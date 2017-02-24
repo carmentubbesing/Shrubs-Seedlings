@@ -34,9 +34,19 @@ The explanatory variables eligible for inclusion in the model for 2015 seedling 
 
 #Data processing 
 
-#Problem solving
+- cleaning and consolidating into one table is done in the file `sdling_grth_model.R`
+
+# Analysis
+
+## Analysis 1
+- The first analysis uses patch as a random effect. This makes the following variables unecessary to include:
+  1. Elevation
+  2. Fire
+  3. Slope/aspect
+
+# Problem solving
 
 The main issues to resolve include:
 1. incorrect measurements making some ht.cm and ht.2015 values 4 cm too large, with no way to tell which ones are
-2. 
+
 
