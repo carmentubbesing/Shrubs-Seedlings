@@ -1,11 +1,13 @@
 ### LOOKING AT SEEDLING GROWTH ~ LIGHT 
 
-#setwd("~/Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data") # Mac
-setwd("C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Shrubs2016_Completed_Data_and_Photos/") # PC
-seedlings.light <- read.csv("Master_Compiled_Jul30_1204_seedlings.csv")
-shrubs <- read.csv("Master_Compiled_Jul30_1204_shrubs.csv")
+DATA <- "C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Shrubs2016_Completed_Data_and_Photos/"
+  
+setwd(DATA) # PC
+
+sdlt <- read.csv("Master_Compiled_Jul30_1204_seedlings.csv")
+shr <- read.csv("Master_Compiled_Jul30_1204_shrubs.csv")
 # Check for typos 
-unique(seedlings.light$Species)
+unique(sdlt$Species)
 # Create variable for fire x patch
 seedlings.light$Fire.Patch <- paste(seedlings.light$Fire, seedlings.light$Patch, sep = "-")
 head(seedlings.light$Fire.Patch, n=20)
@@ -27,6 +29,8 @@ attach(seedlings.light)
 seedlings.light$ht.growth2016 <- Ht.cm - Ht2015 - LastYearGrth.cm
 sort(seedlings.light$ht.growth2016)
 subset(seedlings.light, ht.growth2016 < 0)
+
+### The issue is that there are errors in the height measurements whereby some measurements are 4 cm too large. 
 
 ### ABCO
 
