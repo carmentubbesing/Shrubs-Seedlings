@@ -1,0 +1,23 @@
+---
+title: "Analysis 4 - Seedling Growth by Species: ABCO"
+author: "Carmen Tubbesing"
+date: "3/1/2017"
+output: html_document
+---
+
+- This is a based on some of what I learned in Analysis 2
+    - for example, in terms of using VarPower
+- Note: delete seedlings from PLKN and WRTS because there are only two PIPO in each
+```{r, include=F}
+setwd("~/Shrubs-Seedlings/Rdata")
+load(file="master_data.Rdata")
+library(nlme)
+```
+
+```{r}
+dfABCO <- df[df$Species=="ABCO" & !df$Fire %in% c("PLKN","FRDS"),]
+varPower <- varPower(form=~Ht.cm)
+M1F.abco <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + IAG + Fire + FIre*Ht.cm,
+                weights = varPower,
+                 data= dfABCO, method = "ML")
+anova(M1F.abco)
