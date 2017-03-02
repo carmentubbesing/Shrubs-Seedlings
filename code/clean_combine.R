@@ -1,4 +1,5 @@
 library(dplyr)
+library(tidyr)
 
 ################################################################################################
 #PART 1.SEEDLING DATA EXPLORATION AND CLEANING
@@ -17,8 +18,9 @@ sdlt$Fire[sdlt$Fire=="FRED"]<- "FRDS"
 sdlt$Fire[sdlt$Fire=="AMRC"]<- "AMCR"
 sdlt$Species[sdlt$Species=="pipo"]<- "PIPO"
 sdlt$Species[sdlt$Species=="PILA "]<- "PILA"
+sdlt$Patch[sdlt$Patch=="s"]<- "S"
 sdlt$FirePatch <- paste(sdlt$Fire, sdlt$Patch, sep = "-")
-summary(as.factor(sdlt$FirePatch))
+sdlt$FirePatch <- as.factor(sdlt$FirePatch)
 
 # The variable Ht2015 means height to beginning of 2015 growth season. See image "Seedling Diagram"
 # Issue is that some values of Ht.cm are 4 cm too large 
@@ -42,7 +44,7 @@ plot(sdlt$Ht.cm,sdlt$LastYearGrth.cm)
 ### Create data frame for analysis - start with no CADE
 #sdlt <- sdlt[sdlt$Species!="CADE",]
 sdlt <- sdlt[sdlt$Return==0,]
-df <- sdlt[,c("Seedling.","Fire", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
+df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
 df <- tbl_df(df)
 df <- rename(df,Sdlg = Seedling.)
 
@@ -137,8 +139,89 @@ setdiff(shr_by_sdlg$Sdlg, df$Sdlg)
 #PART 3. COMBINING SHRUB DATA WITH SEEDLING DATA
 ################################################################################################
 df <- full_join(df, shr_by_sdlg, by="Sdlg")
+# COMBINE SEGMENTS INTO PARTIAL TRANSECTS
+df <- df %>%
+  mutate(Cov1.2 = Cov1+Cov2) %>%
+  mutate(Cov1.3 = Cov1.2+Cov3) %>%
+  mutate(Ht1.2 = (Ht1+Ht2)/2) %>%
+  mutate(Ht1.3 = (Ht1+Ht2+Ht3)/3)
+# CREATE COLUMN FOR GENUS
+df$Genus <- 0
+for (i in 1:nrow(df)){
+  if(df$Species[i] %in% c("PILA","PIPO")){
+    df$Genus[i] <- "Pinus"    
+  } else if(df$Species[i] =="CADE"){
+  df$Genus[i] <- "Calocedrus"
+  } else if(df$Species[i] =="ABCO"){
+    df$Genus[i] <- "Abies"
+  } else if(df$Species[i] =="PSME"){
+    df$Genus[i] <- "Pseudotsuga"
+  } else 
+    df$Genus[i] <- "UHOH"
+}
+df$Genus <- as.factor(df$Genus)
+
+# Create Column for Spp1Genus
+df$ShrG1 <- 0
+for (i in 1:nrow(df)){
+  if(df$Spp1[i] %in% c("ARNE","ARPA","ARVI")){
+    df$ShrG1[i] <- "Arcto"    
+  } else if(df$Spp1[i] %in% c("CECO","CEIN","CEPR")){
+    df$ShrG1[i] <- "Ceanothus"    
+  } else if(df$Spp1[i] %in% c("QUVA","QUKE")){
+    df$ShrG1[i] <- "Quercus"
+  } else if(df$Spp1[i] == "LIDE"){
+    df$ShrG1[i] <- "LIDE"
+  } else if(df$Spp1[i] == "CHFO"){
+    df$ShrG1[i] <- "CHFO"
+  } else if(df$Spp1[i] == "CHSE"){
+    df$ShrG1[i] <- "CHSE"
+      } else 
+    df$ShrG1[i] <- "Other"
+}
+df$ShrG1 <- as.factor(df$ShrG1)
+
+df$IAG <- 0
+for (i in 1:nrow(df)){
+  if(df$ImmedAboveSpp[i] %in% c("ARNE","ARPA","ARVI")){
+    df$IAG[i] <- "Arcto"    
+  } else if(df$ImmedAboveSpp[i] %in% c("CECO","CEIN","CEPR")){
+    df$IAG[i] <- "Ceanothus"    
+  } else if(df$ImmedAboveSpp[i] %in% c("QUVA","QUKE")){
+    df$IAG[i] <- "Quercus"
+  } else if(df$ImmedAboveSpp[i] == "LIDE"){
+    df$IAG[i] <- "LIDE"
+  } else if(df$ImmedAboveSpp[i] == "CHFO"){
+    df$IAG[i] <- "CHFO"
+  } else if(df$ImmedAboveSpp[i] == "CHSE"){
+    df$IAG[i] <- "CHSE"
+  } else 
+    df$IAG[i] <- "Other"
+}
+df$IAG <- as.factor(df$IAG)
+
+### Add years since fire
+df$Years <- 0
+for(i in 1:nrow(df)){
+  if (df$Fire[i] == "AMCR"){
+    df$Years[i] <- 8
+  } else if (df$Fire[i] == "CLVD"){
+    df$Years[i] <- 24
+  } else if (df$Fire[i] == "FRDS"){
+    df$Years[i] <- 35
+  } else if (df$Fire[i] == "PLKN"){
+    df$Years[i] <- 43
+  } else if (df$Fire[i] == "STAR"){
+    df$Years[i] <- 38
+  } else if (df$Fire[i] =="WRTS") {
+    df$Years[i] <- 14
+  } else 
+    df$Years[i] <- 9999
+}
+summary(df$Years)
+
 setwd("~/Shrubs-Seedlings/Rdata")
 save(df, file="master_data.Rdata")
 
 ### NEXT STEPS: ADD SLOPE VALUES AND ELEVATION VALUES WHERE THEY'RE MISSING, LOOK FOR MORE DIFN VALUES, BUILD
-### A REGRESSION TREE
+### A REGRESSION MODEL, AND ADD LAT AND LONG TABLE FOR EACH SEEDLING FROM PINS ON AVENZA

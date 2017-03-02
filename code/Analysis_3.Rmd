@@ -1,0 +1,264 @@
+---
+title: "Analysis 3 - Seedling Growth by Species: PIPO"
+author: "Carmen"
+date: "March 1, 2017"
+output: html_document
+---
+
+- This is a based on some of what I learned in Analysis 2
+    - for example, in terms of using VarPower
+- Note: delete seedlings from PLKN and WRTS because there are only two PIPO in each
+```{r, include=F}
+setwd("~/Shrubs-Seedlings/Rdata")
+load(file="master_data.Rdata")
+library(nlme)
+df <- subset(df, df$Species != "CADE")
+```
+
+```{r}
+dfPIPO <- df[df$Species=="PIPO" & !df$Fire %in% c("PLKN","WRTS"),]
+varPower <- varPower(form=~Ht.cm)
+M1F.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + IAG + Fire,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M1F.pipo)
+AIC(M1F.pipo)
+
+M2F.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + IAG + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M2F.pipo)
+AIC(M2F.pipo)
+
+M3F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1 + Cov1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M3F.pipo)
+AIC(M3F.pipo)
+
+M4F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M4F.pipo)
+AIC(M4F.pipo)
+
+M5F.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M5F.pipo)
+AIC(M5F.pipo)
+
+M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M6F.pipo)
+AIC(M6F.pipo) # Best so far
+
+M7F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+anova(M7F.pipo)
+AIC(M7F.pipo)
+
+```
+
+
+- Show these models graphically 
+```{r}
+pred <- as.data.frame(predict(M6F.pipo))
+pred$Cov <- dfPIPO$Cov1.2
+pred$Ht1.2 <- dfPIPO$Ht1.2
+pred$Ht.cm <- dfPIPO$Ht.cm
+pred$Fire <- dfPIPO$Fire
+pred$Grth <- dfPIPO$LastYearGrth.cm
+pred$ShrG1 <- dfPIPO$ShrG1
+#pred <- arrange(pred, predict(M3.lme))
+library(ggplot2)
+ggplot(pred)+
+  geom_point(aes(y=predict(M6F.pipo),x=Ht.cm,col=pred$Ht1.2, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted values, Model 6F:PIPO")
+ggplot(pred)+
+  geom_point(aes(y=Grth,x=Ht.cm,col=pred$Ht1.2, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Measured values")
+E6F.pipo <- resid(M6F.pipo, type="normalized")
+coplot(E6F.pipo ~ Ht.cm | Fire, data=dfPIPO, ylab="Normalized residuals", col=dfPIPO$Fire)
+```
+
+- The predicted values and the residuals look good
+- Are the different slopes caused by different shrub heights or covers in different patches (ie covariance between fire and shrub heights or covers or shrub species?)
+```{r}
+ggplot(pred)+
+  geom_point(aes(y=predict(M6F.pipo),x=Ht.cm,col=pred$ShrG1, shape=pred$Fire))+
+  labs(title = "Relationship between shrub species and fire, Model 6F:PIPO")
+```
+
+- It appears there is a relationship but the shrub species in the flatter-sloped fires are also in other fires
+- Potential conclusions from comparing abco and pipo results
+    - basal diameter matters for ABCO but not for PIPO
+    - shrub cover almost matters for PIPO but not for ABCO
+- Try to refine further by using different cover segments and height segments
+- Then with all Pinus
+
+**Try out including more/different variables**
+```{r}
+M8F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Cov1.2 + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M8F.pipo) 
+
+M9F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.3 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M9F.pipo) 
+
+M10F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Cov1 + Ht1.3 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M10F.pipo) 
+
+M11F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  Cov1 + Ht1.3 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M11F.pipo) 
+
+M12F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm + IAG,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M12F.pipo)
+
+M13F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm + ImmedAboveHt.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M13F.pipo)
+```
+
+- now double check that I'm using the best GLS
+```{r}
+M6Fa.pipo <- M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varFixed(~Ht.cm),
+                 data= dfPIPO, method = "ML")
+AIC(M6Fa.pipo)
+  
+M6Fb.pipo <- M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varExp(form=~ Ht.cm),
+                 data= dfPIPO, method = "ML")
+AIC(M6Fb.pipo)
+
+M6Fc.pipo <- M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varConstPower(form=~Ht.cm),
+                 data= dfPIPO, method = "ML")
+AIC(M6Fc.pipo)
+```
+
+## Try the same model but with DIFN!
+
+```{r}
+dfPIPO.D <- dfPIPO[!is.na(dfPIPO$DIFN),]
+plot(dfPIPO.D$DIFN, dfPIPO.D$LastYearGrth.cm)
+
+M1D.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + DIFN + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M1D.pipo)
+anova(M1D.pipo)
+
+
+M2D.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M2D.pipo)
+anova(M2D.pipo)
+anova(M1D.pipo, M2D.pipo)
+
+M3D.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M3D.pipo)
+
+E1D.pipo <- resid(M1D.pipo, type="normalized")
+coplot(E1D.pipo ~ Ht.cm | Fire, data=dfPIPO.D, ylab="Normalized residuals", main="DIFN model residuals", col=dfPIPO.D$Fire)
+
+
+M2D.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1 + BasDia.cm,
+                random=~1+Ht1|Fire,
+                weights = varPower,
+                 data= dfPIPO.D,
+                method = "ML")
+AIC(M2D.pipo)
+anova(M2D.pipo)
+
+M4D.pipo <- gls(LastYearGrth.cm ~ Ht.cm + + DIFN + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M4D.pipo)
+
+M5D.pipo <- gls(LastYearGrth.cm ~ Ht.cm + DIFN + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M5D.pipo)
+
+M6D.pipo <- gls(LastYearGrth.cm ~ Ht.cm + DIFN + BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO.D, method = "ML")
+AIC(M6D.pipo)
+
+plot(dfPIPO.D$Ht1.2, dfPIPO.D$DIFN)
+```
+
+## Main Findings
+1. The best model to describe PIPO seedling growth with the data I have is 
+```{r}
+M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+
+```
+2. DIFN is not useful for PIPO
+3. Shrub cover is not important but shrub height is
+4. Shrub genus does not appear to be important
+5. The effect of shrub height on seedling growth is small compared to the effect of seedling height and fire 
+
+## Graphically display predictions for a set of fake values
+
+```{r}
+Ht.cm <- c(rep(seq(0,300,5),4))
+length(Ht.cm)
+fakedata <- as.data.frame(Ht.cm)
+fakedata$BasDia.cm <- c(rep(1,244))
+fakedata$Ht1.2 <- c(rep(c(10,80,150,220),61))
+fakedata$Fire <- as.factor(c(rep(c("AMCR","CLVD"),30),"AMCR"))
+predicted <- predict(M6F.pipo, fakedata)
+
+pred <- as.data.frame(predicted)
+pred$Ht1.2 <- fakedata$Ht1.2
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+pred$Grth <- fakedata$LastYearGrth.cm
+
+basal1 <- ggplot(pred)+
+  geom_point(aes(y= predicted ,x=Ht.cm,col=Ht1.2, shape=Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted seedling growth ~ \nHt, shrub height (Ht1.2) \nand fire, using MIN basal dia, \nfor best PIPO model")+
+  ylim(0,55)
+
+fakedata$BasDia.cm <- c(rep(7,244))
+predicted <- predict(M6F.pipo, fakedata)
+pred <- as.data.frame(predicted)
+pred$Ht1.2 <- fakedata$Ht1.2
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+pred$Grth <- fakedata$LastYearGrth.cm
+
+basal7 <- ggplot(pred)+
+  geom_point(aes(y= predicted ,x=Ht.cm,col=Ht1.2, shape=Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted seedling growth ~ \nHt, shrub height (Ht1.2) \nand fire, using MAX basal dia, \nfor best PIPO model")+
+  ylim(0,55)
+
+require(gridExtra)
+grid.arrange(basal1, basal7,ncol=2)
+
+```
+

@@ -1,0 +1,514 @@
+---
+title: "Analysis 2 - Predicting Seedling Growth using GLS"
+author: "Carmen"
+date: "February 28, 2017"
+output: html_document
+---
+
+### Step 1. Linear regression model with all possible variables, detect heterogeneity 
+
+```{r, include=F}
+setwd("~/Shrubs-Seedlings/Rdata")
+load(file="master_data.Rdata")
+library(nlme)
+df <- subset(df, df$Species != "CADE")
+```
+
+```{r}
+M1 <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1.2 + BasDia.cm + Genus + ShrG1, random = ~1|FirePatch, data= df) 
+anova(M1)
+AIC(M1)
+plot(M1, which=c(1))
+```
+
+
+### Step 2. Refit with GLS
+
+```{r}
+M1.gls <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1.2 + BasDia.cm + Genus + ShrG1 + FirePatch, data= df) 
+E <- resid(M1.gls)
+plot(E ~ df$Ht.cm, main = "Seedling Height")
+boxplot(E ~ df$Genus, main = "Genus")
+boxplot(E ~ df$Fire, main = "Fire")
+```
+
+- It's clear that the main source of heterogeneity is in the growth ~ height relationship, so include a GLS term based on height
+
+### Step 3. Choose an appropriate variance structure. In this case, choose between varFixed and varPower based on seedling height 
+
+```{r}
+library(nlme)
+varFixed <- varFixed(~Ht.cm)
+varPower <- varPower(form=~Ht.cm)
+M1.fixed <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1.2 + BasDia.cm + Genus + ShrG1 + FirePatch,
+                weights = varFixed,
+                 data= df)
+M1.power <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1.2 + BasDia.cm + Genus + ShrG1 + FirePatch,
+                weights = varPower,
+                 data= df)
+
+anova(M1.fixed, M1.power)
+anova(M1.gls, M1.power)
+```
+
+- varPower structure is better, at least before including any other random effect
+
+### Check out different combinations of explanatory variables
+```{r}
+M1.lme <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1.2 + BasDia.cm + Genus + ShrG1 + FirePatch,
+                weights = varPower,
+                random=~1|FirePatch,
+                 data= df, method = "ML")
+anova(M1.lme)
+M2.lme <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2,
+                weights = varPower,
+                random=~1|Fire,
+                 data= df, method = "ML")
+anova(M2.lme)
+
+M3.lme <- lme(LastYearGrth.cm ~ Ht.cm,
+                weights = varPower,
+                random=~1|Fire,
+                 data= df, method = "ML")
+
+anova(M2.lme, M3.lme)
+
+M4.lme <- lme(LastYearGrth.cm ~ Ht.cm,
+              random=~1|FirePatch,
+                 data= df, method = "ML")
+
+anova(M4.lme, M3.lme)
+
+
+M5.lme <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2,
+                random=~1|Fire,
+                 data= df, method = "ML")
+
+summary(M5.lme)
+anova(M5.lme, M4.lme)
+plot(M5.lme, which=c(1),col=df$Fire, add.smooth=FALSE)
+
+```
+
+
+### Steps 4-6. Find optimal random structure 
+
+- Plot residuals vs. ht for each fire with and without GLS to see if you fixed the problem
+```{r}
+E5 <- resid(M5.lme, type="normalized")
+coplot(E5 ~ Ht.cm | Fire, data=df, ylab="Normalized residuals", main="Without GLS")
+E3 <- resid(M3.lme, type="normalized")
+coplot(E3 ~ Ht.cm | Fire, data=df, ylab="Normalized residuals", main="VarPower", col=df$Fire)
+E1.fixed <- resid(M1.fixed, type="normalized")
+coplot(E1.fixed ~ Ht.cm | Fire, data=df, ylab="Normalized residuals", main="VarPower", col=df$Fire)
+```
+- Try to plot predicted values vs. shrub cover
+```{r}
+library(dplyr)
+
+pred <- as.data.frame(predict(M2.lme))
+pred$Cov <- df$Cov1.2
+pred$Ht.cm <- df$Ht.cm
+pred$Fire <- df$Fire
+#pred <- arrange(pred, predict(M3.lme))
+plot(pred[,2], pred[,1],xlab="Cover",ylab="Predicted growth", col=pred$Fire)
+plot(pred[,3], pred[,1],xlab="Seedling Height",ylab="Predicted growth")
+plot(pred[,3], pred[,1],xlab="Seedling Height",ylab="Predicted growth",col=pred$Cov)
+library(ggplot2)
+ggplot(pred)+
+  geom_point(aes(y=predict(M2.lme),x=Ht.cm,col=pred$Cov))+
+  scale_color_gradient(low="blue",high="red")
+ggplot(pred)+
+  geom_point(aes(y=predict(M2.lme),x=Cov,col=pred$Fire))#+
+  scale_color_gradient(low="blue",high="red")
+  
+```
+
+### Try with only one genus at a time, of the common genera
+- First with ABCO
+```{r}
+M1.abco <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + ImmedAboveSpp,
+                weights = varPower,
+                random=~1|Fire,
+                 data= df[df$Species=="ABCO",], method = "ML")
+anova(M1.abco)
+M2.abco <- lme(LastYearGrth.cm ~ Ht.cm + BasDia.cm + Ht1 + ImmedAboveSpp,
+                weights = varPower,
+                random=~1|Fire,
+                 data= df[df$Species=="ABCO",], method = "ML")
+anova(M1.abco, M2.abco)
+```
+
+- Then with PIPO
+    - delete seedlings from PLKN and WRTS because there are only two PIPO in each
+```{r}
+dfPIPO <- df[df$Species=="PIPO" & !df$Fire %in% c("PLKN","WRTS"),]
+M1.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + IAG,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+anova(M1.pipo)
+M2.pipo <- lme(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1 + IAG,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+anova(M2.pipo)
+
+M3.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+anova(M3.pipo)
+AIC(M3.pipo)
+anova(M3.pipo, M2.pipo)
+
+M4.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2 + Ht1,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+anova(M4.pipo)
+AIC(M4.pipo)
+anova(M4.pipo, M3.pipo)
+
+M5.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Cov1.2,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+AIC(M5.pipo)
+
+M6.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML")
+AIC(M6.pipo)
+anova(M6.pipo)
+
+M0.pipo <- lme(LastYearGrth.cm ~ Ht.cm,
+                weights = varPower,
+                random=~1|Fire,
+                 data= dfPIPO, method = "ML") 
+AIC(M0.pipo)
+
+M7.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1 + Fire,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M7.pipo) ### best one so far
+anova(M7.pipo)
+summary(M7.pipo)
+
+M8.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1 + Cov1.2 + Fire,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M8.pipo)
+anova(M8.pipo)
+
+M9.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1 + Years,
+                weights = varPower,
+                 data= dfPIPO, method = "ML")
+AIC(M9.pipo)
+anova(M9.pipo)
+
+M10.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10.pipo) ## best so far!
+anova(M10.pipo)
+
+M11.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1 + Cov1.2,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M11.pipo)
+anova(M11.pipo)
+
+M12.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1+IAG,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M12.pipo)
+anova(M12.pipo)
+
+```
+
+- Is it possible that I don't need GLS if I use random slopes and intercepts?
+```{r, eval=FALSE}
+M13.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1,
+                random=~1+Ht.cm|Fire,
+                 data= dfPIPO, 
+                method = "REML")
+```
+
+- That results in an error, so apparently not!
+- Show these models graphically 
+```{r}
+library(dplyr)
+
+pred <- as.data.frame(predict(M7.pipo))
+pred$Cov <- dfPIPO$Cov1.2
+pred$Ht1 <- dfPIPO$Ht1
+pred$Ht.cm <- dfPIPO$Ht.cm
+pred$Fire <- dfPIPO$Fire
+pred$Grth <- dfPIPO$LastYearGrth.cm
+#pred <- arrange(pred, predict(M3.lme))
+library(ggplot2)
+ggplot(pred)+
+  geom_point(aes(y=predict(M7.pipo),x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted values, Model 7:PIPO")
+ggplot(pred)+
+  geom_point(aes(y=Grth,x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Measured values")
+pred <- as.data.frame(predict(M10.pipo))
+pred$Cov <- dfPIPO$Cov1.2
+pred$Ht1 <- dfPIPO$Ht1
+pred$Ht.cm <- dfPIPO$Ht.cm
+pred$Fire <- dfPIPO$Fire
+pred$Grth <- dfPIPO$LastYearGrth.cm
+pred$ShrG1<- dfPIPO$ShrG1
+ggplot(pred)+
+  geom_point(aes(y=predict(M10.pipo),x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted values, Model 10:PIPO")
+E10.pipo <- resid(M10.pipo, type="normalized") 
+coplot(E10.pipo ~ Ht.cm | Fire, data=dfPIPO, ylab="Normalized residuals", col=dfPIPO$Fire)
+```
+
+- Are the different slopes caused by different shrub heights or covers in different patches (ie covariance between fire and shrub heights or covers or shrub species?)
+```{r}
+ggplot(pred)+
+  geom_point(aes(y=predict(M10.pipo),x=Ht.cm,col=pred$ShrG1, shape=pred$Fire))+
+  labs(title = "Relationship between shrub species and fire, Model 10:PIPO")
+```
+
+- It appears there is a relationship but the shrub species in the flatter-sloped fires are also in other fires
+- Potential conclusions from comparing abco and pipo results
+    - basal diameter matters for ABCO but not for PIPO
+    - shrub cover almost matters for PIPO but not for ABCO
+- Try to refine further by using different cover segments and height segments and 
+- Then with all Pinus
+
+**Try out including more/different variables to Model 10**
+```{r}
+M10a.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1 + Cov1.2,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10a.pipo) 
+anova(M10a.pipo)
+anova(M10a.pipo, M10.pipo)
+
+M10b.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10b.pipo) 
+anova(M10b.pipo)
+anova(M10b.pipo, M10.pipo)
+
+
+M10c.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + Cov1.2,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10c.pipo) 
+anova(M10c.pipo)
+anova(M10c.pipo, M10.pipo)
+
+
+M10d.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.3,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10d.pipo) 
+anova(M10d.pipo)
+anova(M10d.pipo, M10.pipo)
+
+M10e.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + Cov1,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10e.pipo) ## best so far!
+anova(M10e.pipo)
+anova(M10e.pipo, M10.pipo)
+
+M10f.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10f.pipo) ## best so far!
+anova(M10f.pipo)
+anova(M10f.pipo, M10.pipo)
+
+```
+
+- Plot the latest model 
+```{r}
+pred <- as.data.frame(predict(M10f.pipo))
+pred$Cov <- dfPIPO$Cov1.2
+pred$Ht1 <- dfPIPO$Ht1
+pred$Ht.cm <- dfPIPO$Ht.cm
+pred$Fire <- dfPIPO$Fire
+pred$Grth <- dfPIPO$LastYearGrth.cm
+pred$ShrG1<- dfPIPO$ShrG1
+
+ggplot(pred)+
+  geom_point(aes(y=predict(M10f.pipo),x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted values, Model 10f:PIPO")
+ggplot(pred)+
+  geom_point(aes(y=Grth,x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Measured values")
+```
+
+- Keep poking around at different variable combinations
+```{r}
+M10g.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.3 + BasDia.cm,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10g.pipo) 
+anova(M10g.pipo)
+anova(M10g.pipo, M10.pipo)
+
+M10h.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + IAG,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10h.pipo) 
+
+M10i.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + ImmedAboveHt.cm,
+                random=~1+Ht.cm|Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10i.pipo) 
+anova(M10i.pipo)
+anova(M10i.pipo, M10.pipo)
+```
+
+- now double check that I'm using the best GLS
+```{r}
+M10j.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm,
+                random=~1+Ht.cm|Fire,
+                weights = varFixed,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10j.pipo)
+anova(M10f.pipo, M10j.pipo)
+
+M10k.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + IAG,
+                random=~1+Ht.cm|Fire,
+                weights = varExp(form=~ Ht.cm),
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10k.pipo)
+
+M10l.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + IAG,
+                random=~1+Ht.cm|Fire,
+                weights = varConstPower(form=~Ht.cm),
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M10l.pipo)
+
+
+```
+### Try using fire as a fixed effect
+```{r}
+library(nlme)
+M13.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + Fire + Ht.cm*Fire,
+              weights = varPower,
+              data= dfPIPO,
+            method = "ML")
+AIC(M13.pipo)
+anova(M13.pipo)
+
+
+M14.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.2 + BasDia.cm + Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+
+AIC(M14.pipo)
+
+M15.pipo <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.2 + Fire + Ht.cm*Fire,
+                weights = varPower,
+                 data= dfPIPO, 
+                method = "ML")
+AIC(M15.pipo)
+anova(M15.pipo)
+
+#summary(M13.pipo)
+summary(M15.pipo)
+```
+
+- Plot the latest model 
+```{r}
+pred <- as.data.frame(predict(M15.pipo))
+pred$Cov <- dfPIPO$Cov1.2
+pred$Ht1 <- dfPIPO$Ht1
+pred$Ht.cm <- dfPIPO$Ht.cm
+pred$Fire <- dfPIPO$Fire
+pred$Grth <- dfPIPO$LastYearGrth.cm
+pred$ShrG1<- dfPIPO$ShrG1
+
+ggplot(pred)+
+  geom_point(aes(y=predict(M15.pipo),x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted values, Model 15:PIPO")
+ggplot(pred)+
+  geom_point(aes(y=Grth,x=Ht.cm,col=pred$Ht1, shape=pred$Fire))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Measured values")
+```
+
+## Try the same model but with DIFN!
+
+```{r}
+dfPIPO.D <- dfPIPO[!is.na(dfPIPO$DIFN),]
+plot(dfPIPO.D$DIFN, dfPIPO.D$LastYearGrth.cm)
+M1D.pipo <- lme(LastYearGrth.cm ~ Ht.cm + DIFN + BasDia.cm,
+                random=~1+DIFN|Fire,
+                weights = varPower,
+                 data= dfPIPO.D, 
+                method = "ML")
+AIC(M1D.pipo) 
+anova(M1D.pipo)
+
+E1D.pipo <- resid(M1D.pipo, type="normalized")
+coplot(E1D.pipo ~ Ht.cm | Fire, data=dfPIPO.D, ylab="Normalized residuals", main="DIFN model residuals", col=dfPIPO.D$Fire)
+
+
+M2D.pipo <- lme(LastYearGrth.cm ~ Ht.cm + Ht1 + BasDia.cm,
+                random=~1+Ht1|Fire,
+                weights = varPower,
+                 data= dfPIPO.D, 
+                method = "ML")
+AIC(M2D.pipo)
+anova(M2D.pipo)
+
+M3D.pipo <- lme(LastYearGrth.cm ~ Ht.cm + DIFN,
+                random=~1|Fire,
+                weights = varPower,
+                 data= dfPIPO.D, 
+                method = "ML")
+AIC(M3D.pipo) 
+anova(M3D.pipo)
+
+plot(dfPIPO.D$Ht1.2, dfPIPO.D$DIFN)
+```
+
+# Repeat the model selection proces with ABCO
