@@ -17,7 +17,40 @@ library(nlme)
 ```{r}
 dfABCO <- df[df$Species=="ABCO" & !df$Fire %in% c("PLKN","FRDS"),]
 varPower <- varPower(form=~Ht.cm)
-M1F.abco <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1 + IAG + Fire + FIre*Ht.cm,
-                weights = varPower,
+table <- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
+
+M1F.abco <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1.3 
+                , weights = varPower,
                  data= dfABCO, method = "ML")
-anova(M1F.abco)
+
+table[1,] <- c("M1F.abco", AIC(M1F.abco))
+
+M2F.abco = update(M1F.abco, . ~ . - BasDia.cm)
+anova(M1F.abco, M2F.abco)
+table <- rbind(table, c("M2F.abco", AIC(M2F.abco)))
+
+M3F.abco = update(M1F.abco, . ~ . + Fire*Ht.cm + Ht.cm*Ht1.3)
+anova(M1F.abco, M3F.abco)
+table <- rbind(table, c("M3F.abco", AIC(M3F.abco)))
+
+M4F.abco = update(M3F.abco, . ~ . - Ht1.3*Ht.cm - Ht1.3 + Ht.cm)
+anova(M3F.abco, M4F.abco)
+table <- rbind(table, c("M4F.abco", AIC(M4F.abco)))
+
+M5F.abco = update(M4F.abco, . ~ . - Cov1.2)
+anova(M4F.abco, M5F.abco)
+table <- rbind(table, c("M5F.abco", AIC(M5F.abco)))
+
+M6F.abco = update(M3F.abco, . ~ . - Cov1.2 - Ht1.3*Ht.cm + Ht.cm)
+anova(M3F.abco, M6F.abco)
+table <- rbind(table, c("M6F.abco", AIC(M6F.abco)))
+
+M7F.abco = update(M6F.abco, . ~ . - BasDia.cm)
+anova(M6F.abco, M7F.abco)
+table <- rbind(table, c("M7F.abco", AIC(M7F.abco)))
+
+table
+
+```
+
+- The above shows that for ABCO, including shrub cover and shrub height appears to not help the model
