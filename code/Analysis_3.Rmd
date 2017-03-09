@@ -152,6 +152,21 @@ M6Fc.pipo <- M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire
 AIC(M6Fc.pipo)
 ```
 
+
+```{r}
+# M6F.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+#                 weights = varPower,
+#                  data= dfPIPO, method = "ML")
+# anova(M6F.pipo)
+# AIC(M6F.pipo)
+# 
+# M6R.pipo <- gls(LastYearGrth.cm ~ Ht.cm +  BasDia.cm + Ht1.2 + Fire + Fire*Ht.cm,
+#                 weights = varPower,
+#                 random = ~1|FirePatch,  
+#                  data= dfPIPO, method = "ML")
+# anova(M6F.pipo)
+# AIC(M6F.pipo)
+```
 ## Try the same model but with DIFN!
 
 ```{r}
