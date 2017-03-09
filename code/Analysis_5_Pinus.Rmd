@@ -98,6 +98,11 @@ M13F.pinus =  update(M1F.pinus, . ~ . + ImmedAboveHt.cm)
 AIC(M13F.pinus)
 table <- rbind(table, c("M13F.pinus", AIC(M13F.pinus)))
 
+M13F.pinus <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.3 + Fire + Fire*Ht.cm + Ht.cm*Ht1.3,
+                weights = varPower,
+                 data= dfPinus, method = "ML")
+AIC(M13F.pinus)
+
 table
 ```
 
@@ -105,7 +110,7 @@ table
 ## Show these models graphically 
 
 ```{r}
-pred <- as.data.frame(predict(M1F.pinus))
+pred <- as.data.frame(predict(M13F.pinus))
 pred$Cov <- dfPinus$Cov1.2
 pred$Ht1.2 <- dfPinus$Ht1.2
 pred$Ht.cm <- dfPinus$Ht.cm
@@ -116,7 +121,7 @@ pred$Species <- dfPinus$Species
 #pred <- arrange(pred, predict(M3.lme))
 library(ggplot2)
 ggplot(pred)+
-  geom_point(aes(y=predict(M1F.pinus),x=Ht.cm,col=pred$Ht1.2, shape=pred$Fire))+
+  geom_point(aes(y=predict(M13F.pinus),x=Ht.cm,col=pred$Ht1.2, shape=pred$Fire))+
   scale_color_gradient(low="blue",high="red")+
   labs(title = "Predicted values, Model 6F:Pinus")
 ggplot(pred)+
@@ -130,8 +135,8 @@ ggplot(pred)+
   scale_color_gradient(low="blue",high="red")+
   labs(title = "Measured values, with larger symbols for PILA than PIPO")
 
-E6F.pinus <- resid(M1F.pinus, type="normalized")
-coplot(E6F.pinus ~ Ht.cm | Fire, data=dfPinus, ylab="Normalized residuals", col=dfPinus$Fire)
+E.pinus <- resid(M13F.pinus, type="normalized")
+coplot(E.pinus ~ Ht.cm | Fire, data=dfPinus, ylab="Normalized residuals", col=dfPinus$Fire)
 ```
 
 - The predicted values and the residuals look good
@@ -238,59 +243,210 @@ tableDIFN
 ```{r}
 M1F.pinus <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1.3 + Fire + Fire*Ht.cm + Ht.cm*Ht1.3,
                 weights = varPower,
-                 data= dfPinus, method = "REML")
+                 data= dfPinus, method = "ML")
+AIC(M1F.pinus)
+
+M1F.pinus.2 <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.3 + Fire + Fire*Ht.cm + Ht.cm*Ht1.3,
+                weights = varPower,
+                 data= dfPinus, method = "ML")
+AIC(M1F.pinus.2)
 ```
 
-    - I reran it with REML for parameter estimation - important!
+  - Must rerun it with REML for parameter estimation - important!
+  - For the purposes of SORTIE, having basal diameter in there is not that helpful. Plus it is only marginally significant in the model. Also, the effect of shrub cover is tiny so I'll delete that too. So the SORTIE model should be 
+
+```{r}
+SORTIE_pinus <- gls(LastYearGrth.cm ~ Ht.cm + Ht1.3 + Fire + Fire*Ht.cm + Ht.cm*Ht1.3,
+                weights = varPower,
+                 data= dfPinus, method = "REML")
+summary(SORTIE_pinus)
+```
+
+  - So this makes the final equation: 
+  
+  Height growth in cm = -.39 + 0.19*Ht.cm - .006*shrub ht 
+  
 2. DIFN is not useful for Pinus
 3. Shrub cover is not super important but shrub height is
 4. Shrub genus does not appear to be important
 
 ## Graphically display predictions for a set of fake values
 
+```{r, include=F}
+library(dplyr)
+```
+
 ```{r}
 Ht.cm <- c(rep(seq(0,300,5),4))
 length(Ht.cm)
 fakedata <- as.data.frame(Ht.cm)
-fakedata$BasDia.cm <- c(rep(2,244))
-fakedata$Ht1.3 <- c(rep(c(10,80,150,220),61))
+fakedata$Ht1.3 <- c(rep(c(5,50,100,150),61))
 fakedata$Fire <- as.factor(c(rep("AMCR",244)))
-fakedata$Cov1.2 <- c(rep(c(200,200,200,200,800,800,800,800),30),200,200,200,200)
-
-predicted <- predict(M1F.pinus, fakedata)
+predicted <- predict(SORTIE_pinus, fakedata)
 
 pred <- as.data.frame(predicted)
-pred$Ht1.3 <- fakedata$Ht1.3
+pred$Shrub_height <- fakedata$Ht1.3
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+dfCLVD <- subset(dfPinus, dfPinus$Fire=="CLVD" & !is.na(dfPinus$LastYearGrth.cm))
+dfAMCR<- subset(dfPinus, dfPinus$Fire=="AMCR" & !is.na(dfPinus$LastYearGrth.cm))
+dfFRDS <- subset(dfPinus, dfPinus$Fire=="FRDS" & !is.na(dfPinus$LastYearGrth.cm))
+dfSTAR <- subset(dfPinus, dfPinus$Fire=="STAR" & !is.na(dfPinus$LastYearGrth.cm))
+
+plot_AMCR <- ggplot(pred[pred$Shrub_height<51&pred$Ht.cm <= max(dfAMCR$Ht.cm),])+
+  geom_line(aes(y= predicted ,x=Ht.cm,group=Shrub_height,col=Shrub_height))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted seedling growth,\nAmerican Complex Fire")+
+  ylim(0,55)+
+  xlim(0,300)+
+  geom_point(data=dfAMCR,aes(y=LastYearGrth.cm,x=Ht.cm,col=Ht1.3))+
+  xlab("Seedling height")+
+  ylab("Seedling growth")
+  
+plot_AMCR
+
+fakedata$Fire <- as.factor(c(rep("CLVD",244)))
+predicted <- predict(SORTIE_pinus, fakedata)
+pred <- as.data.frame(predicted)
+pred$Shrub_height <- fakedata$Ht1.3
 pred$Ht.cm <- fakedata$Ht.cm
 pred$Fire <- fakedata$Fire
 pred$Grth <- fakedata$LastYearGrth.cm
 
-AMCR <- ggplot(pred)+
-  geom_point(aes(y= predicted ,x=Ht.cm,col=Ht1.3))+
+predicted_clvd <- predicted
+
+CLVD <- ggplot(pred[pred$Ht.cm<=max(dfCLVD$Ht.cm),])+
+  geom_line(aes(y= predicted ,x=Ht.cm,group=Shrub_height,col=Shrub_height))+
   scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub height (Ht1.3) \nand shrub cover, American Complex \nFire, for best Pinus model")+
-  ylim(0,55)
+  labs(title = "Predicted seedling growth,\nCleveland Fire")+
+  ylim(0,55)+
+  xlim(0,300)+
+  geom_point(data=dfCLVD,aes(y=LastYearGrth.cm,x=Ht.cm,col=Ht1.3))+
+  xlab("Seedling height")+
+  ylab("Seedling growth")
 
 
+fakedata$Fire <- as.factor(c(rep("FRDS",244)))
+predicted <- predict(SORTIE_pinus, fakedata)
+pred <- as.data.frame(predicted)
+pred$Shrub_height <- fakedata$Ht1.3
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+pred$Grth <- fakedata$LastYearGrth.cm
 
-fakedata$Fire <- as.factor(c(rep("CLVD",244)))
-predicted2 <- predict(M1F.pinus, fakedata)
+predicted_freds <- predicted
 
-pred2 <- as.data.frame(predicted2)
-pred2$Ht1.3 <- fakedata$Ht1.3
-pred2$Ht.cm <- fakedata$Ht.cm
-pred2$Fire <- fakedata$Fire
-pred2$Grth <- fakedata$LastYearGrth.cm
-
-CLVD <- ggplot(pred2)+
-  geom_point(aes(y= predicted2 ,x=Ht.cm,col=Ht1.3))+
+FRDS <- ggplot(pred[pred$Ht.cm<=max(dfFRDS$Ht.cm),])+
+  geom_line(aes(y= predicted ,x=Ht.cm,group=Shrub_height,col=Shrub_height))+
   scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub height (Ht1.3) \nand shrub cover, Cleveland \nFire, for best Pinus model")+
-  ylim(0,55)
+  labs(title = "Predicted seedling growth,\nFreds Fire")+
+  ylim(0,55)+
+  xlim(0,300)+
+  geom_point(data=dfFRDS,aes(y=LastYearGrth.cm,x=Ht.cm,col=Ht1.3))
 
+FRDS
+
+fakedata$Fire <- as.factor(c(rep("STAR",244)))
+predicted <- predict(SORTIE_pinus, fakedata)
+pred <- as.data.frame(predicted)
+pred$Shrub_height <- fakedata$Ht1.3
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+pred$Grth <- fakedata$LastYearGrth.cm
+
+STAR <- ggplot(pred[pred$Shrub_height>51&pred$Ht.cm <= max(dfSTAR$Ht.cm),])+
+  geom_line(aes(y= predicted,x=Ht.cm,group=Shrub_height,col=Shrub_height))+
+  scale_color_gradient(low="blue",high="red")+
+  labs(title = "Predicted seedling growth,\nStar Fire")+
+  ylim(0,55)+
+  xlim(0,300)+
+  geom_point(data=dfSTAR,aes(y=LastYearGrth.cm,x=Ht.cm,col=Ht1.3))
+
+STAR
+```
+
+```{r, include=F}
 require(gridExtra)
-grid.arrange(AMCR, CLVD,ncol=2)
+```
+
+```{r}
+grid.arrange(STAR, FRDS,plot_AMCR,CLVD,ncol=2,nrow=2)
 
 ```
 
+## How do these results inform my initial SORTIE inputs?
+
+- How do I deal with non-continuous shrub cover given that this model only takes shrub height into consideration?
+```{r}
+hist(dfPinus$Cov1)
+nrow(dfPinus[dfPinus$Cov1<100,])
+```
+- There are only 10 pine observations that have seedlings with less than 100 cm shrub cover across 4 1-m transects
+- Perhaps for the seedlings with less than 100 cm shrub cover, I could use a separate growth function that is not dependent upon shrubs
+    - I could derive this function from Welch data, maybe
+    
+### Add variable for whether the seedling is immediately overtopped by shrubs
+```{r}
+
+dfPinus <- tbl_df(dfPinus)
+dfPinus <- dfPinus%>%
+  mutate(Topped = ifelse(dfPinus$ImmedAboveHt.cm>0,1,0))
+
+top_AMCR <- ggplot(data=dfPinus[dfPinus$Fire=="AMCR",], aes(y=LastYearGrth.cm, x=Topped))+
+  geom_point(aes(colour = Fire))
+top_STAR <- ggplot(data=dfPinus[dfPinus$Fire=="STAR",], aes(y=LastYearGrth.cm, x=Topped))+
+  geom_point(aes(colour = Fire))
+top_CLVD <- ggplot(data=dfPinus[dfPinus$Fire=="CLVD",], aes(y=LastYearGrth.cm, x=Topped))+
+  geom_point(aes(colour = Fire))
+top_FRDS <- ggplot(data=dfPinus[dfPinus$Fire=="FRDS",], aes(y=LastYearGrth.cm, x=Topped))+
+  geom_point(aes(colour = Fire))
+grid.arrange(top_STAR, top_FRDS,top_AMCR,top_CLVD,ncol=2,nrow=2)
+
+box_AMCR <- ggplot(data=dfPinus[dfPinus$Fire=="AMCR",],aes(factor(Topped),LastYearGrth.cm))+
+         geom_boxplot()
+box_STAR <- ggplot(data=dfPinus[dfPinus$Fire=="STAR",],aes(factor(Topped),LastYearGrth.cm))+
+         geom_boxplot()
+box_CLVD <- ggplot(data=dfPinus[dfPinus$Fire=="CLVD",],aes(factor(Topped),LastYearGrth.cm))+
+         geom_boxplot()
+box_FRDS <- ggplot(data=dfPinus[dfPinus$Fire=="FRDS",],aes(factor(Topped),LastYearGrth.cm))+
+         geom_boxplot()
+grid.arrange(box_AMCR, box_FRDS, box_CLVD, box_STAR, ncol=2,nrow=2)
+
+```
+
+- Look at whether there's a pattern in the residuals for seedlings with different cover attributes that can inform me on where the shrub cover threshold is below which shrub height doesn't matter for seedling growth
+- Also look at residuals for PILA compared to PIPO
+
+- First, check that residuals are in the same order as the dfPinus data and predictions
+```{r}
+head(dfPinus$LastYearGrth.cm-residuals(SORTIE_pinus))
+head(predict(SORTIE_pinus))
+```
+- Good. Now check out the residuals
+```{r}
+dfPinus$Predicted <- predict(SORTIE_pinus)
+dfPinus$Residuals <- resid(SORTIE_pinus, type="normalized")
+```
+
+
+```{r}
+ggplot(dfPinus)+
+  geom_point(aes(y=Residuals,x=Cov1))+
+  geom_point(data=dfPinus[dfPinus$Cov1.2<300,],aes(y=Residuals,x=Cov1.2),color="red",size=2)
+
+mean(dfPinus[dfPinus$Topped==0,]$Residuals)
+mean(dfPinus$Residuals)
+
+
+ggplot()+
+  geom_point(aes(y=residuals(SORTIE_pinus),x=names(residuals(SORTIE_pinus))))+
+  geom_point(aes(y=residuals(SORTIE_pinus)[dfPinus$Topped==0],x=names(residuals(SORTIE_pinus)[dfPinus$Topped==0])),color="red",size=2)
+
+length(residuals(SORTIE_pinus)[residuals(SORTIE_pinus)>0])
+length(residuals(SORTIE_pinus)[residuals(SORTIE_pinus)<0])
+length(residuals(SORTIE_pinus)[dfPinus$Cov1<300&residuals(SORTIE_pinus)<0])
+length(residuals(SORTIE_pinus)[dfPinus$Cov1<300&residuals(SORTIE_pinus)>0])
+
+```
 
