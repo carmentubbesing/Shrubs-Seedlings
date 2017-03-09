@@ -33,26 +33,29 @@ hist(resid(M.interact))
 
 
 dfPinus$shrubarea <- dfPinus$Ht1.2*(dfPinus$Cov1.2)
-M.interact2 <- gls(LastYearGrth.cm ~ Ht.cm + Fire + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea,
+M.interact2 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
                   weights = varPower,
                   data= dfPinus, method = "ML")
 AIC(M.interact2)
 summary(M.interact2)
 
 ###
-### AIC for 1-3 meters, cover squared: 587.8378
-### AIC for 1-2 meters, cover squared: 587.8073
-### AIC for 1 meter, cover squared:  591.0605
+### AIC for 1-3 meters: 587.8378
+### AIC for 1-2 meters: 587.8073
+### AIC for 1 meter:  591.0605
 
 E2 <- resid(M.interact2, type="normalized")
 coplot(E2 ~ Ht.cm | Fire, data=dfPinus, ylab="Normalized residuals", col=dfPinus$Fire)
 
-plot(dfPinus$Cov1.2, resid(M.interact))
-plot(dfPinus$Ht1.2, resid(M.interact))
-plot(dfPinus$shrubvol, resid(M.interact))
-hist(resid(M.interact))
+plot(dfPinus$Cov1.2, resid(M.interact2))
+plot(dfPinus$Ht1.2, resid(M.interact2))
+plot(dfPinus$shrubarea, resid(M.interact2))
+hist(resid(M.interact2))
+plot(predict(M.interact2),resid(M.interact2))
 
-
+M.interact2 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm +shrubarea+Fire,
+                   weights = varPower,
+                   data= dfPinus, method = "REML")
 
 Ht.cm <- c(rep(seq(0,300,5),4))
 length(Ht.cm)
@@ -75,7 +78,7 @@ dfFRDS <- subset(dfPinus, dfPinus$Fire=="FRDS")
 plotAMCR <- ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAMCR$shrubarea) & pred$shrubarea>=min(dfAMCR$shrubarea),])+
   geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
   scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
-  labs(title = "Seedling growth ~ \nHt, shrub area, AMRC fire")+
+  labs(title = "Pine seedling growth ~ \nHt, shrub area, AMRC fire")+
   ylim(0,55)+
   xlim(0,300)+
   xlab("Seedling height (cm)")+
@@ -101,7 +104,7 @@ pred$Fire <- fakedata$Fire
 plotFRDS <- ggplot(pred[pred$Ht.cm<max(dfFRDS$Ht.cm) & pred$shrubarea<=max(dfFRDS$shrubarea) & pred$shrubarea>=min(dfFRDS$shrubarea),])+
   geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
   scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
-  labs(title = "Seedling growth ~ \nHt, shrub area, Freds Fire")+
+  labs(title = "Pine seedling growth ~ \nHt, shrub area, Freds Fire")+
   ylim(0,55)+
   xlim(0,300)+
   xlab("Seedling height (cm)") +
@@ -127,7 +130,7 @@ pred$Fire <- fakedata$Fire
 plotSTAR <- ggplot(pred[pred$Ht.cm<max(dfSTAR$Ht.cm) & pred$shrubarea<=max(dfSTAR$shrubarea) & pred$shrubarea>=min(dfSTAR$shrubarea),])+
   geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
   scale_color_gradient(low="blue",high="red", limits=c(0,max(dfPinus$shrubarea)))+
-  labs(title = "Seedling growth ~ \nHt, shrub area, Star Fire")+
+  labs(title = "Pine seedling growth ~ \nHt, shrub area, Star Fire")+
   ylim(0,55)+
   xlim(0,300)+
   xlab("Seedling height (cm)") +
@@ -153,7 +156,7 @@ pred$Fire <- fakedata$Fire
 plotCLVD <- ggplot(pred[pred$Ht.cm<max(dfCLVD$Ht.cm) & pred$shrubarea<=max(dfCLVD$shrubarea) & pred$shrubarea>=min(dfCLVD$shrubarea),])+
   geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
   scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
-  labs(title = "Seedling growth ~ \nHt, shrub area, CLVD Fire")+
+  labs(title = "Pine seedling growth ~ \nHt, shrub area, CLVD Fire")+
   ylim(0,55)+
   xlim(0,300)+
   xlab("Seedling height (cm)") +
@@ -165,3 +168,17 @@ plotCLVD
 
 require(gridExtra)
 grid.arrange(plotAMCR, plotFRDS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
+
+M.interact2 <- gls(LastYearGrth.cm ~ Ht.cm + Fire + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea,
+                   weights = varPower,
+                   data= dfPinus, method = "ML")
+AIC(M.interact2)
+
+anova(M.interact2, update(M.interact2, . ~ . - Fire))
+anova(M.interact2, update(M.interact2, . ~ . - Fire-shrubarea))
+lowAIC <- update(M.interact2, . ~ . - Fire-shrubarea)
+anova(M.interact2, update(M.interact2, . ~ . - shrubarea))
+anova(M.interact2, update(M.interact2, . ~ . - Fire-Fire*Ht.cm))
+anova(M.interact2, update(M.interact2, . ~ . - shrubarea*Ht.cm-shrubarea))
+
+summary(lowAIC)
