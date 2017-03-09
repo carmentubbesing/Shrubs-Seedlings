@@ -66,13 +66,22 @@ pred$shrubarea <- fakedata$shrubarea
 pred$Ht.cm <- fakedata$Ht.cm
 pred$Fire <- fakedata$Fire
 
-plotAMCR <- ggplot(pred)+
-  geom_point(aes(y= predicted ,x=Ht.cm,col=shrubarea))+
-  scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub area")+
+dfAMCR <- subset(dfPinus, dfPinus$Fire=="AMCR")
+dfCLVD <- subset(dfPinus, dfPinus$Fire=="CLVD")
+dfSTAR <- subset(dfPinus, dfPinus$Fire=="STAR")
+dfFRDS <- subset(dfPinus, dfPinus$Fire=="FRDS")
+
+
+plotAMCR <- ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAMCR$shrubarea) & pred$shrubarea>=min(dfAMCR$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
+  labs(title = "Seedling growth ~ \nHt, shrub area, AMRC fire")+
   ylim(0,55)+
-  xlab("Seedling height")+
-  ylab("Predicted seedling growth")
+  xlim(0,300)+
+  xlab("Seedling height (cm)")+
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfAMCR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+  
 
 plotAMCR
 
@@ -89,13 +98,15 @@ pred$shrubarea <- fakedata$shrubarea
 pred$Ht.cm <- fakedata$Ht.cm
 pred$Fire <- fakedata$Fire
 
-plotFRDS <- ggplot(pred)+
-  geom_point(aes(y= predicted ,x=Ht.cm,col=shrubarea))+
-  scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub area")+
+plotFRDS <- ggplot(pred[pred$Ht.cm<max(dfFRDS$Ht.cm) & pred$shrubarea<=max(dfFRDS$shrubarea) & pred$shrubarea>=min(dfFRDS$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
+  labs(title = "Seedling growth ~ \nHt, shrub area, Freds Fire")+
   ylim(0,55)+
-  xlab("Seedling height") +
-  ylab("Predicted seedling growth")
+  xlim(0,300)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfFRDS, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
 
 plotFRDS
 
@@ -112,13 +123,16 @@ pred$shrubarea <- fakedata$shrubarea
 pred$Ht.cm <- fakedata$Ht.cm
 pred$Fire <- fakedata$Fire
 
-plotSTAR <- ggplot(pred)+
-  geom_point(aes(y= predicted ,x=Ht.cm,col=shrubarea))+
-  scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub area")+
+
+plotSTAR <- ggplot(pred[pred$Ht.cm<max(dfSTAR$Ht.cm) & pred$shrubarea<=max(dfSTAR$shrubarea) & pred$shrubarea>=min(dfSTAR$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red", limits=c(0,max(dfPinus$shrubarea)))+
+  labs(title = "Seedling growth ~ \nHt, shrub area, Star Fire")+
   ylim(0,55)+
-  xlab("Seedling height") +
-  ylab("Predicted seedling growth")
+  xlim(0,300)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfSTAR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
 
 plotSTAR
 
@@ -126,7 +140,7 @@ plotSTAR
 Ht.cm <- c(rep(seq(0,300,5),4))
 length(Ht.cm)
 fakedata <- as.data.frame(Ht.cm)
-fakedata$shrubarea <- c(rep(c( 44375,88750,133125,177500 ),61))
+fakedata$shrubarea <- c(rep(c(10000,50000,80000,110000 ),61))
 fakedata$Fire <- as.factor(rep("CLVD",244))
 predicted <- predict(M.interact2, fakedata)
 
@@ -135,13 +149,16 @@ pred$shrubarea <- fakedata$shrubarea
 pred$Ht.cm <- fakedata$Ht.cm
 pred$Fire <- fakedata$Fire
 
-plotCLVD <- ggplot(pred)+
-  geom_point(aes(y= predicted ,x=Ht.cm,col=shrubarea))+
-  scale_color_gradient(low="blue",high="red")+
-  labs(title = "Predicted seedling growth ~ \nHt, shrub area")+
+
+plotCLVD <- ggplot(pred[pred$Ht.cm<max(dfCLVD$Ht.cm) & pred$shrubarea<=max(dfCLVD$shrubarea) & pred$shrubarea>=min(dfCLVD$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfPinus$shrubarea)))+
+  labs(title = "Seedling growth ~ \nHt, shrub area, CLVD Fire")+
   ylim(0,55)+
-  xlab("Seedling height") +
-  ylab("Predicted seedling growth")
+  xlim(0,300)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfCLVD, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
 
 plotCLVD
 
