@@ -1,0 +1,125 @@
+---
+title: "Clean and combine - Welch data"
+author: "Carmen"
+date: "March 9, 2017"
+output: html_document
+---
+
+### This is my first go at the Welch data
+
+```{r,include=F}
+library(RODBC)
+conn <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Data from Hugh/RegenDatabase_1_13_16_updatedDates.accdb")
+library(dplyr)
+library(ggplot2)
+```
+
+## Import data from Access
+
+```{r}
+plot <- sqlFetch(conn, "Plot_data")
+regen <- sqlFetch(conn, "tree_regen")
+dist <- sqlFetch(conn, "nearest_regen")
+seed_trees <- sqlFetch(conn, "seed_tree")
+trees <- sqlFetch(conn, "surviving_trees")
+```
+
+*can I use the num_dead column to get at mortality? - well, only 5 plots have dead recorded*
+
+## Look at how age shifts through time
+```{r}
+regen[is.na(regen)] <- 0
+df <- data.frame(Year=numeric(),Count=numeric())
+
+df[1,1] <- 1
+df[1,2] <- sum(regen_pinus$Ct_1yr)
+            
+df <- rbind(df,c(2,sum(regen_pinus$Ct_2yr)))
+df <- rbind(df,c(3,sum(regen_pinus$Ct_3yr)))
+df <- rbind(df,c(4,sum(regen_pinus$Ct_4yr)))
+df <- rbind(df,c(5,sum(regen_pinus$Ct_5yr)))
+df <- rbind(df,c(6,sum(regen_pinus$`6yr`)))
+df <- rbind(df,c(7,sum(regen_pinus$`7yr`)))
+df <- rbind(df,c(8,sum(regen_pinus$`8yr`)))
+df <- rbind(df,c(9,sum(regen_pinus$`9yr`)))
+df <- rbind(df,c(10,sum(regen_pinus$`10yr`)))
+df <- rbind(df,c(11,sum(regen_pinus$`11+yr`)))
+
+ggplot(data=df)+
+  geom_point(aes(x=Year, y=Count))+
+  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots")
+```
+
+
+
+## Combine data
+```{r}
+plot <- tbl_df(plot)
+regen[is.na(regen)] <- 0
+regen <- tbl_df(regen)
+plot[is.na(plot)] <- 0
+regen <- regen %>%
+  full_join(plot,by="Regen_Plot") %>%
+  filter(FIRE_SEV>3) %>%
+  filter(SHRUB>20)
+
+summary(regen$SHRUB)
+
+regen0 <- regen %>% 
+  select(ID.x, Regen_Plot,OldPLOTID,`0yr`,Type,Species,Remarks)
+
+df <- data.frame(Age=numeric(),Count=numeric())
+
+regen_pinus <- regen[regen$Species %in% c("PIPO","PILA","PINUS","PIJE"),]
+
+df[1,1] <- 0
+df[1,2] <- sum(regen_pinus$`0yr`)
+  
+df <- rbind(df, c(1,sum(regen_pinus$Ct_1yr)))
+            
+df <- rbind(df,c(2,sum(regen_pinus$Ct_2yr)))
+df <- rbind(df,c(3,sum(regen_pinus$Ct_3yr)))
+df <- rbind(df,c(4,sum(regen_pinus$Ct_4yr)))
+df <- rbind(df,c(5,sum(regen_pinus$Ct_5yr)))
+df <- rbind(df,c(6,sum(regen_pinus$`6yr`)))
+df <- rbind(df,c(7,sum(regen_pinus$`7yr`)))
+df <- rbind(df,c(8,sum(regen_pinus$`8yr`)))
+df <- rbind(df,c(9,sum(regen_pinus$`9yr`)))
+df <- rbind(df,c(10,sum(regen_pinus$`10yr`)))
+df <- rbind(df,c(11,sum(regen_pinus$`11+yr`)))
+
+ggplot(data=df)+
+  geom_point(aes(x=Age, y=Count))+
+  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots - PINES")
+
+
+df <- data.frame(Age=numeric(),Count=numeric())
+
+regen_abco <- regen[regen$Species =="ABCO",]
+regen_abco <- as.data.frame(regen_abco)
+regen_abco[is.na(regen_abco)] <- 0
+
+df[1,1] <- 0
+df[1,2] <- sum(regen_abco$`0yr`)
+  
+df <- rbind(df, c(1,sum(regen_abco$Ct_1yr)))
+            
+df <- rbind(df,c(2,sum(regen_abco$Ct_2yr)))
+df <- rbind(df,c(3,sum(regen_abco$Ct_3yr)))
+df <- rbind(df,c(4,sum(regen_abco$Ct_4yr)))
+df <- rbind(df,c(5,sum(regen_abco$Ct_5yr)))
+df <- rbind(df,c(6,sum(regen_abco$`6yr`)))
+df <- rbind(df,c(7,sum(regen_abco$`7yr`)))
+df <- rbind(df,c(8,sum(regen_abco$`8yr`)))
+df <- rbind(df,c(9,sum(regen_abco$`9yr`)))
+df <- rbind(df,c(10,sum(regen_abco$`10yr`)))
+df <- rbind(df,c(11,sum(regen_abco$`11+yr`)))
+
+ggplot(data=df)+
+  geom_point(aes(x=Age, y=Count))+
+  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots - ABCO")
+
+
+
+```
+
