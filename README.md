@@ -13,7 +13,9 @@ February 22, 2017
 Summary
 =======
 
-This repository holds the code for analyzing Carmen's summer 2016 shrub and seedling measurements. The data being analyzed is located in Stephens lab dropbox -&gt; SORTIE -&gt; Shrubs\_Summer16 -&gt; Shrubs2016\_Completed\_Data\_and\_Photos
+This repository holds the code for analyzing Carmen's summer 2016 shrub and seedling measurements. The data being analyzed is located in Stephens lab dropbox -&gt; SORTIE -&gt; Shrubs\_Summer16 -&gt; Shrubs2016\_Completed\_Data\_and\_Photos. 
+
+It also includes analysis of Welch regen data and Last Chance regen data as it relates to parameterizing SORTIE.
 
 Variables
 =========
