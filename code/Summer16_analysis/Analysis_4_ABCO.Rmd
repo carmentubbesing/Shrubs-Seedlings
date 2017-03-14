@@ -54,3 +54,154 @@ table
 ```
 
 - The above shows that for ABCO, including shrub cover and shrub height appears to not help the model
+
+## How do the residuals looks?
+```{r}
+E <- resid(M7F.abco, type="normalized")
+coplot(E ~ Ht.cm | Fire, data=dfABCO, ylab="Normalized residuals", col=dfABCO$Fire)
+```
+
+
+## Try using shrubarea with ABCO
+
+```{r}
+dfABCO$shrubarea <- dfABCO$Ht1.2*(dfABCO$Cov1.2)
+ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
+                  weights = varPower,
+                  data= dfABCO, method = "ML")
+AIC(ABCO.M1)
+summary(ABCO.M1)
+anova(ABCO.M1, update(update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht)))
+summary(ABCO.M1)
+
+```
+
+## Plot with predict(fakedata)
+
+```{r}
+library(ggplot2)
+Ht.cm <- c(rep(seq(0,150,length.out=61),4))
+fakedata <- as.data.frame(Ht.cm)
+fakedata$shrubarea <- c(rep(c( 44375,88750,133125,177500 ),61))
+fakedata$Fire <- as.factor(rep("AMCR",244))
+predicted <- predict(ABCO.M1, fakedata)
+
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+dfAMCR <- subset(dfABCO, dfABCO$Fire=="AMCR")
+dfCLVD <- subset(dfABCO, dfABCO$Fire=="CLVD")
+dfSTAR <- subset(dfABCO, dfABCO$Fire=="STAR")
+dfFRDS <- subset(dfABCO, dfABCO$Fire=="WRTS")
+
+plotAMCR <- ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAMCR$shrubarea) & pred$shrubarea>=min(dfAMCR$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Am. Riv. Complex fire")+
+  ylim(0,25)+
+  xlim(0,125)+
+  xlab("Seedling height (cm)")+
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfAMCR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+
+plotAMCR
+
+fakedata$Fire <- as.factor(rep("WRTS",244))
+predicted <- predict(ABCO.M1, fakedata)
+
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+plotWRTS <- ggplot(pred[pred$Ht.cm<max(dfFRDS$Ht.cm) & pred$shrubarea<=max(dfFRDS$shrubarea) & pred$shrubarea>=min(dfFRDS$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Wrights Fire")+
+  ylim(0,25)+
+  xlim(0,225)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfFRDS, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+
+plotWRTS
+
+fakedata$Fire <- as.factor(rep("STAR",244))
+predicted <- predict(ABCO.M1, fakedata)
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+plotSTAR <- ggplot(pred[pred$Ht.cm<max(dfSTAR$Ht.cm) & pred$shrubarea<=max(dfSTAR$shrubarea) & pred$shrubarea>=min(dfSTAR$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red", limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Star Fire")+
+  ylim(0,25)+
+  xlim(0,150)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfSTAR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+plotSTAR
+
+fakedata$Fire <- as.factor(rep("CLVD",244))
+predicted <- predict(ABCO.M1, fakedata)
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+plotCLVD <- ggplot(pred[pred$Ht.cm<max(dfCLVD$Ht.cm) & pred$shrubarea<=max(dfCLVD$shrubarea) & pred$shrubarea>=min(dfCLVD$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Cleveland Fire")+
+  ylim(0,25)+
+  xlim(0,150)+
+  xlab("Seedling height (cm)") +
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfCLVD, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+
+plotCLVD
+require(gridExtra)
+all.fires <- grid.arrange(plotAMCR, plotWRTS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
+all.fires
+```
+
+## How important is fire?
+
+```{r}
+ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire,
+                  weights = varPower,
+                  data= dfABCO, method = "ML")
+AIC(ABCO.M1)
+AIC(update(ABCO.M1, . ~ . - Fire - Fire*Ht.cm))
+
+ABCO.AMCR <- gls(LastYearGrth.cm ~ Ht.cm + shrubarea*Ht.cm + shrubarea,
+                  weights = varPower,
+                  data= dfAMCR[dfAMCR$Ht.cm<100,], method = "ML")
+
+predicted <- predict(ABCO.AMCR, fakedata)
+
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+
+plotAMCR.2 <-ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAMCR$shrubarea) & pred$shrubarea>=min(dfAMCR$shrubarea),])+
+  geom_line(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Am. Riv. Complex only model")+
+  ylim(0,25)+
+  xlim(0,125)+
+  xlab("Seedling height (cm)")+
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfAMCR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+plotAMCR.2
+
+AMCR.compare <- grid.arrange(plotAMCR,plotAMCR.2,nrow=2,ncol=2)
+
+```
+
+- Answer: It's important.

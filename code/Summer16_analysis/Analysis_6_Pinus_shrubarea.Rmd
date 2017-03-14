@@ -211,7 +211,22 @@ AIC(update(M.interact2, . ~ . - shrubarea))
 AIC(update(M.interact2, . ~ . - Fire-Fire*Ht.cm))
 anova(M.interact2, (update(M.interact2, . ~ . - -shrubarea)))
 AIC(update(M.interact2, . ~ . + BasDia.cm))
-M.interact2 <- update(M.interact2, . ~ . - shrubarea - shrubarea*Ht.cm)
 ```
 
 - hmm taking out main effects lowers AIC and doesn't have much effect on the model, likely because the intercept is already 0. But it seemes very non-standard to take out main effect so I won't 
+
+## Are individual variables significant?
+
+```{r}
+summary(M.interact2)
+```
+
+- height*shrubarea interaction is significant
+- for interactions with fire, must use ANOVA
+
+```{r}
+anova(M.interact2, (update(M.interact2, . ~ . - Fire*Ht.cm)))
+```
+
+- Yes, the fire interaction with Ht.cm is significant
+

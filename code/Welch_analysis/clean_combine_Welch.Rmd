@@ -26,100 +26,159 @@ trees <- sqlFetch(conn, "surviving_trees")
 
 *can I use the num_dead column to get at mortality? - well, only 5 plots have dead recorded*
 
-## Look at how age shifts through time
-```{r}
-regen[is.na(regen)] <- 0
-df <- data.frame(Year=numeric(),Count=numeric())
-
-df[1,1] <- 1
-df[1,2] <- sum(regen_pinus$Ct_1yr)
-            
-df <- rbind(df,c(2,sum(regen_pinus$Ct_2yr)))
-df <- rbind(df,c(3,sum(regen_pinus$Ct_3yr)))
-df <- rbind(df,c(4,sum(regen_pinus$Ct_4yr)))
-df <- rbind(df,c(5,sum(regen_pinus$Ct_5yr)))
-df <- rbind(df,c(6,sum(regen_pinus$`6yr`)))
-df <- rbind(df,c(7,sum(regen_pinus$`7yr`)))
-df <- rbind(df,c(8,sum(regen_pinus$`8yr`)))
-df <- rbind(df,c(9,sum(regen_pinus$`9yr`)))
-df <- rbind(df,c(10,sum(regen_pinus$`10yr`)))
-df <- rbind(df,c(11,sum(regen_pinus$`11+yr`)))
-
-ggplot(data=df)+
-  geom_point(aes(x=Year, y=Count))+
-  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots")
-```
-
-
-
-## Combine data
+## Combine regen and plot data
 ```{r}
 plot <- tbl_df(plot)
-regen[is.na(regen)] <- 0
-regen <- tbl_df(regen)
+regenselect <- regen %>% select(ID,Regen_Plot,OldPLOTID,Count_total,`0yr`,Ct_1yr,Ct_2yr,Ct_3yr,Ct_4yr,Ct_5yr,`6yr`,`7yr`,`8yr`,`9yr`,`10yr`,`11+yr`,Type,Species)
+regenselect[is.na(regenselect)] <- 0
+regenselect <- tbl_df(regenselect)
+plot <- plot %>% select(ID,Regen_Plot,Fire,SHRUB,FIRE_SEV,`Year of Fire`,Date)
 plot[is.na(plot)] <- 0
-regen <- regen %>%
-  full_join(plot,by="Regen_Plot") %>%
+plot$ObsYr <- substr(plot$Date,1,4)
+plot$ObsYr <- as.numeric(plot$ObsYr)
+plot$Years <- plot$ObsYr-plot$`Year of Fire`
+regenplot <- left_join(regenselect,plot,by="Regen_Plot") %>%
   filter(FIRE_SEV>3) %>%
   filter(SHRUB>20)
+```
 
-summary(regen$SHRUB)
+## Gather age columns and rename ages
+```{r}
+library(tidyr)
+regentidy <- gather(regenplot, "age","count",5:16)
+```
 
-regen0 <- regen %>% 
-  select(ID.x, Regen_Plot,OldPLOTID,`0yr`,Type,Species,Remarks)
+- rename ages
+```{r}
+ages <- unique(regentidy$age)
+for(i in 0:length(ages)){
+  regentidy$age[regentidy$age==ages[(i+1)]]<- i
+}
+regentidy$count[is.na(regentidy$count)]<- 0
+regentidy$age <- as.numeric(regentidy$age)
+regentidy$count <- as.numeric(regentidy$count)
+regentidy <- regentidy[regentidy$count!=0,]
+```
 
-df <- data.frame(Age=numeric(),Count=numeric())
+## Plot by age, for pines and ABCO
 
-regen_pinus <- regen[regen$Species %in% c("PIPO","PILA","PINUS","PIJE"),]
+```{r}
 
-df[1,1] <- 0
-df[1,2] <- sum(regen_pinus$`0yr`)
-  
-df <- rbind(df, c(1,sum(regen_pinus$Ct_1yr)))
-            
-df <- rbind(df,c(2,sum(regen_pinus$Ct_2yr)))
-df <- rbind(df,c(3,sum(regen_pinus$Ct_3yr)))
-df <- rbind(df,c(4,sum(regen_pinus$Ct_4yr)))
-df <- rbind(df,c(5,sum(regen_pinus$Ct_5yr)))
-df <- rbind(df,c(6,sum(regen_pinus$`6yr`)))
-df <- rbind(df,c(7,sum(regen_pinus$`7yr`)))
-df <- rbind(df,c(8,sum(regen_pinus$`8yr`)))
-df <- rbind(df,c(9,sum(regen_pinus$`9yr`)))
-df <- rbind(df,c(10,sum(regen_pinus$`10yr`)))
-df <- rbind(df,c(11,sum(regen_pinus$`11+yr`)))
+regen_pinus <- regentidy[regentidy$Species %in% c('PIPO','PILA','PINUS','PIJE'),]
 
-ggplot(data=df)+
-  geom_point(aes(x=Age, y=Count))+
-  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots - PINES")
+regen_abco <- regentidy[regentidy$Species %in% c('ABCO','ABIES'),]
+
+ggplot(data=regen_pinus,aes(age,fill=as.factor(Years)))+
+  geom_bar(position="dodge")+
+  labs(title="Plots with pine seedlings, all plots in high sev with shrub cover>20%")+
+  scale_x_continuous(breaks=c(0:11))+
+  guides(fill=guide_legend(title="Years since fire"))
+
+ggplot(data=regen_pinus,aes(age,count))+
+  stat_summary(fun.y=sum,geom="bar",aes(fill=as.factor(Years)),position="dodge")+
+    scale_x_continuous(breaks=c(0:11))+
+  labs(title="Pine seedling totals, all plots in high sev with shrub cover>20%")+
+   guides(fill=guide_legend(title="Years since fire"))
+
+ggplot(data=regen_abco,aes(age,fill=as.factor(Years)))+
+  geom_bar(position="dodge")+
+  labs(title="Plots with ABCO seedlings, all plots in high sev with shrub cover>20%")+
+  scale_x_continuous(breaks=c(0:11))+
+  guides(fill=guide_legend(title="Years since fire"))
+```
+
+## By species, only plots with >50% shrub cover
+
+```{r}
+ggplot(data=regen_abco,aes(age,count))+
+  stat_summary(fun.y=sum,geom="bar",aes(fill=as.factor(Years)),position="dodge")+
+    scale_x_continuous(breaks=c(0:11))+
+  labs(title="ABCO seedling totals, all plots in high sev with  shrub cover>50%")+
+   guides(fill=guide_legend(title="Years since fire"))
+
+ggplot(data=regen_pinus[regen_pinus$SHRUB>50,],aes(age,fill=as.factor(Years)))+
+  geom_bar(position="dodge")+
+  labs(title="Plots with pine seedlings, all plots in high sev with shrub cover>50%")+
+  scale_x_continuous(breaks=c(0:11))+
+  guides(fill=guide_legend(title="Years since fire"))
+
+ggplot(data=regen_pinus[regen_pinus$SHRUB>50,],aes(age,count))+
+  stat_summary(fun.y=sum,geom="bar",aes(fill=as.factor(Years)),position="dodge")+
+    scale_x_continuous(breaks=c(0:11))+
+  labs(title="Pine seedling totals, all plots in high sev with shrub cover>50%")+
+   guides(fill=guide_legend(title="Years since fire"))
 
 
-df <- data.frame(Age=numeric(),Count=numeric())
+ggplot(data=regen_abco[regen_abco$SHRUB>50,],aes(age,fill=as.factor(Years)))+
+  geom_bar(position="dodge")+
+  labs(title="Plots with ABCO seedlings, all plots in high sev with shrub cover>50%")+
+  scale_x_continuous(breaks=c(0:11))+
+  guides(fill=guide_legend(title="Years since fire"))
 
-regen_abco <- regen[regen$Species =="ABCO",]
-regen_abco <- as.data.frame(regen_abco)
-regen_abco[is.na(regen_abco)] <- 0
-
-df[1,1] <- 0
-df[1,2] <- sum(regen_abco$`0yr`)
-  
-df <- rbind(df, c(1,sum(regen_abco$Ct_1yr)))
-            
-df <- rbind(df,c(2,sum(regen_abco$Ct_2yr)))
-df <- rbind(df,c(3,sum(regen_abco$Ct_3yr)))
-df <- rbind(df,c(4,sum(regen_abco$Ct_4yr)))
-df <- rbind(df,c(5,sum(regen_abco$Ct_5yr)))
-df <- rbind(df,c(6,sum(regen_abco$`6yr`)))
-df <- rbind(df,c(7,sum(regen_abco$`7yr`)))
-df <- rbind(df,c(8,sum(regen_abco$`8yr`)))
-df <- rbind(df,c(9,sum(regen_abco$`9yr`)))
-df <- rbind(df,c(10,sum(regen_abco$`10yr`)))
-df <- rbind(df,c(11,sum(regen_abco$`11+yr`)))
-
-ggplot(data=df)+
-  geom_point(aes(x=Age, y=Count))+
-  labs(title = "Mortality parameter? \nSeedling counts by year across all Welch plots - ABCO")
-
+ggplot(data=regen_abco[regen_abco$SHRUB>50,],aes(age,count))+
+  stat_summary(fun.y=sum,geom="bar",aes(fill=as.factor(Years)),position="dodge")+
+    scale_x_continuous(breaks=c(0:11))+
+  labs(title="ABCO seedling totals, all plots in high sev withshrub cover>50%")+
+   guides(fill=guide_legend(title="Years since fire"))
 
 
 ```
 
+
+## Look at zero y/o seedlings to understand seedling establishment
+
+```{r}
+nrow(regen_abco[regen_abco$age==0,])
+summary(as.factor(regen_abco[regen_abco$age==0,]$Years))
+```
+
+- There are only 5 plots with an 0-yr abco seedlings! So that's interesting but doesn't allow me to model abco establishment
+- That's how few abco established out of how many seedlings? Very few!
+```{r}
+sum(regen_abco$count)
+5/1002
+```
+
+## What about 1-yr-olds?
+```{r}
+sum(regen_abco$count)
+5/1002
+ggplot(data=regen_abco[regen_abco$age<2,],aes(Years))+
+  geom_bar()+
+  labs(title="Plots with 0 or 1 year-old fir seedlings, all plots in high sev with shrub cover>20%")
+```
+
+
+```{r}
+nrow(regen_pinus[regen_pinus$age==0,])
+sum(regen_pinus$count)
+32/1104
+ggplot(data=regen_pinus[regen_pinus$age==0,],aes(Years))+
+  geom_bar()+
+  labs(title="Plots with 0 year-old pine seedlings, all plots in high sev with shrub cover>20%")
+nrow(regen_abco[regen_abco$age<2,])
+summary(regen_abco[regen_abco$age<2,]$Fire)
+summary(regen_abco[regen_abco$age<2,]$SHRUB)
+
+
+```
+
+-1-yr-old pines:
+
+```{r}
+nrow(regen_pinus[regen_pinus$age<2,])
+ggplot(data=regen_pinus[regen_pinus$age<2,],aes(Years))+
+  geom_bar()+
+  labs(title="Plots with 0 or 1 year-old pine seedlings, all plots in high sev with shrub cover>20%")
+summary(regen_pinus[regen_pinus$age<2,]$Fire)
+summary(regen_pinus[regen_pinus$age<2,]$SHRUB)
+
+```
+
+## Main findings:
+
+- Establishment of 0-yr-old seedlings in these plots 5-12 years old appears to be almost negligible
+- This introduces a basic design question I need to address in SORTIE: will I model seedling establishment, and if so how?
+- I could take a closer look at my American Fire data in high severity areas
+- There seems to be a peak in seedling establishment 2-4 years after fire - either that or mortality is high (or the seedlings were aged poorly)
+- I could potentially model establishment using my small sample size 
