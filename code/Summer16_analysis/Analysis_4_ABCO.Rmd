@@ -71,10 +71,12 @@ ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+
                   data= dfABCO, method = "ML")
 AIC(ABCO.M1)
 summary(ABCO.M1)
-anova(ABCO.M1, update(update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht)))
+anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
 summary(ABCO.M1)
 
 ```
+
+- The models with and without shrubarea are almost identical in AIC and logLik
 
 ## Plot with predict(fakedata)
 
@@ -169,7 +171,9 @@ all.fires <- grid.arrange(plotAMCR, plotWRTS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
 all.fires
 ```
 
-## How important is fire?
+## What happens if you analyze AMCR data alone and remove fire effect?
+
+- Note: I removed an outlier from the AMCR data
 
 ```{r}
 ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire,
