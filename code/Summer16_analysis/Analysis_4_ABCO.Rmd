@@ -4,19 +4,59 @@ author: "Carmen Tubbesing"
 date: "3/1/2017"
 output: html_document
 ---
-
 - This is a based on some of what I learned in Analysis 2
     - for example, in terms of using VarPower
-- Note: delete seedlings from PLKN and WRTS because there are only two PIPO in each
+- Note: delete seedlings from PLKN and FRDS because there are not many ABCO in them
 ```{r, include=F}
 setwd("~/Shrubs-Seedlings/Rdata")
 load(file="master_data.Rdata")
 library(nlme)
 ```
 
+- Define function for calculating pseudo R^2
+```{r}
+pseudoR2_ABCO <- function(model){
+  meanGrth <- mean(dfPinus$LastYearGrth.cm)
+  sse <- (dfPinus$LastYearGrth.cm - predict(model))^2
+  sst <- (dfPinus$LastYearGrth.cm - meanGrth)^2
+  R2 <- 1 - (sum(sse)/sum(sst))
+  return(R2)
+}
+
+```
+
+
 ```{r}
 dfABCO <- df[df$Species=="ABCO" & !df$Fire %in% c("PLKN","FRDS"),]
+```
+
+- Whittling it down to the top 4 fires for ABCO leaves out only three ABCO:
+```{r}
+nrow(df[df$Species=="ABCO",])
+nrow(dfABCO)
+```
+
+## Use GLS function varPower
+```{r}
 varPower <- varPower(form=~Ht.cm)
+```
+
+## Start out with the best model for PIPO and test similar models
+
+```{r}
+
+dfABCO$shrubarea <- dfABCO$Ht1.2*(dfABCO$Cov1.2)
+ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
+                  weights = varPower,
+                  data= dfABCO, method = "ML")
+AIC(ABCO.M1)
+summary(ABCO.M1)
+anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
+summary(ABCO.M1)
+
+
+
+
 table <- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
 
 M1F.abco <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1.3 
@@ -63,18 +103,6 @@ coplot(E ~ Ht.cm | Fire, data=dfABCO, ylab="Normalized residuals", col=dfABCO$Fi
 
 
 ## Try using shrubarea with ABCO
-
-```{r}
-dfABCO$shrubarea <- dfABCO$Ht1.2*(dfABCO$Cov1.2)
-ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
-                  weights = varPower,
-                  data= dfABCO, method = "ML")
-AIC(ABCO.M1)
-summary(ABCO.M1)
-anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
-summary(ABCO.M1)
-
-```
 
 - The models with and without shrubarea are almost identical in AIC and logLik
 

@@ -130,8 +130,15 @@ $(document).ready(function () {
 </ul></li>
 <li>Note: delete seedlings from PLKN and WRTS because there are only two PIPO in each</li>
 </ul>
-<pre class="r"><code>dfABCO &lt;- df[df$Species==&quot;ABCO&quot; &amp; !df$Fire %in% c(&quot;PLKN&quot;,&quot;FRDS&quot;),]
-varPower &lt;- varPower(form=~Ht.cm)
+<pre class="r"><code>dfABCO &lt;- df[df$Species==&quot;ABCO&quot; &amp; !df$Fire %in% c(&quot;PLKN&quot;,&quot;FRDS&quot;),]</code></pre>
+<ul>
+<li>Whittling it down to the top 4 fires for ABCO leaves out only three ABCO:</li>
+</ul>
+<pre class="r"><code>nrow(df[df$Species==&quot;ABCO&quot;,])</code></pre>
+<pre><code>## [1] 126</code></pre>
+<pre class="r"><code>nrow(dfABCO)</code></pre>
+<pre><code>## [1] 123</code></pre>
+<pre class="r"><code>varPower &lt;- varPower(form=~Ht.cm)
 table &lt;- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
 
 M1F.abco &lt;- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1.3 
