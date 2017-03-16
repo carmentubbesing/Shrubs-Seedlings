@@ -16,9 +16,9 @@ library(nlme)
 - Define function for calculating pseudo R^2
 ```{r}
 pseudoR2_ABCO <- function(model){
-  meanGrth <- mean(dfPinus$LastYearGrth.cm)
-  sse <- (dfPinus$LastYearGrth.cm - predict(model))^2
-  sst <- (dfPinus$LastYearGrth.cm - meanGrth)^2
+  meanGrth <- mean(dfABCO$LastYearGrth.cm)
+  sse <- (dfABCO$LastYearGrth.cm - predict(model))^2
+  sst <- (dfABCO$LastYearGrth.cm - meanGrth)^2
   R2 <- 1 - (sum(sse)/sum(sst))
   return(R2)
 }
@@ -49,64 +49,58 @@ dfABCO$shrubarea <- dfABCO$Ht1.2*(dfABCO$Cov1.2)
 ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
                   weights = varPower,
                   data= dfABCO, method = "ML")
+pseudoR2_ABCO(ABCO.M1)
+
 AIC(ABCO.M1)
 summary(ABCO.M1)
-anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
-summary(ABCO.M1)
-
-
-
-
-table <- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
-
-M1F.abco <- gls(LastYearGrth.cm ~ Ht.cm + Cov1.2 + BasDia.cm + Ht1.3 
-                , weights = varPower,
-                 data= dfABCO, method = "ML")
-
-table[1,] <- c("M1F.abco", AIC(M1F.abco))
-
-M2F.abco = update(M1F.abco, . ~ . - BasDia.cm)
-anova(M1F.abco, M2F.abco)
-table <- rbind(table, c("M2F.abco", AIC(M2F.abco)))
-
-M3F.abco = update(M1F.abco, . ~ . + Fire*Ht.cm + Ht.cm*Ht1.3)
-anova(M1F.abco, M3F.abco)
-table <- rbind(table, c("M3F.abco", AIC(M3F.abco)))
-
-M4F.abco = update(M3F.abco, . ~ . - Ht1.3*Ht.cm - Ht1.3 + Ht.cm)
-anova(M3F.abco, M4F.abco)
-table <- rbind(table, c("M4F.abco", AIC(M4F.abco)))
-
-M5F.abco = update(M4F.abco, . ~ . - Cov1.2)
-anova(M4F.abco, M5F.abco)
-table <- rbind(table, c("M5F.abco", AIC(M5F.abco)))
-
-M6F.abco = update(M3F.abco, . ~ . - Cov1.2 - Ht1.3*Ht.cm + Ht.cm)
-anova(M3F.abco, M6F.abco)
-table <- rbind(table, c("M6F.abco", AIC(M6F.abco)))
-
-M7F.abco = update(M6F.abco, . ~ . - BasDia.cm)
-anova(M6F.abco, M7F.abco)
-table <- rbind(table, c("M7F.abco", AIC(M7F.abco)))
-
-table
-
 ```
 
-- The above shows that for ABCO, including shrub cover and shrub height appears to not help the model
+## Test importance of including shrubarea
+
+```{r}
+anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
+summary(ABCO.M1)
+pseudoR2_ABCO(update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
+
+table <- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
+```
+
+## Try adding basal diameter
+
+```{r}
+ABCO.M2 <- update(ABCO.M1, .~. +BasDia.cm)
+AIC(ABCO.M2)
+table[1,] <- c("ABCO.M1", AIC(ABCO.M1))
+table <- rbind(table, c("ABCO.M2", AIC(ABCO.M2)))
+table
+anova(ABCO.M1,ABCO.M2)
+summary(ABCO.M2)
+
+ABCO.M3 <- update(ABCO.M1, .~. + BasDia.cm +BasDia.cm*Ht.cm)
+AIC(ABCO.M3)
+```
+- So, adding basal diameter is ok but not necessary, and interaction between basal diameter and seedling height does not help
 
 ## How do the residuals looks?
 ```{r}
-E <- resid(M7F.abco, type="normalized")
+E <- resid(ABCO.M1, type="normalized")
 coplot(E ~ Ht.cm | Fire, data=dfABCO, ylab="Normalized residuals", col=dfABCO$Fire)
 ```
-
 
 ## Try using shrubarea with ABCO
 
 - The models with and without shrubarea are almost identical in AIC and logLik
 
 ## Plot with predict(fakedata)
+
+- First, fit the model again using REML
+```{r}
+ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
+                  weights = varPower,
+                  data= dfABCO, method = "REML")
+pseudoR2_ABCO(ABCO.M1)
+
+```
 
 ```{r}
 library(ggplot2)
@@ -201,18 +195,18 @@ all.fires
 
 ## What happens if you analyze AMCR data alone and remove fire effect?
 
-- Note: I removed an outlier from the AMCR data
+- Note: I removed an outlier from the AMCR data, which switched the effect of shrubarea from positive to negative at high values of growth and seedling ht
 
 ```{r}
 ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire,
                   weights = varPower,
-                  data= dfABCO, method = "ML")
+                  data= dfABCO, method = "REML")
 AIC(ABCO.M1)
 AIC(update(ABCO.M1, . ~ . - Fire - Fire*Ht.cm))
 
 ABCO.AMCR <- gls(LastYearGrth.cm ~ Ht.cm + shrubarea*Ht.cm + shrubarea,
                   weights = varPower,
-                  data= dfAMCR[dfAMCR$Ht.cm<100,], method = "ML")
+                  data= dfAMCR[dfAMCR$Ht.cm<100,], method = "REML")
 
 predicted <- predict(ABCO.AMCR, fakedata)
 
@@ -237,3 +231,38 @@ AMCR.compare <- grid.arrange(plotAMCR,plotAMCR.2,nrow=2,ncol=2)
 ```
 
 - Answer: It's important.
+
+## Graph effect of change in basal diameter
+
+```{r}
+ABCO.M2 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire + BasDia.cm,
+                  weights = varPower,
+                  data= dfABCO, method = "REML")
+Ht.cm <- c(rep(seq(0,150,length.out=61),4))
+fakedata <- as.data.frame(Ht.cm)
+fakedata$shrubarea <- c(rep(c( 44375,88750,133125,177500 ),61))
+fakedata$Fire <- as.factor(rep("AMCR",244))
+fakedata$BasDia.cm <- c(rep(1,122),rep(3,122))
+predicted <- predict(ABCO.M2, fakedata)
+
+pred <- as.data.frame(predicted)
+pred$shrubarea <- fakedata$shrubarea
+pred$Ht.cm <- fakedata$Ht.cm
+pred$Fire <- fakedata$Fire
+pred$BasDia.cm <- fakedata$BasDia.cm
+
+plotAMCR <- ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAMCR$shrubarea) & pred$shrubarea>=min(dfAMCR$shrubarea),])+
+  geom_point(aes(y= predicted ,group=shrubarea,x=Ht.cm,col=shrubarea,size=BasDia.cm))+
+  scale_color_gradient(low="blue",high="red",limits=c(0,max(dfABCO$shrubarea)))+
+  labs(title = "ABCO seedling growth ~ \nHt, shrub area, Am. Riv. Complex fire")+
+  ylim(0,25)+
+  xlim(0,125)+
+  xlab("Seedling height (cm)")+
+  ylab("Seedling growth (cm)")+
+  geom_point(data=dfAMCR, aes(x=Ht.cm,y=LastYearGrth.cm,col=shrubarea))
+
+plotAMCR
+hist(dfAMCR$BasDia.cm)
+```
+
+- There is a negative relationship between basal diameter and vertical seedling growth - how will I incorporate that into SORTIE given that I was hoping to consistently model diameter allometrically with height? Perhaps this summer when I remeasure diameter I can relate basal diameter growth with height growth

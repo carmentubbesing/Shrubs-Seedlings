@@ -200,17 +200,17 @@ grid.arrange(plotAMCR, plotFRDS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
 
 ```{r}
 
-M.interact2 <- gls(LastYearGrth.cm ~ Ht.cm + Fire + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea,
+M.shrubarea <- gls(LastYearGrth.cm ~ Ht.cm + Fire + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea,
                    weights = varPower,
                    data= dfPinus, method = "ML")
-AIC(M.interact2)
+AIC(M.shrubarea)
 
-AIC(update(M.interact2, . ~ . - Fire))
-AIC(update(M.interact2, . ~ . - Fire-shrubarea))
-AIC(update(M.interact2, . ~ . - shrubarea))
-AIC(update(M.interact2, . ~ . - Fire-Fire*Ht.cm))
-anova(M.interact2, (update(M.interact2, . ~ . - -shrubarea)))
-AIC(update(M.interact2, . ~ . + BasDia.cm))
+AIC(update(M.shrubarea, . ~ . - Fire))
+AIC(update(M.shrubarea, . ~ . - Fire-shrubarea))
+AIC(update(M.shrubarea, . ~ . - shrubarea))
+AIC(update(M.shrubarea, . ~ . - Fire-Fire*Ht.cm))
+anova(M.shrubarea, (update(M.shrubarea, . ~ . - -shrubarea)))
+AIC(update(M.shrubarea, . ~ . + BasDia.cm))
 ```
 
 - hmm taking out main effects lowers AIC and doesn't have much effect on the model, likely because the intercept is already 0. But it seemes very non-standard to take out main effect so I won't 
@@ -218,14 +218,14 @@ AIC(update(M.interact2, . ~ . + BasDia.cm))
 ## Are individual variables significant?
 
 ```{r}
-summary(M.interact2)
+summary(M.shrubarea)
 ```
 
 - height*shrubarea interaction is significant
 - for interactions with fire, must use ANOVA
 
 ```{r}
-anova(M.interact2, (update(M.interact2, . ~ . - Fire*Ht.cm)))
+anova(M.shrubarea, (update(M.shrubarea, . ~ . - Fire*Ht.cm)))
 ```
 
 - Yes, the fire interaction with Ht.cm is significant
@@ -236,7 +236,7 @@ anova(M.interact2, (update(M.interact2, . ~ . - Fire*Ht.cm)))
 that explained by the simple mean of the data
 
 ```{r}
-pred <- as.data.frame(predict(M.interact2))
+pred <- as.data.frame(predict(M.shrubarea))
 pred$Ht.cm <- dfPinus$Ht.cm
 pred$Fire <- dfPinus$Fire
 pred$Grth <- dfPinus$LastYearGrth.cm
@@ -244,7 +244,7 @@ pred$Shrubarea <- dfPinus$shrubarea
 #pred <- arrange(pred, predict(M3.lme))
 library(ggplot2)
 predicted <- ggplot(pred)+
-  geom_point(aes(y=predict(M.interact2),x=Ht.cm,col=pred$Shrubarea, shape=pred$Fire))+
+  geom_point(aes(y=predict(M.shrubarea),x=Ht.cm,col=pred$Shrubarea, shape=pred$Fire))+
   scale_color_gradient(low="blue",high="red")+
   labs(title = "Predicted values, Best Pinus model")
 
@@ -255,7 +255,7 @@ meas <- ggplot(dfPinus)+
 
 grid.arrange(predicted, meas,nrow=1,ncol=2)
 meanGrth <- mean(dfPinus$LastYearGrth.cm)
-sse <- (dfPinus$LastYearGrth.cm - predict(M.interact2))^2
+sse <- (dfPinus$LastYearGrth.cm - predict(M.shrubarea))^2
 sst <- (dfPinus$LastYearGrth.cm - meanGrth)^2
 R2 <- 1 - (sum(sse)/sum(sst))
 R2
