@@ -1,8 +1,157 @@
 ---
-title: "Seedling Establishment - Welch Data - Analysis 1"
+title: "Seedling Establishment - Welch Data - Analysis 1: Shrubs"
 author: "Carmen"
 date: "March 9, 2017"
 output: html_document
 ---
 
-## This is my first go at the Welch data
+## Analysis question: how does shrub area relate to time since fire, by shrub species?
+
+
+## 1. Load data
+```{r, include=F}
+library(RODBC)
+library(dplyr)
+library(ggplot2)
+```
+```{r}
+conn <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Data_from_others/Hugh/RegenDatabase_1_13_16_updatedDates.accdb")
+
+```
+
+## 2. Combine shrub and plot data and filter for high severity fire
+```{r}
+plots <- sqlFetch(conn, "Plot_data")
+shrubs <- sqlFetch(conn, "shrub_regen")
+plots[is.na(plots)] <- 0
+plots$ObsYr <- substr(plots$Date,1,4)
+plots$ObsYr <- as.numeric(plots$ObsYr)
+plots$Years <- as.factor(plots$ObsYr-plots$`Year of Fire`)
+shrubplot <- left_join(shrubs, plots,by="Regen_Plot")
+shrubplotHS <- shrubplot %>%
+  filter(FIRE_SEV>3) 
+shrubplotHS <- subset(shrubplotHS,!is.na(shrubplotHS$modal_ht_cm & !is.na(shrubplotHS$Cover)))
+shrubplotHS[is.na(shrubplotHS)] <- 0
+```
+
+## 3. Calculate shrub area, cover, and height by plot
+```{r}
+shrubarea_plot <- shrubplotHS %>%
+  group_by(Regen_Plot) %>%
+  summarize(shrubarea = sum(Cover*modal_ht_cm))
+shrubarea_plot <- inner_join(shrubarea_plot, shrubplotHS,by='Regen_Plot')
+shrubarea_plot <- shrubarea_plot%>%
+  select(Regen_Plot, shrubarea, Years, Fire, FIRE_SEV) %>%
+  distinct()
+
+cover_plot <- shrubplotHS %>%
+  group_by(Regen_Plot) %>%
+  summarize(cover = sum(Cover))
+cover_plot <- inner_join(cover_plot, shrubplotHS,by='Regen_Plot')
+cover_plot <- cover_plot%>%
+  select(Regen_Plot, cover, Years, Fire, FIRE_SEV) %>%
+  distinct()  
+
+height_plot <- shrubplotHS %>%
+  group_by(Regen_Plot) %>%
+  summarize(height = sum(modal_ht_cm))
+height_plot <- inner_join(height_plot, shrubplotHS,by='Regen_Plot')
+height_plot <- height_plot%>%
+  select(Regen_Plot, height, Years, Fire, FIRE_SEV) %>%
+  distinct()  
+
+# Check
+shrubarea_plot
+head(shrubplotHS[shrubplotHS$Regen_Plot=="AMR1300134",])
+ 45*35+55*.5
+```
+
+
+## 3. Plot shrub characteristics vs year since fire by plot
+```{r}
+ggplot(data=cover_plot,aes(Years, cover))+
+  geom_violin()+
+  stat_summary(geom="point",fun.y="mean",size=3,color="red")+
+  labs(title="How does shrub *cover* change with time in initial years after fire?")+
+  ylab("Shrub cover by plot")+
+  theme(text=element_text(size=20),
+        title=element_text(size=12))
+
+ggplot(data=height_plot,aes(Years, height))+
+  geom_violin()+
+  stat_summary(geom="point",fun.y="mean",size=3,color="red")+
+  labs(title="How does shrub *height* change with time in initial years after fire?")+
+  ylab("Shrub height by plot")+
+  theme(text=element_text(size=20),
+        title=element_text(size=12))
+
+
+ggplot(data=shrubarea_plot)+
+  geom_violin(aes(Years, shrubarea))+
+  stat_summary(geom="point",fun.y="mean",aes(x=Years,y=shrubarea),size=3,color="red")+
+  labs(title="How does *shrubarea* change with time in initial years after fire?")+
+  ylab("Shrub cover * shrub modal height by plot")+
+  theme(text=element_text(size=20),
+        title=element_text(size=12))
+
+ggplot(data=shrubarea_plot)+
+  geom_boxplot(aes(Years, shrubarea))+
+  labs(title="shrubarea by year")
+
+```
+
+## 4. Plot shrub characteristics *by species* by year since fire
+```{r}
+shrubarea_plot_spp <- shrubplotHS %>%
+  mutate(shrubarea=Cover*modal_ht_cm)
+shrubarea_plot_spp <- tbl_df(shrubarea_plot_spp)
+shrubarea_plot_spp
+View(shrubarea_plot_spp[,c("Regen_Plot","Species","Cover","modal_ht_cm","shrubarea")])
+
+fewspp <- names(tail(sort(summary(shrubarea_plot_spp$Species)),n=10))
+
+ggplot(data=shrubarea_plot_spp[shrubarea_plot_spp$Species%in%fewspp,])+
+  geom_boxplot(aes(Years, shrubarea, fill=Species))+
+  labs(title="shrubarea by year and shrub species")
+
+
+ggplot(data=shrubarea_plot_spp[shrubarea_plot_spp$Species%in%fewspp,])+
+  geom_boxplot(aes(Years, Cover, fill=Species))+
+  labs(title="shrub cover by year and shrub species")
+
+
+ggplot(data=shrubarea_plot_spp[shrubarea_plot_spp$Species%in%fewspp,])+
+  geom_boxplot(aes(Years, modal_ht_cm, fill=Species))+
+  labs(title="shrub height by year and shrub species")
+
+ggplot()+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="CEIN3",],aes(y=modal_ht_cm, x=as.numeric(Years)),color="darkgreen",size=2)+
+   stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARVI",],aes(y=modal_ht_cm, x=as.numeric(Years)),color="darkorange",size=2)+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARPA6",],aes(y=modal_ht_cm, x=as.numeric(Years)),color="salmon",size=2)+
+  labs(title= "Changes in shrub height over time for CEIN, ARVI, and ARPA")+
+  xlab("Years")+
+  ylab("Shrub height (cm)")
+
+ggplot()+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="CEIN3",],aes(y=Cover, x=as.numeric(Years)),color="darkgreen",size=2)+
+   stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARVI",],aes(y=Cover, x=as.numeric(Years)),color="darkorange",size=2)+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARPA6",],aes(y=Cover, x=as.numeric(Years)),color="salmon",size=2)+
+  labs(title= "Changes in shrub cover over time for CEIN, ARVI, and ARPA")+
+  xlab("Years")+
+  ylab("Shrub cover")
+
+
+ggplot()+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="CEIN3",],aes(y=shrubarea, x=as.numeric(Years)),color="darkgreen",size=2)+
+   stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARVI",],aes(y=shrubarea, x=as.numeric(Years)),color="darkorange",size=2)+
+  stat_summary(fun.y="mean",geom="line",data=shrubarea_plot_spp[shrubarea_plot_spp$Species=="ARPA6",],aes(y=shrubarea, x=as.numeric(Years)),color="salmon",size=2)+
+  labs(title= "Changes in shrubarea time for CEIN, ARVI, and ARPA")+
+  xlab("Years")+
+  ylab("Shrub height (cm) * shrub cover")
+```
+
+## 5. Look at relationships between canopy cover and shrub characteristics 
+```{r}
+
+```
+

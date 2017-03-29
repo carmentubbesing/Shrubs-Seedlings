@@ -9,7 +9,7 @@ output: html_document
 
 ```{r,include=F}
 library(RODBC)
-conn <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Data from Hugh/RegenDatabase_1_13_16_updatedDates.accdb")
+conn <- odbcDriverConnect("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/Data_from_others/Hugh/RegenDatabase_1_13_16_updatedDates.accdb")
 library(dplyr)
 library(ggplot2)
 ```
