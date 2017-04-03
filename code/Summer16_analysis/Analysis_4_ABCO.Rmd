@@ -15,12 +15,27 @@ library(nlme)
 
 - Define function for calculating pseudo R^2
 ```{r}
-pseudoR2_ABCO <- function(model){
+pseudoR2_ABCO <- function(model, data){
   meanGrth <- mean(dfABCO$LastYearGrth.cm)
-  sse <- (dfABCO$LastYearGrth.cm - predict(model))^2
-  sst <- (dfABCO$LastYearGrth.cm - meanGrth)^2
+  sse <- (data$LastYearGrth.cm - predict(model))^2
+  sst <- (data$LastYearGrth.cm - meanGrth)^2
   R2 <- 1 - (sum(sse)/sum(sst))
   return(R2)
+}
+
+```
+
+#### Define function for 3D plotting
+```{r}
+
+plot3D <- function(data, model, Ht_range, shrub_range, Fire){
+  xy <- expand.grid(Ht.cm=Ht_range, shrubarea=shrub_range, Fire = Fire)
+  predmatrix <- matrix (nrow = 60, ncol = 60,  data = predict(model, newdata = data.frame(xy),interval = "prediction"))
+  scatter3D(z=data$LastYearGrth.cm, x=data$Ht.cm, y=data$shrubarea, pch=18, cex=2, theta = 45, phi = 20, ticktype = "detailed",
+            xlab = "Ht", ylab = "shrubarea", zlab = "growth",  
+            surf = list(z=predmatrix, x=Ht.cm,y=shrubarea,
+                        facets = NA),
+            main="fakedata")
 }
 
 ```
@@ -49,7 +64,7 @@ dfABCO$shrubarea <- dfABCO$Ht1.2*(dfABCO$Cov1.2)
 ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
                   weights = varPower,
                   data= dfABCO, method = "ML")
-pseudoR2_ABCO(ABCO.M1)
+pseudoR2_ABCO(ABCO.M1, dfABCO)
 
 AIC(ABCO.M1)
 summary(ABCO.M1)
@@ -60,7 +75,7 @@ summary(ABCO.M1)
 ```{r}
 anova(ABCO.M1, update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
 summary(ABCO.M1)
-pseudoR2_ABCO(update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht))
+pseudoR2_ABCO(update(ABCO.M1, . ~ . - shrubarea-shrubarea*Ht), dfABCO)
 
 table <- data.frame(model=character(), AIC=numeric(), stringsAsFactors=FALSE)
 ```
@@ -98,9 +113,38 @@ coplot(E ~ Ht.cm | Fire, data=dfABCO, ylab="Normalized residuals", col=dfABCO$Fi
 ABCO.M1 <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm+shrubarea+Fire,
                   weights = varPower,
                   data= dfABCO, method = "REML")
-pseudoR2_ABCO(ABCO.M1)
+pseudoR2_ABCO(ABCO.M1, dfABCO)
 
 ```
+
+## Try out 3D plotting function
+```{r}
+data=dfABCO
+model = ABCO.M1
+Ht_range = seq(0,150,length.out=60)
+shrub_range = seq(44375,177500,length.out=60)
+Fire = "AMCR"
+
+plot3D <- function(data, model, Ht_range, shrub_range, Fire, theta){
+  xy <- expand.grid(Ht.cm=Ht_range, shrubarea=shrub_range, Fire = Fire)
+  predmatrix <- matrix (nrow = 60, ncol = 60,  data = predict(model, newdata = data.frame(xy),interval = "prediction"))
+  scatter3D(z=data$LastYearGrth.cm, x=data$Ht.cm, y=data$shrubarea, pch=18, cex=2, theta = theta, phi = 20, ticktype = "detailed",
+            xlab = "Ht", ylab = "shrubarea", zlab = "growth",  
+            surf = list(z=predmatrix, x=Ht_range,y=shrub_range,
+                        facets = NA),
+            main="fakedata")
+}
+
+plot3D(data=dfABCO, model=ABCO.M1, Ht_range = seq(0,150,length.out=60),
+shrub_range = seq(44375,177500,length.out=60),
+Fire = "AMCR", theta=60)
+```
+
+```{r}
+
+```
+
+
 
 ```{r}
 library(ggplot2)
@@ -227,7 +271,6 @@ plotAMCR.2 <-ggplot(pred[pred$Ht.cm<max(dfAMCR$Ht.cm) & pred$shrubarea<=max(dfAM
 plotAMCR.2
 
 AMCR.compare <- grid.arrange(plotAMCR,plotAMCR.2,nrow=2,ncol=2)
-
 ```
 
 - Answer: It's important.
@@ -266,3 +309,48 @@ hist(dfAMCR$BasDia.cm)
 ```
 
 - There is a negative relationship between basal diameter and vertical seedling growth - how will I incorporate that into SORTIE given that I was hoping to consistently model diameter allometrically with height? Perhaps this summer when I remeasure diameter I can relate basal diameter growth with height growth
+
+## Try including DIFN
+
+```{r}
+baseline <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire,
+                  weights = varPower,
+                  data= dfABCO[!is.na(dfABCO$DIFN.53),], method = "ML")
+M.DIFN <- gls(LastYearGrth.cm ~ Ht.cm + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + Fire + DIFN.53,
+                  weights = varPower,
+                  data= dfABCO[!is.na(dfABCO$DIFN.53),], method = "ML")
+
+AIC(baseline)
+AIC(baseline) - AIC(M.DIFN)
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - DIFN.53 + DIFN.all))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - DIFN.53 + DIFN.all + DIFN.all*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - shrubarea-shrubarea*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - shrubarea -shrubarea*Ht.cm + DIFN.53*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . + DIFN.53*Ht.cm))
+
+```
+
+#### it looks like the model without shrubarea and with DIFN.53 is slightly better. Check out its R^2 and coefficients
+```{r}
+M.DIFN <- update(M.DIFN, . ~ . - shrubarea -shrubarea*Ht.cm + DIFN.53*Ht.cm)
+dfABCODIFN <- dfABCO[!is.na(dfABCO$DIFN.53),]
+pseudoR2_ABCO(M.DIFN, dfABCODIFN)
+pseudoR2_ABCO(baseline, dfABCODIFN)
+summary(M.DIFN)
+E <- resid(M.DIFN, type="normalized")
+coplot(E ~ Ht.cm | Fire, data=dfABCODIFN, ylab="Normalized residuals", col=dfABCODIFN$Fire)
+
+```
+
+## Relationships between shrubarea and DIFN
+```{r}
+plot(dfABCODIFN$shrubarea,dfABCODIFN$DIFN.53)
+library(mgcv)
+M1 <- gam(dfABCODIFN$DIFN.53 ~ s(dfABCODIFN$shrubarea, fx=F, k=-1, bs="cr"))
+plot(M1, se=TRUE)
+plot(dfABCODIFN$DIFN.53,log(dfABCODIFN$shrubarea))
+M2 <- gam(dfABCODIFN$DIFN.53 ~ s(log(dfABCODIFN$shrubarea), fx=F, k=-1, bs="cr"))
+plot(M2, se=TRUE, add=T)
+
+```
+

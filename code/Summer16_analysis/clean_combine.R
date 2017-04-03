@@ -44,7 +44,7 @@ plot(sdlt$Ht.cm,sdlt$LastYearGrth.cm)
 ### Create data frame for analysis - start with no CADE
 #sdlt <- sdlt[sdlt$Species!="CADE",]
 sdlt <- sdlt[sdlt$Return==0,]
-df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
+df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","Light_File","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
 df <- tbl_df(df)
 df <- rename(df,Sdlg = Seedling.)
 
@@ -220,8 +220,34 @@ for(i in 1:nrow(df)){
 }
 summary(df$Years)
 
+#add DIFN degrees from FV2200 output file
+setwd("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Shrubs2016_Completed_Data_and_Photos/LAI-2000_data/")
+DIFNl53 <- read.table(file="AllDIFNGaps1-4",header=T,sep="\t")
+names(df)
+DIFNl53 <- distinct(DIFNl53)
+
+DIFNl53$LAI_File <- as.factor(DIFNl53$LAI_File)
+df <- left_join(df, DIFNl53, by=c("Light_File"="LAI_File")) %>%
+  rename(DIFN.all = DIFN.x) %>%
+  rename(DIFN.53 =DIFN.y) %>%
+  select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
+
+## Find which seedlings have DIFN.all but lack DIFN.53
+fix <- subset(df, !is.na(df$DIFN.all) & is.na(df$DIFN.53))
+View(fix)
+
+## Fill in a couple seedlings with funky DIFN situations
+# Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky
+
+df[df$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"]
+df[df$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"])
+
+fix <- subset(df, !is.na(df$DIFN.all) & is.na(df$DIFN.53))
+View(fix)
+
 setwd("~/Shrubs-Seedlings/Rdata")
 save(df, file="master_data.Rdata")
 
 ### NEXT STEPS: ADD SLOPE VALUES AND ELEVATION VALUES WHERE THEY'RE MISSING, LOOK FOR MORE DIFN VALUES, BUILD
 ### A REGRESSION MODEL, AND ADD LAT AND LONG TABLE FOR EACH SEEDLING FROM PINS ON AVENZA
+

@@ -11,6 +11,7 @@ library(nlme)
 df <- subset(df, df$Species != "CADE")
 dfPinus <- df[df$Species%in%c("PIPO","PILA") & !df$Fire %in% c("PLKN","WRTS"),]
 varPower <- varPower(form=~Ht.cm)
+library(plot3D)
 ```
 
 - Best model without using shrubarea, to compare this analysis' results to:
@@ -196,6 +197,23 @@ grid.arrange(plotAMCR, plotFRDS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
 
 ```
 
+## Plot in 3D
+```{r}
+
+plot3D <- function(data, model, Ht_range, shrub_range, Fire, theta, species){
+  xy <- expand.grid(Ht.cm=Ht_range, shrubarea=shrub_range, Fire = Fire)
+  predmatrix <- matrix (nrow = 60, ncol = 60,  data = predict(model, newdata = data.frame(xy),interval = "prediction"))
+  scatter3D(z=data$LastYearGrth.cm, x=data$Ht.cm, y=data$shrubarea, pch=18, cex=1, cex.axis=.5,theta = theta, phi = 20, ticktype = "detailed",
+            xlab = "Ht", ylab = "shrubarea", zlab = "growth",  
+           surf = list(z=predmatrix, x=Ht_range,y=shrub_range,
+                     facets = NA, fit=predict(model)),
+            main=paste(species, "seedling growth,",Fire,"Fire",sep=" "))
+   }
+
+plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(0,250,length.out=60),shrub_range=seq(0,max(dfPinus$shrubarea),length.out=60), Fire = "FRDS", theta=-65, species = "PIPO")
+```
+
+
 ## Check AIC with similar models
 
 ```{r}
@@ -259,5 +277,36 @@ sse <- (dfPinus$LastYearGrth.cm - predict(M.shrubarea))^2
 sst <- (dfPinus$LastYearGrth.cm - meanGrth)^2
 R2 <- 1 - (sum(sse)/sum(sst))
 R2
+```
+
+## Try similar methods with DIFN
+
+#### First run a model that's the same as the best model above but without 
+```{r}
+M.DIFN <- gls(LastYearGrth.cm ~ Ht.cm + Fire + Ht.cm*Fire + shrubarea*Ht.cm + shrubarea + DIFN.53,
+                   weights = varPower,
+                   data= dfPinus[!is.na(dfPinus$DIFN.53),], method = "ML")
+AIC(M.DIFN)
+```
+
+Plot residuals
+``` {r}
+E <- resid(M.DIFN, type="normalized")
+coplot(E ~ Ht.cm | Fire, data=dfPinus[!is.na(dfPinus$DIFN.53),], ylab="Normalized residuals", col=dfPinus[!is.na(dfPinus$DIFN.53),]$Fire)
+
+
+```
+
+Test AIC of similar models with and without DIFN.all and DIFN.53
+Below, baseline is best model above without any DIFN. Positive numbers mean that the model is better than the model without DIFN in it.
+```{r}
+baseline <- update(M.DIFN, . ~ . - DIFN.53)
+AIC(baseline) - AIC(M.DIFN)
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - DIFN.53 + DIFN.all))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - DIFN.53 + DIFN.all + DIFN.all*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - shrubarea-shrubarea*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - shrubarea-shrubarea*Ht.cm+DIFN.53*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . - shrubarea -shrubarea*Ht.cm + DIFN.53*Ht.cm))
+AIC(baseline) - AIC(update(M.DIFN, . ~ . + DIFN.53*Ht.cm))
 ```
 
