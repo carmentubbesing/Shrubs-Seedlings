@@ -247,6 +247,7 @@ View(fix)
 
 setwd("~/Shrubs-Seedlings/Rdata")
 save(df, file="master_data.Rdata")
+write.csv(df, file = "master_data")
 
 ### NEXT STEPS: ADD SLOPE VALUES AND ELEVATION VALUES WHERE THEY'RE MISSING, LOOK FOR MORE DIFN VALUES, BUILD
 ### A REGRESSION MODEL, AND ADD LAT AND LONG TABLE FOR EACH SEEDLING FROM PINS ON AVENZA

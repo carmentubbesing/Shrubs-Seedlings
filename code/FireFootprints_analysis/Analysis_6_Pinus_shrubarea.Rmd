@@ -199,18 +199,33 @@ grid.arrange(plotAMCR, plotFRDS,plotSTAR,plotCLVD,nrow=2,ncol=2 )
 
 ## Plot in 3D
 ```{r}
+plot3d(dfPinus[,c("Ht.cm","LastYearGrth.cm","shrubarea")], pch=as.integer(dfPinus$LastYearGrth.cm), , type="s", size=2)
+
+scatterplot3d(dfPinus[,c("Ht.cm","LastYearGrth.cm","shrubarea")])
 
 plot3D <- function(data, model, Ht_range, shrub_range, Fire, theta, species){
+  data<- data[data$Fire==Fire,]
   xy <- expand.grid(Ht.cm=Ht_range, shrubarea=shrub_range, Fire = Fire)
   predmatrix <- matrix (nrow = 60, ncol = 60,  data = predict(model, newdata = data.frame(xy),interval = "prediction"))
   scatter3D(z=data$LastYearGrth.cm, x=data$Ht.cm, y=data$shrubarea, pch=18, cex=1, cex.axis=.5,theta = theta, phi = 20, ticktype = "detailed",
-            xlab = "Ht", ylab = "shrubarea", zlab = "growth",  
+            xlab = "Height of juvenile conifer (cm)", ylab = "shrub cover*height (cm*cm)", zlab = "Conifer vertical growth (cm)",  
+            zlim=c(0,max(data[data$Fire==Fire,"LastYearGrth.cm"])+10),
+            xlim=c(0,max(data[data$Fire==Fire,"Ht.cm"])+10),
            surf = list(z=predmatrix, x=Ht_range,y=shrub_range,
-                     facets = NA, fit=predict(model)),
+                     facets = NA),
             main=paste(species, "seedling growth,",Fire,"Fire",sep=" "))
    }
 
-plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(0,250,length.out=60),shrub_range=seq(0,max(dfPinus$shrubarea),length.out=60), Fire = "FRDS", theta=-65, species = "PIPO")
+plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(0,max(dfPinus$Ht.cm[dfPinus$Fire=="FRDS"]),length.out=60),shrub_range=seq(0,max(dfPinus$shrubarea[dfPinus$Fire=="FRDS"]),length.out=60), Fire = "FRDS", theta=-150, species = "PIPO")
+
+plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(min(dfPinus$Ht.cm[dfPinus$Fire=="STAR"]),max(dfPinus$Ht.cm[dfPinus$Fire=="STAR"]),length.out=60),shrub_range=seq(min(dfPinus$shrubarea[dfPinus$Fire=="STAR"]),max(dfPinus$shrubarea[dfPinus$Fire=="STAR"]),length.out=60), Fire = "STAR", theta=-150, species = "PIPO")
+
+
+plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(0,max(dfPinus$Ht.cm[dfPinus$Fire=="AMCR"]),length.out=60),shrub_range=seq(0,max(dfPinus$shrubarea[dfPinus$Fire=="AMCR"]),length.out=60), Fire = "AMCR", theta=-150, species = "PIPO")
+
+plot3D(data=dfPinus, model=M.interact2, Ht_range=seq(min(dfPinus$Ht.cm[dfPinus$Fire=="CLVD"]),max(dfPinus$Ht.cm[dfPinus$Fire=="CLVD"]),length.out=60),shrub_range=seq(min(dfPinus$shrubarea[dfPinus$Fire=="CLVD"]),max(dfPinus$shrubarea[dfPinus$Fire=="CLVD"]),length.out=60), Fire = "CLVD", theta=-150, species = "PIPO")
+
+
 ```
 
 

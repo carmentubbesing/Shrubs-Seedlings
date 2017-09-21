@@ -1,0 +1,29 @@
+---
+title: "Fire Footprints Data Compile - 2016 and 2017"
+author: "Carmen"
+date: "September 20, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+```
+
+
+# Read in 2017 data
+```{r}
+setwd("~/../Dropbox (Stephens Lab)/SORTIE/FireFootprints_2017/data/compiled/")
+df17 <- read_excel("Shrubs_Summer17_Compiled_Sep14.xlsx")
+```
+
+# Read in 2016 data
+```{r}
+
+```
+

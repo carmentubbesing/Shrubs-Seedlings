@@ -11,6 +11,7 @@ output: html_document
 setwd("~/Shrubs-Seedlings/Rdata")
 load(file="master_data.Rdata")
 library(nlme)
+library(plot3D)
 ```
 
 - Define function for calculating pseudo R^2
