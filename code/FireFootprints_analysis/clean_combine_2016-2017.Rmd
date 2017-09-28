@@ -11,10 +11,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-
+```{r, include=F}
+require(readxl)
+require(dplyr)
+require(tidyr)
 ```
-
 
 # Read in 2017 data
 ```{r}
@@ -24,6 +25,113 @@ df17 <- read_excel("Shrubs_Summer17_Compiled_Sep14.xlsx")
 
 # Read in 2016 data
 ```{r}
+setwd("~/Shrubs-Seedlings/compiled_data/")
+df16 <- read.csv("master_data_2016.csv")
+```
 
+# Combine
+```{r}
+df <- full_join(df16, df17, by = "Sdlg")
+```
+
+# Take out the incense cedar
+```{r}
+df <- df %>% 
+  filter(Species.x != "CADE")
+```
+
+# Sync up repeat column names
+
+## Check for different species
+```{r}
+df %>% 
+  filter(Species.x != Species.y)
+```
+
+## Go with 2017 species when it's listed since one tree's species was corrected
+```{r}
+df <- df %>% 
+  mutate(Species = ifelse(!is.na(Species.y), Species.y, Species.x)) %>% 
+  select(-Species.x, -Species.y)
+```
+
+## Sync fire and fire patch
+```{r}
+df %>% 
+  filter(FirePatch.x != FirePatch.y)
+df <- df %>% 
+  rename(FirePatch = FirePatch.x) %>% 
+  select(-FirePatch.y)
+df <- df %>% 
+  rename(Fire = Fire.x) %>% 
+  select(-Fire.y)
+```
+
+## Rename date and datasheet columns
+```{r}
+df <- df %>% 
+  rename(Date = Date.x) %>% 
+  select(-Date.y) %>% 
+  rename(DataSheet2017 = DataSheet)
+```
+
+## Rename basal diameter and height columns
+```{r}
+df <- df %>% 
+  rename( BasDia2016.cm = BasDia.cm) %>% 
+  rename(BasDia2017.mm.1 = Dia_1_mm) %>% 
+  rename(BasDia2017.mm.2 = Dia_2_mm ) %>% 
+  rename(Ht2016.cm = Ht.cm) %>% 
+  rename(Ht2017.cm = Ht_cm)
+```
+
+## Reorder columns
+```{r}
+df <- df %>% 
+  select(Sdlg, Species, Fire, FirePatch, Ht2016.cm, Ht2017.cm, everything())
+```
+
+# Find missing seedlings from 2017 data
+```{r}
+df %>% 
+  filter(is.na(Ht2017.cm) & is.na(Status)) %>% 
+  select(Sdlg, Status, FirePatch, DataSheet2017, notes)
+```
+
+## Record why things were left out 
+```{r}
+df <- df %>% 
+  mutate(Status = ifelse(Sdlg %in% c(19,28, 139, 137), "exclude, lone in patch", Status)) %>% 
+  mutate(Status = ifelse(FirePatch == "FRDS-JB" | Sdlg %in% c(58,80,91,92,93,100,103,106,107,229), "not found",Status))
+```
+
+
+# Calculate diameter growth
+
+## Calculate diameter average in 2017
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.mm.1 = as.numeric(BasDia2017.mm.1)) %>% 
+  mutate(BasDia2017.mm.2 = as.numeric(BasDia2017.mm.2)) 
+df <- replace_na(df, replace = list(BasDia2017.mm.2 = 0, BasDia2017.mm.1 = 0))
+df <- df %>% 
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.1+BasDia2017.mm.2)/2)
+```
+
+## Adjust 2016 diameters to mm and correct for calipers error
+```{r}
+df <- df %>% 
+  mutate(BasDia2016.mm = BasDia2016.cm*10-.8)
+```
+
+## Calculate growth
+```{r}
+df <- df %>% 
+  mutate(DiaGrowth = ifelse(BasDia2017.mm.1 >0, BasDia2017.mm.ave - BasDia2016.mm, NA))
+df %>% 
+  filter(BasDia2017.mm.ave >0 & !is.na(DiaGrowth)) %>% 
+  summarise(mean(DiaGrowth))
+hist(df$DiaGrowth)
+View(df %>% filter(BasDia2017.mm.1 >0 & !is.na(DiaGrowth)))
 ```
 

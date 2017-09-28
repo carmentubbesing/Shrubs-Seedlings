@@ -11,6 +11,7 @@ output:
 ```{r, include = F}
 require(readxl)
 require(dplyr)
+require(tidyr)
 ```
 
 
@@ -190,6 +191,8 @@ df$Genus <- as.factor(df$Genus)
 ## Create Column for Spp1Genus
 ```{r}
 df$ShrG1 <- 0
+df$Spp1 <- as.character(df$Spp1)
+df[is.na(df$Spp1),"Spp1"] <- "NONE"
 for (i in 1:nrow(df)){
   if(df$Spp1[i] %in% c("ARNE","ARPA","ARVI")){
     df$ShrG1[i] <- "Arcto"    
