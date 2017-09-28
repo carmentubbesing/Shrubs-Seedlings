@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 require(readxl)
 require(dplyr)
 require(tidyr)
+require(ggplot2)
 ```
 
 # Read in 2017 data
@@ -102,7 +103,16 @@ df %>%
 ```{r}
 df <- df %>% 
   mutate(Status = ifelse(Sdlg %in% c(19,28, 139, 137), "exclude, lone in patch", Status)) %>% 
-  mutate(Status = ifelse(FirePatch == "FRDS-JB" | Sdlg %in% c(58,80,91,92,93,100,103,106,107,229), "not found",Status))
+  mutate(Status = ifelse(FirePatch == "FRDS-JB" | Sdlg %in% c(58,80,91,92,93,100,103,106,107,229,176), "not found",Status)) %>% 
+  mutate(Status = ifelse(Sdlg == 7, "exclude, under oak", Status))
+
+```
+
+## Remove seedlings that were excluded for reasons other than dead or couldn't find them
+```{r}
+df <- df %>% 
+  filter(!Status %in% c("exclude, under oak", "exclude, lone in patch"))
+summary(as.factor(df$Status))
 ```
 
 
@@ -121,7 +131,7 @@ df <- df %>%
 ## Adjust 2016 diameters to mm and correct for calipers error
 ```{r}
 df <- df %>% 
-  mutate(BasDia2016.mm = BasDia2016.cm*10-.8)
+  mutate(BasDia2016.mm = BasDia2016.cm*10-1.1)
 ```
 
 ## Calculate growth
@@ -131,7 +141,74 @@ df <- df %>%
 df %>% 
   filter(BasDia2017.mm.ave >0 & !is.na(DiaGrowth)) %>% 
   summarise(mean(DiaGrowth))
-hist(df$DiaGrowth)
-View(df %>% filter(BasDia2017.mm.1 >0 & !is.na(DiaGrowth)))
+hist(df$DiaGrowth, breaks = 30)
+```
+
+# Get data ready to analyze vertical growth
+
+## Create data frame with one row per growth measurement
+```{r}
+df <- tbl_df(df)
+names(df)
+df <- df %>% 
+  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
+df <- gather(df, "Year", "VertGrowth",41:43)
+```
+
+## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
+```{r}
+df <- df %>% 
+  mutate(VertGrowth = ifelse(is.na(VertGrowth) & Year == "2015", LastYearGrth.cm, VertGrowth))
+``` 
+
+## Take out 2017 vertical growth measurements for trees that died since last measure
+```{r}
+summary(as.factor(df$Status))
+df <- df %>% 
+  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
+```
+
+## Take out 2016 and 2017 vertical growth measurements for trees that were not found
+```{r}
+df <- df %>% 
+  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
+```
+
+## Check out NA values and delete years that broke off
+```{r}
+df %>% 
+  filter(is.na(VertGrowth)) %>% 
+  select(Sdlg, Year, VertGrowth, Status, notes) %>% 
+  arrange(Sdlg)
+df <- df %>% 
+  filter(!(Sdlg %in% c("6","185","131","226","6","74","98") & Year %in% c("2017","2016"))) %>% 
+  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
+  filter(!(Sdlg == 75 & Year == 2017))  
+```
+
+## Look at odd vertical growth value
+```{r}
+df <- df %>% 
+  mutate(VertGrowth = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth))
+df$VertGrowth <- as.numeric(df$VertGrowth)
+```
+
+## Look at distribution of relative growth rate
+```{r}
+df$VertGrowth_Rel <- df$VertGrowth/df$Ht2017.cm
+hist(df$VertGrowth_Rel, breaks = 30)
+```
+
+## Look at relative growth rate in relation to DIFN
+```{r}
+ggplot(df, aes(x = DIFN.all, y = VertGrowth_Rel))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```
+
+# Save
+```{r}
+save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+write.csv(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv", row.names = F)
 ```
 
