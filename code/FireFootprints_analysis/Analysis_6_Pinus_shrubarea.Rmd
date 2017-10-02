@@ -2,11 +2,21 @@
 title: 'Analysis 6: Pinus with shrubarea'
 author: "Carmen"
 date: "March 9, 2017"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
 ---
+
+```{r, include = F}
+require(nlme)
+```
+
+
+# Load data
 ```{r, include=F}
-setwd("~/Shrubs-Seedlings/Rdata")
-load(file="master_data.Rdata")
+setwd("~/Shrubs-Seedlings/compiled_data/")
+load(file="fire_footprints/master_seedlings.Rdata")
 library(nlme)
 df <- subset(df, df$Species != "CADE")
 dfPinus <- df[df$Species%in%c("PIPO","PILA") & !df$Fire %in% c("PLKN","WRTS"),]

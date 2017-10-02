@@ -153,6 +153,7 @@ names(df)
 df <- df %>% 
   rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
 df <- gather(df, "Year", "VertGrowth",41:43)
+df$Year <- as.factor(df$Year)
 ```
 
 ## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
@@ -193,9 +194,25 @@ df <- df %>%
 df$VertGrowth <- as.numeric(df$VertGrowth)
 ```
 
+
+## Create shrubarea variables for each distance from the seedling
+```{r}
+df <- df %>% 
+  mutate(shrubarea2 = Ht1.2 * Cov1.2) %>% 
+  mutate(shrubarea3 = Ht1.3 * Cov1.3)
+```
+
+## Fill in height if it was not taken in 2017
+```{r}
+df <- df %>% 
+  mutate(Ht_cm = ifelse(is.na(Ht2017.cm), Ht2016.cm, Ht2017.cm)) %>% 
+  select(-Ht2016.cm, -Ht2017.cm)
+```
+
+
 ## Look at distribution of relative growth rate
 ```{r}
-df$VertGrowth_Rel <- df$VertGrowth/df$Ht2017.cm
+df$VertGrowth_Rel <- df$VertGrowth/df$Ht_cm
 hist(df$VertGrowth_Rel, breaks = 30)
 ```
 
@@ -205,6 +222,7 @@ ggplot(df, aes(x = DIFN.all, y = VertGrowth_Rel))+
   geom_point()+
   geom_smooth(method = "lm")
 ```
+
 
 # Save
 ```{r}

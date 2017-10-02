@@ -4,78 +4,64 @@ Carmen
 February 22, 2017
 
 -   [Summary](#summary)
--   [Variables](#variables)
--   [Data processing](#data-processing)
--   [Analysis](#analysis)
-    -   [Analysis 1](#analysis-1)
--   [Problem solving](#problem-solving)
+-   [Fire Footprint Data (2016 and 2017)](#fire-footprint-data-2016-and-2017)
+    -   [Concerns](#concerns)
+    -   [Data processing](#data-processing)
+    -   [Analysis](#analysis)
 
 Summary
 =======
 
-This repository holds the code for analyzing Carmen's summer 2016-2017 shrub and seedling measurements. The data being analyzed is located in Stephens lab dropbox -&gt; SORTIE -&gt; Shrubs\_Summer16 -&gt; Shrubs2016\_Completed\_Data\_and\_Photos
+This repository holds the code for analyzing Carmen's summer 2016-2017 shrub and seedling measurements and other data related to the interactions between shrubs and conifer seedlings. The data being analyzed is located in Stephens lab dropbox -&gt; SORTIE -&gt; Shrubs\_Summer16 -&gt; Shrubs2016\_Completed\_Data\_and\_Photos
 
-Variables
-=========
+Fire Footprint Data (2016 and 2017)
+===================================
 
-The explanatory variables eligible for inclusion in the model for 2015 seedling growth (cm) include:
+Concerns
+--------
 
-1.  light attenuation from LAI-2000 measurements
-2.  Most abundant shrub species 2-3 m from seedling
-3.  Most abundant shrub species in 1-2 m from seedling
-4.  Most abundant shrub species in 0-1 m from seedling
-5.  Shrub species immediately overtopping the seedling
-6.  Total cover of shrubs 2-3 m from seedling
-7.  Total cover of shrubs 1-2 m from seedling
-8.  Total cover of shrubs 0-1 m from seedling
-9.  Elevation
-10. Fire
-11. Time since fire
-12. Seedling species
-13. Average shrub height 2-3 m from seedling
-14. Average shrub height 1-2 m from seedling
-15. Average shrub height 0-1 m from seedling
-16. Slope/aspect
-17. Seedling diameter
-18. Seedling total height
+Some seedlings have diameter measurements that are smaller in 2017 than in 2016. For some seedlings, the difference is small enough that it could be a measurement error, such as the calipers not being perfect or people measuring on the wrong side of the tree. However, for some seedlings the differences are large and it seems that the error could be due to a serious mistake, like measuring the wrong tree or writing down the number wrong.
+
+Thoughts on how to deal with this problem: - Since only 1 measurement was taken in 2016 and 2 were taken in 2017, for trees with diameter measurements smaller in 2017 than 2016 I could potentially use just the smaller of the two measurements from 2017, though that won't help much since many seedlings have two very similar measurements in 2017, and that logic would be hard to apply to seedlings without this problem.
 
 Data processing
-===============
+---------------
 
--   cleaning and consolidating into one table is done in the file `clean_combine.R`
+-   cleaning and consolidating into one table is done in the files `clean_combine_2016-only.Rmd` and `clean_combine_2016-2017.Rmd`
 
 Analysis
-========
+--------
 
-Analysis 1
-----------
+Controlled variables:
 
--   The first analysis uses patch as a random effect. This makes the following variables unecessary to include:
-    1.  Elevation
-    2.  Fire
-    3.  Slope/aspect
-    4.  Time since fire
--   Analysis 1 uses all seedlings and does not use light attenuation, since it is not available for all seedlings
--   Analysis 1 INCLUDES the variables
-    1.  Seedling species (factor)
-    2.  Patch unique
-    3.  Seedling total height (continuous)
-    4.  Seedling diameter (continuous)
-    5.  Shrub species immediately overtopping the seedling (factor)
-    6.  Total cover of shrubs 2-3 m from seedling (continuous)
-    7.  Total cover of shrubs 1-2 m from seedling (continuous)
-    8.  Total cover of shrubs 0-1 m from seedling (continuous)
-    9.  Average shrub height 2-3 m from seedling (continuous)
-    10. Average shrub height 1-2 m from seedling (continuous)
-    11. Average shrub height 0-1 m from seedling (continuous)
-    12. Most abundant shrub species 2-3 m from seedling (factor)
-    13. Most abundant shrub species in 1-2 m from seedling (factor)
-    14. Most abundant shrub species in 0-1 m from seedling (factor)
--   Clumping of similar patches
-    1.  CLVD-SE and CLVD-SW: can't clump, slopes too similar
-    2.  
+-   Since this is a repeated measures analysis, **seedling** was included as a random effect in all models
+-   **Fire** was also included as a random effect in all models
+-   **Year** was included as a fixed effect for all models
 
-Problem solving
-===============
+To the above fixed and random effects, I tried all possible combinations of the following variables:
 
-The main issues to resolve include: 1. incorrect measurements making some ht.cm and ht.2015 values 4 cm too large, with no way to tell which ones are
+1.  ShrG1: Most abundant shrub genus within 1 m from seedling
+2.  IAG: Shrub genus immediately above seedling
+3.  Cov1: Total cover of shrubs 0-1 m from seedling
+4.  Cov1.2: Total cover of shrubs 0-2 m from seedling
+5.  Cov1.3: Total cover of shrubs 0-3 m from seedling
+6.  Ht1: Average shrub height 0-1 m from seedling
+7.  Ht1.2: Average shrub height 0-2 m from seedling
+8.  Ht1.3: Average shrub height 0-3 m from seedling
+9.  shrubarea1: Cov1\*Ht1, square root transformed
+10. shrubarea2: Cov1.2\*Ht1.2, square root transformed
+11. shrubarea3: Cov1.3\*Ht1.3, square root transformed
+12. Seedling species
+13. Slope/aspect
+14. BasDia2017.mm.ave: Seedling diameter (average of the two measurements taken in 2017)
+15. Ht\_cm: Seedling total height
+
+And the following interactions:
+
+1.  Ht\_cm \* Ht1.3
+2.  Cov1.3 \* Ht1.3
+3.  Species \* sqrt(shrubarea3)
+
+-   I excluded redundant combinations of variables/interactions (such as including Cov1 and Cov1.2 or including shrub cover, height, and cover\*height)
+-   I calculated AIC for models with all of the possible variable and interaction combinations and found the model with the best AIC
+-   For that model, and created a figure of predicted values for a fictional set of data spanning the actual range of shrub measurements, and for all fires and years

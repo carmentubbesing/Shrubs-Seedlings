@@ -1,0 +1,192 @@
+---
+title: 'Analysis 6: Pinus with shrubarea'
+author: "Carmen"
+date: "March 9 + 2017"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+```
+
+# Load data
+```{r, include=F}
+setwd("~/Shrubs-Seedlings/compiled_data/")
+load(file="fire_footprints/master_seedlings.Rdata")
+```
+
+## Filter to just pines
+```{r}
+df <- df[df$Species%in%c("PIPO","PILA") & !df$Fire %in% c("PLKN","WRTS"),]
+```
+
+## Change species to factor
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species))
+```
+
+## Conditional inference tree
+```{r}
+tree_df <- tree(VertGrowth_Rel ~  Fire + FirePatch + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3, df)
+summary(tree_df)
+plot(tree_df)
+text(tree_df, pretty = 0)
+pruned <- prune.tree(tree_df, best = 5)
+plot(pruned)
+text(pruned, pretty = 0)
+```
+
+
+## Look at random forest
+```{r}
+fit <- randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+                    data = df,
+                    importance = TRUE,
+                    mtry = 13)
+fit
+varImpPlot(fit)
+```
+
+## See how well random forest predicts data
+```{r}
+train = sample(1:nrow(df), nrow(df)/2)
+tree_train = randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+                    data = df,
+                    importance = TRUE,
+                    mtry = 13,
+                    subset = train)
+yhat.bag = predict(tree_train, newdata = df[-train,])
+growth.test = unlist(df[-train, "VertGrowth_Rel"])
+plot(yhat.bag, growth.test)
+abline(0,1)
+```
+
+# Look for patterns in residuals of mixed effects model
+```{r}
+M1 <- lme(VertGrowth_Rel ~ Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 , random = ~1|FirePatch, data= df) 
+anova(M1)
+```
+
+```{r}
+E <- resid(M1, type="normalized")
+coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
+```
+
+# AIC table of mixed effects models
+
+## Find all possible variable combinations
+```{r}
+v1 <- c("sqrt(shrubarea3)","sqrt(shrubarea2)", "Species" , "Ht_cm" , "Cov1" , "Cov1.2" , "Cov1.3" , "Ht1" , "Ht1.2" , "Ht1.3" , "IAG", "ShrG1","BasDia2017.mm.ave" , "Ht_cm*Ht1.3" , "Cov1.3*Ht1.3", "Species*sqrt(shrubarea3)")
+combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
+list.bad <- list()
+for(i in 1:length(combs)){
+  if("sqrt(shrubarea3)" %in% combs[i][[1]] & "sqrt(shrubarea2)" %in% combs[i][[1]]){
+    list.bad <- c(list.bad, i)
+  }
+  if("Cov1" %in% combs[i][[1]] & ("Cov1.2" %in% combs[i][[1]] | "Cov1.3" %in% combs[i][[1]] 
+        | "sqrt(shrubarea2)"%in% combs[i][[1]] | "sqrt(shrubarea3)" %in% combs[i][[1]])){
+    list.bad <- c(list.bad, i)
+  }
+    if("Cov1.2" %in% combs[i][[1]] & ("Cov1.3" %in% combs[i][[1]] 
+        | "sqrt(shrubarea2)"%in% combs[i][[1]] | "sqrt(shrubarea3)" %in% combs[i][[1]])){
+    list.bad <- c(list.bad, i)
+  }
+    if("Cov1.3" %in% combs[i][[1]] & ("sqrt(shrubarea2)"%in% combs[i][[1]] | "sqrt(shrubarea3)" %in% combs[i][[1]])){
+    list.bad <- c(list.bad, i)
+    }  
+      if("Ht1" %in% combs[i][[1]] & ("Ht1.2"%in% combs[i][[1]] | "Ht1.3" %in% combs[i][[1]])){
+    list.bad <- c(list.bad, i)
+      } 
+        if("Ht1.2" %in% combs[i][[1]] & "Ht1.3" %in% combs[i][[1]]){
+    list.bad <- c(list.bad, i)
+        } 
+    if("Cov1.3*Ht1.3" %in% combs[i][[1]] & ("sqrt(shrubarea2)"%in% combs[i][[1]] | "sqrt(shrubarea3)" %in% combs[i][[1]] | "Cov1.2" %in% combs[i][[1]] | "Cov1.3" %in% combs[i][[1]] | "Cov1" %in% combs[i][[1]] | "Ht1.2"%in% combs[i][[1]] | "Ht1.3" %in% combs[i][[1]] )){
+    list.bad <- c(list.bad, i)
+      } 
+}
+list.bad <- unlist(list.bad)
+combs.bad <- combs[list.bad]
+combs <- setdiff(combs, combs.bad)
+length(combs)
+```
+
+## Table
+```{r}
+table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
+for(i in 1:length(combs)){
+  vars <- combs[i]
+  vars <- paste(vars[[1]], collapse=" + ")
+  f <- formula(paste("(VertGrowth_Rel ~  Year +", vars,")"))
+  M <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg))
+  ModelName <- paste("M", i, sep="_")
+  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
+  table <- rbind(table, add)
+}
+colnames(table) <- c("Model","Variables", "AIC")
+table_final <- kable(table %>% arrange(AIC), format = "markdown") 
+table_final
+```
+
+## Save table
+```{r}
+save(table, file = "~/../Documents/LastChance/results/tables/pinus_vert_AIC.Rdata")
+```
+
+## Pull out the best model
+```{r}
+best <- filter(table, AIC == min(AIC))
+best <- unlist((best[1,2]))
+f <- formula(paste("(VertGrowth_Rel ~  Year +", best,")"))
+best_model <- lme(f,data = df, random = list(~ 1| Fire,~1| Sdlg))
+summary(best_model)
+anova(best_model)
+```
+
+## Predictions - Actual Data
+```{r}
+pred <- as.data.frame(predict(best_model))
+df$pred_best_model <- predict(best_model)
+ggplot(df)+
+  geom_point(aes(y=pred_best_model,x=shrubarea3,col=Fire))+
+  labs(title = "Predicted values")
+
+E <- resid(best_model, type="normalized")
+coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
+```
+
+
+## Predictions - perfect data
+```{r}
+MyData <-  rbind(expand.grid(Fire = "AMCR", Year = unique(df$Year), Sdlg = unique(subset(df$Sdlg, df$Fire == "AMCR")), shrubarea3 = seq(min(df$shrubarea3), max(df$shrubarea3), length = 10)), expand.grid(Fire = "STAR", Year = unique(df$Year), Sdlg = unique(subset(df$Sdlg, df$Fire == "STAR")), shrubarea3 = seq(min(df$shrubarea3), max(df$shrubarea3), length = 10)))
+MyData$pred <- predict(best_model, newdata = MyData)
+MyData$pred_no_rand <- predict(best_model, level = 0, newdata = MyData)
+```
+
+```{r}
+figure <- ggplot(MyData)+
+  labs(title = "Predicted vertical pine seedling growth (lines) \nand actual growth (points)")+
+  ylab("Predicted relative seedling growth")+
+  xlab("shrub cover * shrub height 0-3 m from seedling")+
+    geom_point(data=df, aes(x = shrubarea3, y = VertGrowth_Rel))+
+    geom_line(aes(y = pred, x = shrubarea3, group = interaction(Fire, Year, Sdlg)), col = "gray")+
+ geom_line(aes(x = shrubarea3, y = pred_no_rand, group = interaction(Fire, Year), col = Year), size = 2)
+figure
+```
+
+## Save figure
+```{r}
+jpeg("~/../Documents/Shrubs-Seedlings/plots/pinus_predicted_actual.jpeg")
+figure
+dev.off()
+```
+
