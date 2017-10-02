@@ -1,0 +1,20 @@
+---
+title: "Growth Mortality Data Cleaning"
+author: "Carmen"
+date: "October 2, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = F}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_Sep08_2017.xlsx", sheet = 2)
+counts <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_counts_compiled_Aug16_2017.xlsx", sheet = 2)
+
+```
+

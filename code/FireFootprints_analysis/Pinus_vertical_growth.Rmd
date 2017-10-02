@@ -133,7 +133,7 @@ for(i in 1:length(combs)){
   table <- rbind(table, add)
 }
 colnames(table) <- c("Model","Variables", "AIC")
-table_final <- kable(table %>% arrange(AIC), format = "markdown") 
+table_final <- kable(head(table) %>% arrange(AIC), format = "markdown") 
 table_final
 ```
 
@@ -177,8 +177,8 @@ figure <- ggplot(MyData)+
   labs(title = "Predicted vertical pine seedling growth (lines) \nand actual growth (points)")+
   ylab("Predicted relative seedling growth")+
   xlab("shrub cover * shrub height 0-3 m from seedling")+
+  geom_line(aes(y = pred, x = shrubarea3, group = interaction(Fire, Year, Sdlg)), col = "gray")+
     geom_point(data=df, aes(x = shrubarea3, y = VertGrowth_Rel))+
-    geom_line(aes(y = pred, x = shrubarea3, group = interaction(Fire, Year, Sdlg)), col = "gray")+
  geom_line(aes(x = shrubarea3, y = pred_no_rand, group = interaction(Fire, Year), col = Year), size = 2)
 figure
 ```

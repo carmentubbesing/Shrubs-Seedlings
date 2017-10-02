@@ -223,6 +223,15 @@ ggplot(df, aes(x = DIFN.all, y = VertGrowth_Rel))+
   geom_smooth(method = "lm")
 ```
 
+## Standardize variables 
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+df_norm <- df %>% 
+  
+```
+
 
 # Save
 ```{r}
