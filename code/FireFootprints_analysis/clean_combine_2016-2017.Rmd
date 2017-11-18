@@ -202,6 +202,12 @@ df <- df %>%
   mutate(shrubarea3 = Ht1.3 * Cov1.3)
 ```
 
+### Fix NA shrubarea
+```{r}
+df <- df %>% filter(!(is.na(shrubarea2) & Sdlg == "17"))
+```
+
+
 ## Fill in height if it was not taken in 2017
 ```{r}
 df <- df %>% 
@@ -223,13 +229,17 @@ ggplot(df, aes(x = DIFN.all, y = VertGrowth_Rel))+
   geom_smooth(method = "lm")
 ```
 
-## Standardize variables 
+## Standardize continuous variables I plan to use in the model
 ```{r}
 normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
   }
-df_norm <- df %>% 
-  
+```
+
+```{r}
+df <- df %>% 
+  mutate(Ht_norm = normalize(Ht_cm)) %>% 
+  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) )
 ```
 
 

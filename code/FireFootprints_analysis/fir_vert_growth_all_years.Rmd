@@ -1,0 +1,146 @@
+---
+title: "fir functional group vertical growth - fire footprints"
+author: "Carmen"
+date: "November 13, 2017"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+```
+
+# Load data
+```{r, include=F}
+setwd("~/Shrubs-Seedlings/compiled_data/")
+load(file="fire_footprints/master_seedlings.Rdata")
+```
+
+## Filter to just firs
+```{r}
+df <- df[df$Species%in%c("ABCO","ABMA", "PSME") & !df$Fire %in% c("PLKN","FRDS"),]
+df <- df %>% filter(!is.na(shrubarea2))
+```
+
+
+## Change species to factor
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species))
+```
+
+## Conditional inference tree
+```{r}
+tree_df <- tree(VertGrowth_Rel ~  Fire + FirePatch + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3, df)
+summary(tree_df)
+plot(tree_df)
+text(tree_df, pretty = 0)
+pruned <- prune.tree(tree_df, best = 5)
+plot(pruned)
+text(pruned, pretty = 0)
+```
+
+
+## Look at random forest
+```{r}
+fit <- randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+                    data = df,
+                    importance = TRUE,
+                    mtry = 13)
+fit
+varImpPlot(fit)
+```
+
+## See how well random forest predicts data
+```{r}
+train = sample(1:nrow(df), nrow(df)/2)
+tree_train = randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+                    data = df,
+                    importance = TRUE,
+                    mtry = 13,
+                    subset = train)
+yhat.bag = predict(tree_train, newdata = df[-train,])
+growth.test = unlist(df[-train, "VertGrowth_Rel"])
+plot(yhat.bag, growth.test)
+abline(0,1)
+```
+
+### Normalize MyData variables
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+MyData <- MyData %>% 
+  mutate(Ht_norm = normalize(Ht_cm)) %>% 
+  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) )
+```
+
+
+## Save figure final data
+```{r}
+save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata")
+```
+
+## Different approach (Nov 13, 2017) - no AIC table, just pick variables based on preliminary knowledge
+```{r}
+f <- VertGrowth_Rel ~  Year + Fire + shrubarea2_sqrt_norm + Ht_norm +  shrubarea2_sqrt_norm*Ht_norm
+f_noshrubs <- VertGrowth_Rel ~  Year + Fire + Ht_norm 
+LM1 <- lme(f,data = df, random = ~1| Sdlg, method = "ML")
+LM1_noshrubs <- lme(f_noshrubs,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
+anova(LM1, LM1_noshrubs)
+```
+
+## Plot
+```{r}
+MyData$pred_simple <- predict(LM1, level = 0,newdata = MyData)
+```
+
+### Summary plot
+```{r}
+MyData_summary_simple <- MyData %>% 
+  group_by(shrubarea2) %>% 
+  mutate(pred_simple = mean(pred_simple))
+MyData_summary_simple
+figure_summary <- ggplot(MyData_summary_simple)+
+  labs(title = "Predicted vertical fir seedling growth (lines) \nand actual growth (points)")+
+  ylab("Relative vertical growth (cm/cm)")+
+  xlab(
+    expression(
+      paste(
+        sqrt("shrub cover * shrub height"),
+    " 0-2 m from seedling"))
+    )+
+  geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)), size = 1.5, col = "#a02313")+
+  geom_point(data=df, aes(x = sqrt(shrubarea2), y = VertGrowth_Rel), col = "#a02313")+
+  theme_bw()+
+  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
+        panel.background = element_rect(fill="#e9ebe8"))
+figure_summary
+```
+
+```{r}
+E <- resid(LM1, type="normalized")
+plot(sqrt(df$shrubarea2), E)
+plot((df$Ht_norm), E)
+coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
+```
+
+# Save figure
+```{r}
+setwd("C:/Users/Carmen/Documents/Shrubs-Seedlings/results/figures")
+pdf("fir_vert.pdf", width = 4.5, height = 7, pointsize = 30,useDingbats = F)
+figure_summary
+dev.off()
+```
+

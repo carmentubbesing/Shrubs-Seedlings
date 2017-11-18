@@ -14,7 +14,77 @@ library(readxl)
 library(ggplot2)
 library(dplyr)
 df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_Sep08_2017.xlsx", sheet = 2)
-counts <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_counts_compiled_Aug16_2017.xlsx", sheet = 2)
-
+counts180 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx")
+counts380 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_380_counts_compiled_Oct1_2017.xlsx")
 ```
+
+# Counts - calculate mortality rate for each compartment and overall, by species
+```{r}
+nrow(counts180)
+nrow(counts380)
+```
+
+## Change columns names
+```{r}
+counts380 <- counts380 %>% 
+  rename(ABCO_ALIVE = `Abco, alive`, ABCO_DEAD = `Abco, dead`, PIPO_ALIVE = `Pipo, alive`, PIPO_DEAD = `Pipo, dead`)
+```
+
+
+## Delete points that were thrown out
+
+### 180
+```{r}
+counts180 %>% filter(!is.na(NOTES))
+notes_bad <- sort(unique(counts180$NOTES))
+counts180 <- counts180 %>% 
+  filter(!(NOTES %in% notes_bad & is.na(ABCO_ALIVE)))
+```
+
+### 380
+```{r}
+counts380 %>% filter(!is.na(notes))
+notes_bad <- sort(unique(counts380$notes))
+counts380 <- counts380 %>% 
+  filter(!(notes %in% notes_bad & is.na(ABCO_ALIVE)))
+```
+
+## Check for NAs
+```{r}
+counts180 %>% 
+  filter(is.na(ABCO_ALIVE) | is.na(ABCO_DEAD) | is.na(PIPO_ALIVE) | is.na(PIPO_DEAD))
+counts380 %>% 
+  filter(is.na(ABCO_ALIVE) | is.na(ABCO_DEAD) | is.na(PIPO_ALIVE) | is.na(PIPO_DEAD))
+```
+
+```{r}
+counts380 <- counts380 %>% 
+  mutate(PIPO_ALIVE = ifelse(Plot == 9, 0, PIPO_ALIVE))
+```
+
+## Calculate mortality rates
+
+### PIPO
+```{r}
+mort180_PIPO <- sum(counts180$PIPO_DEAD)/sum(counts180$PIPO_ALIVE)
+mort380_PIPO <- sum(counts380$PIPO_DEAD)/sum(counts380$PIPO_ALIVE)
+mort180_PIPO
+mort380_PIPO
+```
+
+```{r}
+mort_both_PIPO <- (sum(counts180$PIPO_DEAD)+ sum(counts380$PIPO_DEAD))/(sum(counts380$PIPO_ALIVE)+sum(counts180$PIPO_ALIVE))
+mort_both_PIPO
+```
+
+
+### ABCO
+```{r}
+mort180_ABCO <- sum(counts180$ABCO_DEAD)/sum(counts180$ABCO_ALIVE)
+mort380_ABCO <- sum(counts380$ABCO_DEAD)/sum(counts380$ABCO_ALIVE)
+mort180_ABCO
+mort380_ABCO
+```
+
+
 
