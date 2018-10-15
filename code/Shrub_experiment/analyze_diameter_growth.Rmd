@@ -1,0 +1,155 @@
+---
+title: "diameter growth analysis - shrub removal"
+author: "Carmen"
+date: "November 9, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+This code analyzes how shrub removal affected seedling radial growth.
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(nlme)
+library(effects)
+```
+
+# Load data
+```{r}
+df <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia.csv")
+dfshrub <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/dfshrub.csv")
+```
+
+# Add shrub data
+```{r}
+df <- full_join(df, dfshrub)
+summary(df$shrubarea)
+```
+
+# Look at sample sizes
+```{r}
+df %>% group_by(species, shrub_species, shrubs) %>% 
+  summarise(n())
+```
+
+# Check for missing values
+```{r}
+summary(df$dia_growth_rel)
+summary(df$species)
+summary(df$shrub_species)
+summary(df$ht_cm)
+```
+
+# Look at height distributions by shrub species
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = interaction(shrub_species, species), y = ht_))
+```
+
+# How does variance of RGR compare for different heights?
+```{r}
+sd(unlist(df[df$ht_cm < median(df$ht_cm),"RGR"]))
+sd(unlist(df[df$ht_cm > median(df$ht_cm),"RGR"]))
+```
+
+Taller seedlings have nearly half the variance of shorter seedlings. This hints we'll need a GLS model. 
+
+# How many of the measurements are below 0?
+```{r}
+df %>% 
+  summarise(n_neg = sum(dia_growth_rel<0), n_pos = sum(dia_growth_rel>=0), n_total = n()) 
+```
+
+# Stats
+
+## Distribution of diameter growth
+```{r}
+hist(df$dia_growth_rel, breaks = 30)
+```
+
+Looks pretty normal.
+
+## Mixed effects with island effect
+```{r}
+MM1 <- lme(dia_growth_rel ~ shrubs + ht_cm +  species + shrub_species + shrubarea + shrubs:species + shrubs:shrub_species + shrubs:ht_cm, random =~1|island, data = df, method = "ML")
+MM1_noremoval <- lme(dia_growth_rel ~ ht_cm + species + shrub_species + shrubarea, random =~1|island, method = "ML",data = df)
+anova(MM1, MM1_noremoval)
+```
+
+### Residuals
+```{r}
+E <- residuals(MM1)
+pred <- predict(MM1)
+plot(MM1, which=c(1))
+plot(df$shrubs, E)
+plot(df$species, E)
+plot(df$shrub_species, E)
+```
+
+# Plot predictions
+
+### Create MyData
+```{r}
+MyData <- expand.grid(shrubs = c("retained", "removed"), ht_cm = c(seq(10,300, length = 20)), species = c("ABCO", "PIPO"), shrub_species = c("CEIN","CECO","ARPA"), shrubarea = seq(33000,120000, length = 20))
+```
+
+### Add pred
+```{r}
+MyData$predMM <- predict(MM1, level = 0, newdata = MyData)
+```
+
+## Overall effect of removal on diameter growth
+```{r}
+MyData_summary <- MyData %>% 
+  group_by(shrubs, shrub_species, species) %>% 
+  summarise(mean_predMM = mean(predMM))
+figure <- ggplot(MyData_summary,aes(x = shrubs, y = mean_predMM)) +
+  geom_point(aes(col = species, shape = shrub_species), size = 2)+
+  geom_line(aes(col = species, linetype = shrub_species, group = interaction(shrub_species, species)))+
+  theme_bw()+
+  scale_color_manual(values=c("#1a9850", "#d73027"))+
+  labs(y = "Predicted relative diameter growth")+
+  ggtitle("Shrub removal increased diameter growth,\nespecially for whitethorn")
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("dia_growth.png")
+figure
+dev.off()
+```
+
+### Plot effect of height
+```{r}
+MyData$ht_cm <- as.numeric(paste(MyData$ht_cm))
+MyData_height_summary <-  MyData %>% 
+  group_by(species, shrubs, ht_cm) %>% 
+  summarise(predMM = mean(predMM))
+  
+ggplot(MyData_height_summary)+
+  geom_line(aes(x = ht_cm, y = predMM, group = interaction(shrubs, species), col = species, linetype = shrubs))+
+  scale_color_manual(values = c('#d73027','#66bd63','#f46d43','#a6d96a','#fdae61','#1a9850'))+
+  theme_bw()+
+  ggtitle("The effect of removal was stronger for larger seedlings")+
+  labs(y = "Predicted relative growth rate")+
+  labs(x = "Seedling height in 2017 (cm)")
+```
+
+The taller the seedling, the smaller the effect of removal. Makes sense.
+
+### Effect of pre-treatment shrub cover 
+```{r}
+MyData_shrubarea_summary <- MyData %>% 
+  group_by(species, shrubs, shrubarea) %>% 
+  summarise(predMM = mean(predMM))
+ggplot(MyData_shrubarea_summary)+
+  geom_line(aes(x = shrubarea, y = predMM, group = interaction(shrubs, species), linetype = shrubs, col = species))
+```
+
+The greater the pre-treatment shrub cover, the greater the predicted diameter growth. 
+
+
+# Save final data frame
+```{r}
+save(df, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia_final.Rdata")
+```

@@ -1,0 +1,80 @@
+---
+title: "shrub data cleaning"
+author: "Carmen"
+date: "November 9, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+```
+
+# Load data
+```{r}
+dfshrub <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/ShrubCov_compiled_20171108.xlsx")
+```
+
+# Rename columns
+```{r}
+dfshrub <- dfshrub %>% 
+  rename(cov_cm = `cover (cm)`) %>% 
+  rename(ht_cm = `ht (cm)`)
+```
+
+# Make everything uppercase
+```{r}
+dfshrub <- dfshrub %>% 
+  mutate(island = toupper(island))
+```
+
+
+# Take out gaps for now
+```{r}
+dfshrub <- dfshrub %>% 
+  filter(spp != "gap" & spp != "Gap")
+summary(as.factor(dfshrub$spp))
+summary(as.numeric(dfshrub$ht_cm))
+dfshrub$ht_cm <- as.numeric(dfshrub$ht_cm)
+```
+
+# Calculate shrubarea for each transect and species
+```{r}
+dfshrub <- dfshrub %>% 
+  mutate(shrubarea = cov_cm*ht_cm)
+dfshrub
+```
+
+# Sum shrubarea for the whole plot
+```{r}
+dfshrub <- dfshrub %>% 
+  group_by(Compartment, island, plot) %>% 
+  summarise(shrubarea = sum(shrubarea))
+summary(dfshrub$shrubarea)
+```
+
+# Take a look
+```{r}
+dfshrub
+hist(dfshrub$shrubarea)
+dfshrub %>% 
+  group_by(Compartment, island) %>% 
+  summarise(n())
+```
+
+# Rename to match seedling columns
+```{r}
+dfshrub <- dfshrub %>% 
+  rename(compartment = Compartment)
+```
+
+# Save
+```{r}
+write.csv(dfshrub, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/dfshrub.csv", row.names = F)
+```
+
+

@@ -1,0 +1,294 @@
+---
+title: "Fir volume growth analysis -fire footprints"
+author: "Carmen"
+date: "November 19, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+
+```{r, include = F}
+library(ggplot2)
+library(dplyr)
+require(nlme)
+library(kableExtra)
+library(knitr)
+library(lme4)
+library(tidyr)
+```
+
+
+# Load final data frame
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata")
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
+df_vert <- df
+remove(df)
+```
+
+# Delete rows for vert growth before 2016
+```{r}
+df_vert <- df_vert %>% 
+  filter(Year != "2015")
+```
+
+# Restructure vert data so there's one row per seedling
+```{r}
+df_vert <- df_vert %>% select(-VertGrowth_Rel)
+df_vert <- spread(df_vert, key = Year, value = VertGrowth) %>% 
+  rename(VertGr_2016 = `2016`) %>% 
+  rename(VertGr_2017 = `2017`)
+```
+
+
+# Filter to only seedlings with workable data for both diameter and vertical growth
+```{r}
+df_vert <- df_vert %>% select(Sdlg, VertGr_2016, VertGr_2017)
+df <- inner_join(df_dia, df_vert)
+```
+
+
+# Clean up extreme and negative values
+
+```{r}
+nrow(df)
+hist(df$DiaGrowth_rel, breaks = 10)
+hist(df$DiaGrowth_rel)
+nrow(df)
+```
+
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+nrow(df)
+hist(df$DiaGrowth, breaks = 20)
+mean_minSD <- mean(df$DiaGrowth) - 2*sd(df$DiaGrowth)
+mean_minSD
+mean_plusSD <- mean(df$DiaGrowth) + 2*sd(df$DiaGrowth)
+mean_plusSD
+df <- df %>% 
+  filter(!(DiaGrowth < mean_minSD |
+             DiaGrowth > mean_plusSD))
+hist(df$DiaGrowth)
+nrow(df)
+```
+
+
+## Adjust final diameters so everything's above 0
+```{r}
+hist(df$DiaGrowth)
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth)))
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(DiaGrowth = (DiaGrowth - min(DiaGrowth)))
+```
+
+
+# Calculate relative growth rate
+
+## Calculate pre volume
+```{r}
+#fix NA vert growth for math purposes
+df <- df %>%
+  mutate(VertGr_2017 = ifelse(is.na(VertGr_2017), 0, VertGr_2017)) %>% 
+   mutate(VertGr_2016 = ifelse(is.na(VertGr_2016), 0, VertGr_2016))
+
+df <- df %>% 
+  mutate(vol_pre_cm2 = ((BasDia2016.mm/10)^2) * (Ht_cm - VertGr_2017  - VertGr_2016) * (pi/12))
+hist(df$vol_pre_cm2)
+```
+
+## Calculate post volume
+```{r}
+df <- df %>% 
+  mutate(vol_post_cm2 = ((BasDia2017.mm.ave/10)^2) * Ht_cm * (pi/12))
+hist(df$vol_post_cm2)
+```
+
+
+
+## Calculate RGR
+```{r}
+df <- df %>% 
+  mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2))/2)
+hist(df$RGR)
+```
+
+### Take a look
+
+```{r}
+ggplot(df, aes(x = Ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+ggplot(df, aes(x = log(Ht_cm), y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+```
+
+# Normalize
+
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+df <- df %>% 
+  mutate(ht_norm = normalize(Ht_cm)) %>% 
+  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) ) %>% 
+  mutate(Ht_log_norm = normalize(log(Ht_cm)))
+```
+
+
+```{r}
+ggplot(df)+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_pre_cm2)-log(vol_post_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+ggplot(df, aes(x = log(vol_pre_cm2), y = RGR))+
+  geom_point()
+```
+
+# Mixed effects with island effect
+```{r}
+MM1 <- lme(RGR ~Cov1.2_norm + Ht_log_norm, random =~1|Fire, data = df, method = "ML")
+
+MM1_null <- lme(RGR ~ Ht_log_norm, random =~1|Fire, method = "ML",data = df)
+anova(MM1, MM1_null)
+summary(MM1)
+```
+
+
+
+### Residuals
+```{r}
+E <- resid(MM1, type = "normalized")
+pred <- predict(MM1)
+plot(MM1)
+plot(df$shrubarea2_sqrt_norm, E)
+plot(df$Ht_log_norm, E)
+```
+
+
+# AIC table
+
+## Find all possible variable combinations
+```{r}
+v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm:Ht_log_norm", "Cov1.2_norm:Ht_log_norm")
+combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
+list.bad <- list()
+for(i in 1:length(combs)){
+  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
+    {
+    list.bad <- c(list.bad, i)
+    }
+  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
+    list.bad <- c(list.bad, i)
+    } 
+}
+list.bad <- unlist(list.bad)
+combs.bad <- combs[list.bad]
+combs <- setdiff(combs, combs.bad)
+length(combs)
+```
+
+## Table
+```{r}
+table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
+for(i in 1:length(combs)){
+  vars <- combs[i]
+  vars <- paste(vars[[1]], collapse="+")
+  f <- formula(paste("(RGR ~ Ht_log_norm +", vars,")"))
+  M <- lme(f,data = df, random = ~ 1| Fire)
+  ModelName <- paste("M", i, sep="_")
+  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
+  table <- rbind(table, add)
+}
+colnames(table) <- c("Model","Variables", "AIC")
+table_final <- kable(table %>% arrange(AIC), format = "markdown") 
+table_final
+```
+
+
+# Plot
+
+## Make fake data
+```{r}
+MyData <-  rbind(
+  expand.grid( 
+    Fire = unique(df$Fire),
+    Ht_cm = mean(df$Ht_cm),
+    Cov1.2 = seq(min(df$Cov1.2), max(df$Cov1.2), length = 20)
+    ) 
+)
+```
+
+## "normalize" MyData
+```{r}
+MyData$Ht_norm <- (MyData$Ht_cm - mean(df$Ht_cm))/sd(df$Ht_cm)
+MyData$Ht_log_norm <- (log(MyData$Ht_cm) - mean(log(df$Ht_cm)))/sd(log(df$Ht_cm))
+MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df$Cov1.2))/sd(df$Cov1.2)
+```
+
+
+```{r}
+MyData$pred <- predict(MM1, newdata = MyData)
+```
+
+
+### Summary plot
+```{r}
+MyData_summary_simple <- MyData %>% 
+  group_by(Cov1.2) %>%
+  mutate(pred_simple = mean(pred)) %>% 
+  ungroup()
+
+brown <- "#5b3d07"
+figure_summary <- ggplot(MyData_summary_simple)+
+  labs(title = "Fir seedling volumetric growth")+
+  ylab("relative growth rate (RGR)")+
+  xlab("shrub cover 0-2 m from seedling")+
+  geom_line(aes(y = pred_simple, x =Cov1.2), col = "#1b3f4c")+
+  #geom_point(data=df, aes(x = Cov1.2, y = RGR), col = "#1b3f4c")+
+  theme_bw()+
+  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
+        panel.background = element_rect(fill="#e9ebe8"),
+        text = element_text(size=20, colour = brown),
+        axis.text.x = element_text(colour=brown), 
+        axis.text.y = element_text(colour=brown),
+        panel.border = element_rect(colour = brown)
+        )+
+  scale_y_continuous(limits = c(0,1.12))
+figure_summary
+```
+
+
+# Save figure
+```{r}
+setwd("C:/Users/Carmen/Documents/Shrubs-Seedlings/results/figures")
+pdf("fir_RGR.pdf", width = 5.5, height = 7.25, pointsize = 30,useDingbats = F)
+figure_summary
+dev.off()
+```
+
+# Calculate pseudo r squared
+```{r}
+meanGrth <- mean(df$RGR)
+sse <- (df$RGR - predict(MM1))^2
+sst <- (df$RGR - meanGrth)^2
+R2 <- 1 - (sum(sse)/sum(sst))
+R2
+```
+
+# Save final data
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
+```

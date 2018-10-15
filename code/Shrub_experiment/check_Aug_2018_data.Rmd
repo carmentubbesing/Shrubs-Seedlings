@@ -1,0 +1,103 @@
+---
+title: "Check August 2018 Data"
+author: "Carmen"
+date: "October 11, 2018"
+output: html_document
+---
+
+
+```{r, include=F}
+require(tidyverse)
+require(readxl)
+```
+
+# Read in all data
+```{r}
+df <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Original - do not edit/seedlings_Aug_2018/Seedling_vert_Aug30_2018_1100(4).xlsx")
+```
+
+# Do some basic cleaning
+```{r}
+df <- df %>% 
+  rename(SEEDLING = `seedling tag #`)
+```
+
+
+# See if all compartments and islands and plots are represented
+```{r}
+print(df %>% group_by(compartment, island, plot) %>% 
+  summarise(count = n()), n = 50)
+```
+
+# Compare to previous seedling list from 2017
+
+Note: there are two sets of 2017 df's, because some seedlings had vert data but not diameter data and vice versa
+```{r}
+df18 <- df
+remove(df)
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert_final.Rdata")
+df17v <- df
+remove(df)
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia_final.Rdata")
+df17d <- df
+remove(df)
+```
+
+# There are more seedlings in the 2018 data than the 2018 data. Investigate why that is. 
+
+## Rename column name in 2017 data
+```{r}
+df17 <- df17 %>% 
+  rename(SEEDLING = sdlg)
+```
+
+## Check for repeat seedlings in the 2018 data
+```{r}
+repeats <- df18 %>% 
+  group_by(compartment, island, plot, SEEDLING) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 1)
+```
+
+### Look at repeats
+```{r}
+for(i in 1:nrow(repeats)){
+  print(df18 %>% 
+    filter(compartment == repeats$compartment[i] & island == repeats$island[i] & plot == repeats$plot[i] & SEEDLING == repeats$SEEDLING[i]) %>% 
+    select(compartment, island, plot, SEEDLING, notes_2017, notes_2018)
+  )
+}
+```
+
+## See if all compartments and islands and plots are represented in 2017 data
+
+### Check that all plots are present in 2017 data
+```{r}
+print(df17 %>% 
+        group_by(compartment, island, plot) %>% 
+        select(compartment, island, plot) %>% 
+        distinct() %>% 
+        ungroup() %>% 
+        group_by(compartment, island) %>% 
+        summarise(n())
+      , 
+      n = 50)
+```
+
+## Check that all plots have seedlings in 2017 data
+```{r}
+print(df17 %>% 
+        group_by(compartment, island, plot) %>% 
+        summarise(n = n()) %>% 
+        filter(n<1)
+      )
+```
+
+## Find seedlings that are in 2018 data but not in 2017 data
+```{r}
+df18summary <- df18 %>% group_by(compartment, island, plot, SEEDLING)
+df17summary <- df17 %>% group_by(compartment, island, plot, SEEDLING)
+antijoin <- anti_join(df18, df17, by = c("compartment", "island", "plot", "SEEDLING"))
+antijoin
+```
+

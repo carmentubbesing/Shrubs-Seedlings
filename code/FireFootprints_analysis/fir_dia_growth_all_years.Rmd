@@ -1,0 +1,416 @@
+---
+title: "Fir diameter growth analysis, all years - fire footprints"
+author: "Carmen"
+date: "November 14, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(ggplot2)
+library(dplyr)
+require(nlme)
+library(kableExtra)
+library(knitr)
+library(lme4)
+```
+
+# Load data
+```{r}
+load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+```
+
+# Filter out firs and fires with very few firs
+```{r}
+df <- df[df$Species%in%c("ABCO","ABMA", "PSME") & !df$Fire %in% c("PLKN","FRDS"),]
+df$Species <- as.factor(df$Species)
+df %>% 
+  group_by(Fire) %>% 
+  summarise(n())
+```
+
+
+
+# Take a look
+```{r}
+hist(df$DiaGrowth)
+summary(df$DiaGrowth)
+df %>% filter(is.na(DiaGrowth))
+```
+
+```{r}
+df %>% group_by(Species) %>% 
+  summarise(n())
+```
+
+
+# Clean
+
+## Take out trees with no second dia measurement
+```{r}
+df <- df %>% filter(!(BasDia2017.mm.2== 0 & BasDia2017.mm.1 == 0))
+```
+
+## Restructure so there's only one row per seedling 
+```{r}
+df_dia <- df %>% 
+  select(-VertGrowth, -VertGrowth_Rel, -Year) %>% 
+  distinct()
+remove(df)
+```
+
+### A seedling was defined as an outlier using analysis of residuals after the fact
+It had suspiciously lower basal diameter in 2017 compared to 2016, and I take it out here
+```{r}
+df_dia <- df_dia %>% filter(!(Fire == "CLVD" & Sdlg == "11"))
+```
+
+## Lump quercus with "other" shrub genus since it only has 3 observations
+```{r}
+df_dia <- df_dia %>% 
+  ungroup() %>% 
+  mutate(ShrG1 = ifelse(ShrG1 == "Quercus", "Other", as.character(ShrG1)))
+df_dia$ShrG1 <- as.factor(df_dia$ShrG1)
+```
+
+# Calculate relative diameter growth
+```{r}
+df_dia <- df_dia %>% 
+  mutate(DiaGrowth_rel = DiaGrowth/(BasDia2016.cm*10))
+hist(df_dia$DiaGrowth_rel)
+```
+
+
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+mean(df_dia$DiaGrowth_rel) - 2*sd(df_dia$DiaGrowth_rel)
+mean(df_dia$DiaGrowth_rel) + 2*sd(df_dia$DiaGrowth_rel)
+df_dia <- df_dia %>% 
+  filter(!(DiaGrowth_rel < (mean(df_dia$DiaGrowth_rel) - 2*sd(df_dia$DiaGrowth_rel)) |
+             DiaGrowth_rel > mean(df_dia$DiaGrowth_rel) + 2*sd(df_dia$DiaGrowth_rel)))
+hist(df_dia$DiaGrowth_rel)
+df_dia %>% 
+  filter(DiaGrowth_rel < 0) %>% 
+  summarise(n())
+39/nrow(df_dia)
+```
+
+
+## Adjust so that no values are below 0 
+```{r}
+df_dia <- df_dia %>% 
+  mutate(DiaGrowth_rel = (DiaGrowth_rel - min(df_dia$DiaGrowth_rel)))
+```
+
+
+# Normalize variables that still need it
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+df_dia <- df_dia %>% 
+  mutate(Cov1.2_norm = normalize(Cov1.2)) %>% 
+  mutate(Cov1.3_norm = normalize(Cov1.3)) %>% 
+  mutate(Ht_norm = normalize(Ht_cm)) %>% 
+  mutate(Ht_log_norm = normalize(log(Ht_cm)))
+```
+
+
+# Stats
+
+## Mixed effects model: How does relative diameter growth relate to shrub area?
+```{r}
+f <- DiaGrowth_rel ~  shrubarea2_sqrt_norm + Ht_log_norm 
+f_noshrubs <- DiaGrowth_rel ~  Ht_norm
+LM1 <- lme(f,data = df_dia, random = ~ 1|Fire, method = "ML")
+LM1_noshrubs <- lme(f_noshrubs,data = df_dia, random = ~ 1|Fire, method = "ML")
+anova(LM1, LM1_noshrubs)
+```
+
+# Look for patterns in residuals of mixed effects model
+
+## In relation to fitted values
+```{r}
+E <- resid(LM1, type="normalized")
+df_dia$resid <- E
+plot(LM1, col = df_dia$Fire)
+df_dia[fitted.values(LM1)<0,]$resid
+plot(df_dia$Ht_norm, E)
+```
+
+## In relation to height
+```{r}
+plot(E~df_dia$Ht_norm)
+coplot(E ~ Ht_norm | Fire, data=df_dia, ylab="Normalized residuals", col=df_dia$Fire)
+```
+
+## In relation to shrub area and fire
+```{r}
+plot(df_dia$shrubarea2_sqrt_norm, E)
+plot(df_dia$Fire, E)
+```
+
+# Is the variance different between larger and smaller seedlings? 
+```{r}
+sd(unlist(df_dia[df_dia$Ht_cm < median(df_dia$Ht_cm),"resid"]))
+sd(unlist(df_dia[df_dia$Ht_cm >= median(df_dia$Ht_cm),"resid"]))
+sd(df_dia$resid)
+(sd(unlist(df_dia[df_dia$Ht_cm < median(df_dia$Ht_cm),"resid"])))/(sd(unlist(df_dia[df_dia$Ht_cm >= median(df_dia$Ht_cm),"resid"])))
+```
+
+Not bad.
+
+# Plot 
+
+## Make fake data
+```{r}
+MyData <-  rbind(
+  expand.grid( 
+    Fire = unique(df_dia$Fire), 
+    shrubarea2 = seq(min(df_dia$shrubarea2), max(df_dia$shrubarea2), length = 20),
+    Ht_cm = seq(min(df_dia$Ht_cm), max(df_dia$Ht_cm), length = 20),
+    Cov1.2 = seq(min(df_dia$Cov1.2), max(df_dia$Cov1.2), length = 20)
+    ) 
+)
+```
+
+## "Normalize" fake data, but use mean and sd from actual data
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+MyData$shrubarea2_sqrt_norm <- (sqrt(MyData$shrubarea2) - mean(sqrt(df_dia$shrubarea2)))/sd(sqrt(df_dia$shrubarea2))
+
+MyData$Ht_norm <- (MyData$Ht_cm - mean(df_dia$Ht_cm))/sd(df_dia$Ht_cm)
+MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df_dia$Cov1.2))/sd(df_dia$Cov1.2)
+```
+
+## Plot
+```{r}
+MyData$pred_simple <- predict(LM1, level = 0, newdata = MyData, type = "response")
+```
+
+### Summary plot
+```{r}
+MyData_summary_simple <- MyData %>% 
+  group_by(shrubarea2, Fire) %>% 
+  mutate(pred_simple = mean(pred_simple))
+
+figure_summary <- ggplot(MyData_summary_simple)+
+  labs(title = "Predicted fir seedling diameter growth (lines) \nand actual growth (points)")+
+  ylab("Predicted relative seedling growth")+
+  xlab("shrub cover * shrub height 0-2 m from seedling")+
+  geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)))+
+  geom_point(data=df_dia, aes(x = sqrt(shrubarea2), y = DiaGrowth_rel))
+dev.off()
+figure_summary
+remove(MyData_summary_simple)
+```
+
+```{r}
+df_dia %>% 
+  group_by(ShrG1) %>% 
+  summarise(n())
+```
+
+# Add date measured in 2016??
+
+# AIC table
+
+## Find all possible variable combinations
+```{r}
+v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm:Ht_norm", "Cov1.2_norm:Ht_norm")
+combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
+list.bad <- list()
+for(i in 1:length(combs)){
+  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
+    {
+    list.bad <- c(list.bad, i)
+    }
+  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
+    list.bad <- c(list.bad, i)
+    } 
+}
+list.bad <- unlist(list.bad)
+combs.bad <- combs[list.bad]
+combs <- setdiff(combs, combs.bad)
+length(combs)
+```
+
+## Table
+```{r}
+table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
+for(i in 1:length(combs)){
+  vars <- combs[i]
+  vars <- paste(vars[[1]], collapse="+")
+  f <- formula(paste("(DiaGrowth_rel ~ Ht_norm +", vars,")"))
+  M <- lme(f,data = df_dia, random = ~ 1| Fire)
+  ModelName <- paste("M", i, sep="_")
+  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
+  table <- rbind(table, add)
+}
+colnames(table) <- c("Model","Variables", "AIC")
+table_final <- kable(table %>% arrange(AIC), format = "markdown") 
+table_final
+```
+
+# Re-analyse and plot using best model from above that sticks with 0-2 m
+```{r}
+f <- DiaGrowth_rel ~  Cov1.2_norm + Ht_norm 
+f_noshrubs <- DiaGrowth_rel ~  Ht_norm
+LM2 <- lme(f,data = df_dia, random = ~ 1|Fire, method = "ML")
+LM2_noshrubs <- lme(f_noshrubs,data = df_dia, random = ~ 1|Fire, method = "ML")
+anova(LM2, LM2_noshrubs)
+```
+
+
+# Look for patterns in residuals of mixed effects model
+
+## In relation to fitted values
+```{r}
+E <- resid(LM2, type="normalized")
+df_dia$resid <- E
+plot(LM2, col = df_dia$Fire)
+df_dia[fitted.values(LM2)<0,]$resid
+plot(df_dia$Ht_norm, E)
+```
+
+# What about a variance structure in relation to height?
+```{r}
+f <- DiaGrowth_rel ~  Cov1.2_norm + Ht_norm 
+f_null <- DiaGrowth_rel ~ Ht_norm 
+LM3 <- lme(f,
+           data = df_dia, 
+           random = ~ 1| Fire,  
+           method = "REML", 
+           weights = varExp(form=~Ht_norm))
+LM2 <- lme(f,
+           data = df_dia, 
+           random = ~ 1| Fire,  
+           method = "REML")
+anova(LM3, LM2)
+```
+
+Looks like a variance structure does not need to be included. Go back above and take it out of the AIC selection.
+
+## Compare to null
+# ```{r}
+# LM3_null <- lme(f_null,
+#            data = df_dia, 
+#            random = ~ 1| Fire,  
+#            method = "REML", 
+#            weights = varExp(form=~Ht_norm))
+# anova(LM3, LM3_null)
+# summary(LM3)
+# ```
+
+Note: the best model from the AIC table is with cover from 0-3  m, and that shows a significant likelihood ratio test. For simplicity, in the poster I include cover from 0-2 m and do not discuss significance
+
+## resids for gls model
+```{r}
+E <- resid(LM3, type="normalized")
+df_dia$resid <- E
+plot(LM3, col = df_dia$Fire)
+df_dia[fitted.values(LM3)<0,]$resid
+plot(df_dia$Ht_norm, E)
+```
+
+# Plot once more with the final best model
+
+```{r}
+f <- DiaGrowth_rel ~  Cov1.2_norm + Ht_norm 
+LM2 <- lme(f,
+           data = df_dia, 
+           random = ~ 1| Fire,  
+           method = "ML")
+```
+
+## Make fake data
+```{r}
+MyData2 <-  rbind(
+  expand.grid( 
+    Fire = unique(df_dia$Fire),
+    Ht_cm = mean(df_dia$Ht_cm),
+    Cov1.2 = seq(min(df_dia$Cov1.2), max(df_dia$Cov1.2), length = 20)
+    ) 
+)
+```
+
+## "normalize" MyData
+```{r}
+MyData2$Ht_norm <- (MyData2$Ht_cm - mean(df_dia$Ht_cm))/sd(df_dia$Ht_cm)
+MyData2$Cov1.2_norm <- (MyData2$Cov1.2 - mean(df_dia$Cov1.2))/sd(df_dia$Cov1.2)
+```
+
+# Try lmer
+
+# THIS IS THE BEST ONE:
+```{r}
+LM4 <- lmer(DiaGrowth_rel ~ Cov1.2_norm + Ht_norm + (1|Fire), data=df_dia) 
+LM4_null <- lmer(DiaGrowth_rel ~ Ht_norm + (1|Fire), data=df_dia)
+anova(LM4, LM4_null)
+```
+
+Same results as using nlme
+
+```{r}
+MyData2$pred_simple <- predict(LM4, newdata = MyData2)
+```
+
+
+
+### Summary plot
+```{r}
+MyData2_summary_simple <- MyData2 %>% 
+  group_by(Cov1.2) %>%
+  mutate(pred_simple = mean(pred_simple))
+
+figure_summary <- ggplot(MyData2_summary_simple)+
+  labs(title = "Fir seedling diameter growth")+
+  ylab("relative growth (mm/mm)")+
+  xlab("shrub cover 0-2 m from seedling")+
+  geom_line(aes(y = pred_simple, x =Cov1.2), col = "#1b3f4c")+
+  geom_point(data=df_dia, aes(x = Cov1.2, y = DiaGrowth_rel), col = "#1b3f4c")+
+  theme_bw()+
+  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
+        panel.background = element_rect(fill="#e9ebe8"),
+        text = element_text(size=20),
+        axis.title = element_text(colour = "#1b3f4c"),
+        plot.title = element_text(colour = "#1b3f4c")
+        )+
+  scale_y_continuous(limits = c(0,.72)) 
+figure_summary
+remove(MyData2_summary_simple)
+```
+
+
+# Save figure
+```{r}
+setwd("C:/Users/Carmen/Documents/Shrubs-Seedlings/results/figures")
+pdf("fir_dia.pdf", width = 5.5, height = 7.25, pointsize = 30,useDingbats = F)
+figure_summary
+dev.off()
+```
+
+# Calculate pseudo r squared
+```{r}
+meanGrth <- mean(df_dia$DiaGrowth_rel)
+sse <- (df_dia$DiaGrowth_rel - predict(LM4))^2
+sst <- (df_dia$DiaGrowth_rel - meanGrth)^2
+R2 <- 1 - (sum(sse)/sum(sst))
+R2
+```
+
+# Save final data
+```{r}
+save(df_dia, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata")
+```
+

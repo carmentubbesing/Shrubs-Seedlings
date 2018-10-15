@@ -1,0 +1,507 @@
+---
+title: "Fir volumetric growth analysis - shrub experiment"
+author: "Carmen"
+date: "November 14, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(nlme)
+library(effects)
+```
+
+
+# Load final data frames
+```{r}
+load(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia_final.Rdata")
+df_dia <- df
+remove(df)
+load(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert_final.Rdata")
+df_vert <- df
+remove(df)
+```
+
+# Filter to only seedlings with workable data for both diameter and vertical growth
+```{r}
+df_vert$leader_damage <- as.character(df_vert$leader_damage)
+df <- inner_join(df_dia, df_vert)
+```
+
+# Clean up extreme and negative values
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+nrow(df)
+hist(df$dia_growth_mm, breaks = 20)
+mean_minSD <- mean(df$dia_growth_mm) - 1.5*sd(df$dia_growth_mm)
+mean_minSD
+mean_plusSD <- mean(df$dia_growth_mm) + 1.5*sd(df$dia_growth_mm)
+mean_plusSD
+df <- df %>% 
+  filter(!(dia_growth_mm < mean_minSD |
+             dia_growth_mm > mean_plusSD))
+hist(df$dia_growth_mm)
+nrow(df)
+```
+
+## Adjust  so everything's above 0
+```{r}
+hist(df$Aug_dia_ave_mm)
+df <- df %>% 
+  mutate(Aug_dia_ave_mm = Aug_dia_ave_mm - min(dia_growth_mm)) %>% 
+  mutate(dia_growth_mm = (dia_growth_mm - min(dia_growth_mm))) 
+hist(df$Aug_dia_ave_mm)  
+hist(df$dia_growth_mm)
+```
+
+# Calculate relative growth rate
+
+## Calculate pre volume
+```{r}
+df <- df %>% 
+  mutate(vol_pre_cm2 = ((spring_dia_ave_mm/10)^2) * (ht_cm - gr_2017_cm) * (pi/12))
+hist(df$vol_pre_cm2)
+```
+
+## Calculate post volume
+```{r}
+df <- df %>% 
+  mutate(vol_post_cm2 = ((Aug_dia_ave_mm/10)^2) * ht_cm * (pi/12))
+hist(df$vol_post_cm2)
+```
+
+## Check
+```{r}
+hist(log(df$vol_post_cm2))
+ggplot(df)+
+  geom_point(aes(x = vol_pre_cm2, y = vol_post_cm2))+
+  scale_x_continuous(limits = c(0,50))+
+  scale_y_continuous(limits = c(0,50))+
+  geom_abline(slope = 1,intercept = 0)
+ggplot(df %>% filter(species == "ABCO"))+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_pre_cm2)-log(vol_post_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+
+ggplot(df %>% filter(species == "PIPO"))+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_pre_cm2)-log(vol_post_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+ggplot(df %>% filter(species == "ABCO"))+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_pre_cm2)-log(vol_post_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+ggplot(df %>% filter(species == "PIPO"))+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_pre_cm2)-log(vol_post_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+```
+
+NOTE: This plot looks very different if I set the outlier cutoff to 2xSD, making it so that all the values are adjusted more to the right. I chose to stick with the 1xSD cutoff for that reason. 
+
+## Check
+```{r}
+df[14,] %>% select(spring_dia_ave_mm, ht_cm, vol_pre_cm2)
+(df[14,"spring_dia_ave_mm"]/10)^2 * (df[14,"ht_cm"] -  df[14,"gr_2017_cm"]) * (pi/12)
+
+df[12,] %>% select(Aug_dia_ave_mm, ht_cm, vol_post_cm2)
+(df[12,"Aug_dia_ave_mm"]/10)^2 * df[12,"ht_cm"] * (pi/12)
+
+```
+
+## Calculate RGR
+```{r}
+df <- df %>% 
+  mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2)))
+hist(df$RGR, breaks = 20)
+hist(log(df$RGR), breaks = 20)
+```
+
+### Take a look
+
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = interaction(shrubs, species), y = RGR))
+```
+
+
+```{r}
+ggplot(df)+
+  geom_point(aes(x = vol_pre_cm2, y = RGR))+
+  scale_x_continuous(limits = c(0,300))
+ggplot(df)+
+  geom_point(aes(x = vol_pre_cm2, y = log(RGR)))+
+  scale_x_continuous(limits = c(0,300))
+```
+
+
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = interaction(shrubs, species), y = log(RGR)))
+```
+
+```{r}
+ggplot(df, aes(x = ht_cm, y = log(RGR)))+
+  geom_point()+
+  stat_smooth(method = "gam")
+```
+
+Log transformation looks better than no log transformation:
+
+```{r}
+ggplot(df, aes(x = ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam")
+```
+
+
+
+# Plot mean and SE RGR for both species
+```{r}
+df_summary <- df %>% 
+  group_by(shrubs, species) %>% 
+  summarise(mean_RGR = mean(RGR), sd= sd(RGR), n = n(), SE = sd(RGR)/sqrt(n()))
+df_summary
+figure_meanSE <- ggplot(df_summary, aes(x = interaction(shrubs, species), col = species))+
+  geom_errorbar(aes(ymin = mean_RGR-SE, ymax = mean_RGR+SE), width = .1)+
+  geom_point(aes(y = mean_RGR), size = 2)+
+  theme_bw()+
+  theme(legend.position = c(.8,.8),
+        text = element_text(size=10)
+        )+
+  ylab("relative growth rate (RGR)")+
+  xlab("")+
+  scale_x_discrete(labels = c("shrubs\nremoved","control","shrubs\nremoved", "control"))+
+  scale_colour_manual(
+    name = "Species",
+    labels = c("fir", "pine"),
+    values = c("#1b3f4c","#a02313")
+    )
+  
+    
+figure_meanSE
+```
+
+Save this figure
+```{r}
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+pdf("meansSE.pdf", width = 3, height = 3, useDingbats = F)
+figure_meanSE
+dev.off()
+```
+
+
+# Standardize continuous variables I plan to use in the model
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+## Analyze RGR in relation to shrub removal
+```{r}
+df_abco <- df %>% filter(species == "ABCO")
+```
+
+
+```{r}
+df_abco <- df_abco %>% 
+  mutate(ht_norm = normalize(ht_cm)) %>% 
+  mutate(shrubarea_sqrt_norm = normalize(sqrt(shrubarea)) ) %>% 
+  mutate(ht_log_norm = normalize(log(ht_cm)))
+```
+
+```{r}
+ggplot(df_abco, aes(x = ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+ggplot(df_abco, aes(x = ht_norm, y = log(RGR)))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+ggplot(df_abco, aes(x = ht_log_norm, y = log(RGR)))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+```
+
+The log relationship between ht and RGR means that we have to transform one of them
+
+
+# Stats
+
+THESE ARE SUPER WACKY! NEED TO FIX EVERYTHING
+
+### Mixed effects with island effect
+```{r}
+MM1_abco <- lme(RGR ~ shrubs + ht_log_norm + shrub_species, random =~1|island, data = df_abco, method = "ML", weights = varExp(form=~ht_norm))
+MM1_null_abco <- lme(RGR ~ ht_log_norm + shrub_species, random =~1|island, method = "ML",data = df_abco, weights = varExp(form=~ht_norm))
+anova(MM1_abco, MM1_null_abco)
+summary(MM1_abco)
+```
+
+
+```{r}
+df_pipo <- df %>% filter(species == "PIPO")
+```
+
+
+```{r}
+df_pipo <- df_pipo %>% 
+  mutate(ht_norm = normalize(ht_cm)) %>% 
+  mutate(shrubarea_sqrt_norm = normalize(sqrt(shrubarea)) ) %>% 
+  mutate(ht_log_norm = normalize(log(ht_cm)))
+```
+
+The log relationship between ht and RGR means that we have to transform one of them
+
+
+### Mixed effects with island effect - PIPO
+```{r}
+MM1_pipo <- lme(RGR ~ shrubs + ht_log_norm + shrub_species + shrubs:ht_log_norm, 
+                data = df_pipo, 
+                random =~ 1 | island, 
+                weights = varExp(form=~ht_log_norm),
+                method = "ML")
+MM1_null_pipo <- lme(RGR ~ ht_log_norm + shrub_species, 
+                     data = df_pipo,
+                     weights = varExp(form=~ht_log_norm),
+                     random =~ 1 | island, 
+                method = "ML")
+anova(MM1_pipo, MM1_null_pipo)
+summary(MM1_pipo)
+AIC(MM1_pipo)
+AIC(MM1_null_pipo)
+```
+
+### Simple linear model - PIPO
+### Mixed effects with island effect - PIPO
+```{r}
+MM2_pipo <- lm(RGR ~ shrubs + ht_log_norm + shrub_species + shrubs:ht_log_norm, 
+                data = df_pipo)
+                
+MM2_null_pipo <- lm(RGR ~ ht_log_norm + shrub_species, data = df_pipo)
+
+anova(MM2_pipo, MM2_null_pipo)
+summary(MM1_pipo)
+AIC(MM2_pipo)
+AIC(MM2_null_pipo)
+```
+
+
+
+
+### Residuals
+```{r}
+E <- resid(MM1_pipo, type = "normalized")
+pred <- predict(MM1_pipo)
+plot(MM1_pipo)
+
+plot(df[df$species == "PIPO","shrubs"], E)
+plot(df[df$species == "PIPO","shrub_species"], E)
+plot(df_pipo$ht_log_norm, E)
+```
+
+<!-- # Plot predictions -->
+
+<!-- ### Create MyData -->
+<!-- ```{r} -->
+<!-- MyData_abco <- expand.grid(shrubs = c("retained", "removed"), ht_norm = c(seq(min(df$ht_norm), max(df$ht_norm), length = 20)), shrub_species = c("CEIN","CECO","ARPA"), shrubarea_sqrt_norm= seq(min(df$shrubarea_aqrt_norm, max(df$shrubarea_sqrt_norm)), length = 20), island = unique(df$island)) -->
+<!-- ``` -->
+
+<!-- #### Take out MyData_abco for islands without ABCO -->
+<!-- ```{r} -->
+<!-- MyData_abco <- filter(MyData_abco, island != "A") -->
+<!-- ``` -->
+
+
+<!-- ### Add pred -->
+<!-- ```{r} -->
+<!-- MyData_abco$predMM <- predict(MM1_abco, newdata = MyData_abco) -->
+<!-- ``` -->
+
+<!-- ## Overall effect of removal on growth -->
+<!-- ```{r} -->
+<!-- MyData_summary_abco <- MyData_abco %>%  -->
+<!--   group_by(shrubs, shrub_species, island) %>%  -->
+<!--   summarise(mean_predMM = mean(predMM)) -->
+<!-- MyData_summary_abco -->
+<!-- figure <- ggplot(MyData_summary_abco,aes(x = shrubs, y = mean_predMM)) + -->
+<!--    geom_boxplot(data = df %>% filter(species == "ABCO"), aes(x = shrubs, y = RGR)) + -->
+<!--   geom_point(aes(col = shrub_species, shape = shrub_species), size = 2)+ -->
+<!--   geom_line(aes(col = shrub_species, linetype = shrub_species, group = interaction(shrub_species, island)))+ -->
+<!--   theme_bw()+ -->
+<!--   scale_color_manual(values=c("#1a9850", "#d73027", "pink"))+ -->
+<!--   labs(y = "Predicted relative growth rate")+ -->
+<!--   ggtitle("Shrub removal increased relative growth rate") -->
+
+<!-- figure -->
+<!-- setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/") -->
+<!-- png("RGR.png") -->
+<!-- figure -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+<!-- ### Plot effect of height -->
+<!-- ```{r} -->
+<!-- MyData_abco$ht_norm <- as.numeric(paste(MyData_abco$ht_norm)) -->
+<!-- MyData_abco_height_summary <-  MyData_abco %>%  -->
+<!--   group_by(shrub_species, shrubs, ht_norm) %>%  -->
+<!--   summarise(predMM = mean(predMM)) -->
+<!-- MyData_abco_height_summary -->
+<!-- ggplot(MyData_abco_height_summary)+ -->
+<!--   geom_line(aes(x = ht_norm, y = predMM, group = interaction(shrubs, shrub_species), col = shrub_species, linetype = shrubs))+ -->
+<!--   theme_bw() -->
+<!-- ``` -->
+
+<!-- The taller the seedling, the smaller the predicted growth rate. I think there's a serious GLS issue here.  -->
+
+<!-- # GLS analysis, no island effect -->
+
+<!-- ## Which is better, varExp or VarPower? (test according to Zuur Ch. 4) -->
+<!-- ```{r} -->
+<!-- G1_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "REML") -->
+<!-- G2_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs,  -->
+<!--                weights = varPower(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "REML") -->
+<!-- AIC(G1_abco) -->
+<!-- AIC(G2_abco) -->
+
+<!-- E1 <- resid(G1_abco, type = "normalized") -->
+<!-- plot(df[df$species == "ABCO","ht_cm"], E1) -->
+<!-- E2 <- resid(G2_abco, type = "normalized") -->
+<!-- plot(df[df$species == "ABCO","ht_cm"], E2) -->
+<!-- ``` -->
+
+<!-- VarExp is definitely better! -->
+
+<!-- ## See what nonessential predictors are helpful -->
+
+<!-- ### ht:removal interaction? -->
+<!-- ```{r} -->
+<!-- G1_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- G3_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- AIC(G1_abco) -->
+<!-- AIC(G3_abco) -->
+<!-- anova(G1_abco, G3_abco) -->
+<!-- ``` -->
+
+<!-- Interaction between ht and removal does not help! -->
+
+<!-- ### species:removal interaction? -->
+<!-- ```{r} -->
+<!-- G4_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species + shrub_species:shrubs,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- AIC(G1_abco) -->
+<!-- AIC(G4_abco) -->
+<!-- anova(G1_abco, G4_abco) -->
+<!-- ``` -->
+
+<!-- Interaction between shrub species and removal does not help! -->
+
+<!-- ### shrubarea? -->
+
+<!-- ```{r} -->
+<!-- G5_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species + shrubarea_sqrt_norm,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- AIC(G1_abco) -->
+<!-- AIC(G5_abco) -->
+<!-- anova(G1_abco, G5_abco) -->
+<!-- ``` -->
+
+<!-- Shrub area does not help! -->
+
+<!-- ## Compare to null model -->
+<!-- ```{r} -->
+<!-- G1_abco <- lme(log(RGR) ~ ht_norm + shrubs + shrub_species,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- G1_abco_null <- lme(log(RGR) ~ ht_norm  + shrub_species,  -->
+<!--                weights = varExp(form=~ht_norm), -->
+<!--                random =~ 1 | island,  -->
+<!--                data = df %>% filter(species == "ABCO"), -->
+<!--                method = "ML") -->
+<!-- summary(G1_abco) -->
+<!-- anova(G1_abco, G1_abco_null) -->
+<!-- ``` -->
+
+
+<!-- ## Plot -->
+
+<!-- ### Add pred -->
+<!-- ```{r} -->
+<!-- MyData_abco$predMM_gls <- predict(G1_abco, newdata = MyData_abco) -->
+<!-- ``` -->
+
+<!-- ## Overall effect of removal on diameter growth -->
+<!-- ```{r} -->
+<!-- MyData_summary_abco <- MyData_abco %>%  -->
+<!--   group_by(shrubs, shrub_species, island) %>%  -->
+<!--   summarise(mean_predMM_gls = mean(predMM_gls)) -->
+<!-- MyData_summary_abco -->
+<!-- figure <- ggplot(MyData_summary_abco, -->
+<!--                  aes(x = shrubs, y = mean_predMM_gls)) + -->
+<!--    geom_boxplot(data = df %>% filter(species == "ABCO"),  -->
+<!--                 aes(x = shrubs, y = RGR)) + -->
+<!--   geom_point( -->
+<!--     aes(col = shrub_species, shape = shrub_species), size = 2)+ -->
+<!--   geom_line( -->
+<!--     aes(col = shrub_species,  -->
+<!--         linetype = shrub_species,  -->
+<!--         group = interaction(shrub_species, island)))+ -->
+<!--   theme_bw()+ -->
+<!--   scale_color_manual(values=c("#1a9850", "#d73027", "pink"))+ -->
+<!--   labs(y = "Predicted relative growth rate")+ -->
+<!--   ggtitle("Shrub removal increased relative growth rate") -->
+
+<!-- figure -->
+<!-- setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/") -->
+<!-- png("RGR.png") -->
+<!-- figure -->
+<!-- dev.off() -->
+<!-- ``` -->
+
+<!-- ## Residuals -->
+
+<!-- ```{r} -->
+<!-- E <- resid(G1_abco, type = "normalized") -->
+<!-- pred <- predict(G1_abco) -->
+<!-- plot(G1_abco) -->
+<!-- plot(df[df$species == "ABCO","shrubs"], E) -->
+<!-- plot(df[df$species == "ABCO","shrub_species"], E) -->
+<!-- ``` -->
+
+

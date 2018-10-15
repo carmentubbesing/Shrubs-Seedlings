@@ -1,0 +1,341 @@
+---
+title: "Pine volumetric growth analysis - shrub experiment"
+author: "Carmen"
+date: "November 15, 2017"
+output: html_document
+---
+---
+title: "Volumetric growth analysis - shrub experiment"
+author: "Carmen"
+date: "November 14, 2017"
+output: html_document
+---
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(nlme)
+library(effects)
+```
+
+
+# Load final data frames
+```{r}
+load(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia_final.Rdata")
+df_dia <- df
+remove(df)
+load(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert_final.Rdata")
+df_vert <- df
+remove(df)
+```
+
+# Filter to only seedlings with workable data for both diameter and vertical growth
+```{r}
+df_vert$leader_damage <- as.character(df_vert$leader_damage)
+df <- inner_join(df_dia, df_vert)
+```
+
+# Clean up extreme and negative values
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+nrow(df)
+hist(df$dia_growth_mm)
+mean_minSD <- mean(df$dia_growth_mm) - 2*sd(df$dia_growth_mm)
+mean_plusSD <- mean(df$dia_growth_mm) + 2*sd(df$dia_growth_mm)
+df <- df %>% 
+  filter(!(dia_growth_mm < mean_minSD |
+             dia_growth_mm > mean_plusSD))
+hist(df$dia_growth_mm)
+nrow(df)
+```
+
+## Adjust  so everything's above 0
+```{r}
+df <- df %>% 
+  mutate(dia_growth_mm = (dia_growth_mm - min(dia_growth_mm)))
+```
+
+
+# Calculate relative growth rate
+
+## Calculate pre volume
+```{r}
+df <- df %>% 
+  mutate(vol_pre_cm2 = ((spring_dia_ave_mm/10)^2) * (ht_cm - gr_2017_cm) * (pi/12))
+hist(df$vol_pre_cm2)
+```
+
+## Calculate post volume
+```{r}
+df <- df %>% 
+  mutate(vol_post_cm2 = ((Aug_dia_ave_mm/10)^2) * ht_cm * (pi/12))
+hist(df$vol_post_cm2)
+```
+
+## Check
+```{r}
+df[14,] %>% select(spring_dia_ave_mm, ht_cm, vol_pre_cm2)
+(df[14,"spring_dia_ave_mm"]/10)^2 * (df[14,"ht_cm"] -  df[14,"gr_2017_cm"]) * (pi/12)
+
+df[12,] %>% select(Aug_dia_ave_mm, ht_cm, vol_post_cm2)
+(df[12,"Aug_dia_ave_mm"]/10)^2 * df[12,"ht_cm"] * (pi/12)
+
+```
+
+## Calculate RGR
+```{r}
+df <- df %>% 
+  mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2)))
+hist(df$RGR)
+```
+
+### Take a look
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = interaction(shrubs, species), y = RGR))
+```
+
+```{r}
+ggplot(df, aes(x = ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam")
+```
+
+
+# Standardize continuous variables I plan to use in the model
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+df <- df %>% 
+  mutate(ht_norm = normalize(ht_cm)) %>% 
+  mutate(shrubarea_sqrt_norm = normalize(sqrt(shrubarea)) )
+```
+
+## Take out CEIN
+```{r}
+df <- df %>% filter(shrub_species != "CEIN")
+```
+
+
+# Stats
+
+## Analyze RGR in relation to shrub removal
+
+### Mixed effects with island effect
+```{r}
+MM1_pipo <- lme(RGR ~ shrubs + ht_norm + shrub_species + ht_norm:shrubs, random =~1|island, data = df %>% filter(species == "PIPO"), method = "ML")
+MM1_null_pipo <- lme(RGR ~ ht_norm + shrub_species + ht_norm:shrubs, random =~1|island, method = "ML",data = df %>%  filter(species == "PIPO"))
+anova(MM1_pipo, MM1_null_pipo)
+summary(MM1_pipo)
+```
+
+### Residuals
+```{r}
+E <- resid(MM1_pipo, type = "normalized")
+pred <- predict(MM1_pipo)
+plot(MM1_pipo)
+plot(df[df$species == "PIPO","shrubs"], E)
+plot(df[df$species == "PIPO","shrub_species"], E)
+plot(df[df$species == "PIPO","ht_norm"], E)
+```
+
+# Plot predictions
+
+### Create MyData
+```{r}
+MyData_pipo <- expand.grid(shrubs = c("retained", "removed"), ht_norm = c(seq(min(df$ht_norm), max(df$ht_norm), length = 20)), shrub_species = c("CECO","ARPA"), shrubarea_sqrt_norm= seq(min(df$shrubarea_aqrt_norm, max(df$shrubarea_sqrt_norm)), length = 20), island = unique(df$island))
+```
+
+#### Take out MyData_pipo for islands without PIPO
+```{r}
+MyData_pipo <- filter(MyData_pipo, island != "A")
+```
+
+
+### Add pred
+```{r}
+MyData_pipo$predMM <- predict(MM1_pipo, newdata = MyData_pipo)
+```
+
+## Overall effect of removal on diameter growth
+```{r}
+MyData_summary_pipo <- MyData_pipo %>% 
+  group_by(shrubs, shrub_species, island) %>% 
+  summarise(mean_predMM = mean(predMM))
+MyData_summary_pipo
+figure <- ggplot(MyData_summary_pipo,aes(x = shrubs, y = mean_predMM)) +
+   geom_boxplot(data = df %>% filter(species == "PIPO"), aes(x = shrubs, y = RGR)) +
+  geom_point(aes(col = shrub_species, shape = shrub_species), size = 2)+
+  geom_line(aes(col = shrub_species, linetype = shrub_species, group = interaction(shrub_species, island)))+
+  theme_bw()+
+  scale_color_manual(values=c("#1a9850", "#d73027", "pink"))+
+  labs(y = "Predicted relative growth rate")+
+  ggtitle("Shrub removal increased relative growth rate")
+ 
+figure
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("RGR.png")
+figure
+dev.off()
+```
+
+### Plot effect of height
+```{r}
+MyData_pipo$ht_norm <- as.numeric(paste(MyData_pipo$ht_norm))
+MyData_pipo_height_summary <-  MyData_pipo %>% 
+  group_by(shrub_species, shrubs, ht_norm) %>% 
+  summarise(predMM = mean(predMM))
+MyData_pipo_height_summary
+ggplot(MyData_pipo_height_summary)+
+  geom_line(aes(x = ht_norm, y = predMM, group = interaction(shrubs, shrub_species), col = shrub_species, linetype = shrubs))+
+  theme_bw()
+```
+
+The taller the seedling, the smaller the predicted growth rate. I think there's a serious GLS issue here. 
+
+# GLS analysis, no island effect
+
+## Which is better, varExp or VarPower? (test according to Zuur Ch. 4)
+```{r}
+G1_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "REML")
+G2_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs, 
+               weights = varPower(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "REML")
+AIC(G1_pipo)
+AIC(G2_pipo)
+
+E1 <- resid(G1_pipo, type = "normalized")
+plot(df[df$species == "PIPO","ht_cm"], E1)
+E2 <- resid(G2_pipo, type = "normalized")
+plot(df[df$species == "PIPO","ht_cm"], E2)
+```
+
+VarExp is definitely better!
+
+## See what nonessential predictors are helpful
+
+### ht:removal interaction?
+```{r}
+G1_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+G3_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species+ ht_norm:shrubs, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+AIC(G1_pipo)
+AIC(G3_pipo)
+anova(G1_pipo, G3_pipo)
+```
+
+Interaction between ht and removal does not help!
+
+### species:removal interaction?
+```{r}
+G4_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species + shrub_species:shrubs, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+AIC(G1_pipo)
+AIC(G4_pipo)
+anova(G1_pipo, G4_pipo)
+```
+
+Interaction between shrub species and removal helps if CEIN is included, but otherwise does not. 
+
+### shrubarea?
+
+```{r}
+G5_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species +  shrubarea_sqrt_norm, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+AIC(G1_pipo)
+AIC(G5_pipo)
+anova(G1_pipo, G5_pipo)
+```
+
+Shrub area maybe helps.
+
+## Compare to null model
+```{r}
+G1_pipo <- lme(RGR ~ ht_norm + shrubs + shrub_species, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+G1_pipo_null <- lme(RGR ~ ht_norm  + shrub_species, 
+               weights = varExp(form=~ht_norm),
+               random =~ 1 | island, 
+               data = df %>% filter(species == "PIPO"),
+               method = "ML")
+summary(G1_pipo)
+anova(G1_pipo, G1_pipo_null)
+```
+
+
+## Plot
+
+### Add pred
+```{r}
+MyData_pipo$predMM_gls <- predict(G1_pipo, newdata = MyData_pipo)
+```
+
+## Overall effect of removal on diameter growth
+```{r}
+MyData_summary_pipo <- MyData_pipo %>% 
+  group_by(shrubs, shrub_species, island) %>% 
+  summarise(mean_predMM_gls = mean(predMM_gls))
+MyData_summary_pipo
+figure <- ggplot(MyData_summary_pipo,aes(x = shrubs, y = mean_predMM_gls)) +
+  geom_point(aes(col = shrub_species, shape = shrub_species), size = 2)+
+  geom_line(aes(col = shrub_species, linetype = shrub_species, group = interaction(shrub_species, island)))+
+  theme_bw()+
+  scale_color_manual(values=c("#1a9850", "#d73027", "pink"))+
+  labs(y = "Predicted relative growth rate")+
+  ggtitle("Shrub removal increased relative growth rate")
+ 
+figure
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("RGR.png")
+figure
+dev.off()
+```
+
+# The effect is reverse for CEIN so I took that species out
+
+## Residuals
+```{r}
+E <- resid(G1_pipo, type = "normalized")
+pred <- predict(G1_pipo)
+plot(G1_pipo)
+plot(df[df$species == "PIPO","shrubs"], E)
+plot(df[df$species == "PIPO","shrub_species"], E)
+```
+
+
+# Boxplots
+```{r}
+ggplot(df %>% filter(species == "PIPO" & ht_cm > median(df$ht_cm)))+
+  geom_boxplot(aes(x = interaction(shrubs, shrub_species), y = RGR))+
+  geom_point(aes(x = interaction(shrubs, shrub_species), y = mean(RGR)), col = "red")
+```
+
+# Check for outliers with high RGR!

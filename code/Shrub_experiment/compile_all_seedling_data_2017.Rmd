@@ -1,0 +1,297 @@
+---
+title: "Shrub experiment seedling data - cleaning"
+author: "Carmen"
+date: "November 7, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+This code compiles and cleans seedling diameter, height, and vertical growth data. It then combines these data with treatment, shrub species, and compartment data. Later code makes pretty graphs and analyses with the cleaned and combined data.
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+```
+
+
+# Pull in data
+```{r}
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/")
+dfsp_plots <- read_excel("Spring_seedling_data_compiled_20171107.xlsx", sheet = 1)
+dfsp_dia <- read_excel("Spring_seedling_data_compiled_20171107.xlsx", sheet = "dia")
+dfAu_dia <- read_excel("Aug_seedling_data_compiled_110717.xlsx", sheet = "data")
+```
+
+# Make all island names uppercase
+```{r}
+dfsp_dia <- dfsp_dia %>% mutate(island = toupper(island))
+dfAu_dia <- dfAu_dia %>% mutate(island = toupper(island))
+```
+ 
+
+# Combine spring and August data
+```{r}
+dfsp_dia
+nrow(dfsp_dia)
+dfsp_dia %>% group_by(compartment, island) %>% summarise(n())
+dfAu_dia
+nrow(dfAu_dia)
+str(dfAu_dia)
+dfAu_dia %>% group_by(compartment, island) %>% summarise(n())
+df_dia <- full_join(dfsp_dia, dfAu_dia, by = c("compartment", "island", "plot", "seedling tag #"))
+nrow(df_dia)
+str(df_dia)
+```
+
+# Remove unnecessary columns
+```{r}
+df_dia <- df_dia %>% 
+  select(-`dm at 10 (1)`, -`dm at 10 (2)`)
+```
+ 
+# Check that species match
+```{r}
+df_dia %>% filter(species.x != species.y) %>% select(species.x, species.y, notes.y)
+```
+
+## Remove seedling with unknown species
+```{r}
+df_dia <- df_dia %>% filter(!(compartment == "180" & island == "C" & `seedling tag #` == 109))
+```
+
+## Remove species.x column since species.y is more accurate
+```{r}
+df_dia <- df_dia %>% select(-species.x) %>% rename(species = species.y)
+```
+ 
+## Check that it's safe to remove the column for height before 2017 growth, then do
+```{r}
+df_dia %>% 
+  filter(!is.na(`height (before 2017 growth)`)) %>% 
+  filter(is.na(notes.y) | notes.y != "thrown out") %>% 
+  mutate(check_ht = `height (before 2017 growth)`+gr_2017_cm - ht_cm) %>% 
+  select(`seedling tag #`, check_ht, gr_2017_cm, ht_cm, `height (before 2017 growth)`, notes.x, notes.y)
+df_dia <- df_dia %>% 
+  select(-`height (before 2017 growth)`)
+```
+
+# Rename columns
+```{r}
+df_dia <- df_dia %>% 
+  rename(spring_dia_1_mm = `dm at base 1 (mm)`) %>% 
+  rename(spring_dia_2_mm = `dm at base 2 (mm)`) %>% 
+  rename(Aug_dia_1_mm = bas_dia_mm_1) %>% 
+  rename(Aug_dia_2_mm = bas_dia_mm_2) %>% 
+  rename(growing = `growing yet.`) %>% 
+  rename(sdlg = `seedling tag #`) %>% 
+  rename(notes.spring = notes.x) %>% 
+  rename(notes.Aug = notes.y) %>% 
+  rename(leader_damage = `leader broke or died`) %>% 
+  select(-`DIA/ht check`)
+df_dia
+```
+
+
+# Correct typo
+```{r}
+df_dia <- df_dia %>% 
+  mutate(spring_dia_2_mm = ifelse(sdlg == 21 & spring_dia_2_mm == 28, 2.8, spring_dia_2_mm))
+filter(df_dia, sdlg == 21)
+```
+
+
+# Take out seedlings that were thrown out
+```{r}
+df_dia %>% filter(is.na(Aug_dia_1_mm)) %>% select(notes.spring, notes.Aug)
+df_dia <- df_dia %>% 
+  filter(!is.na(Aug_dia_1_mm)) 
+```
+
+# Fix NAs
+```{r}
+df_dia %>% 
+  filter(is.na(spring_dia_1_mm)) %>% 
+  select(compartment, island, plot, sdlg, notes.spring, notes.Aug, spring_dia_1_mm, spring_dia_2_mm, species, gr_2017_cm, Aug_dia_1_mm, dead)
+df_dia %>% filter((compartment == "180" & sdlg == "130" & island == "G"))
+```
+
+I looked at the original data sheets for all 3 of the seedlings missing spring data, and found nothing
+
+
+# Calculate average growth
+```{r}
+df_dia <- df_dia %>%
+  rowwise() %>% 
+  mutate(spring_dia_ave_mm = mean(c(spring_dia_1_mm, spring_dia_2_mm), na.rm = T) ) %>% 
+  mutate(Aug_dia_ave_mm = mean(c(Aug_dia_1_mm, Aug_dia_2_mm), na.rm = T))
+```
+
+# Assign each row a date and removed/retained based on plot data
+
+## Clean up plot data
+```{r}
+dfsp_plots <- dfsp_plots %>% 
+  rename(date_sdlg = `date - seedlings`, time_sdlg = `time - seedling meas`, source_sdlg = `source - seedlings`)
+dfsp_plots_small <- dfsp_plots %>% 
+  dplyr::select(compartment, island, plot, shrub_species, shrubs, date_sdlg, time_sdlg, source_sdlg)
+```
+
+## Join
+```{r}
+df_dia <- full_join(df_dia, dfsp_plots_small, by = c("compartment", "island", "plot"))
+```
+
+## Check 
+```{r}
+df_dia %>% filter(is.na(shrubs)) %>% select(compartment, island, plot) %>% distinct()
+```
+
+# Calculate diameter growth and relative diameter growth
+```{r}
+df_dia <- df_dia %>% 
+
+  mutate(dia_growth_mm = Aug_dia_ave_mm - spring_dia_ave_mm) %>% 
+  mutate(dia_growth_rel = dia_growth_mm/(spring_dia_ave_mm))
+```
+
+# Create new df without NA diameter growth and take out seedling with obviously wrong dia measurements in spring 
+```{r}
+df_dia_only <- df_dia %>% 
+  filter(!is.na(spring_dia_1_mm)) %>% 
+  filter(!(compartment == 570 & island == "P" & sdlg == 35))
+```
+
+# Take out seedlings with clearly errors in diameter measurements
+```{r}
+df_dia_only %>% filter(dia_growth_rel>1)
+df_dia_only <- df_dia_only %>% filter(dia_growth_rel<1)
+```
+
+
+# Compare 2017 radial growth between treatments
+
+## Plot
+
+```{r}
+dia_growth_boxplots <- ggplot(data = df_dia_only)+
+  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = dia_growth_rel, col = shrubs))
+dia_growth_boxplots
+df_dia_only %>% 
+  group_by(species, shrub_species, shrubs) %>% 
+  summarise(mean(dia_growth_rel), median(dia_growth_rel))
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("dia_growth_boxplots.jpeg", width = 1500, height = 450, res = 72)
+dia_growth_boxplots
+dev.off()
+```
+
+```{r}
+ggplot(data = df_dia_only)+
+  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = dia_growth_rel, col = shrubs))
+figure <- ggplot(data = df_dia_only)+
+  geom_boxplot(aes(x = interaction(shrubs, species), y = dia_growth_rel, col = shrubs))+
+  labs(y = "2017 relative diameter growth")+
+  ggtitle("Relative diameter growth was higherin removal plots")
+figure
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("dia_growth_boxplots_simple.png")
+figure
+dev.off()
+```
+
+
+# Calculate relative growth rate for vertical growth
+
+## Create data frame for analysing vertical growth 
+
+### Calculate relative vertical growth for each year
+```{r}
+df_vert <- df_dia %>% 
+  mutate(gr_2017_rel = gr_2017_cm/(ht_cm-gr_2017_cm)) %>% 
+  mutate(gr_2016_rel = gr_2016_cm/(ht_cm - gr_2017_cm - gr_2016_cm)) %>% 
+  mutate(gr_2015_rel = gr_2015_cm/(ht_cm - gr_2017_cm - gr_2016_cm - gr_2015_cm)) 
+```
+
+### Take out seedlings with broken leaders in 2017 or 2016, unless it died after growth was complete
+```{r}
+summary(as.factor(df_vert$leader_damage))
+df_vert %>% filter(!is.na(leader_damage) & leader_damage != 0)
+df_vert <- df_vert %>% 
+  filter(!leader_damage %in% c("2016", "2017", "2016,2017", "2017 and 2016", "2017,2015", "2017,2016", "gall in 2016 growth"))
+```
+
+
+# Compare 2017 vertical growth between treatments
+
+## Check distribution
+```{r}
+hist(df_vert$gr_2017_rel)
+hist(log(df_vert$gr_2017_rel))
+hist(df_vert$gr_2017_rel)
+hist(sqrt(df_vert$gr_2017_rel))
+```
+
+
+# Calculate vertical 2017 growth/2016 growth and compare it between treatments
+## Create gr_17_over_16 variable
+```{r}
+df_vert <- df_vert %>% 
+  mutate(gr_17_over_16 = gr_2017_rel/gr_2016_rel)
+```
+
+
+## Check distribution
+```{r}
+hist(df_vert$gr_17_over_16)
+hist(log(df_vert$gr_17_over_16)) # don't use log because there are some zeros (plus sqrt transformation is better)
+hist(sqrt(df_vert$gr_17_over_16))
+```
+
+# Check on the NA value
+```{r}
+df_vert %>% filter(is.na(gr_17_over_16))
+```
+
+## throw it out
+```{r}
+df_vert <- df_vert %>% filter(!is.na(gr_17_over_16))
+```
+
+## throw out dead seedlings
+```{r}
+df_vert <- df_vert %>% filter(dead == "A")
+```
+
+## throw out outlier 
+```{r}
+nrow(df_vert)
+df_vert <- df_vert %>% filter(gr_17_over_16<5.2)
+  nrow(df_vert)
+```
+
+
+
+```{r}
+ggplot(data = df_vert)+
+  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = sqrt(gr_17_over_16), col = shrubs))
+figure <- ggplot(data = df_vert)+
+  geom_boxplot(aes(x = interaction(shrubs, species), y = sqrt(gr_17_over_16), col = shrubs))+
+  labs(y = "2017 relative growth/2016 relative growth, square root transformed")+
+  ggtitle("Change in vertical growth between 2017 and 2016\nwas lower in removal plots")
+figure
+setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
+png("vert_growth_boxplots.png")
+figure
+dev.off()
+```
+
+# Save data frames
+```{r}
+write.csv(df_vert, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert.csv", row.names = F)
+save(df_vert, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert.Rdata")
+write.csv(df_dia_only, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia.csv", row.names = F)
+save(df_dia_only, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_dia.Rdata")
+```
+

@@ -16,6 +16,10 @@ require(knitr)
 require(dplyr)
 require(tidyr)
 require(ggplot2)
+library(effects)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
 ```
 
 # Load data
@@ -35,7 +39,22 @@ df <- df %>%
   mutate(Species = as.factor(Species))
 ```
 
-## Conditional inference tree
+
+# Normalize variables that still need it
+
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+df <- df %>% 
+  mutate(Cov1.2_norm = normalize(Cov1.2)) %>% 
+  mutate(Cov1.3_norm = normalize(Cov1.3))
+```
+
+# Conditional inference tree
 ```{r}
 tree_df <- tree(VertGrowth_Rel ~  Fire + FirePatch + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3, df)
 summary(tree_df)
@@ -89,29 +108,26 @@ MyData <-  rbind(
     Fire = unique(df$Fire), 
     Year = unique(df$Year), 
     shrubarea2 = seq(min(df$shrubarea2), max(df$shrubarea2), length = 100),
-    Ht_cm = seq(min(df$Ht_cm), max(df$Ht_cm), length = 10),
+    Ht_cm = mean(df$Ht_cm),
     Species = c("PIPO","PILA"),
     ShrG1 = unique(df$ShrG1)
     )
 )
-MyData$
 ```
 
-### Normalize MyData variables
-```{r}
-normalize <- function(x) {
-    return ((x - mean(x)) / sd(x))
-  }
-```
+### "Normalize"" MyData variables
 
 ```{r}
-MyData <- MyData %>% 
-  mutate(Ht_norm = normalize(Ht_cm)) %>% 
-  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) )
+MyData$Ht_norm <- (MyData$Ht_cm - mean(df$Ht_cm))/sd(df$Ht_cm)
+MyData$shrubarea2_sqrt <- sqrt(MyData$shrubarea2)
+MyData$shrubarea2_sqrt_norm <- 
+  (MyData$shrubarea2_sqrt - 
+     mean(sqrt(df$shrubarea2))
+   )/sd(sqrt(df$shrubarea2))
 ```
 
 
-## Save figure final data
+## Save final data
 ```{r}
 save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata")
 ```
@@ -125,36 +141,111 @@ LM1_noshrubs <- lme(f_noshrubs,data = df, random = list(~ 1| Fire, ~1| Sdlg), me
 anova(LM1, LM1_noshrubs)
 ```
 
-## Plot
+## Find all possible variable combinations
 ```{r}
-MyData$pred_simple <- predict(LM1, level = 0,newdata = MyData)
+v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm*Ht_norm")
+combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
+list.bad <- list()
+for(i in 1:length(combs)){
+  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
+    {
+    list.bad <- c(list.bad, i)
+    }
+  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
+    list.bad <- c(list.bad, i)
+    } 
+}
+list.bad <- unlist(list.bad)
+combs.bad <- combs[list.bad]
+combs <- setdiff(combs, combs.bad)
+length(combs)
 ```
 
-### Summary plot
+## Table
+```{r}
+table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
+for(i in 1:length(combs)){
+  vars <- combs[i]
+  vars <- paste(vars[[1]], collapse="+")
+  f <- formula(paste("(VertGrowth_Rel ~  Year  + Ht_norm +", vars,")"))
+  M <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg))
+  ModelName <- paste("M", i, sep="_")
+  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
+  table <- rbind(table, add)
+}
+colnames(table) <- c("Model","Variables", "AIC")
+table_final <- kable(table %>% arrange(AIC), format = "markdown") 
+table_final
+```
+
+
+## Compare best model to null
+
+## AIC model selection shows that this is the best model, when year and height are included:
+```{r}
+f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm 
+f_null <- VertGrowth_Rel ~  Year + Ht_norm 
+LM2 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
+LM2_null <- lme(f_null,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
+anova(LM2, LM2_null)
+```
+
+# Add gls
+```{r}
+LM3 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "REML", weights = varExp(form=~Ht_norm))
+LM2 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "REML")
+anova(LM3, LM2)
+```
+
+# THIS IS THE BEST:
+```{r}
+f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm 
+f_null <- VertGrowth_Rel ~  Year + Ht_norm 
+LM3 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML", weights = varExp(form=~Ht_norm))
+LM3_null <- lme(f_null,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
+anova(LM3, LM3_null)
+```
+
+```{r}
+summary(LM3)
+```
+
+
+# Plot again with new best model
+```{r}
+MyData$pred_simple <- predict(LM3, level = 0,newdata = MyData)
+```
+
 ```{r}
 MyData_summary_simple <- MyData %>% 
   group_by(shrubarea2) %>% 
   mutate(pred_simple = mean(pred_simple))
 MyData_summary_simple
 figure_summary <- ggplot(MyData_summary_simple)+
-  labs(title = "Predicted vertical pine seedling growth (lines) \nand actual growth (points)")+
-  ylab("Relative vertical growth (cm/cm)")+
+  labs(title = "Pine seedling vertical growth")+
+  ylab("relative growth (cm/cm)")+
   xlab(
     expression(
-      paste(
+      atop(
         sqrt("shrub cover * shrub height"),
-    " 0-2 m from seedling"))
+    paste("0-2 m from seedling")))
     )+
   geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)), size = 1.5, col = "#a02313")+
   geom_point(data=df, aes(x = sqrt(shrubarea2), y = VertGrowth_Rel), col = "#a02313")+
   theme_bw()+
-  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
-        panel.background = element_rect(fill="#e9ebe8"))
+  theme(
+    plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
+        panel.background = element_rect(fill="#e9ebe8"),
+        text = element_text(size=20),
+        axis.title = element_text(colour = "#a02313"),
+        plot.title = element_text(colour = "#a02313")
+    )
 figure_summary
 ```
 
 ```{r}
-E <- resid(LM1, type="normalized")
+E <- resid(LM3, type="normalized")
+plot(LM3)
 plot(sqrt(df$shrubarea2), E)
 plot((df$Ht_norm), E)
 coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
@@ -163,8 +254,18 @@ coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
 # Save figure
 ```{r}
 setwd("C:/Users/Carmen/Documents/Shrubs-Seedlings/results/figures")
-pdf("pine_vert.pdf")
+pdf("pine_vert.pdf", width = 5.5, height = 8, pointsize = 30,useDingbats = F)
 figure_summary
 dev.off()
 ```
+
+# Calculate pseudo r squared
+```{r}
+meanGrth <- mean(df$VertGrowth_Rel)
+sse <- (df$VertGrowth_Rel - predict(LM3))^2
+sst <- (df$VertGrowth_Rel - meanGrth)^2
+R2 <- 1 - (sum(sse)/sum(sst))
+R2
+```
+
 
