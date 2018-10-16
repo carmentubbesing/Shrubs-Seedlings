@@ -167,7 +167,7 @@ $(document).ready(function () {
 
 <div id="read-in-all-data" class="section level1">
 <h1>Read in all data</h1>
-<pre class="r"><code>df &lt;- read_excel(&quot;~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Original - do not edit/seedlings_Aug_2018/Seedling_vert_Aug30_2018_1100(4).xlsx&quot;)</code></pre>
+<pre class="r"><code>df &lt;- read_excel(&quot;~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Seedling_vert_Aug_2018_compiled.xlsx&quot;)</code></pre>
 </div>
 <div id="do-some-basic-cleaning" class="section level1">
 <h1>Do some basic cleaning</h1>
@@ -182,14 +182,14 @@ $(document).ready(function () {
 <h2>Delete row with all NA’s</h2>
 <pre class="r"><code>npre &lt;- nrow(df)
 df %&gt;% dplyr::filter((is.na(compartment) &amp; is.na(plot)))</code></pre>
-<pre><code>## # A tibble: 1 x 18
-##   compartment island  plot SEEDLING species dead2017 dead2018 ht_cm_2017
-##         &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;         &lt;dbl&gt;
-## 1          NA &lt;NA&gt;      NA       NA &lt;NA&gt;    &lt;NA&gt;     &lt;NA&gt;             NA
-## # ... with 10 more variables: gr_2017_cm &lt;dbl&gt;, gr_2018_cm &lt;chr&gt;,
-## #   bas_dia_mm_1 &lt;chr&gt;, bas_dia_mm_2 &lt;chr&gt;, leader_damage &lt;chr&gt;,
-## #   notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;, `DIA/ht check` &lt;dbl&gt;, `DIA/DIA
-## #   CHECK` &lt;dbl&gt;, `GR/HT CHECK` &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 1 x 19
+##   compartment island  plot SEEDLING species date2018 dead2017 dead2018
+##         &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
+## 1          NA &lt;NA&gt;      NA       NA &lt;NA&gt;    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## # ... with 11 more variables: ht_cm_2017 &lt;dbl&gt;, gr_2017_cm &lt;dbl&gt;,
+## #   gr_2018_cm &lt;chr&gt;, bas_dia_mm_1 &lt;chr&gt;, bas_dia_mm_2 &lt;chr&gt;,
+## #   leader_damage &lt;chr&gt;, notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;, `DIA/ht
+## #   check` &lt;dbl&gt;, `DIA/DIA CHECK` &lt;dbl&gt;, `GR/HT CHECK` &lt;dbl&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% filter(!(is.na(compartment) &amp; is.na(plot)))
 npost &lt;- nrow(df)</code></pre>
 <p>This removed 1 rows, bringing the total to 456.</p>
@@ -210,8 +210,8 @@ npost &lt;- nrow(df)</code></pre>
 ##  3 0.28000000000000003 &lt;NA&gt;                        &lt;NA&gt;      
 ##  4 0.36                &lt;NA&gt;                        &lt;NA&gt;      
 ##  5 0.41                &lt;NA&gt;                        &lt;NA&gt;      
-##  6 0.42                &lt;NA&gt;                        top bent  
-##  7 0.42                2014 birth                  &lt;NA&gt;      
+##  6 0.42                2014 birth                  &lt;NA&gt;      
+##  7 0.42                &lt;NA&gt;                        top bent  
 ##  8 0.45                &lt;NA&gt;                        &lt;NA&gt;      
 ##  9 0.51                &lt;NA&gt;                        &lt;NA&gt;      
 ## 10 0.54                &lt;NA&gt;                        &lt;NA&gt;</code></pre>
@@ -230,8 +230,8 @@ npost &lt;- nrow(df)</code></pre>
 ##  3       0.28 &lt;NA&gt;                        &lt;NA&gt;      
 ##  4       0.36 &lt;NA&gt;                        &lt;NA&gt;      
 ##  5       0.41 &lt;NA&gt;                        &lt;NA&gt;      
-##  6       0.42 &lt;NA&gt;                        top bent  
-##  7       0.42 2014 birth                  &lt;NA&gt;      
+##  6       0.42 2014 birth                  &lt;NA&gt;      
+##  7       0.42 &lt;NA&gt;                        top bent  
 ##  8       0.45 &lt;NA&gt;                        &lt;NA&gt;      
 ##  9       0.51 &lt;NA&gt;                        &lt;NA&gt;      
 ## 10       0.54 &lt;NA&gt;                        &lt;NA&gt;</code></pre>
@@ -240,18 +240,18 @@ npost &lt;- nrow(df)</code></pre>
   select(gr_2018_cm, notes_2017, notes_2018) %&gt;% 
   slice(415:440)</code></pre>
 <pre><code>## # A tibble: 26 x 3
-##    gr_2018_cm notes_2017                             notes_2018           
-##    &lt;chr&gt;      &lt;chr&gt;                                  &lt;chr&gt;                
-##  1 na         &lt;NA&gt;                                   last 3 yes growth de~
-##  2 na         &lt;NA&gt;                                   tip dead, bud not ye~
-##  3 na         3 yrs of growth died after 2017 growt~ top Eaton            
-##  4 na         top died before done growing           &lt;NA&gt;                 
-##  5 na         &lt;NA&gt;                                   leader dead          
-##  6 NA         &lt;NA&gt;                                   broken top           
-##  7 &lt;NA&gt;       top broke off, excluding from study    &lt;NA&gt;                 
-##  8 &lt;NA&gt;       &lt;NA&gt;                                   dead                 
-##  9 &lt;NA&gt;       &lt;NA&gt;                                   &lt;NA&gt;                 
-## 10 &lt;NA&gt;       cut                                    &lt;NA&gt;                 
+##    gr_2018_cm      notes_2017           notes_2018                        
+##    &lt;chr&gt;           &lt;chr&gt;                &lt;chr&gt;                             
+##  1 9.39            &lt;NA&gt;                 &lt;NA&gt;                              
+##  2 9.41            very curvy seedling  &lt;NA&gt;                              
+##  3 9.449999999999~ &lt;NA&gt;                 partially girdled                 
+##  4 9.61            same growth 2016 an~ &lt;NA&gt;                              
+##  5 9.61            first stem           fork 2 cm above ground, measured ~
+##  6 9.67            &lt;NA&gt;                 partially girdled                 
+##  7 na              &lt;NA&gt;                 tip dead, bud not yet set         
+##  8 na              &lt;NA&gt;                 leader died bf bud set            
+##  9 na              &lt;NA&gt;                 last 3 yes growth dead            
+## 10 na              top died before don~ &lt;NA&gt;                              
 ## # ... with 16 more rows</code></pre>
 <pre class="r"><code>df %&gt;% 
   arrange(gr_2018_cm) %&gt;% 
@@ -261,18 +261,18 @@ npost &lt;- nrow(df)</code></pre>
 <pre><code>## Warning in evalq(as.numeric(gr_2018_cm), &lt;environment&gt;): NAs introduced by
 ## coercion</code></pre>
 <pre><code>## # A tibble: 26 x 3
-##    gr_2018_cm notes_2017                             notes_2018           
-##         &lt;dbl&gt; &lt;chr&gt;                                  &lt;chr&gt;                
-##  1         NA &lt;NA&gt;                                   last 3 yes growth de~
-##  2         NA &lt;NA&gt;                                   tip dead, bud not ye~
-##  3         NA 3 yrs of growth died after 2017 growt~ top Eaton            
-##  4         NA top died before done growing           &lt;NA&gt;                 
-##  5         NA &lt;NA&gt;                                   leader dead          
-##  6         NA &lt;NA&gt;                                   broken top           
-##  7         NA top broke off, excluding from study    &lt;NA&gt;                 
-##  8         NA &lt;NA&gt;                                   dead                 
-##  9         NA &lt;NA&gt;                                   &lt;NA&gt;                 
-## 10         NA cut                                    &lt;NA&gt;                 
+##    gr_2018_cm notes_2017             notes_2018                           
+##         &lt;dbl&gt; &lt;chr&gt;                  &lt;chr&gt;                                
+##  1       9.39 &lt;NA&gt;                   &lt;NA&gt;                                 
+##  2       9.41 very curvy seedling    &lt;NA&gt;                                 
+##  3       9.45 &lt;NA&gt;                   partially girdled                    
+##  4       9.61 same growth 2016 and ~ &lt;NA&gt;                                 
+##  5       9.61 first stem             fork 2 cm above ground, measured dia~
+##  6       9.67 &lt;NA&gt;                   partially girdled                    
+##  7      NA    &lt;NA&gt;                   tip dead, bud not yet set            
+##  8      NA    &lt;NA&gt;                   leader died bf bud set               
+##  9      NA    &lt;NA&gt;                   last 3 yes growth dead               
+## 10      NA    top died before done ~ &lt;NA&gt;                                 
 ## # ... with 16 more rows</code></pre>
 <p>What I learned from this: any non-numeric value (“-”, “na”, etc) will automatically be converted to NA if you apply is.numeric() to the column.</p>
 </div>
@@ -289,21 +289,21 @@ npost &lt;- nrow(df)</code></pre>
 <div id="for-some-trees-na-was-recorded-for-dead-because-the-tree-was-thrown-out.-might-as-well-record-it-as-alive." class="section level3">
 <h3>For some trees, NA was recorded for dead because the tree was thrown out. Might as well record it as alive.</h3>
 <pre class="r"><code>df %&gt;% filter(is.na(dead2017))</code></pre>
-<pre><code>## # A tibble: 8 x 18
-##   compartment island  plot SEEDLING species dead2017 dead2018 ht_cm_2017
-##         &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;         &lt;dbl&gt;
-## 1         180 E          1       35 CADE    &lt;NA&gt;     &lt;NA&gt;             NA
-## 2         180 E          1       37 CADE    &lt;NA&gt;     &lt;NA&gt;             NA
-## 3         380 K          2       34 CADE    &lt;NA&gt;     &lt;NA&gt;             NA
-## 4         380 K          2       36 PSME    &lt;NA&gt;     &lt;NA&gt;             NA
-## 5         380 K          2       38 CADE    &lt;NA&gt;     &lt;NA&gt;             NA
-## 6         380 K          2       39 PSME    &lt;NA&gt;     &lt;NA&gt;             NA
-## 7         380 K          2       40 CADE    &lt;NA&gt;     &lt;NA&gt;             NA
-## 8         380 L          2       34 ABCO    &lt;NA&gt;     &lt;NA&gt;             NA
-## # ... with 10 more variables: gr_2017_cm &lt;dbl&gt;, gr_2018_cm &lt;dbl&gt;,
-## #   bas_dia_mm_1 &lt;chr&gt;, bas_dia_mm_2 &lt;chr&gt;, leader_damage &lt;chr&gt;,
-## #   notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;, `DIA/ht check` &lt;dbl&gt;, `DIA/DIA
-## #   CHECK` &lt;dbl&gt;, `GR/HT CHECK` &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 8 x 19
+##   compartment island  plot SEEDLING species date2018 dead2017 dead2018
+##         &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
+## 1         180 E          1       35 CADE    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 2         180 E          1       37 CADE    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 3         380 K          2       34 CADE    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 4         380 K          2       36 PSME    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 5         380 K          2       38 CADE    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 6         380 K          2       39 PSME    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 7         380 K          2       40 CADE    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## 8         380 L          2       34 ABCO    &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt;    
+## # ... with 11 more variables: ht_cm_2017 &lt;dbl&gt;, gr_2017_cm &lt;dbl&gt;,
+## #   gr_2018_cm &lt;dbl&gt;, bas_dia_mm_1 &lt;chr&gt;, bas_dia_mm_2 &lt;chr&gt;,
+## #   leader_damage &lt;chr&gt;, notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;, `DIA/ht
+## #   check` &lt;dbl&gt;, `DIA/DIA CHECK` &lt;dbl&gt;, `GR/HT CHECK` &lt;dbl&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% mutate(dead2017 = ifelse(is.na(dead2017), &quot;A&quot;, dead2017))</code></pre>
 </div>
 <div id="default-to-2017-dead-status-if-nothing-is-recorded-for-dead2018" class="section level3">
@@ -323,11 +323,14 @@ npost &lt;- nrow(df)</code></pre>
 <h4>Check</h4>
 <pre class="r"><code>summary(as.factor(df$dead2018))</code></pre>
 <pre><code>##   A   D 
-## 433  23</code></pre>
+## 432  24</code></pre>
 </div>
 </div>
 <div id="leader-damage" class="section level3">
 <h3>Leader damage</h3>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(leader_damage = ifelse(notes_2018 %in% grep(&quot;leader dead|leader died|tip dead|last 3 yes growth dead&quot;, df$notes_2018, value = T),
+                                paste(leader_damage, &quot;2018&quot;), leader_damage))</code></pre>
 </div>
 </div>
 </div>
@@ -428,10 +431,10 @@ remove(df)</code></pre>
 <pre class="r"><code>nrow(df17_ue)</code></pre>
 <pre><code>## [1] 456</code></pre>
 <pre class="r"><code>anti_join(df18, df17_ue, by = c(&quot;compartment&quot;, &quot;island&quot;, &quot;plot&quot;, &quot;SEEDLING&quot;))</code></pre>
-<pre><code>## # A tibble: 0 x 18
-## # ... with 18 variables: compartment &lt;dbl&gt;, island &lt;chr&gt;, plot &lt;dbl&gt;,
-## #   SEEDLING &lt;dbl&gt;, species &lt;chr&gt;, dead2017 &lt;chr&gt;, dead2018 &lt;chr&gt;,
-## #   ht_cm_2017 &lt;dbl&gt;, gr_2017_cm &lt;dbl&gt;, gr_2018_cm &lt;dbl&gt;,
+<pre><code>## # A tibble: 0 x 19
+## # ... with 19 variables: compartment &lt;dbl&gt;, island &lt;chr&gt;, plot &lt;dbl&gt;,
+## #   SEEDLING &lt;dbl&gt;, species &lt;chr&gt;, date2018 &lt;chr&gt;, dead2017 &lt;chr&gt;,
+## #   dead2018 &lt;chr&gt;, ht_cm_2017 &lt;dbl&gt;, gr_2017_cm &lt;dbl&gt;, gr_2018_cm &lt;dbl&gt;,
 ## #   bas_dia_mm_1 &lt;chr&gt;, bas_dia_mm_2 &lt;chr&gt;, leader_damage &lt;chr&gt;,
 ## #   notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;, `DIA/ht check` &lt;dbl&gt;, `DIA/DIA
 ## #   CHECK` &lt;dbl&gt;, `GR/HT CHECK` &lt;dbl&gt;</code></pre>
@@ -505,7 +508,7 @@ remove(df)</code></pre>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>summary(as.factor(df18$dead2018))</code></pre>
 <pre><code>##   A   D 
-## 433  23</code></pre>
+## 432  24</code></pre>
 <pre class="r"><code>summary(df18$ht_cm_2017)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 ##    6.00   20.00   42.00   49.51   70.00  203.00      11</code></pre>
@@ -514,7 +517,7 @@ remove(df)</code></pre>
 ##   0.000   1.800   3.600   4.657   6.600  27.500      11</code></pre>
 <pre class="r"><code>summary(df18$gr_2018_cm)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-##   0.110   2.257   3.645   4.922   6.713  24.500      44</code></pre>
+##   0.110   2.265   3.690   4.925   6.705  24.500      37</code></pre>
 <div id="check-why-some-seedlings-have-na-in-some-fields" class="section level3">
 <h3>Check why some seedlings have NA in some fields</h3>
 <div id="ht_cm_2017" class="section level4">
@@ -534,23 +537,15 @@ remove(df)</code></pre>
 <div id="gr_2018_cm" class="section level4">
 <h4>gr_2018_cm</h4>
 <pre class="r"><code>df18 %&gt;% 
-  filter(is.na(gr_2018_cm) &amp; dead2018 != &quot;D&quot; &amp; leader_damage != &quot;2018&quot; &amp; thrown_out == 0) %&gt;% select(species, notes_2017, notes_2018, leader_damage, dead2018) </code></pre>
-<pre><code>## # A tibble: 13 x 5
-##    species notes_2017            notes_2018         leader_damage dead2018
-##    &lt;chr&gt;   &lt;chr&gt;                 &lt;chr&gt;              &lt;chr&gt;         &lt;chr&gt;   
-##  1 PIPO    &lt;NA&gt;                  leader died bf bu~ 2017          A       
-##  2 ABCO    &lt;NA&gt;                  last 3 yes growth~ 0             A       
-##  3 PIPO    &lt;NA&gt;                  tip dead, bud not~ 2014          A       
-##  4 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-##  5 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-##  6 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-##  7 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-##  8 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-##  9 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-## 10 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-## 11 ABCO    &lt;NA&gt;                  &lt;NA&gt;               0             A       
-## 12 PIPO    top died before done~ &lt;NA&gt;               2017          A       
-## 13 PIPO    &lt;NA&gt;                  leader dead        0             A</code></pre>
+  filter(is.na(gr_2018_cm) 
+         &amp; dead2018 != &quot;D&quot; 
+         &amp; !leader_damage %in% grep(&quot;2018&quot;, df18$leader_damage, value = T) 
+         &amp; thrown_out == 0) %&gt;% 
+  select(compartment, island, SEEDLING, species, notes_2017, notes_2018, leader_damage, dead2018) </code></pre>
+<pre><code>## # A tibble: 0 x 8
+## # ... with 8 variables: compartment &lt;dbl&gt;, island &lt;chr&gt;, SEEDLING &lt;dbl&gt;,
+## #   species &lt;chr&gt;, notes_2017 &lt;chr&gt;, notes_2018 &lt;chr&gt;,
+## #   leader_damage &lt;chr&gt;, dead2018 &lt;chr&gt;</code></pre>
 </div>
 </div>
 </div>
