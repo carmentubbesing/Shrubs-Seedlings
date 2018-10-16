@@ -23,6 +23,18 @@ df <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_
 dfshrub <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/dfshrub.csv")
 ```
 
+## Throw out outlier, for which growth in 2017 is more than 5 times greater than growth in 2016
+```{r}
+npre <- nrow(df)
+npre
+df %>% filter(gr_17_over_16>5)
+df <- df %>% filter(gr_17_over_16<5)
+npost <- nrow(df)
+npost
+```
+
+### This removed `r npre-npost` tree, bringing the df_vert total to `r npost`
+
 # Add shrub data
 ```{r}
 df <- full_join(df, dfshrub)
@@ -82,11 +94,6 @@ df %>%
   group_by(species, shrubs) %>% 
   summarise(mean(gr_2017_rel))
 ```
-
-```{r}
-s
-```
-
 
 ## Mixed effects with island effect
 ```{r}

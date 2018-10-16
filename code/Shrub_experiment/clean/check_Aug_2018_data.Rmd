@@ -1,0 +1,247 @@
+---
+title: "Check August 2018 Data"
+author: "Carmen"
+date: "October 11, 2018"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include=F}
+require(tidyverse)
+require(readxl)
+```
+
+# Read in all data
+```{r}
+df <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Seedling_vert_Aug_2018_compiled.xlsx")
+```
+
+# Do some basic cleaning
+
+## Rename columns
+```{r}
+df <- df %>% 
+  rename(SEEDLING = `seedling tag #`) %>% 
+  rename(leader_damage = `leader broke or died`) %>% 
+  rename(dead2017 = dead)
+```
+
+## Delete row with all NA's
+```{r}
+npre <- nrow(df)
+df %>% dplyr::filter((is.na(compartment) & is.na(plot)))
+df <- df %>% filter(!(is.na(compartment) & is.na(plot)))
+npost <- nrow(df)
+```
+
+This removed `r npre-npost` rows, bringing the total to `r npost`.
+
+## Make all values of gr_2018_cm numeric
+
+### Look at non-numeric values at the head and tail of sorted values
+```{r}
+df %>% 
+  arrange(gr_2018_cm) %>% 
+  select(gr_2018_cm, notes_2017, notes_2018) %>% 
+  slice(1:10)
+```
+
+```{r}
+df %>% 
+  arrange(gr_2018_cm) %>% 
+  mutate(gr_2018_cm = as.numeric(gr_2018_cm)) %>% 
+  select(gr_2018_cm, notes_2017, notes_2018) %>% 
+  slice(1:10)
+```
+
+```{r}
+df %>% 
+  arrange(gr_2018_cm) %>% 
+  select(gr_2018_cm, notes_2017, notes_2018) %>% 
+  slice(415:440)
+```
+
+```{r}
+df %>% 
+  arrange(gr_2018_cm) %>% 
+  mutate(gr_2018_cm = as.numeric(gr_2018_cm)) %>% 
+  select(gr_2018_cm, notes_2017, notes_2018) %>% 
+  slice(415:440)
+```
+
+What I learned from this: any non-numeric value ("-", "na", etc) will automatically be converted to NA if you apply is.numeric() to the column.
+
+### Change to numeric
+```{r}
+df <- df %>% 
+  mutate(gr_2018_cm = as.numeric(gr_2018_cm))
+```
+
+## Replace NA's with data for dead columns 
+
+### For some trees, NA was recorded for dead because the tree was thrown out. Might as well record it as alive.
+```{r}
+df %>% filter(is.na(dead2017))
+```
+
+```{r}
+df <- df %>% mutate(dead2017 = ifelse(is.na(dead2017), "A", dead2017))
+```
+
+### Default to 2017 dead status if nothing is recorded for dead2018
+```{r}
+df <- df %>% 
+  mutate(dead2018 = ifelse(is.na(dead2018), dead2017, dead2018))
+```
+
+## Move info in notes to appropriate columns where possible
+
+### Dead in notes column
+```{r}
+df <- df %>% 
+  mutate(dead2018 = ifelse(!is.na(df$notes_2018) & notes_2018 == "dead", "D", dead2018))%>% 
+  mutate(notes_2018 = ifelse(!is.na(df$notes_2018) & notes_2018 == "dead", NA, notes_2018))
+```
+
+#### Check
+```{r}
+summary(as.factor(df$dead2018))
+```
+
+### Leader damage
+```{r}
+df <- df %>% 
+  mutate(leader_damage = ifelse(notes_2018 %in% grep("leader dead|leader died|tip dead|last 3 yes growth dead", df$notes_2018, value = T),
+                                paste(leader_damage, "2018"), leader_damage))
+```
+
+# See if all compartments and islands and plots are represented
+```{r}
+print(df %>% group_by(compartment, island, plot) %>% 
+  summarise(count = n()), n = 50)
+```
+
+# Compare to previous seedling list from 2017
+
+## Full but edited df
+
+Note: there are three sets of 2017 df's, because some seedlings had vert data but not diameter data and vice versa. I'm using the most complete option, but it still has some seedlings thrown out for reasons like death.
+```{r}
+df18 <- df
+remove(df)
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df.Rdata")
+df17 <- df
+remove(df)
+```
+
+### Rename column name in 2017 data
+```{r}
+df17 <- df17 %>% 
+  rename(SEEDLING = sdlg)
+```
+
+### Compare counts
+```{r}
+nrow(df17)
+nrow(df18)
+nrow(df18)-nrow(df17)
+```
+
+There are `r nrow(df18)-nrow(df17)` more seedlings in the 2018 data than the 2017 data. The reasons for deletion from 2017 data are detailed in `README_shrub_experiment`. However, to make sure that there aren't missing seedlings cancelling each other out, I'll have to bring in a *complete* data set from 2017.
+
+## Full and unedited df
+
+```{r}
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_unedited.Rdata")
+df17_ue <- df
+remove(df)
+```
+
+#### Rename column
+```{r}
+df17_ue <- df17_ue %>% rename(SEEDLING = sdlg)
+```
+
+#### Use anti_join to look for differences
+```{r}
+nrow(df17_ue)
+anti_join(df18, df17_ue, by = c("compartment", "island", "plot", "SEEDLING"))
+anti_join(df17_ue, df18, by = c("compartment", "island", "plot", "SEEDLING"))
+```
+
+All good!
+
+# Create a column for whether the seedling was thrown out in 2017 or 2018 for indesputable reasons
+```{r}
+df18 <- df18 %>% 
+  mutate(thrown_out = ifelse(species %in% c("PSME", "CADE") 
+                             | notes_2017 %in% grep("thrown out", df18$notes_2017, value = T)
+                             | notes_2017 %in% grep("Dropped from study", df18$notes_2017, value = T)
+                             | notes_2017 %in% grep("excluding from study", df18$notes_2017, value = T)
+                             | notes_2017 %in% grep("too broken to measure", df18$notes_2017, value = T),
+                             1, 0))
+```
+
+
+# Check for errors or missing fields in the 2018 data
+```{r}
+repeats <- df18 %>% 
+  group_by(compartment, island, plot, SEEDLING) %>% 
+  summarise(n = n()) %>% 
+  filter(n > 1)
+```
+
+## Repeat seedlings
+```{r}
+for(i in 1:nrow(repeats)){
+  print(df18 %>% 
+    filter(compartment == repeats$compartment[i] & island == repeats$island[i] & plot == repeats$plot[i] & SEEDLING == repeats$SEEDLING[i]) %>% 
+    select(compartment, island, plot, SEEDLING, notes_2017, notes_2018)
+  )
+}
+```
+
+The only repeats are legitimate and due to forking at the base.
+
+## Missing data - look for NA's in any field
+```{r}
+summary(as.factor(df18$compartment))
+summary(as.factor(df18$island))
+summary(as.factor(df18$plot))
+summary(df18$SEEDLING)
+summary(as.factor(df18$species))
+summary(as.factor(df18$dead))
+summary(as.factor(df18$dead2018))
+summary(df18$ht_cm_2017)
+summary(df18$gr_2017_cm)
+summary(df18$gr_2018_cm)
+
+```
+
+### Check why some seedlings have NA in some fields
+
+#### ht_cm_2017
+```{r}
+df18 %>% filter(is.na(ht_cm_2017) & thrown_out == 0) %>% select(species, notes_2017, notes_2018)
+```
+
+They were all thrown out.
+
+#### gr_2017_cm
+```{r}
+df18 %>% filter(is.na(gr_2017_cm) & thrown_out == 0) %>% select(species, notes_2017, notes_2018)
+```
+
+They were all thrown out.
+
+#### gr_2018_cm
+```{r}
+df18 %>% 
+  filter(is.na(gr_2018_cm) 
+         & dead2018 != "D" 
+         & !leader_damage %in% grep("2018", df18$leader_damage, value = T) 
+         & thrown_out == 0) %>% 
+  select(compartment, island, SEEDLING, species, notes_2017, notes_2018, leader_damage, dead2018) 
+```
+
