@@ -19,6 +19,13 @@ df <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/See
 
 # Do some basic cleaning
 
+## Remove columns used to check values in the field
+```{r}
+df <- df %>% 
+  select(-`DIA/ht check`, - `DIA/DIA CHECK`, -`GR/HT CHECK`)
+```
+
+
 ## Rename columns
 ```{r}
 df <- df %>% 
@@ -37,9 +44,11 @@ npost <- nrow(df)
 
 This removed `r npre-npost` rows, bringing the total to `r npost`.
 
-## Make all values of gr_2018_cm numeric
+## Make numeric columns numeric
 
-### Look at non-numeric values at the head and tail of sorted values
+### gr_2018_cm
+
+#### Look at non-numeric values at the head and tail of sorted values
 ```{r}
 df %>% 
   arrange(gr_2018_cm) %>% 
@@ -72,11 +81,19 @@ df %>%
 
 What I learned from this: any non-numeric value ("-", "na", etc) will automatically be converted to NA if you apply is.numeric() to the column.
 
-### Change to numeric
+#### Change to numeric
 ```{r}
 df <- df %>% 
   mutate(gr_2018_cm = as.numeric(gr_2018_cm))
 ```
+
+### bas_dia_mm_1 and bas_dia_mm_2
+```{r}
+df <- df %>% 
+  mutate(bas_dia_mm_1 = as.numeric(bas_dia_mm_1)) %>% 
+  mutate(bas_dia_mm_2 = as.numeric(bas_dia_mm_2)) 
+```
+
 
 ## Replace NA's with data for dead columns 
 
@@ -245,4 +262,98 @@ df18 %>%
   select(compartment, island, SEEDLING, species, notes_2017, notes_2018, leader_damage, dead2018) 
 ```
 
-# Test branch
+#### bas_dia_mm_1 and bas_dia_mm_1
+```{r}
+df18 %>% 
+  filter((is.na(bas_dia_mm_1) | is.na(bas_dia_mm_2) )
+         & dead2018 != "D" 
+         & thrown_out == 0) %>% 
+  select(compartment, island, SEEDLING, species, notes_2017, notes_2018, bas_dia_mm_1, bas_dia_mm_2, dead2018) 
+
+```
+
+## Check for negative values
+```{r}
+df18 %>% 
+  filter_all(any_vars(.<0)) 
+```
+
+## Check for outliers or strange combinations of values
+
+### Make compartment, seedling, plot and thrown_out factors
+```{r}
+df18 <- df18 %>% 
+  mutate(compartment = as.factor(compartment)) %>% 
+  mutate(plot = as.factor(plot)) %>% 
+  mutate(thrown_out = as.factor(thrown_out)) %>% 
+  mutate(SEEDLING = as.factor(SEEDLING))
+```
+
+### Plot histograms of each variable to look for outliers
+```{r}
+df18 %>% 
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value))+
+  facet_wrap(~key, scales = "free")+
+  geom_histogram()
+```
+
+### Plot ratios of dia to height, dia to dia, and growth to height
+
+#### dia-ht
+```{r}
+ggplot(df18) +
+  geom_histogram(aes(bas_dia_mm_1/ht_cm_2017))
+ggplot(df18) +
+  geom_histogram(aes(bas_dia_mm_2/ht_cm_2017))
+```
+
+Clearly there is an error with the seedling with a very high dia to height ratio for one measurement.
+
+##### Look at the seedling with outlier dia-ht for dia 2
+```{r}
+df18 %>% 
+  filter(bas_dia_mm_1/bas_dia_mm_2<.5)
+```
+
+#### dia-dia
+```{r}
+ggplot(df18) +
+  geom_histogram(aes(bas_dia_mm_1/bas_dia_mm_2))
+```
+
+##### Look at the seedling with outlier dia-dia
+```{r}
+df18 %>% 
+  filter(bas_dia_mm_1/bas_dia_mm_2<.5)
+```
+
+#### The combination of the above histograms shows that bas_dia_mm_2 for seedling 570-O-2-36 is actually 2.5, not 25, so correct that.
+```{r}
+df18 <- df18 %>% 
+  mutate(bas_dia_mm_2 = ifelse(
+    compartment == "570" & island == "O" & plot == "2" & SEEDLING == "36", 
+    2.5,
+    bas_dia_mm_2
+  ))
+```
+
+#### growth-height
+```{r}
+ggplot(df18) +
+  geom_histogram(aes(gr_2018_cm/ht_cm_2017))
+```
+
+##### Look at outlier
+```{r}
+df18 %>% 
+  filter(gr_2018_cm/ht_cm_2017>.75)
+```
+
+# Save edited data frame
+```{r}
+save(df18, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df2018.Rdata")
+write.csv(df18, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/compiled_cleaned_Aug2018.csv", row.names = F)
+```
+
