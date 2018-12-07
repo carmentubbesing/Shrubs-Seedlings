@@ -1,0 +1,56 @@
+---
+title: "Read Dendro Data"
+author: "Carmen"
+date: "December 11, 2018"
+output: html_document
+---
+
+```{r, include = F}
+require(tidyverse)
+require(dplR)
+```
+
+# Read in and compile dendro files
+```{r}
+files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
+```
+
+## Make a dendro rwl file that's separate from data frames, so that you can manipulate the data frame without it losing rwl status
+```{r}
+df <- data.frame()
+for(i in 1:length(files)){
+  file <- files[i]
+  rwli <- read.rwl(file)
+  if(i >1){
+    rwl <- combine.rwl(rwl, rwli)
+  } else {
+    rwl <- rwli
+  }
+  dfi <- as.data.frame(t(as.data.frame(rwli)))
+  delim <- read.delim(file, header = F)
+  delim$V1 <- as.character(delim$V1)
+  board <- sapply(delim, substr, 74,79)
+  board <- unique(board)
+  print(board)
+  dfi <- dfi %>% 
+    mutate(board = board[1])
+  if(i == 1){
+    df <- dfi
+    } else{
+     df <- full_join(df, dfi) 
+    }
+}
+```
+
+## Rearrange
+```{r}
+df <- df %>% 
+  select(everything(), board)
+```
+
+
+# Look for repeat trees
+```{r}
+colnames(df)[duplicated(colnames(df))]
+```
+

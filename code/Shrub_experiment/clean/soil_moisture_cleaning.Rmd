@@ -1,0 +1,35 @@
+---
+title: "Soil moisture sensor data cleaning"
+author: "Carmen"
+date: "December 7, 2018"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = F}
+require(tidyverse)
+require(readxl)
+```
+
+```{r}
+files <- list.files("../../../../../Dropbox (Stephens Lab)/Shrub_experiment/Data/soil_moisture_data/", pattern = ".xls", full.names = T)
+```
+
+```{r}
+table <- data.frame(file = character(), name = character(), stringsAsFactors = F)
+file_names <- list.files("../../../../../Dropbox (Stephens Lab)/Shrub_experiment/Data/soil_moisture_data/", pattern = ".xls", full.names = F)
+for(i in 1:length(files)){
+  file <- files[i]
+  df <- read_excel(file, col_names = F)
+  name <- df[1,1]
+  file_name <- file_names[i]
+  table[i,1] <- file_name
+  table[i,2] <- name
+}
+```
+
+```{r}
+table
+```
+

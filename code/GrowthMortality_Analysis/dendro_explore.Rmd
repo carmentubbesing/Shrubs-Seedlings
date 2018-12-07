@@ -1,0 +1,101 @@
+---
+title: "Growth Mortality Initial Tree Ring Analysis"
+author: "Carmen"
+date: "December 11, 2018"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+# Sources: 
+
+-  https://rpubs.com/andybunn/r4tree-rings
+-  Speer, J. H. (2010). Fundamentals of tree-ring research. Tucson: University of Arizona Press.
+-  to ask an expert questions, go to itrdbfor.org
+
+# General notes:
+
+-  **Standardization** = **Detrending** = removing age-related growth trends and other long-term variability that can be considered noise
+    - often, a climatologist's signal is an ecologist's noise
+    - produces a series mean of 1
+    - Technique #1: **negative exponential curve**
+        - determined by the geometry of how much narrower a ring gets when you add the same volume of wood to a larger cylinder
+        - deterministic = same eqn for every data set
+        - most common method
+        - `ModNegEx` method in `detrend` in `dplR` tries to fit a nonlinear model, and if that doesn't work it fits a linear model
+    - Technique #2: **cubic smoothing spline**
+        - a 40 year one removes 50% of variance, removes 99% of variance at 126 years, and removes only 1% of variance at 12.67 years
+        - more flexible than negative exponential curve
+    - Technique #3: **regional curve standardization** 
+        - advantage: splines often remove long-term trends that are not age-related, like the Little Ice Age
+        - based on the biological age of each ring
+            - therefore you have to age each core
+        - regional curve = average growth for that stand, which is removed from each core
+        - must have at least 5 trees for any section of the curve and at least 40 trees at densest part of the curve 
+    - Technique #4: **signal-free method**
+        - don't know anything about this other than that Andy Bunn says there's been a lot of interest in including it in `dplR` but it's not there yet
+    - once a `rwl` data set is detrended, it becomes a `rwi` (ring-width index) file
+        - at which point every series has a mean of 1
+    - use `detrend` in `dplR` to detrend
+    - sometimes people detrend different series in the same data set using different methods, which you could do using `i.detrend.series`
+        
+        
+```{r, include = F}
+require(dplR)
+require(tidyverse)
+```
+
+# Example with built-in data
+```{r}
+data(ca533)
+```
+
+## This is a special kind of data frame specific to dendro analysis
+```{r}
+class(ca533)
+```
+
+In order to create a rwl data frame, you use the function `read.rwl`
+
+## Time (years) is an attribute of this class
+```{r}
+head(time(ca533))
+```
+
+# Rwl data frames can easily be plotted in a dendro way
+```{r}
+plot(ca533, plot.type = "spag")
+```
+
+# And described with descriptive stats
+```{r}
+rwl.report(ca533)
+summary(ca533)
+```
+
+**Note: Bunn thinks that mean sensitivity is a terrible statistic that should not be used
+
+## which you can then plot
+```{r}
+ggplot(summary(ca533))+
+  geom_boxplot(aes(y = ar1))+
+  geom_jitter(aes(y = ar1, x = 0), width = .01)
+```
+
+# Detrend
+```{r}
+ca533.rwi <- detrend(rwl = ca533, method = "ModNegExp")
+class(ca533.rwi)
+```
+
+## This results in each column (series) having a mean of 1
+```{r}
+summary(colMeans(ca533.rwi, na.rm = T))
+```
+
+## You can also detrend a single series at a time
+```{r}
+CAM011.rwi <- detrend.series(y = ca533[, "CAM011"], verbose = TRUE)
+```
+
+This shows the performance of multiple detrending options
