@@ -2,7 +2,9 @@
 title: "Read Dendro Data"
 author: "Carmen"
 date: "December 11, 2018"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 ```{r, include = F}
@@ -15,8 +17,8 @@ require(dplR)
 files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
 ```
 
-## Make a dendro rwl file that's separate from data frames, so that you can manipulate the data frame without it losing rwl status
-```{r}
+## Make a dendro rwl and a separate data frame, so that you can manipulate the data frame without it losing rwl status
+```{r, message = F, warning = F}
 df <- data.frame()
 for(i in 1:length(files)){
   file <- files[i]
@@ -27,6 +29,7 @@ for(i in 1:length(files)){
     rwl <- rwli
   }
   dfi <- as.data.frame(t(as.data.frame(rwli)))
+  dfi$series <- paste(row.names(dfi))
   delim <- read.delim(file, header = F)
   delim$V1 <- as.character(delim$V1)
   board <- sapply(delim, substr, 74,79)
@@ -45,12 +48,107 @@ for(i in 1:length(files)){
 ## Rearrange
 ```{r}
 df <- df %>% 
-  select(everything(), board)
+  select(series, board, everything())
+df_bu <- df
 ```
-
 
 # Look for repeat trees
+
+## Make series all caps
 ```{r}
-colnames(df)[duplicated(colnames(df))]
+df <- df %>% 
+  mutate(series = toupper(series))
 ```
+
+
+# Separate out tree number and radius number
+
+## Radius number
+```{r}
+df$radius <- substr(df$series, nchar(df$series), nchar(df$series)) 
+```
+
+## Tree
+```{r}
+df$tree <- substr(df$series, 1, nchar(df$series)-2) 
+```
+
+## Find trees where this technique didn't work and fix them
+```{r}
+df %>% 
+  filter(!radius %in% c(1, 2, 3))
+```
+
+### Radius
+```{r}
+df <- df %>% 
+  mutate(radius = ifelse(
+    !radius %in% c(1, 2, 3),
+    substr(series, nchar(series)-2, nchar(series)),
+    radius
+    )) 
+df %>% 
+  filter(!radius %in% c(1, 2, 3))
+```
+
+### Series
+```{r}
+df <- df %>% 
+  mutate(tree = ifelse(
+    !radius %in% c(1, 2, 3),
+    substr(series, 1, nchar(series)-4),
+    tree
+    )) 
+df %>% 
+  filter(!radius %in% c(1, 2, 3))
+head(df)
+```
+
+## Tidy up names
+```{r}
+df <- df %>% 
+  dplyr::select(board, tree, series, radius, everything())
+head(df)
+```
+
+# Throw out trees from sample board
+```{r}
+df <- df %>% 
+  filter(board != "P1BdS ")
+```
+
+# Find duplicate trees
+```{r}
+df %>% 
+  group_by(tree) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 3) %>% 
+  dplyr::select(board, tree, series, radius)
+```
+
+## Fix duplicates
+
+### Tree 19
+
+#### Take a look
+```{r}
+df %>% filter(tree %in% c(19, "19BU"))
+```
+
+#### Clearly only the 19BU belongs, so delete the other one and fix the mislabeled radius on the BU board
+```{r}
+df <- df %>% 
+  filter(!(tree == 19 & board == "P1Bd62")) %>% 
+  mutate(tree = ifelse(tree %in% c(19, "19BU"), 19, tree))
+df %>% filter(tree %in% c(19, "19BU"))
+```
+
+
+# MAJOR THINGS I NEED TO DO:
+
+1. Which 12 is the real 12?
+4. Take out trees that have both BU and non-BU recordes
+2. Check these changes against the excel Mort_details_compiled... sheet
+3. APPLY THESE CHANGES TO THE rwl DATA FRAME
+
 
