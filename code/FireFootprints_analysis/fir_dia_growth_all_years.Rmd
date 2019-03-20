@@ -189,7 +189,7 @@ normalize <- function(x) {
 ```{r}
 MyData$shrubarea2_sqrt_norm <- (sqrt(MyData$shrubarea2) - mean(sqrt(df_dia$shrubarea2)))/sd(sqrt(df_dia$shrubarea2))
 
-MyData$Ht_norm <- (MyData$Ht_cm - mean(df_dia$Ht_cm))/sd(df_dia$Ht_cm)
+MyData$Ht_log_norm <- normalize(log(MyData$Ht_cm))
 MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df_dia$Cov1.2))/sd(df_dia$Cov1.2)
 ```
 

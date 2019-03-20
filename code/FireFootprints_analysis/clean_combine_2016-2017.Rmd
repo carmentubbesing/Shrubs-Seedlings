@@ -242,7 +242,6 @@ df <- df %>%
   mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) )
 ```
 
-
 # Save
 ```{r}
 save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")

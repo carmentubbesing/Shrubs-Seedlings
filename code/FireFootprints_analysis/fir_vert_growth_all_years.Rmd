@@ -19,7 +19,7 @@ require(ggplot2)
 ```
 
 # Load data
-```{r, include=F}
+```{r}
 setwd("~/Shrubs-Seedlings/compiled_data/")
 load(file="fire_footprints/master_seedlings.Rdata")
 ```
@@ -66,7 +66,7 @@ text(pruned, pretty = 0)
 
 ## Look at random forest
 ```{r}
-fit <- randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+fit <- randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + ShrubSpp01 + ShrubSpp02 + ShrubSpp03 + IAG, 
                     data = df,
                     importance = TRUE,
                     mtry = 13)
@@ -77,7 +77,7 @@ varImpPlot(fit)
 ## See how well random forest predicts data
 ```{r}
 train = sample(1:nrow(df), nrow(df)/2)
-tree_train = randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + Spp1 + Spp2 + Spp3 + IAG, 
+tree_train = randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + ShrubSpp01 + ShrubSpp02 + ShrubSpp03 + IAG, 
                     data = df,
                     importance = TRUE,
                     mtry = 13,

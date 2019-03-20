@@ -115,36 +115,65 @@ mean(shr[shr$Seedling.==1 & shr$Seg==3,]$Ht.cm) == ht[ht$Sdlg==1,4]
 shr_by_sdlg <- full_join(cov,ht,by="Sdlg")
 ```
 
-## Find most common shrub species in 0-1, 1-2, and 2-3
+## Find most common shrub species in 0-1, 0-2, and 0-3
+
+### 0-1
 ```{r}
-spp <- shr %>%
-  group_by(Seedling.,Seg, ShrubSpp) %>%
+spp1 <- shr %>%
+  filter(Seg == 1) %>% 
+  group_by(Seedling., Seg, ShrubSpp) %>% 
   mutate(cov=sum(Cover.cm)) %>%
   ungroup %>%
-  group_by(Seedling.,Seg)%>%
+  group_by(Seedling., Seg)%>%
   filter(cov == max(cov)) %>%
   select(Seedling.,Seg,ShrubSpp,cov) %>%
-  distinct(.keep_all=TRUE)
+  distinct(.keep_all=TRUE)%>% 
+  rename(ShrubSpp01 = ShrubSpp)
 ```
 
-## Restructure spp so it can be binded to df
+### 0-2
 ```{r}
-spp2 <- spp %>%
-  select(Seedling.,Seg, ShrubSpp) %>%
-  group_by(Seedling.) %>%
-  spread(Seg, ShrubSpp) %>%
-  rename(Sdlg=Seedling.) %>%
-  rename(Spp1=`1`) %>%
-  rename(Spp2=`2`) %>%
-  rename(Spp3=`3`)  # Check for lost seedlings
-shr_by_sdlg <- full_join(shr_by_sdlg,spp2,by="Sdlg")
+spp2 <- shr %>%
+  filter(Seg == 1|Seg ==2) %>% 
+  group_by(Seedling.,ShrubSpp) %>% 
+  mutate(cov=sum(Cover.cm)) %>%
+  ungroup %>%
+  group_by(Seedling.)%>%
+  filter(cov == max(cov)) %>%
+  select(Seedling.,ShrubSpp,cov) %>%
+  distinct(.keep_all=TRUE)%>% 
+  rename(ShrubSpp02 = ShrubSpp)
 ```
 
-## Check the calculations - should be TRUE
+### 0-3
 ```{r}
-sum(shr[shr$Seedling.==1 &shr$Seg==1 & shr$ShrubSpp=="ARPA",]$Cover.cm)== 
-  spp[spp$ShrubSpp=="ARPA" & spp$Seedling.==1 & spp$Seg==1,]$cov[1]
-max(spp[spp$Seedling.==1 &spp$Seg==1,]$cov) == spp[spp$Seedling.==1&spp$Seg==1,]$cov[1]
+spp3 <- shr %>%
+  group_by(Seedling.,ShrubSpp) %>% 
+  mutate(cov=sum(Cover.cm)) %>%
+  ungroup %>%
+  group_by(Seedling.)%>%
+  filter(cov == max(cov)) %>%
+  select(Seedling.,ShrubSpp,cov) %>%
+  distinct(.keep_all=TRUE) %>% 
+  rename(ShrubSpp03 = ShrubSpp)
+```
+
+# NEED TO FIX: TIES IN SHRUB COVER BETWEEN 2 SPECIES - BREAK THE TIE WITH HEIGHT?
+
+## Combine with df
+```{r}
+spp1 <- spp1 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp01)
+df <- left_join(df, spp1, by = c("Sdlg" ="Seedling."))
+spp2 <- spp2 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp02)
+df <- left_join(df, spp2, by = c("Sdlg" ="Seedling."))
+spp3 <- spp3 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp03)
+df <- left_join(df, spp3, by = c("Sdlg" ="Seedling."))
 ```
 
 ## Check that shrub seedlings match seedlings seedlings
@@ -188,23 +217,23 @@ df$Genus <- as.factor(df$Genus)
 
 ```
 
-## Create Column for Spp1Genus
+## Create Column for ShrubSpp01Genus
 ```{r}
 df$ShrG1 <- 0
-df$Spp1 <- as.character(df$Spp1)
-df[is.na(df$Spp1),"Spp1"] <- "NONE"
+df$ShrubSpp01 <- as.character(df$ShrubSpp01)
+df[is.na(df$ShrubSpp01),"ShrubSpp01"] <- "NONE"
 for (i in 1:nrow(df)){
-  if(df$Spp1[i] %in% c("ARNE","ARPA","ARVI")){
+  if(df$ShrubSpp01[i] %in% c("ARNE","ARPA","ARVI")){
     df$ShrG1[i] <- "Arcto"    
-  } else if(df$Spp1[i] %in% c("CECO","CEIN","CEPR")){
+  } else if(df$ShrubSpp01[i] %in% c("CECO","CEIN","CEPR")){
     df$ShrG1[i] <- "Ceanothus"    
-  } else if(df$Spp1[i] %in% c("QUVA","QUKE")){
+  } else if(df$ShrubSpp01[i] %in% c("QUVA","QUKE")){
     df$ShrG1[i] <- "Quercus"
-  } else if(df$Spp1[i] == "LIDE"){
+  } else if(df$ShrubSpp01[i] == "LIDE"){
     df$ShrG1[i] <- "LIDE"
-  } else if(df$Spp1[i] == "CHFO"){
+  } else if(df$ShrubSpp01[i] == "CHFO"){
     df$ShrG1[i] <- "CHFO"
-  } else if(df$Spp1[i] == "CHSE"){
+  } else if(df$ShrubSpp01[i] == "CHSE"){
     df$ShrG1[i] <- "CHSE"
       } else 
     df$ShrG1[i] <- "Other"
