@@ -42,6 +42,15 @@ df_vert <- spread(df_vert, key = Year, value = VertGrowth) %>%
   rename(VertGr_2017 = `2017`)
 ```
 
+### Remove duplicate seedling
+```{r}
+nrow(df_vert)
+df_vert <- df_vert %>% 
+  filter(!(Sdlg == "117" & LAI == 0))
+nrow(df_vert)
+```
+
+
 ## Filter to only seedlings with workable data for both diameter and vertical growth
 ```{r}
 df_vert <- df_vert %>% select(Sdlg, VertGr_2016, VertGr_2017)
@@ -97,6 +106,15 @@ min(df$BasDia2017.mm.ave)
 hist(df$BasDia2017.mm.ave)
 df <- df %>% 
   mutate(DiaGrowth = (DiaGrowth - min(DiaGrowth)))
+```
+
+## Check for seedlings with more than one row
+```{r}
+nrow(df)
+length(unique(df$Sdlg))
+df %>% filter(duplicated(Sdlg))
+df <- df %>% 
+  distinct()
 ```
 
 # Calculate relative growth rate
@@ -208,6 +226,21 @@ ggplot(df, aes(x = tree_Ht_log_norm, y = RGR))+
 
 There appears to be less of a relationship between height and growth than between volume and growth
 
+# Mixed effects with random fire effect
+```{r}
+MM1 <- lme(RGR ~Cov1.2_norm, random =~1|Fire, data = df, method = "ML")
+
+MM1_null <- lme(RGR ~ 1, random =~1|Fire, method = "ML",data = df)
+anova(MM1, MM1_null)
+summary(MM1)
+```
+
+```{r}
+decdf <- read.csv("~/Shrubs-Seedlings-master_Dec2018/code/FireFootprints_analysis/df_firvol_Dec2018.csv")
+setdiff(as.numeric(df$Sdlg), decdf$Sdlg)
+setdiff(decdf$Sdlg, as.numeric(df$Sdlg))
+```
+
 # Build a random forest to get a sense of what variables are important
 ```{r}
 fit <- randomForest(formula = RGR ~ Fire  + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + ShrubSpp01 + ShrubSpp02 + ShrubSpp03 + IAG + shrubarea2_sqrt_norm+ Cov1.2_norm + Cov1.3_norm + IAG+ ShrG1+ shrubarea2_sqrt_norm:tree_Ht_log_norm+ Cov1.2_norm:tree_Ht_log_norm+ BasDia2016.cm+ vol_pre_cm2+ tree_Ht_log_norm, 
@@ -312,6 +345,7 @@ MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df$Cov1.2))/sd(df$Cov1.2)
 ```
 
 ```{r}
+MM1
 MyData$pred <- predict(MM1, newdata = MyData)
 ```
 
@@ -328,7 +362,7 @@ figure_summary <- ggplot(MyData_summary_simple)+
   ylab("relative growth rate (RGR)")+
   xlab("shrub cover 0-2 m from seedling")+
   geom_line(aes(y = pred_simple, x =Cov1.2), col = "#1b3f4c")+
-  #geom_point(data=df, aes(x = Cov1.2, y = RGR), col = "#1b3f4c")+
+  geom_point(data=df, aes(x = Cov1.2, y = RGR), col = "#1b3f4c")+
   theme_bw()+
   theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
         panel.background = element_rect(fill="#e9ebe8"),

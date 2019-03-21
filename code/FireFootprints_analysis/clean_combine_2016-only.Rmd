@@ -37,9 +37,10 @@ sdlt$FirePatch <- paste(sdlt$Fire, sdlt$Patch, sep = "-")
 sdlt$FirePatch <- as.factor(sdlt$FirePatch)
 ```
 
-## Subset to only non-CADE species 
+## Take out Seedling 17 because it doesn't have shrub data
 ```{r}
-#sdlt <- sdlt[sdlt$Species!="CADE",]
+sdlt <- sdlt %>% 
+  filter(Seedling. != "17")
 ```
 
 ## Take out repeat rows
@@ -131,6 +132,27 @@ spp1 <- shr %>%
   rename(ShrubSpp01 = ShrubSpp)
 ```
 
+#### Check for correct # of seedlings and correct errors
+```{r}
+length(unique(df$Sdlg))
+nrow(spp1)
+setdiff(df$Sdlg, spp1$Seedling.)
+setdiff(spp1$Seedling., df$Sdlg)
+spp1 %>% 
+  group_by(Seedling.) %>% 
+  mutate(n = n()) %>% 
+  filter(n != 1)
+shr %>% 
+  filter(Seedling. == 48 & Seg == 1)
+```
+
+Since there's a tie between LIDE and conifer, I'm choosing the one with the greater height, which in this case is LIDE
+```{r}
+spp1 <- spp1 %>% 
+  filter(!(Seedling.==48 & ShrubSpp01 =="conifer"))
+```
+
+
 ### 0-2
 ```{r}
 spp2 <- shr %>%
@@ -145,6 +167,19 @@ spp2 <- shr %>%
   rename(ShrubSpp02 = ShrubSpp)
 ```
 
+#### Check for correct # of seedlings and correct errors
+```{r}
+length(unique(df$Sdlg))
+nrow(spp2)
+setdiff(df$Sdlg, spp2$Seedling.)
+setdiff(spp2$Seedling., df$Sdlg)
+spp2 %>% 
+  group_by(Seedling.) %>% 
+  mutate(n = n()) %>% 
+  filter(n != 1)
+```
+
+
 ### 0-3
 ```{r}
 spp3 <- shr %>%
@@ -157,6 +192,80 @@ spp3 <- shr %>%
   distinct(.keep_all=TRUE) %>% 
   rename(ShrubSpp03 = ShrubSpp)
 ```
+
+
+#### Check for correct # of seedlings and correct errors
+```{r}
+length(unique(df$Sdlg))
+nrow(spp3)
+setdiff(df$Sdlg, spp3$Seedling.)
+setdiff(spp3$Seedling., df$Sdlg)
+spp3 %>% 
+  group_by(Seedling.) %>% 
+  mutate(n = n()) %>% 
+  filter(n != 1)
+```
+
+Choose the ones with greater heights:
+##### 20
+```{r}
+shr %>% 
+  filter(Seedling. == 20 & ShrubSpp %in% c("PREM", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp)
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==20 & ShrubSpp03 =="PREM"))
+```
+
+##### 21
+```{r}
+shr %>% 
+  filter(Seedling. == 21 & ShrubSpp %in% c("PREM", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp)
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==21 & ShrubSpp03 =="PREM"))
+```
+
+##### 188
+```{r}
+shr %>% 
+  filter(Seedling. == 188 & ShrubSpp %in% c("CONU", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp) %>% 
+  mutate(math = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  summarise(sum(math))
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==188 & ShrubSpp03 =="CECO"))
+```
+
+
+##### 190
+```{r}
+shr %>% 
+  filter(Seedling. == 190 & ShrubSpp %in% c("willow", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp) %>% 
+  mutate(math = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  summarise(sum(math))
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==190 & ShrubSpp03 =="CECO"))
+```
+
 
 # NEED TO FIX: TIES IN SHRUB COVER BETWEEN 2 SPECIES - BREAK THE TIE WITH HEIGHT?
 

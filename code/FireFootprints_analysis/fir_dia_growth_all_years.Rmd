@@ -81,7 +81,13 @@ df_dia <- df_dia %>%
 hist(df_dia$DiaGrowth_rel)
 ```
 
-
+## Take out repeat row
+```{r}
+nrow(df_dia)
+df_dia <- df_dia %>% 
+  filter(!(Sdlg == "117" & LAI == 0))
+nrow(df_dia)
+```
 
 ## Take out outliers on both ends, defined as greater than two SD from the mean
 ```{r}

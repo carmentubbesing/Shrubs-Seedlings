@@ -157,9 +157,10 @@ sdlt$Patch[sdlt$Patch==&quot;s&quot;]&lt;- &quot;S&quot;
 sdlt$FirePatch &lt;- paste(sdlt$Fire, sdlt$Patch, sep = &quot;-&quot;)
 sdlt$FirePatch &lt;- as.factor(sdlt$FirePatch)</code></pre>
 </div>
-<div id="subset-to-only-non-cade-species" class="section level2">
-<h2>Subset to only non-CADE species</h2>
-<pre class="r"><code>#sdlt &lt;- sdlt[sdlt$Species!=&quot;CADE&quot;,]</code></pre>
+<div id="take-out-seedling-17-because-it-doesnt-have-shrub-data" class="section level2">
+<h2>Take out Seedling 17 because it doesn’t have shrub data</h2>
+<pre class="r"><code>sdlt &lt;- sdlt %&gt;% 
+  filter(Seedling. != &quot;17&quot;)</code></pre>
 </div>
 <div id="take-out-repeat-rows" class="section level2">
 <h2>Take out repeat rows</h2>
@@ -248,6 +249,40 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   select(Seedling.,Seg,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE)%&gt;% 
   rename(ShrubSpp01 = ShrubSpp)</code></pre>
+<div id="check-for-correct-of-seedlings-and-correct-errors" class="section level4">
+<h4>Check for correct # of seedlings and correct errors</h4>
+<pre class="r"><code>length(unique(df$Sdlg))</code></pre>
+<pre><code>## [1] 274</code></pre>
+<pre class="r"><code>nrow(spp1)</code></pre>
+<pre><code>## [1] 275</code></pre>
+<pre class="r"><code>setdiff(df$Sdlg, spp1$Seedling.)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>setdiff(spp1$Seedling., df$Sdlg)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>spp1 %&gt;% 
+  group_by(Seedling.) %&gt;% 
+  mutate(n = n()) %&gt;% 
+  filter(n != 1)</code></pre>
+<pre><code>## # A tibble: 2 x 5
+## # Groups:   Seedling. [1]
+##   Seedling.   Seg ShrubSpp01   cov     n
+##   &lt;fct&gt;     &lt;dbl&gt; &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;
+## 1 48            1 conifer       20     2
+## 2 48            1 LIDE          20     2</code></pre>
+<pre class="r"><code>shr %&gt;% 
+  filter(Seedling. == 48 &amp; Seg == 1)</code></pre>
+<pre><code>## # A tibble: 4 x 12
+##   Seedling. Transect Segment ShrubSpp Cover.cm Ht.cm Dead. Note1 Note2
+##   &lt;fct&gt;     &lt;fct&gt;    &lt;fct&gt;   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt;
+## 1 48        N        &quot;0-1 m~ none            0     0     0 &quot;&quot;    &quot;&quot;   
+## 2 48        E        &quot;0-1 m~ conifer        20    20     0 &quot;&quot;    &quot;&quot;   
+## 3 48        S        &quot;0-1 m~ LIDE           20    60     0 chan~ &quot;&quot;   
+## 4 48        W        &quot;0-1 m~ none            0     0     0 &quot;&quot;    &quot;&quot;   
+## # ... with 3 more variables: Note3 &lt;lgl&gt;, X &lt;lgl&gt;, Seg &lt;dbl&gt;</code></pre>
+<p>Since there’s a tie between LIDE and conifer, I’m choosing the one with the greater height, which in this case is LIDE</p>
+<pre class="r"><code>spp1 &lt;- spp1 %&gt;% 
+  filter(!(Seedling.==48 &amp; ShrubSpp01 ==&quot;conifer&quot;))</code></pre>
+</div>
 </div>
 <div id="section-1" class="section level3">
 <h3>0-2</h3>
@@ -261,6 +296,25 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   select(Seedling.,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE)%&gt;% 
   rename(ShrubSpp02 = ShrubSpp)</code></pre>
+<div id="check-for-correct-of-seedlings-and-correct-errors-1" class="section level4">
+<h4>Check for correct # of seedlings and correct errors</h4>
+<pre class="r"><code>length(unique(df$Sdlg))</code></pre>
+<pre><code>## [1] 274</code></pre>
+<pre class="r"><code>nrow(spp2)</code></pre>
+<pre><code>## [1] 274</code></pre>
+<pre class="r"><code>setdiff(df$Sdlg, spp2$Seedling.)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>setdiff(spp2$Seedling., df$Sdlg)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>spp2 %&gt;% 
+  group_by(Seedling.) %&gt;% 
+  mutate(n = n()) %&gt;% 
+  filter(n != 1)</code></pre>
+<pre><code>## # A tibble: 0 x 4
+## # Groups:   Seedling. [0]
+## # ... with 4 variables: Seedling. &lt;fct&gt;, ShrubSpp02 &lt;fct&gt;, cov &lt;dbl&gt;,
+## #   n &lt;int&gt;</code></pre>
+</div>
 </div>
 <div id="section-2" class="section level3">
 <h3>0-3</h3>
@@ -273,6 +327,97 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   select(Seedling.,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE) %&gt;% 
   rename(ShrubSpp03 = ShrubSpp)</code></pre>
+<div id="check-for-correct-of-seedlings-and-correct-errors-2" class="section level4">
+<h4>Check for correct # of seedlings and correct errors</h4>
+<pre class="r"><code>length(unique(df$Sdlg))</code></pre>
+<pre><code>## [1] 274</code></pre>
+<pre class="r"><code>nrow(spp3)</code></pre>
+<pre><code>## [1] 278</code></pre>
+<pre class="r"><code>setdiff(df$Sdlg, spp3$Seedling.)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>setdiff(spp3$Seedling., df$Sdlg)</code></pre>
+<pre><code>## character(0)</code></pre>
+<pre class="r"><code>spp3 %&gt;% 
+  group_by(Seedling.) %&gt;% 
+  mutate(n = n()) %&gt;% 
+  filter(n != 1)</code></pre>
+<pre><code>## # A tibble: 8 x 4
+## # Groups:   Seedling. [4]
+##   Seedling. ShrubSpp03   cov     n
+##   &lt;fct&gt;     &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;
+## 1 20        PREM         100     2
+## 2 20        CECO         100     2
+## 3 21        PREM         100     2
+## 4 21        CECO         100     2
+## 5 188       CECO         490     2
+## 6 188       CONU         490     2
+## 7 190       willow       300     2
+## 8 190       CECO         300     2</code></pre>
+<p>Choose the ones with greater heights: ##### 20</p>
+<pre class="r"><code>shr %&gt;% 
+  filter(Seedling. == 20 &amp; ShrubSpp %in% c(&quot;PREM&quot;, &quot;CECO&quot;)) %&gt;% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  arrange(ShrubSpp)</code></pre>
+<pre><code>## # A tibble: 4 x 4
+##   Seedling. ShrubSpp Cover.cm Ht.cm
+##   &lt;fct&gt;     &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 20        CECO          100    70
+## 2 20        PREM           10   110
+## 3 20        PREM           70    60
+## 4 20        PREM           20    60</code></pre>
+<pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
+  filter(!(Seedling.==20 &amp; ShrubSpp03 ==&quot;PREM&quot;))</code></pre>
+<div id="section-3" class="section level5">
+<h5>21</h5>
+<pre class="r"><code>shr %&gt;% 
+  filter(Seedling. == 21 &amp; ShrubSpp %in% c(&quot;PREM&quot;, &quot;CECO&quot;)) %&gt;% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  arrange(ShrubSpp)</code></pre>
+<pre><code>## # A tibble: 4 x 4
+##   Seedling. ShrubSpp Cover.cm Ht.cm
+##   &lt;fct&gt;     &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 21        CECO          100    70
+## 2 21        PREM           10   110
+## 3 21        PREM           70    60
+## 4 21        PREM           20    60</code></pre>
+<pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
+  filter(!(Seedling.==21 &amp; ShrubSpp03 ==&quot;PREM&quot;))</code></pre>
+</div>
+<div id="section-4" class="section level5">
+<h5>188</h5>
+<pre class="r"><code>shr %&gt;% 
+  filter(Seedling. == 188 &amp; ShrubSpp %in% c(&quot;CONU&quot;, &quot;CECO&quot;)) %&gt;% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  arrange(ShrubSpp) %&gt;% 
+  mutate(math = Cover.cm*Ht.cm) %&gt;% 
+  group_by(ShrubSpp) %&gt;% 
+  summarise(sum(math))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   ShrubSpp `sum(math)`
+##   &lt;fct&gt;          &lt;dbl&gt;
+## 1 CECO           73500
+## 2 CONU          113700</code></pre>
+<pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
+  filter(!(Seedling.==188 &amp; ShrubSpp03 ==&quot;CECO&quot;))</code></pre>
+</div>
+<div id="section-5" class="section level5">
+<h5>190</h5>
+<pre class="r"><code>shr %&gt;% 
+  filter(Seedling. == 190 &amp; ShrubSpp %in% c(&quot;willow&quot;, &quot;CECO&quot;)) %&gt;% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  arrange(ShrubSpp) %&gt;% 
+  mutate(math = Cover.cm*Ht.cm) %&gt;% 
+  group_by(ShrubSpp) %&gt;% 
+  summarise(sum(math))</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   ShrubSpp `sum(math)`
+##   &lt;fct&gt;          &lt;dbl&gt;
+## 1 CECO           31500
+## 2 willow         54500</code></pre>
+<pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
+  filter(!(Seedling.==190 &amp; ShrubSpp03 ==&quot;CECO&quot;))</code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -302,9 +447,9 @@ df &lt;- left_join(df, spp3, by = c(&quot;Sdlg&quot; =&quot;Seedling.&quot;))</c
 <div id="check-that-shrub-seedlings-match-seedlings-seedlings" class="section level2">
 <h2>Check that shrub seedlings match seedlings seedlings</h2>
 <pre class="r"><code>nrow(df) - nrow(shr_by_sdlg)</code></pre>
-<pre><code>## [1] 6</code></pre>
+<pre><code>## [1] 0</code></pre>
 <pre class="r"><code>setdiff(df$Sdlg, shr_by_sdlg$Sdlg)</code></pre>
-<pre><code>## [1] &quot;17&quot;</code></pre>
+<pre><code>## character(0)</code></pre>
 <pre class="r"><code>setdiff(shr_by_sdlg$Sdlg, df$Sdlg)</code></pre>
 <pre><code>## character(0)</code></pre>
 </div>
@@ -404,7 +549,7 @@ for(i in 1:nrow(df)){
 }
 summary(df$Years)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##    8.00    8.00   14.00   20.08   35.00   43.00</code></pre>
+##    8.00    8.00   14.00   19.87   35.00   43.00</code></pre>
 </div>
 </div>
 <div id="add-difn-degrees-from-fv2200-output-file" class="section level1">

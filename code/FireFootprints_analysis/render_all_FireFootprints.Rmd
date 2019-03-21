@@ -19,7 +19,7 @@ rmarkdown::render("clean_combine_2016-2017.Rmd", "html_document")
 print(Sys.time()-strt)
 ```
 
-# Intermediary Analysis
+# Analysis
 ```{r intermediary_analysis}
 strt <- Sys.time()
 rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
