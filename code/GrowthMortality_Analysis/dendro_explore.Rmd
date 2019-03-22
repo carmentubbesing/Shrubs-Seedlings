@@ -99,3 +99,10 @@ CAM011.rwi <- detrend.series(y = ca533[, "CAM011"], verbose = TRUE)
 ```
 
 This shows the performance of multiple detrending options
+
+# Crossdating a sample data set
+```{r}
+data(co021)
+dat <- co021
+```
+

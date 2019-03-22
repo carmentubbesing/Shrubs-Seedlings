@@ -269,13 +269,13 @@ The following are marked as being thrown out, but DO have data, so could potenti
 So make them thrown_out = ?
 ```{r}
 meta <- meta %>% 
-  mutate(thrown_out = ifelse(SEEDLING %in% c("58B", "53B", "7B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B"), "?", thrown_out))
+  mutate(thrown_out = ifelse(SEEDLING %in% c("58B", "53B", "7B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), "?", thrown_out))
 ```
 
 ### Add column to df for mateless seedlings
 ```{r}
 df <- df %>% 
-  mutate(mateless = ifelse(tree %in% c("7B","76B", "58B", "53B", "5B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B"), 1, 0)) %>% 
+  mutate(mateless = ifelse(tree %in% c("7B","76B", "58B", "53B", "5B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), 1, 0)) %>% 
   arrange(desc(mateless))
 ```
 
@@ -286,6 +286,17 @@ meta %>%
   dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %>% 
   arrange(desc(SEEDLING)) 
 ```
+
+
+## Correct 184A/184-A/185
+```{r}
+df <- df %>% 
+  mutate(tree = ifelse(tree == "184A", "184-A", tree)) %>% 
+  mutate(tree = ifelse(tree == "184BA", "184B-A", tree)) %>% 
+  mutate(tree = ifelse(tree == "185BA", "185B-A", tree)) %>% 
+  mutate(tree = ifelse(tree == "185B", "185B-P", tree))
+```
+
 
 # Check for mismatches between df and meta not created by thrown out seedlings
 ```{r}
@@ -299,21 +310,11 @@ join <- join %>%
   mutate(SPECIES = toupper(SPECIES)) 
 ```
 
-
 ## Look at seedlings without meta data - make notes below about which to look for the physical seedlings for
 ```{r}
 join %>%
   filter(is.na(board) | tree %in% (join %>% filter(is.na(board)))$tree) %>% 
   dplyr::select(board, tree, NOTES, Notes, `Tops cut?`) 
-```
-
-## Correct 184A/184-A/185
-```{r}
-df <- df %>% 
-  mutate(tree = ifelse(tree == "184A", "184-A", tree)) %>% 
-  mutate(tree = ifelse(tree == "184BA", "184B-A", tree)) %>% 
-  mutate(tree = ifelse(tree == "185BA", "185B-A", tree)) %>% 
-  mutate(tree = ifelse(tree == "185B", "185B-P", tree))
 ```
 
 The 185B-P correction is based on the "dendro" sheet of hte Mort_details... .xls file
@@ -327,26 +328,65 @@ join %>%
 
 # Check for mateless seedlings not marked as such
 
-## Create a column for dead #
+## Create a column for PAIR, or dead #
 ```{r}
 join$PAIR <- NA
 bs <- grep("B", join$tree, value = T)
 bs <- substr(bs, 1, nchar(bs)-1)
 join[grep("B", join$tree), "PAIR"] <- bs
-
+head(bs)
 join <- join %>% 
   mutate(PAIR = ifelse(is.na(PAIR), tree, PAIR))
 
+head(join %>% 
+  dplyr::select(tree, PAIR))
+```
+
+# Find mateless seedlings not marked as such and not already flagged for needing me to check them
+```{r}
 join %>% 
-  dplyr::select(tree, PAIR)
+  group_by(PAIR) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 6) %>% 
+  arrange(PAIR) %>% 
+  filter(mateless == 0) %>% 
+  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
+  filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
 ```
 
 ## Fix the funky 183/184/185 ones - INCOMPLETE
 ```{r}
 join <- join %>% 
-  mutate(PAIR = ifelse())
+  mutate(PAIR = ifelse(tree == "184B-P", "184-P",PAIR))
 ```
 
+```{r}
+join %>% 
+  filter(PAIR == "183B-") %>% 
+  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) 
+```
+
+```{r}
+join <- join %>% 
+  mutate(PAIR = ifelse(tree == "185B-P", "185-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(tree == "185B-A", "185-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(tree == "184B-A", "184-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(tree == "183B-A", "183-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(tree == "183B-P", "183-P",PAIR)) 
+  
+```
+
+# Check again
+```{r}
+join %>% 
+  group_by(PAIR) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 6) %>% 
+  arrange(PAIR) %>% 
+  filter(mateless == 0) %>% 
+  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
+  filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
+```
 
 # See about pairing up mateless seedlings with each other if possible
 ```{r}
@@ -355,25 +395,12 @@ join %>%
   mutate(count = n()) %>% 
   filter(count != 6) %>% 
   filter(DEAD_ALIVE == "DEAD") %>% 
-  dplyr::select(tree, PAIR, thrown_out, board) %>% 
+  dplyr::select(tree, PAIR, thrown_out, board, DEAD_ALIVE, mateless) %>% 
   distinct() %>% 
   arrange(tree) %>% 
   filter(!is.na(board))
 
 ```
-
-
-# MAJOR THINGS I NEED TO DO:
-
-1. Which 12 is the real 12?
-2. Check why Seedling 155 was thrown out - it's on board 32 but no data 
-3. Look for seedling 26 on board 39 - it doesn't have measurements in the original board 39 data
-2. seedlings 98, 63B, and 163B - they're not listed as having a board, so look for it in the thrown out pile
-3. Seedling 159B - not listed as having a board
-4. Look for seedling 195B - on board 28 but not in data
-5. 205B - missing
-4. See which trees do and don't have mates
-3. APPLY THESE CHANGES TO THE rwl DATA FRAME
 
 What species are these missing seedlings?
 ```{r}
@@ -393,4 +420,120 @@ join %>%
   summarise(n())
 ```
 
+# Check for seedlings with <3 years worth of growth data
+```{r}
+nas <- join %>% 
+    select(5:17) %>% 
+    is.na %>% 
+    `!` %>% 
+    rowSums
+```
+
+```{r}
+join[nas<3,] %>% 
+   dplyr::select(tree, PAIR, 5:17, thrown_out, board, DEAD_ALIVE, mateless, exclude_reason) %>% 
+  filter(thrown_out ==0)
+```
+
+## Take out 74 because even the backup only has 2 years of growth
+```{r}
+join %>% 
+  filter(PAIR ==74) %>% 
+   dplyr::select(5:17, tree, PAIR, thrown_out, board, DEAD_ALIVE, mateless, exclude_reason)
+```
+
+```{r}
+join <- join %>% 
+  mutate(thrown_out = ifelse(tree == 74, 1, thrown_out)) %>% 
+  mutate(mateless = ifelse(tree == "74B", 1, mateless)) %>% 
+  mutate(thrown_out = ifelse(tree == "74B", "?", thrown_out)) %>% 
+  mutate(exclude_reason = ifelse(tree == 74, "<3 yrs growth", exclude_reason))
+```
+
+## Check that the live mates with <3 years growth have counterparts with 3+ yrs growth
+```{r}
+join %>% 
+  filter(PAIR %in% c(222, 207, 91)) %>% 
+  dplyr::select(5:17, tree, PAIR, thrown_out, board, DEAD_ALIVE, mateless, exclude_reason) %>% 
+  arrange(tree)
+```
+
+```{r}
+join <- join %>% 
+  mutate(thrown_out = ifelse(tree %in% c("222B","207B", "91B"), "?", thrown_out)) %>% 
+  mutate(exclude_reason = ifelse(tree %in% c("222B","207B", "91B"), "<3 yrs growth", exclude_reason)) %>% 
+  mutate(mateless = ifelse(tree %in% c("222","207", "91"), "?", mateless))
+```
+
+# Just for funsies, compare growth in dead trees vs. live trees, roughly
+
+## Tidy growth data
+```{r}
+join <- gather(join, key = "YEAR", value = "GROWTH_mm", 5:17)
+```
+
+## Compare
+```{r}
+prelim <- join %>% 
+  filter(!is.na(GROWTH_mm)) %>% 
+  filter(thrown_out == 0) %>% 
+  filter(YEAR %in% c(2014, 2015, 2016)) %>% 
+  mutate(rel_growth = GROWTH_mm/BAS_DIA_1_mm) %>% 
+  group_by(tree, SPECIES, DEAD_ALIVE) %>% 
+  summarize(rel_growth = mean(rel_growth), growth_mm = mean(GROWTH_mm), growth_vert = mean(na.omit(as.numeric(paste(LAST_YR_GR_cm))/HEIGHT)))
+
+ggplot(prelim)+
+  geom_boxplot(aes(x = interaction(SPECIES, DEAD_ALIVE), y= rel_growth))
+anova(lm(rel_growth ~ DEAD_ALIVE, data = prelim %>% filter(SPECIES == "PIPO")))
+ggplot(prelim)+
+  geom_boxplot(aes(x = interaction(SPECIES, DEAD_ALIVE), y= growth_mm))
+ggplot(prelim)+
+  geom_boxplot(aes(x = interaction(SPECIES, DEAD_ALIVE), y= growth_vert))
+
+```
+
+# It looks preliminarily like dead seedlings have greater radial growth and lower vertical growth than live seedlings
+
+# Take out thrown out seedlings from rwl
+
+## Make colnames of rwl all caps
+```{r}
+rwl_bu <- rwl
+colnames(rwl) <- toupper(colnames(rwl))
+```
+
+
+```{r}
+thrown_out <- join %>% 
+  filter(thrown_out != 0 | mateless == 1) %>% 
+  dplyr::select(series) %>% 
+  distinct()
+nrow(thrown_out)
+ncol_old <- ncol(rwl)
+ncol_old
+sum(colnames(rwl) %in% thrown_out$series)
+rwl <- rwl[, !colnames(rwl) %in% thrown_out$series]
+ncol_old - ncol(rwl) == nrow(thrown_out)
+```
+
+# save rwl
+```{r}
+save(rwl, file = "../../data/GrowthMortality/rwl.Rdata")
+```
+
+
+# MAJOR THINGS I NEED TO DO:
+
+Seedlings needing checking: 12, 155, 26, 98, 63B, 163B, 159B, 195B, 205B
+
+1. Which 12 is the real 12?
+2. Check why Seedling 155 was thrown out - it's on board 32 but no data 
+3. Look for seedling 26 on board 39 - it doesn't have measurements in the original board 39 data
+2. seedlings 98, 63B, and 163B - they're not listed as having a board, so look for it in the thrown out pile
+3. Seedling 159B - not listed as having a board
+4. Look for seedling 195B - on board 28 but not in data
+5. 205B - missing
+4. See which trees do and don't have mates
+3. APPLY THESE CHANGES TO THE rwl DATA FRAME
+6. ASK JODI WHETHER DIAMETER CHANGES AS TREES AGE AFTER DEATH
 
