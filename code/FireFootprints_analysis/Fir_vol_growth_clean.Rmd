@@ -1,0 +1,184 @@
+---
+title: "Fir volume cleaning"
+author: "Carmen"
+date: "March 25, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+library(knitr)
+library(tidyr)
+```
+
+# Data wrangling
+
+## Load final data frame
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata")
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
+df_vert <- df
+remove(df)
+```
+
+## Delete rows for vert growth before 2016
+```{r}
+df_vert <- df_vert %>% 
+  filter(Year != 2015)
+```
+
+## Restructure vert data so there's one row per seedling
+```{r}
+df_vert <- df_vert %>% select(-VertGrowth_Rel)
+df_vert <- spread(df_vert, key = Year, value = VertGrowth) %>% 
+  rename(VertGr_2016 = `2016`) %>% 
+  rename(VertGr_2017 = `2017`)
+```
+
+### Remove duplicate seedling
+```{r}
+nrow(df_vert)
+df_vert <- df_vert %>% 
+  filter(!(Sdlg == "117" & LAI == 0))
+nrow(df_vert)
+```
+
+
+## Filter to only seedlings with workable data for both diameter and vertical growth
+```{r}
+df_vert <- df_vert %>% select(Sdlg, VertGr_2016, VertGr_2017)
+df <- inner_join(df_dia, df_vert)
+```
+
+## Rename columns to distinguish between seedling ht and shrub ht
+```{r}
+df <- df %>% 
+  rename(tree_Ht_cm = Ht_cm, tree_Ht_norm = Ht_norm)
+```
+
+## Take out PSME so there's only ABCO
+```{r}
+df <- df %>% 
+  filter(Species == "ABCO")
+```
+
+## Clean up extreme and negative values
+
+```{r}
+nrow(df)
+hist(df$DiaGrowth_rel, breaks = 10)
+hist(df$DiaGrowth_rel)
+nrow(df)
+```
+
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+nrow(df)
+hist(df$DiaGrowth, breaks = 20)
+mean_minSD <- mean(df$DiaGrowth) - 2*sd(df$DiaGrowth)
+mean_minSD
+mean_plusSD <- mean(df$DiaGrowth) + 2*sd(df$DiaGrowth)
+mean_plusSD
+df <- df %>% 
+  filter(!(DiaGrowth < mean_minSD |
+             DiaGrowth > mean_plusSD))
+hist(df$DiaGrowth)
+nrow(df)
+```
+
+
+## Adjust diameter growth so that all values are > 0
+```{r}
+hist(df$DiaGrowth)
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth)))
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(DiaGrowth = (DiaGrowth - min(DiaGrowth)))
+```
+
+## Check for seedlings with more than one row
+```{r}
+nrow(df)
+length(unique(df$Sdlg))
+df %>% filter(duplicated(Sdlg))
+df <- df %>% 
+  distinct()
+```
+
+# Calculate relative growth rate
+
+## Replace NA vertical growth with 0 
+```{r}
+df <- df %>%
+  mutate(VertGr_2017 = ifelse(is.na(VertGr_2017), 0, VertGr_2017)) %>% 
+   mutate(VertGr_2016 = ifelse(is.na(VertGr_2016), 0, VertGr_2016))
+```
+
+## Calculate pre volume
+```{r}
+df <- df %>% 
+  mutate(vol_pre_cm2 = ((BasDia2016.mm/10)^2) * (tree_Ht_cm - VertGr_2017  - VertGr_2016) * (pi/12))
+hist(df$vol_pre_cm2)
+```
+
+## Calculate post volume
+```{r}
+df <- df %>% 
+  mutate(vol_post_cm2 = ((BasDia2017.mm.ave/10)^2) * tree_Ht_cm * (pi/12))
+hist(df$vol_post_cm2)
+```
+
+## Calculate RGR
+```{r}
+df <- df %>% 
+  mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2))/2)
+hist(df$RGR)
+```
+
+# Take a look
+
+```{r}
+ggplot(df, aes(x = tree_Ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+ggplot(df, aes(x = log(tree_Ht_cm), y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+```
+
+# Normalize independent variables
+
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+```{r}
+df <- df %>% 
+  mutate(tree_Ht_norm = normalize(tree_Ht_cm)) %>% 
+  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) ) %>% 
+  mutate(tree_Ht_log_norm = normalize(log(tree_Ht_cm)))
+```
+
+# Fill in missing elevation values
+```{r}
+df %>% 
+  filter(is.na(Elevation))
+```
+
+
+# Save
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
+```
+

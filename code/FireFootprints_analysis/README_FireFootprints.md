@@ -21,7 +21,7 @@ Files are dependent in the following order:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv`
 
-## 2. Intermediary Analysis
+## 2. Intermediary Data Wrangling and Analysis
 #### **fir_dia_growth_all_years**
 * uses: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
@@ -35,6 +35,15 @@ Files are dependent in the following order:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
 * creates: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata`
+    
+#### **Fir_vol_growth_clean**
+* does: 
+    * gets volume data ready for analysis
+* uses: 
+    * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata`
+    * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata`
+* creates:
+    * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata`
 
 ## 3. Main analyses
 #### **Fir_vol_growth_analysis**

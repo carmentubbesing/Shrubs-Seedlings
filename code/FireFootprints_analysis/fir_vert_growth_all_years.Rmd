@@ -94,140 +94,140 @@ abline(0,1)
 save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
 ```
 
-## Initial look at regression model
-```{r}
-f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm + ShrG1 + shrubarea2_sqrt_norm*Ht_norm + Species
-f_noshrubs <- VertGrowth_Rel ~  Year + Ht_norm  + ShrG1 + Species
-LM1 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
-LM1_noshrubs <- lme(f_noshrubs,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML")
-anova(LM1, LM1_noshrubs)
-```
+<!-- ## Initial look at regression model -->
+<!-- ```{r} -->
+<!-- f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm + ShrG1 + shrubarea2_sqrt_norm*Ht_norm + Species -->
+<!-- f_noshrubs <- VertGrowth_Rel ~  Year + Ht_norm  + ShrG1 + Species -->
+<!-- LM1 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML") -->
+<!-- LM1_noshrubs <- lme(f_noshrubs,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML") -->
+<!-- anova(LM1, LM1_noshrubs) -->
+<!-- ``` -->
 
-## Find all possible variable combinations
-```{r}
-v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm*Ht_norm", "shrubarea3_sqrt_norm")
-combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
-list.bad <- list()
-for(i in 1:length(combs)){
-  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
-    {
-    list.bad <- c(list.bad, i)
-    }
-  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
-    list.bad <- c(list.bad, i)
-  } 
-    if("shrubarea3_sqrt_norm" %in% combs[i][[1]] & "shrubarea2_sqrt_norm" %in% combs[i][[1]])
-    {
-    list.bad <- c(list.bad, i)
-    }
-}
-list.bad <- unlist(list.bad)
-combs.bad <- combs[list.bad]
-combs <- setdiff(combs, combs.bad)
-length(combs)
-```
+<!-- ## Find all possible variable combinations -->
+<!-- ```{r} -->
+<!-- v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm*Ht_norm", "shrubarea3_sqrt_norm") -->
+<!-- combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list))) -->
+<!-- list.bad <- list() -->
+<!-- for(i in 1:length(combs)){ -->
+<!--   if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]]) -->
+<!--     { -->
+<!--     list.bad <- c(list.bad, i) -->
+<!--     } -->
+<!--   if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){ -->
+<!--     list.bad <- c(list.bad, i) -->
+<!--   }  -->
+<!--     if("shrubarea3_sqrt_norm" %in% combs[i][[1]] & "shrubarea2_sqrt_norm" %in% combs[i][[1]]) -->
+<!--     { -->
+<!--     list.bad <- c(list.bad, i) -->
+<!--     } -->
+<!-- } -->
+<!-- list.bad <- unlist(list.bad) -->
+<!-- combs.bad <- combs[list.bad] -->
+<!-- combs <- setdiff(combs, combs.bad) -->
+<!-- length(combs) -->
+<!-- ``` -->
 
-## Table
-```{r}
-table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
-for(i in 1:length(combs)){
-  vars <- combs[i]
-  vars <- paste(vars[[1]], collapse="+")
-  f <- formula(paste("(VertGrowth_Rel ~  Year  + Ht_norm +", vars,")"))
-  M <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "REML", weights = varExp(form=~Ht_norm))
-  ModelName <- paste("M", i, sep="_")
-  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
-  table <- rbind(table, add)
-}
-colnames(table) <- c("Model","Variables", "AIC")
-table_final <- kable(table %>% arrange(AIC), format = "markdown") 
-table_final
-```
+<!-- ## Table -->
+<!-- ```{r} -->
+<!-- table <- data.frame(Model = character(), Formula = character(), AIC = numeric()) -->
+<!-- for(i in 1:length(combs)){ -->
+<!--   vars <- combs[i] -->
+<!--   vars <- paste(vars[[1]], collapse="+") -->
+<!--   f <- formula(paste("(VertGrowth_Rel ~  Year  + Ht_norm +", vars,")")) -->
+<!--   M <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "REML", weights = varExp(form=~Ht_norm)) -->
+<!--   ModelName <- paste("M", i, sep="_") -->
+<!--   add <- data.frame(c(ModelName),c(vars), c(AIC(M))) -->
+<!--   table <- rbind(table, add) -->
+<!-- } -->
+<!-- colnames(table) <- c("Model","Variables", "AIC") -->
+<!-- table_final <- kable(table %>% arrange(AIC), format = "markdown")  -->
+<!-- table_final -->
+<!-- ``` -->
 
-## Compare best model to null
+<!-- ## Compare best model to null -->
 
-## AIC model selection shows that this is the best model, when year and height are included:
-```{r}
-f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm 
-f_null <- VertGrowth_Rel ~  Year + Ht_norm 
-LM2 <- lme(f,
-           data = df, 
-           random = list(~ 1| Fire, ~1| Sdlg), 
-           method = "ML",
-           weights = varExp(form=~Ht_norm))
-LM2_null <- lme(f_null,
-                data = df, 
-                random = list(~ 1| Fire, ~1| Sdlg),
-                method = "ML",
-                weights = varExp(form=~Ht_norm))
-anova(LM2, LM2_null)
-```
+<!-- ## AIC model selection shows that this is the best model, when year and height are included: -->
+<!-- ```{r} -->
+<!-- f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm  -->
+<!-- f_null <- VertGrowth_Rel ~  Year + Ht_norm  -->
+<!-- LM2 <- lme(f, -->
+<!--            data = df,  -->
+<!--            random = list(~ 1| Fire, ~1| Sdlg),  -->
+<!--            method = "ML", -->
+<!--            weights = varExp(form=~Ht_norm)) -->
+<!-- LM2_null <- lme(f_null, -->
+<!--                 data = df,  -->
+<!--                 random = list(~ 1| Fire, ~1| Sdlg), -->
+<!--                 method = "ML", -->
+<!--                 weights = varExp(form=~Ht_norm)) -->
+<!-- anova(LM2, LM2_null) -->
+<!-- ``` -->
 
-# Plot 
+<!-- # Plot  -->
 
-## Create MyData
-```{r}
-MyData <-  rbind(
-  expand.grid( 
-    Fire = unique(df$Fire), 
-    Year = unique(df$Year), 
-    shrubarea2 = seq(min(df$shrubarea2), max(df$shrubarea2), length = 100),
-    #shrubarea3 = seq(min(df$shrubarea3), max(df$shrubarea3), length = 100),
-    Ht_cm = seq(min(df$Ht_cm), max(df$Ht_cm), length = 10),
-    Species = c("PIPO","PILA"),
-    ShrG1 = unique(df$ShrG1),
-    Cov1.2 = seq(min(df$Cov1.2), max(df$Cov1.2), length = 10)
-    )
-)
-```
-
-
-### Normalize MyData variables
-
-```{r}
-MyData <- MyData %>% 
-  mutate(Ht_norm = normalize(Ht_cm)) %>% 
-  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) ) %>% 
-  mutate(cov1.2_norm = normalize(Cov1.2)) 
-#%>% 
- # mutate(shrubarea3_sqrt_norm = normalize(sqrt(shrubarea3)))
-```
-
-```{r}
-MyData$pred_simple <- predict(LM2, level = 0,newdata = MyData)
-```
-
-### Summary plot
-```{r}
-MyData_summary_simple <- MyData %>% 
-  group_by(shrubarea2) %>% 
-  mutate(pred_simple = mean(pred_simple))
-MyData_summary_simple
-figure_summary <- ggplot(MyData_summary_simple)+
-  labs(title = "Predicted vertical fir seedling growth (lines) \nand actual growth (points)")+
-  ylab("Relative vertical growth (cm/cm)")+
-  xlab(
-    expression(
-      paste(
-        sqrt("shrub cover * shrub height"),
-    " 0-2 m from seedling"))
-    )+
-  geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)), size = 1.5, col = "#a02313")+
-  geom_point(data=df, aes(x = sqrt(shrubarea2), y = VertGrowth_Rel), col = "#a02313")+
-  theme_bw()+
-  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
-        panel.background = element_rect(fill="#e9ebe8"))
-figure_summary
-```
-
-```{r}
-E <- resid(LM2, type="normalized")
-plot(LM2)
-plot(LM1)
-plot(sqrt(df$shrubarea2), E)
-plot((df$Ht_norm), E)
-coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire)
-```
+<!-- ## Create MyData -->
+<!-- ```{r} -->
+<!-- MyData <-  rbind( -->
+<!--   expand.grid(  -->
+<!--     Fire = unique(df$Fire),  -->
+<!--     Year = unique(df$Year),  -->
+<!--     shrubarea2 = seq(min(df$shrubarea2), max(df$shrubarea2), length = 100), -->
+<!--     #shrubarea3 = seq(min(df$shrubarea3), max(df$shrubarea3), length = 100), -->
+<!--     Ht_cm = seq(min(df$Ht_cm), max(df$Ht_cm), length = 10), -->
+<!--     Species = c("PIPO","PILA"), -->
+<!--     ShrG1 = unique(df$ShrG1), -->
+<!--     Cov1.2 = seq(min(df$Cov1.2), max(df$Cov1.2), length = 10) -->
+<!--     ) -->
+<!-- ) -->
+<!-- ``` -->
 
 
-# RESULT: best model has higher AIC than null, so there is no effect
+<!-- ### Normalize MyData variables -->
+
+<!-- ```{r} -->
+<!-- MyData <- MyData %>%  -->
+<!--   mutate(Ht_norm = normalize(Ht_cm)) %>%  -->
+<!--   mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) ) %>%  -->
+<!--   mutate(cov1.2_norm = normalize(Cov1.2))  -->
+<!-- #%>%  -->
+<!--  # mutate(shrubarea3_sqrt_norm = normalize(sqrt(shrubarea3))) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- MyData$pred_simple <- predict(LM2, level = 0,newdata = MyData) -->
+<!-- ``` -->
+
+<!-- ### Summary plot -->
+<!-- ```{r} -->
+<!-- MyData_summary_simple <- MyData %>%  -->
+<!--   group_by(shrubarea2) %>%  -->
+<!--   mutate(pred_simple = mean(pred_simple)) -->
+<!-- MyData_summary_simple -->
+<!-- figure_summary <- ggplot(MyData_summary_simple)+ -->
+<!--   labs(title = "Predicted vertical fir seedling growth (lines) \nand actual growth (points)")+ -->
+<!--   ylab("Relative vertical growth (cm/cm)")+ -->
+<!--   xlab( -->
+<!--     expression( -->
+<!--       paste( -->
+<!--         sqrt("shrub cover * shrub height"), -->
+<!--     " 0-2 m from seedling")) -->
+<!--     )+ -->
+<!--   geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)), size = 1.5, col = "#a02313")+ -->
+<!--   geom_point(data=df, aes(x = sqrt(shrubarea2), y = VertGrowth_Rel), col = "#a02313")+ -->
+<!--   theme_bw()+ -->
+<!--   theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'), -->
+<!--         panel.background = element_rect(fill="#e9ebe8")) -->
+<!-- figure_summary -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- E <- resid(LM2, type="normalized") -->
+<!-- plot(LM2) -->
+<!-- plot(LM1) -->
+<!-- plot(sqrt(df$shrubarea2), E) -->
+<!-- plot((df$Ht_norm), E) -->
+<!-- coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire) -->
+<!-- ``` -->
+
+
+<!-- # RESULT: best model has higher AIC than null, so there is no effect -->

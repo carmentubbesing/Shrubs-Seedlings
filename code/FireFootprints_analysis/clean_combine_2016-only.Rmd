@@ -14,7 +14,6 @@ require(dplyr)
 require(tidyr)
 ```
 
-
 Adapted from the .R file clean_combine
 
 # Basic cleaning
@@ -423,6 +422,12 @@ df[df$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"]
 df[df$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"])
 
 fix <- subset(df, !is.na(df$DIFN.all) & is.na(df$DIFN.53))
+```
+
+## Take out seedlings that aren't ABCO or PIPO
+```{r}
+df <- df %>% 
+  filter(Species %in% c("ABCO", "PIPO"))
 ```
 
 ## Save

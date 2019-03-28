@@ -71,9 +71,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -98,22 +96,92 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
 
-<div class="container-fluid main-container">
-
 <!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
 <script>
 $(document).ready(function () {
   window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
 });
 </script>
 
 <!-- code folding -->
 
 
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -123,8 +191,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Clean and Compile 2016 Fire Footprint data</h1>
-<h4 class="author"><em>Carmen</em></h4>
-<h4 class="date"><em>September 20, 2017</em></h4>
+<h4 class="author">Carmen</h4>
+<h4 class="date">September 20, 2017</h4>
 
 </div>
 
@@ -310,8 +378,10 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   group_by(Seedling.) %&gt;% 
   mutate(n = n()) %&gt;% 
   filter(n != 1)</code></pre>
+<pre><code>## Warning: Factor `Seedling.` contains implicit NA, consider using
+## `forcats::fct_explicit_na`</code></pre>
 <pre><code>## # A tibble: 0 x 4
-## # Groups:   Seedling. [0]
+## # Groups:   Seedling. [1]
 ## # ... with 4 variables: Seedling. &lt;fct&gt;, ShrubSpp02 &lt;fct&gt;, cov &lt;dbl&gt;,
 ## #   n &lt;int&gt;</code></pre>
 </div>
@@ -601,6 +671,11 @@ fix</code></pre>
 df[df$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),&quot;DIFN&quot;])
 
 fix &lt;- subset(df, !is.na(df$DIFN.all) &amp; is.na(df$DIFN.53))</code></pre>
+</div>
+<div id="take-out-seedlings-that-arent-abco-or-pipo" class="section level2">
+<h2>Take out seedlings that aren’t ABCO or PIPO</h2>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(Species %in% c(&quot;ABCO&quot;, &quot;PIPO&quot;))</code></pre>
 </div>
 <div id="save" class="section level2">
 <h2>Save</h2>
