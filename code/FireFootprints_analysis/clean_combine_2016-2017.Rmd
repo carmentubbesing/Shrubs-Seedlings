@@ -334,11 +334,86 @@ elv(255, elv_est)
 df %>% filter(Sdlg %in% c(222, 225, 255)) %>% select(Sdlg, FirePatch, Elevation) %>% distinct()
 ```
 
-
 ## Test for completion
 ```{r}
 df %>% 
   filter(is.na(Elevation)) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  distinct()
+```
+
+# Repeat for Aspect
+```{r}
+df %>% 
+  filter(is.na(Aspect.deg)) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  distinct() 
+```
+
+## Create function for adding aspect data to an individual seedling
+```{r}
+asp <- function(sdlg, aspect){
+  df <<- df %>% 
+    mutate(Aspect.deg = ifelse(Sdlg == sdlg, aspect, Aspect.deg))
+}
+```
+
+## Apply the function to seedlings with missing aspect data
+```{r}
+asp(204, 257)
+asp(10, 47)
+asp(11, 38)
+asp(12, 17)
+asp(13, 17)
+asp(15, 26)
+asp(8, 41)
+asp(9, 34)
+```
+
+## Check
+```{r}
+df %>% 
+  filter(is.na(Aspect.deg)) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  distinct() 
+```
+
+# Repeat for Slope
+```{r}
+df %>% 
+  filter(is.na(Slope.Deg)) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  distinct()
+```
+
+## Create function for adding slope data to an individual seedling
+```{r}
+slp <- function(sdlg, slope){
+  df <<- df %>% 
+    mutate(Slope.Deg = ifelse(Sdlg == sdlg, slope, Slope.Deg))
+}
+```
+
+## Apply the function to seedlings with missing slope data
+```{r}
+slp(176, 13)
+slp(10, 16)
+slp(11, 16)
+slp(12, 15)
+slp(13, 15)
+slp(15, 15)
+slp(8, 15)
+slp(9, 15)
+```
+
+## Check
+```{r}
+df %>% 
+  filter(is.na(Slope.Deg)) %>% 
   arrange(Sdlg) %>% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct()

@@ -244,6 +244,16 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#test-for-completion">Test for completion</a></li>
 </ul></li>
+<li><a href="#repeat-for-aspect">Repeat for Aspect</a><ul>
+<li><a href="#create-function-for-adding-aspect-data-to-an-individual-seedling">Create function for adding aspect data to an individual seedling</a></li>
+<li><a href="#apply-the-function-to-seedlings-with-missing-aspect-data">Apply the function to seedlings with missing aspect data</a></li>
+<li><a href="#check">Check</a></li>
+</ul></li>
+<li><a href="#repeat-for-slope">Repeat for Slope</a><ul>
+<li><a href="#create-function-for-adding-slope-data-to-an-individual-seedling">Create function for adding slope data to an individual seedling</a></li>
+<li><a href="#apply-the-function-to-seedlings-with-missing-slope-data">Apply the function to seedlings with missing slope data</a></li>
+<li><a href="#check-1">Check</a></li>
+</ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
@@ -674,6 +684,102 @@ elv_est</code></pre>
 <pre><code>## # A tibble: 0 x 5
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;fct&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;</code></pre>
+</div>
+</div>
+<div id="repeat-for-aspect" class="section level1">
+<h1>Repeat for Aspect</h1>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(Aspect.deg)) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  distinct() </code></pre>
+<pre><code>## # A tibble: 8 x 5
+##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;int&gt;      &lt;int&gt;
+## 1 10    CLVD-N         1632        NA         NA
+## 2 11    CLVD-N         1632        NA         NA
+## 3 12    CLVD-N         1632        NA         NA
+## 4 13    CLVD-N         1632        NA         NA
+## 5 15    CLVD-N         1632        NA         NA
+## 6 204   AMCR-2         1672        24         NA
+## 7 8     CLVD-N         1632        NA         NA
+## 8 9     CLVD-N         1632        NA         NA</code></pre>
+<div id="create-function-for-adding-aspect-data-to-an-individual-seedling" class="section level2">
+<h2>Create function for adding aspect data to an individual seedling</h2>
+<pre class="r"><code>asp &lt;- function(sdlg, aspect){
+  df &lt;&lt;- df %&gt;% 
+    mutate(Aspect.deg = ifelse(Sdlg == sdlg, aspect, Aspect.deg))
+}</code></pre>
+</div>
+<div id="apply-the-function-to-seedlings-with-missing-aspect-data" class="section level2">
+<h2>Apply the function to seedlings with missing aspect data</h2>
+<pre class="r"><code>asp(204, 257)
+asp(10, 47)
+asp(11, 38)
+asp(12, 17)
+asp(13, 17)
+asp(15, 26)
+asp(8, 41)
+asp(9, 34)</code></pre>
+</div>
+<div id="check" class="section level2">
+<h2>Check</h2>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(Aspect.deg)) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  distinct() </code></pre>
+<pre><code>## # A tibble: 0 x 5
+## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;fct&gt;, Elevation &lt;dbl&gt;,
+## #   Slope.Deg &lt;int&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div id="repeat-for-slope" class="section level1">
+<h1>Repeat for Slope</h1>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(Slope.Deg)) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 8 x 5
+##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;int&gt;      &lt;dbl&gt;
+## 1 10    CLVD-N         1632        NA         47
+## 2 11    CLVD-N         1632        NA         38
+## 3 12    CLVD-N         1632        NA         17
+## 4 13    CLVD-N         1632        NA         17
+## 5 15    CLVD-N         1632        NA         26
+## 6 176   STAR-mid       1689        NA        176
+## 7 8     CLVD-N         1632        NA         41
+## 8 9     CLVD-N         1632        NA         34</code></pre>
+<div id="create-function-for-adding-slope-data-to-an-individual-seedling" class="section level2">
+<h2>Create function for adding slope data to an individual seedling</h2>
+<pre class="r"><code>slp &lt;- function(sdlg, slope){
+  df &lt;&lt;- df %&gt;% 
+    mutate(Slope.Deg = ifelse(Sdlg == sdlg, slope, Slope.Deg))
+}</code></pre>
+</div>
+<div id="apply-the-function-to-seedlings-with-missing-slope-data" class="section level2">
+<h2>Apply the function to seedlings with missing slope data</h2>
+<pre class="r"><code>slp(176, 13)
+slp(10, 16)
+slp(11, 16)
+slp(12, 15)
+slp(13, 15)
+slp(15, 15)
+slp(8, 15)
+slp(9, 15)</code></pre>
+</div>
+<div id="check-1" class="section level2">
+<h2>Check</h2>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(Slope.Deg)) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 0 x 5
+## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;fct&gt;, Elevation &lt;dbl&gt;,
+## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">

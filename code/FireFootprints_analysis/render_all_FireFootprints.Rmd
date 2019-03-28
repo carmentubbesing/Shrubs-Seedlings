@@ -30,6 +30,6 @@ print(strt-Sys.time())
 # Main Analysis
 ```{r main_analysis}
 strt <- Sys.time()
-rmarkdown::render("Fir_vol_growth_analysis.Rmd", "html_document")
+rmarkdown::render("Fir_vol_growth_explore.Rmd", "html_document")
 print(strt-Sys.time())
 ```
