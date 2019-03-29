@@ -18,10 +18,20 @@ Files are dependent in the following order:
     * `~/Shrubs-Seedlings/compiled_data/`
     * `master_data_2016.csv`
 * creates:
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.csv`
 
 ## 2. Intermediary Data Wrangling and Analysis
+
+#### **Heat_load**
+* does:
+    * fills in missing values of slope, aspect, and latitude
+    * calculates heat load from slope, aspect, and latitude
+* uses:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata`
+* creates:
+    *  `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+
 #### **fir_dia_growth_all_years**
 * uses: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`

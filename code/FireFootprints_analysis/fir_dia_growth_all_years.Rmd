@@ -18,7 +18,7 @@ library(lme4)
 
 # Load data
 ```{r}
-load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
 # Filter out firs and fires with very few firs

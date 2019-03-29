@@ -19,11 +19,19 @@ rmarkdown::render("clean_combine_2016-2017.Rmd", "html_document")
 print(Sys.time()-strt)
 ```
 
-# Analysis
+# Intermediary Analysis
 ```{r intermediary_analysis}
 strt <- Sys.time()
+rmarkdown::render("Heat_load.Rmd", "html_document")
 rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
 rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
+print(strt-Sys.time())
+```
+
+# Intermediary Cleaning
+```{r}
+strt <- Sys.time()
+rmarkdown::render("fir_vol_growth_clean.Rmd", "html_document")
 print(strt-Sys.time())
 ```
 

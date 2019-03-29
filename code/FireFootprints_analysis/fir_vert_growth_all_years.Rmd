@@ -21,7 +21,7 @@ require(ggplot2)
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings.Rdata")
+load(file="fire_footprints/master_seedlings1.Rdata")
 ```
 
 ## Filter to just firs

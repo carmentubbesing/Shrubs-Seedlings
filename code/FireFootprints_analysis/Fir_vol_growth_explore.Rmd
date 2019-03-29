@@ -26,7 +26,6 @@ load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
 
 
 # Visualize pre and post volumes on a log scale
-
 ```{r}
 ggplot(df)+
   geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
@@ -93,11 +92,24 @@ setdiff(as.numeric(df$Sdlg), decdf$Sdlg)
 setdiff(decdf$Sdlg, as.numeric(df$Sdlg))
 ```
 
-
 # Try using VSURF
+
+## Make df of just the predictor variables I want to include
 ```{r}
 xdf <- df %>% 
   select(Fire, 
+         #FirePatch,
+         Elevation,
+         Slope.Deg,
+         Aspect.rad.fold.NESW,
+         #DIFN.all,
+         ImmedAboveSpp,
+         ImmedAboveHt.cm,
+         Years,
+         #LAI,
+         #DIFN.53,
+         tree_Ht_norm,
+         Lat.rad,
          shrubarea2, 
          shrubarea3,
          Cov1, 
@@ -116,20 +128,40 @@ xdf <- df %>%
          ShrG1, 
          BasDia2016.cm, 
          vol_pre_cm2, 
-         tree_Ht_log_norm)
+         tree_Ht_log_norm,
+         heatload,
+         incidrad)
+```
 
-names(xdf)
+## Normalize the numeric ones
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+xdf <- xdf %>% mutate_if(is.numeric, normalize)
+```
+
+## Apply VSURF
+```{r}
 vsurf <- VSURF(x = xdf, y = df$RGR, na.action = na.omit)
 summary(vsurf)
 vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
 ```
 
-## Try using all variables, including those with missing values
+# See how that compares to a simple random forest using the same variables
+```{r}
+forest <- randomForest(x = xdf, y = df$RGR, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+
+## Try using VSURF with all variables, including those with missing values
 
 ### Remove columns that are not explanatory variables or are totally redundant (eg same as another var but diff units)
 ```{r}
 df_vars <- df %>% 
-  select(-Sdlg, -Status, -notes, -Light_File, -Map, -DataSheet2017, -Date, -resid, -DiaGrowth, -DiaGrowth_rel, -BasDia2016.cm, -VertGr_2016, -VertGr_2017)
+  select(-Sdlg, -Status, -notes, -Light_File, -Map, -DataSheet2017, -Date, -resid, -DiaGrowth, -DiaGrowth_rel, -BasDia2016.cm, -VertGr_2016, -VertGr_2017, -BasDia2017.mm.1, -BasDia2017.mm.2, -vol_post_cm2, -BasDia2017.mm.ave, -X, -Y)
 ```
 
 ```{r}
@@ -142,25 +174,24 @@ The order thing is annoying. Better to reorder variables before running vsurf th
 ```{r}
 vsurf2$varselect.pred
 df_vars[vsurf2$varselect.pred]
-
 ```
 
 ### Run a random forest with just those variables and look at their relative importances
 ```{r}
-
+randomForest()
 ```
 
 STILL NEED TO DO THIS
 
 # Build a random forest to get a sense of what variables are important
 ```{r}
-# This isn't working for some unknown reason
-# fit <- randomForest(y = df$RGR, x = df_vars[vsurf2$varselect.pred], 
-#                     importance = TRUE,
-#                     scale = TRUE,
-#                     na.action = na.omit)
-# fit
-# varImpPlot(fit)
+This isn't working for some unknown reason
+fit <- randomForest(y = df$RGR, x = df_vars,
+                    importance = TRUE,
+                    scale = TRUE,
+                    na.action = na.omit)
+fit
+varImpPlot(fit)
 ```
 
 
