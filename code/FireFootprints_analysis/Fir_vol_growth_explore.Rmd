@@ -17,6 +17,7 @@ library(lme4)
 library(tidyr)
 library(randomForest)
 library(VSURF)
+library(effects)
 ```
 
 # Load data
@@ -130,7 +131,7 @@ xdf <- df %>%
          vol_pre_cm2, 
          tree_Ht_log_norm,
          heatload,
-         incidrad)
+         incidrad) 
 ```
 
 ## Normalize the numeric ones
@@ -141,7 +142,7 @@ normalize <- function(x) {
 xdf <- xdf %>% mutate_if(is.numeric, normalize)
 ```
 
-## Apply VSURF
+## Apply VSURF to RGR
 ```{r}
 vsurf <- VSURF(x = xdf, y = df$RGR, na.action = na.omit)
 summary(vsurf)
@@ -155,190 +156,54 @@ forest <- randomForest(x = xdf, y = df$RGR, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
+# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
-## Try using VSURF with all variables, including those with missing values
-
-### Remove columns that are not explanatory variables or are totally redundant (eg same as another var but diff units)
+## Structure data for LM
 ```{r}
-df_vars <- df %>% 
-  select(-Sdlg, -Status, -notes, -Light_File, -Map, -DataSheet2017, -Date, -resid, -DiaGrowth, -DiaGrowth_rel, -BasDia2016.cm, -VertGr_2016, -VertGr_2017, -BasDia2017.mm.1, -BasDia2017.mm.2, -vol_post_cm2, -BasDia2017.mm.ave, -X, -Y)
+LMdf <- df %>% 
+  select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Slope.Deg, ShrubSpp02, shrubarea3, Ht1.3) %>% 
+  mutate_if(is.numeric, normalize)
+LMdf <- droplevels(LMdf)
+sort(summary(LMdf$ShrubSpp02))
+
+LMdf <- LMdf %>% 
+  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp02)))%>% 
+  mutate(ShrubSpp02 = as.factor(ShrubSpp02))
+
+summary(LMdf$ShrubSpp02)
 ```
 
+## Linear model
 ```{r}
-vsurf2 <- VSURF(RGR ~ ., data = df_vars, na.action = na.omit)
+LM <-  lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + shrubarea3+ vol_pre_cm2+ Ht1.3 + vol_pre_cm2:Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
 ```
 
-The order thing is annoying. Better to reorder variables before running vsurf than to have to figure out the otder afterwards. Since RGR is the 57th variable out of 58, I probably don't need to worry aboutt he order issue.
-
-### See what variables came out
+### Look at individual effects
 ```{r}
-vsurf2$varselect.pred
-df_vars[vsurf2$varselect.pred]
+eff_shrubarea <- effect("shrubarea3", LM)
+plot(eff_shrubarea)
+
+eff_shrubht<- effect("Ht1.3", LM)
+plot(eff_shrubht)
+
+eff_shrubspp <- effect("ShrubSpp02", LM)
+plot(eff_shrubspp)
 ```
 
-### Run a random forest with just those variables and look at their relative importances
+### Compare to model with no shrub data
 ```{r}
-randomForest()
+LMnull <- lme(RGR ~ BasDia2016.cm+  Slope.Deg+ vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
+anova(LM, LMnull)
 ```
-
-STILL NEED TO DO THIS
-
-# Build a random forest to get a sense of what variables are important
-```{r}
-This isn't working for some unknown reason
-fit <- randomForest(y = df$RGR, x = df_vars,
-                    importance = TRUE,
-                    scale = TRUE,
-                    na.action = na.omit)
-fit
-varImpPlot(fit)
-```
-
-
-# Then identify exactly what variables to use in an AIC table based on the random forest above
-
-## Find all possible variable combinations
-
-### Define variables of interest
-```{r}
-v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm:tree_Ht_log_norm", "Cov1.2_norm:tree_Ht_log_norm", "BasDia2017.mm.ave", "log(vol_pre_cm2)", "tree_Ht_log_norm")
-combs <- do.call(c, lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
-```
-
-### Remove biologically redundant variable combinations
-```{r}
-list.bad <- list()
-for(i in 1:length(combs)){
-  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
-    {
-    list.bad <- c(list.bad, i)
-  }
-  if("tree_Ht_log_norm" %in% combs[i][[1]] & "log(vol_pre_cm2)" %in% combs[i][[1]])
-    {
-    list.bad <- c(list.bad, i)
-    }
-  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
-    list.bad <- c(list.bad, i)
-    } 
-}
-list.bad <- unlist(list.bad)
-combs.bad <- combs[list.bad]
-combs <- setdiff(combs, combs.bad)
-length(combs)
-```
-
-## Table
-```{r}
-table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
-for(i in 1:length(combs)){
-  vars <- combs[i]
-  vars <- paste(vars[[1]], collapse="+")
-  f <- formula(paste("(RGR ~ ", vars,")"))
-  M <- lme(f,data = df, random = ~ 1| Fire)
-  ModelName <- paste("M", i, sep="_")
-  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
-  table <- rbind(table, add)
-}
-colnames(table) <- c("Model","Variables", "AIC")
-table_final <- kable(table %>% arrange(AIC), format = "markdown") 
-head(table_final, n = 10)
-```
-
-# Likelihood ratio test using the top two models
-```{r}
-model1 <- lme(RGR ~ log(vol_pre_cm2),data = df, random = ~ 1| Fire)
-model2 <- lme(RGR ~ Cov1.3_norm+BasDia2016.cm+tree_Ht_log_norm,data = df, random = ~ 1| Fire)
-summary(model1)
-summary(model2)
-nullmodel <- lme(RGR ~ 1, random = ~1|Fire, data= df)
-summary(nullmodel)
-```
-
-# Likelihood ratio test using variables from VSURF
-```{r}
-modelvsurf <- lme(RGR ~ Cov1.3+BasDia2016.cm + ShrubSpp02 + Ht1.3 + vol_pre_cm2,data = df, random = ~ 1| Fire, method = "ML")
-modelvsurfnull <- lme(RGR ~ BasDia2016.cm + vol_pre_cm2, data = df, random = ~ 1| Fire, method = "ML")
-summary(modelvsurf)
-anova(modelvsurf, modelvsurfnull)
-```
-
 
 ### Residuals
 ```{r}
-E <- resid(model1, type = "normalized")
-pred <- predict(model1)
-plot(model1)
+E <- resid(LM, type = "normalized")
+pred <- predict(LM)
+plot(LM)
 plot(df$shrubarea2_sqrt_norm, E)
 plot(df$tree_Ht_log_norm, E)
 plot(log(df$vol_pre_cm2), E)
-```
-
-Do the residuals look good?
-
-# Plot
-
-## Make fake data
-```{r}
-MyData <-  rbind(
-  expand.grid( 
-    Fire = unique(df$Fire),
-    tree_Ht_cm = mean(df$tree_Ht_cm),
-    Cov1.2 = seq(min(df$Cov1.2), max(df$Cov1.2), length = 20)
-    ) 
-)
-```
-
-## normalize MyData
-```{r}
-MyData$tree_Ht_norm <- (MyData$tree_Ht_cm - mean(df$tree_Ht_cm))/sd(df$tree_Ht_cm)
-MyData$tree_Ht_log_norm <- (log(MyData$tree_Ht_cm) - mean(log(df$tree_Ht_cm)))/sd(log(df$tree_Ht_cm))
-MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df$Cov1.2))/sd(df$Cov1.2)
-```
-
-```{r}
-MM1
-MyData$pred <- predict(MM1, newdata = MyData)
-```
-
-### Summary plot
-```{r}
-MyData_summary_simple <- MyData %>% 
-  group_by(Cov1.2) %>%
-  mutate(pred_simple = mean(pred)) %>% 
-  ungroup()
-
-brown <- "#5b3d07"
-figure_summary <- ggplot(MyData_summary_simple)+
-  labs(title = "Fir seedling volumetric growth")+
-  ylab("relative growth rate (RGR)")+
-  xlab("shrub cover 0-2 m from seedling")+
-  geom_line(aes(y = pred_simple, x =Cov1.2), col = "#1b3f4c")+
-  geom_point(data=df, aes(x = Cov1.2, y = RGR), col = "#1b3f4c")+
-  theme_bw()+
-  theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
-        panel.background = element_rect(fill="#e9ebe8"),
-        text = element_text(size=20, colour = brown),
-        axis.text.x = element_text(colour=brown), 
-        axis.text.y = element_text(colour=brown),
-        panel.border = element_rect(colour = brown)
-        )+
-  scale_y_continuous(limits = c(0,1.12))
-figure_summary
-```
-
-# Save figure
-```{r}
-setwd("C:/Users/Carmen/Documents/Shrubs-Seedlings/results/figures")
-pdf("fir_RGR.pdf", width = 5.5, height = 7.25, pointsize = 30,useDingbats = F)
-figure_summary
-dev.off()
-```
-
-# Calculate pseudo r squared
-```{r}
-meanGrth <- mean(df$RGR)
-sse <- (df$RGR - predict(MM1))^2
-sst <- (df$RGR - meanGrth)^2
-R2 <- 1 - (sum(sse)/sum(sst))
-R2
 ```

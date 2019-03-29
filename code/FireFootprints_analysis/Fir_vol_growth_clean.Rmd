@@ -137,6 +137,13 @@ df <- df %>%
 hist(df$vol_post_cm2)
 ```
 
+## Calculate volume growth 
+```{r}
+df <- df %>% 
+  mutate(vol_growth_cm2 = vol_post_cm2 - vol_pre_cm2)
+```
+
+
 ## Calculate RGR
 ```{r}
 df <- df %>% 
