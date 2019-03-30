@@ -17,7 +17,7 @@ library(kableExtra)
 
 # Load data
 ```{r}
-load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
 # Filter out firs and fires with very few pines
@@ -33,9 +33,9 @@ df %>%
 
 # Take a look
 ```{r}
-hist(df$DiaGrowth)
-summary(df$DiaGrowth)
-df %>% filter(is.na(DiaGrowth))
+hist(df$DiaGrowth.mm)
+summary(df$DiaGrowth.mm)
+df %>% filter(is.na(DiaGrowth.mm))
 ```
 
 ```{r}
@@ -61,21 +61,21 @@ df_dia <- df %>%
 # Calculate relative diameter growth
 ```{r}
 df_dia <- df_dia %>% 
-  mutate(DiaGrowth_rel = DiaGrowth/(BasDia2016.cm*10))
-hist(df_dia$DiaGrowth_rel)
+  mutate(DiaGrowth.mm_rel = DiaGrowth.mm/(BasDia2016.cm*10))
+hist(df_dia$DiaGrowth.mm_rel)
 ```
 
 ## Take out outliers on both ends, defined as greater than two SD from the mean
 ```{r}
-hist(df_dia$DiaGrowth_rel)
-mean(df_dia$DiaGrowth_rel) - 2*sd(df_dia$DiaGrowth_rel)
-mean(df_dia$DiaGrowth_rel) + 2*sd(df_dia$DiaGrowth_rel)
+hist(df_dia$DiaGrowth.mm_rel)
+mean(df_dia$DiaGrowth.mm_rel) - 2*sd(df_dia$DiaGrowth.mm_rel)
+mean(df_dia$DiaGrowth.mm_rel) + 2*sd(df_dia$DiaGrowth.mm_rel)
 df_dia <- df_dia %>% 
-  filter(!(DiaGrowth_rel < (mean(df_dia$DiaGrowth_rel) - 2*sd(df_dia$DiaGrowth_rel)) |
-             DiaGrowth_rel > mean(df_dia$DiaGrowth_rel) + 2*sd(df_dia$DiaGrowth_rel)))
-hist(df_dia$DiaGrowth_rel)
+  filter(!(DiaGrowth.mm_rel < (mean(df_dia$DiaGrowth.mm_rel) - 2*sd(df_dia$DiaGrowth.mm_rel)) |
+             DiaGrowth.mm_rel > mean(df_dia$DiaGrowth.mm_rel) + 2*sd(df_dia$DiaGrowth.mm_rel)))
+hist(df_dia$DiaGrowth.mm_rel)
 df_dia %>% 
-  filter(DiaGrowth_rel < 0) %>% 
+  filter(DiaGrowth.mm_rel < 0) %>% 
   summarise(n())
 18/nrow(df_dia)
 ```
@@ -83,7 +83,7 @@ df_dia %>%
 ## Adjust so that no values are below 0 
 ```{r}
 df_dia <- df_dia %>% 
-  mutate(DiaGrowth_rel = (DiaGrowth_rel - min(df_dia$DiaGrowth_rel)))
+  mutate(DiaGrowth.mm_rel = (DiaGrowth.mm_rel - min(df_dia$DiaGrowth.mm_rel)))
 ```
 
 ### A seedling was defined as an outlier using analysis of residuals after the fact
@@ -121,8 +121,8 @@ df_dia <- df_dia %>%
 
 ## Mixed effects model: How does relative diameter growth relate to shrub area?
 ```{r}
-f <- DiaGrowth_rel ~  shrubarea2_sqrt_norm + Ht_norm + ShrG1 + Ht_norm:shrubarea2_sqrt_norm
-f_noshrubs <- DiaGrowth_rel ~  Ht_norm  + ShrG1
+f <- DiaGrowth.mm_rel ~  shrubarea2_sqrt_norm + Ht_norm + ShrG1 + Ht_norm:shrubarea2_sqrt_norm
+f_noshrubs <- DiaGrowth.mm_rel ~  Ht_norm  + ShrG1
 LM1 <- lme(f,data = df_dia, random = ~ 1| Fire, method = "ML")
 LM1_noshrubs <- lme(f_noshrubs,data = df_dia, random = ~ 1| Fire, method = "ML")
 anova(LM1, LM1_noshrubs)
@@ -191,7 +191,7 @@ figure_summary <- ggplot(MyData_summary_simple)+
   ylab("Predicted relative seedling growth")+
   xlab("shrub cover * shrub height 0-2 m from seedling")+
   geom_line(aes(y = pred_simple, x = shrubarea2_sqrt_norm, group = ShrG1, col = ShrG1))+
-  geom_point(data=df_dia, aes(x = shrubarea2_sqrt_norm, y = DiaGrowth_rel))
+  geom_point(data=df_dia, aes(x = shrubarea2_sqrt_norm, y = DiaGrowth.mm_rel))
 figure_summary
 ```
 
@@ -236,7 +236,7 @@ table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
 for(i in 1:length(combs)){
   vars <- combs[i]
   vars <- paste(vars[[1]], collapse="+")
-  f <- formula(paste("(DiaGrowth_rel ~ Ht_norm +", vars,")"))
+  f <- formula(paste("(DiaGrowth.mm_rel ~ Ht_norm +", vars,")"))
   M <- lme(f,data = df_dia, random = ~ 1| Fire)
   ModelName <- paste("M", i, sep="_")
   add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
@@ -249,8 +249,8 @@ table_final
 
 # Re-analyse and plot using best model from above that sticks with 0-2 m
 ```{r}
-f <- DiaGrowth_rel ~  Cov1.2_norm + Ht_norm 
-f_null <- DiaGrowth_rel ~  Ht_norm
+f <- DiaGrowth.mm_rel ~  Cov1.2_norm + Ht_norm 
+f_null <- DiaGrowth.mm_rel ~  Ht_norm
 LM2 <- lme(f,data = df_dia, random = ~ 1|Fire, method = "ML")
 LM2_null <- lme(f_null,data = df_dia, random = ~ 1|Fire, method = "ML")
 anova(LM2, LM2_null)
@@ -306,7 +306,7 @@ figure_summary <- ggplot(MyData2_summary_simple)+
   ylab("relative growth (mm/mm)")+
   xlab("shrub cover 0-2 m from seedling")+
   geom_line(aes(y = pred_simple, x =Cov1.2), col = "#a02313")+
-  geom_point(data=df_dia, aes(x = Cov1.2, y = DiaGrowth_rel), col = "#a02313")+
+  geom_point(data=df_dia, aes(x = Cov1.2, y = DiaGrowth.mm_rel), col = "#a02313")+
   theme_bw()+
   theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
         panel.background = element_rect(fill="#e9ebe8"),
@@ -330,9 +330,9 @@ dev.off()
 
 # Calculate pseudo r squared
 ```{r}
-meanGrth <- mean(df_dia$DiaGrowth_rel)
-sse <- (df_dia$DiaGrowth_rel - predict(LM2))^2
-sst <- (df_dia$DiaGrowth_rel - meanGrth)^2
+meanGrth <- mean(df_dia$DiaGrowth.mm_rel)
+sse <- (df_dia$DiaGrowth.mm_rel - predict(LM2))^2
+sst <- (df_dia$DiaGrowth.mm_rel - meanGrth)^2
 R2 <- 1 - (sum(sse)/sum(sst))
 R2
 ```

@@ -25,7 +25,7 @@ library(sjlabelled)
 # Load data
 ```{r, include=F}
 setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings.Rdata")
+load(file="fire_footprints/master_seedlings2.Rdata")
 ```
 
 ## Filter to just pines

@@ -34,7 +34,7 @@ Files are dependent in the following order:
 
 #### **fir_dia_growth_all_years**
 * uses: 
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
 * creates: 
     * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata`
 * figures:
@@ -42,9 +42,22 @@ Files are dependent in the following order:
 
 #### **fir_vert_growth_all_years**
 * uses: 
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
 * creates: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata`
+    
+#### **Pine_dia_growth**
+* uses:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+* creates:
+    * `~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_dia.Rdata`
+    
+#### **Pine_vertical_growth**
+* uses:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+* creates:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata`
+    
     
 #### **Fir_vol_growth_clean**
 * does: 

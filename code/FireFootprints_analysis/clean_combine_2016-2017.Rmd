@@ -137,11 +137,11 @@ df <- df %>%
 ## Calculate growth
 ```{r}
 df <- df %>% 
-  mutate(DiaGrowth = ifelse(BasDia2017.mm.1 >0, BasDia2017.mm.ave - BasDia2016.mm, NA))
+  mutate(DiaGrowth.mm = ifelse(BasDia2017.mm.1 >0, BasDia2017.mm.ave - BasDia2016.mm, NA))
 df %>% 
-  filter(BasDia2017.mm.ave >0 & !is.na(DiaGrowth)) %>% 
-  summarise(mean(DiaGrowth))
-hist(df$DiaGrowth, breaks = 30)
+  filter(BasDia2017.mm.ave >0 & !is.na(DiaGrowth.mm)) %>% 
+  summarise(mean(DiaGrowth.mm))
+hist(df$DiaGrowth.mm, breaks = 30)
 ```
 
 # Get data ready to analyze vertical growth

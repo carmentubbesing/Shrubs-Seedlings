@@ -1,7 +1,7 @@
 ---
-title: "Fir volume cleaning"
+title: "Pine volume growth clean"
 author: "Carmen"
-date: "March 25, 2019"
+date: "March 29, 2019"
 output: 
     html_document:
         toc: TRUE
@@ -19,8 +19,8 @@ library(tidyr)
 
 ## Load final data frame
 ```{r}
-load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata")
-load("~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_dia.Rdata")
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata")
 df_vert <- df
 remove(df)
 ```
@@ -44,25 +44,12 @@ df_vert <- spread(df_vert, key = Year, value = VertGrowth) %>%
 sort(df_vert$Sdlg)
 nrow(df_vert)
 length(unique(df_vert$Sdlg))
-df_vert[df_vert %>% select(Sdlg) %>% duplicated(),]
-df_vert <- df_vert %>% 
-  filter(!(Sdlg == "117" & LAI == 0))
-
-
 sort(df_dia$Sdlg)
 nrow(df_dia)
 length(unique(df_dia$Sdlg))
-dups <- df_dia[df_dia %>% select(Sdlg) %>% duplicated(),]
-df_dia %>% filter(Sdlg %in% dups$Sdlg)
-df_dia <- df_dia %>% filter(!(Sdlg %in% dups$Sdlg & file_lat == "AMR - Aerial - 2.csv"))
-```
-
-
-```{r}
-nrow(df_vert)
-df_vert <- df_vert %>% 
-  filter(!(Sdlg == "117" & LAI == 0))
-nrow(df_vert)
+df_dia[df_dia %>% select(Sdlg) %>% duplicated(),]
+df_dia %>% filter(Sdlg == "26")
+df_dia <- df_dia %>% filter(!(Sdlg == 26 & file_lat == "Freds_JB_A.csv"))
 ```
 
 
@@ -78,18 +65,17 @@ df <- df %>%
   rename(tree_Ht_cm = Ht_cm, tree_Ht_norm = Ht_norm)
 ```
 
-## Take out PSME so there's only ABCO
+## Take out species besides PIPO
 ```{r}
 df <- df %>% 
-  filter(Species == "ABCO")
+  filter(Species == "PIPO")
 ```
 
 ## Clean up extreme and negative values
-
 ```{r}
 nrow(df)
-hist(df$DiaGrowth_rel, breaks = 10)
-hist(df$DiaGrowth_rel)
+hist(df$DiaGrowth.mm_rel, breaks = 10)
+hist(df$DiaGrowth.mm_rel)
 nrow(df)
 ```
 
@@ -97,30 +83,30 @@ nrow(df)
 ## Take out outliers on both ends, defined as greater than two SD from the mean
 ```{r}
 nrow(df)
-hist(df$DiaGrowth, breaks = 20)
-mean_minSD <- mean(df$DiaGrowth) - 2*sd(df$DiaGrowth)
+hist(df$DiaGrowth.mm, breaks = 20)
+mean_minSD <- mean(df$DiaGrowth.mm) - 2*sd(df$DiaGrowth.mm)
 mean_minSD
-mean_plusSD <- mean(df$DiaGrowth) + 2*sd(df$DiaGrowth)
+mean_plusSD <- mean(df$DiaGrowth.mm) + 2*sd(df$DiaGrowth.mm)
 mean_plusSD
 df <- df %>% 
-  filter(!(DiaGrowth < mean_minSD |
-             DiaGrowth > mean_plusSD))
-hist(df$DiaGrowth)
+  filter(!(DiaGrowth.mm < mean_minSD |
+             DiaGrowth.mm > mean_plusSD))
+hist(df$DiaGrowth.mm)
 nrow(df)
 ```
 
 
 ## Adjust diameter growth so that all values are > 0
 ```{r}
-hist(df$DiaGrowth)
+hist(df$DiaGrowth.mm)
 min(df$BasDia2017.mm.ave)
 hist(df$BasDia2017.mm.ave)
 df <- df %>% 
-  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth)))
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth.mm)))
 min(df$BasDia2017.mm.ave)
 hist(df$BasDia2017.mm.ave)
 df <- df %>% 
-  mutate(DiaGrowth = (DiaGrowth - min(DiaGrowth)))
+  mutate(DiaGrowth.mm = (DiaGrowth.mm - min(DiaGrowth.mm)))
 ```
 
 ## Check for seedlings with more than one row
@@ -170,7 +156,6 @@ hist(df$RGR)
 ```
 
 # Take a look
-
 ```{r}
 ggplot(df, aes(x = tree_Ht_cm, y = RGR))+
   geom_point()+
@@ -182,6 +167,6 @@ ggplot(df, aes(x = log(tree_Ht_cm), y = RGR))+
 
 # Save
 ```{r}
-save(df, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
+save(df, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vol.Rdata")
 ```
 

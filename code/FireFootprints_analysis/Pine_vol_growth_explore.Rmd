@@ -22,9 +22,8 @@ library(effects)
 
 # Load data
 ```{r}
-load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
+load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vol.Rdata")
 ```
-
 
 # Visualize pre and post volumes on a log scale
 ```{r}
@@ -60,39 +59,6 @@ ggplot(df, aes(x = log(vol_pre_cm2), y = RGR))+
 
 This looks like I should maybe include volume in the model of growth rate or adjust how I analyze growth rates
 
-## Plot relative growth rate vs. ht to check for a relationship
-
-### least squares
-```{r}
-ggplot(df, aes(x = tree_Ht_log_norm, y = RGR))+
-  geom_point()+
-  geom_smooth(method = 'lm')
-```
-
-### loess
-```{r}
-ggplot(df, aes(x = tree_Ht_log_norm, y = RGR))+
-  geom_point()+
-  geom_smooth()
-```
-
-There appears to be less of a relationship between height and growth than between volume and growth
-
-# Mixed effects with random fire effect
-```{r}
-MM1 <- lme(RGR ~Cov1.2_norm, random =~1|Fire, data = df, method = "ML")
-
-MM1_null <- lme(RGR ~ 1, random =~1|Fire, method = "ML",data = df)
-anova(MM1, MM1_null)
-summary(MM1)
-```
-
-```{r}
-decdf <- read.csv("~/Shrubs-Seedlings-master_Dec2018/code/FireFootprints_analysis/df_firvol_Dec2018.csv")
-setdiff(as.numeric(df$Sdlg), decdf$Sdlg)
-setdiff(decdf$Sdlg, as.numeric(df$Sdlg))
-```
-
 # Try using VSURF
 
 ## Make df of just the predictor variables I want to include
@@ -104,8 +70,6 @@ xdf <- df %>%
          Slope.Deg,
          Aspect.rad.fold.NESW,
          #DIFN.all,
-         ImmedAboveSpp,
-         ImmedAboveHt.cm,
          Years,
          #LAI,
          #DIFN.53,
@@ -122,7 +86,6 @@ xdf <- df %>%
          ShrubSpp01, 
          ShrubSpp02, 
          ShrubSpp03, 
-         IAG, 
          ShrG1, 
          BasDia2016.cm, 
          vol_pre_cm2, 
@@ -157,40 +120,30 @@ varImpPlot(forest)
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Slope.Deg, ShrubSpp02, shrubarea3, Ht1.3) %>% 
+  select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Elevation, Ht1.3) %>% 
   mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
-sort(summary(LMdf$ShrubSpp02))
-
-LMdf <- LMdf %>% 
-  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp02)))%>% 
-  mutate(ShrubSpp02 = as.factor(ShrubSpp02))
-
-summary(LMdf$ShrubSpp02)
 ```
 
 ## Linear model
 ```{r}
-LM <-  lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + shrubarea3+ vol_pre_cm2+ Ht1.3 + vol_pre_cm2:Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+LM <-  lme(RGR ~ BasDia2016.cm + Elevation + vol_pre_cm2+ Ht1.3 ,data = LMdf, random = ~ 1| Fire, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
 
 ### Look at individual effects
 ```{r}
-eff_shrubarea <- effect("shrubarea3", LM)
-plot(eff_shrubarea)
-
 eff_shrubht<- effect("Ht1.3", LM)
 plot(eff_shrubht)
 
-eff_shrubspp <- effect("ShrubSpp02", LM)
+eff_shrubspp <- effect("Elevation", LM)
 plot(eff_shrubspp)
 ```
 
 ### Compare to model with no shrub data
 ```{r}
-LMnull <- lme(RGR ~ BasDia2016.cm+  Slope.Deg+ vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
+LMnull <- lme(RGR ~ BasDia2016.cm + Elevation + vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
 anova(LM, LMnull)
 ```
 
@@ -200,6 +153,33 @@ E <- resid(LM, type = "normalized")
 pred <- predict(LM)
 plot(LM)
 plot(df$shrubarea2_sqrt_norm, E)
-plot(df$tree_Ht_log_norm, E)
+plot(df$tree_Ht_cm, E)
 plot(log(df$vol_pre_cm2), E)
 ```
+
+# Now do a random forest model for the vert:dia growth ratio
+
+## Create growth ratio variable
+```{r}
+df <- df %>% 
+  mutate(grthratio = VertGr_2017/DiaGrowth.mm) %>% 
+  mutate(grthratio = ifelse(DiaGrowth.mm == 0, 10, grthratio))
+```
+
+**** Bold move: I adjusted the relative growth ratio to 10 for the seedling with 0 diameter growth
+
+## Apply VSURF to grthratio
+```{r}
+vsurf <- VSURF(x = xdf, y = df$grthratio, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+# See how that compares to a simple random forest using the same variables
+```{r}
+forest <- randomForest(x = xdf, y = df$grthratio, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+# **NEXT STEPS: FIX THE SHRUB VARIABLES FOR GROWTH RATIO, REPEAT THAT STEP FOR FIRS, AND DECIDE ON FINAL VARIABLES TO INCLUDE**
