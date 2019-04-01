@@ -430,6 +430,13 @@ df <- df %>%
   filter(Species %in% c("ABCO", "PIPO"))
 ```
 
+## Look at breakdown by fire and species
+```{r}
+df %>% 
+  group_by(Species, Fire) %>% 
+  summarise(n())
+```
+
 ## Save
 ```{r}
 setwd("~/Shrubs-Seedlings/compiled_data/")
@@ -437,7 +444,4 @@ save(df, file="master_data_2016.Rdata")
 write.csv(df, file = "master_data_2016.csv", row.names = F)
 ```
 
-
-### NEXT STEPS: ADD SLOPE VALUES AND ELEVATION VALUES WHERE THEY'RE MISSING, LOOK FOR MORE DIFN VALUES, BUILD
-### A REGRESSION MODEL, AND ADD LAT AND LONG TABLE FOR EACH SEEDLING FROM PINS ON AVENZA
 

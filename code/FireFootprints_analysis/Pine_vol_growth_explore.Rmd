@@ -25,6 +25,21 @@ library(effects)
 load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vol.Rdata")
 ```
 
+# Reduce # of levels in shrub variables
+```{r}
+df <- droplevels(df)
+sort(summary(df$ShrubSpp01))
+sort(summary(df$ShrubSpp02))
+sort(summary(df$ShrubSpp03))
+df <- df %>% 
+  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp02)))%>% 
+  mutate(ShrubSpp02 = as.factor(ShrubSpp02)) %>% 
+    mutate(ShrubSpp01 = ifelse(!ShrubSpp01 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp01)))%>% 
+  mutate(ShrubSpp01 = as.factor(ShrubSpp01)) %>% 
+    mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp03)))%>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+```
+
 # Visualize pre and post volumes on a log scale
 ```{r}
 ggplot(df)+
@@ -59,7 +74,8 @@ ggplot(df, aes(x = log(vol_pre_cm2), y = RGR))+
 
 This looks like I should maybe include volume in the model of growth rate or adjust how I analyze growth rates
 
-# Try using VSURF
+# Variable selection to describe RGR using VSURF
+Following the methods of Battles, J.J., Bell, D.M., Kennedy, R.E., Saah, D.S., Collins, B.M., York, R.A., Sanders, J.E., Lopez-Ornelas, F., 2018. Innovations in Measuring and Managing Forest Carbon Stocks in California. California's Fourth Climate Change Assessment. University of California, Berkeley.
 
 ## Make df of just the predictor variables I want to include
 ```{r}
@@ -74,7 +90,7 @@ xdf <- df %>%
          #LAI,
          #DIFN.53,
          tree_Ht_cm,
-         Lat.rad,
+         #Lat.rad,
          shrubarea2, 
          shrubarea3,
          Cov1, 
@@ -93,7 +109,7 @@ xdf <- df %>%
          incidrad) 
 ```
 
-## Normalize the numeric ones
+## Normalize the numeric variables
 ```{r}
 normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
@@ -109,13 +125,13 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-# See how that compares to a simple random forest using the same variables
+## See how that compares to a simple random forest using the same variables
 ```{r}
 forest <- randomForest(x = xdf, y = df$RGR, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
-# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
+# RGR linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
 ## Structure data for LM
 ```{r}
@@ -157,7 +173,7 @@ plot(df$tree_Ht_cm, E)
 plot(log(df$vol_pre_cm2), E)
 ```
 
-# Now do a random forest model for the vert:dia growth ratio
+# Variable selection for the vert:dia growth ratio using VSURF
 
 ## Create growth ratio variable
 ```{r}
@@ -170,16 +186,19 @@ df <- df %>%
 
 ## Apply VSURF to grthratio
 ```{r}
-vsurf <- VSURF(x = xdf, y = df$grthratio, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
+vsurf2 <- VSURF(x = xdf, y = df$grthratio, na.action = na.omit)
+summary(vsurf2)
+vsurf2$varselect.pred
+xdf[vsurf2$varselect.pred]
 ```
 
-# See how that compares to a simple random forest using the same variables
+## See how that compares to a simple random forest using the same variables
 ```{r}
 forest <- randomForest(x = xdf, y = df$grthratio, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
+
+# Linear model of dia:vert growth ratio using variables identified above
+
 
 # **NEXT STEPS: FIX THE SHRUB VARIABLES FOR GROWTH RATIO, REPEAT THAT STEP FOR FIRS, AND DECIDE ON FINAL VARIABLES TO INCLUDE**

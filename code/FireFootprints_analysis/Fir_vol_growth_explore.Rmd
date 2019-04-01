@@ -25,6 +25,21 @@ library(effects)
 load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata")
 ```
 
+# Reduce # of levels in shrub variables
+```{r}
+df <- droplevels(df)
+sort(summary(df$ShrubSpp01))
+sort(summary(df$ShrubSpp02))
+sort(summary(df$ShrubSpp03))
+df <- df %>% 
+  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp02)))%>% 
+  mutate(ShrubSpp02 = as.factor(ShrubSpp02)) %>% 
+    mutate(ShrubSpp01 = ifelse(!ShrubSpp01 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp01)))%>% 
+  mutate(ShrubSpp01 = as.factor(ShrubSpp01)) %>% 
+    mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp03)))%>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+```
+
 
 # Visualize pre and post volumes on a log scale
 ```{r}
@@ -122,8 +137,8 @@ xdf <- df %>%
          ShrubSpp01, 
          ShrubSpp02, 
          ShrubSpp03, 
-         IAG, 
-         ShrG1, 
+         #IAG, 
+         #ShrG1, 
          BasDia2016.cm, 
          vol_pre_cm2, 
          heatload,
@@ -160,12 +175,6 @@ LMdf <- df %>%
   select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Slope.Deg, ShrubSpp02, shrubarea3, Ht1.3) %>% 
   mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
-sort(summary(LMdf$ShrubSpp02))
-
-LMdf <- LMdf %>% 
-  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHSE"), "Other", paste(ShrubSpp02)))%>% 
-  mutate(ShrubSpp02 = as.factor(ShrubSpp02))
-
 summary(LMdf$ShrubSpp02)
 ```
 
