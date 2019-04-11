@@ -27,7 +27,7 @@ rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
 rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
 
 rmarkdown::render("Pine_dia_growth.Rmd", "html_document")
-rmarkdown::render("Pine_vertical_growth.Rmd", "html_document")
+rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document")
 print(strt-Sys.time())
 ```
 
@@ -35,6 +35,7 @@ print(strt-Sys.time())
 ```{r}
 strt <- Sys.time()
 rmarkdown::render("fir_vol_growth_clean.Rmd", "html_document")
+rmarkdown::render("Pine_vol_growth_clean.Rmd", "html_document")
 print(strt-Sys.time())
 ```
 

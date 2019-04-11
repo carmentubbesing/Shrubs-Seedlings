@@ -79,14 +79,14 @@ This looks like I should maybe include volume in the model of growth rate or adj
 
 ### least squares
 ```{r}
-ggplot(df, aes(x = tree_Ht_log_norm, y = RGR))+
+ggplot(df, aes(x = tree_Ht_norm, y = RGR))+
   geom_point()+
   geom_smooth(method = 'lm')
 ```
 
 ### loess
 ```{r}
-ggplot(df, aes(x = tree_Ht_log_norm, y = RGR))+
+ggplot(df, aes(x = tree_Ht_norm, y = RGR))+
   geom_point()+
   geom_smooth()
 ```
@@ -114,18 +114,13 @@ setdiff(decdf$Sdlg, as.numeric(df$Sdlg))
 ```{r}
 xdf <- df %>% 
   select(Fire, 
-         #FirePatch,
          Elevation,
          Slope.Deg,
          Aspect.rad.fold.NESW,
-         #DIFN.all,
-         ImmedAboveSpp,
-         ImmedAboveHt.cm,
          Years,
-         #LAI,
-         #DIFN.53,
          tree_Ht_cm,
          Lat.rad,
+         shrubarea1,
          shrubarea2, 
          shrubarea3,
          Cov1, 
@@ -137,13 +132,13 @@ xdf <- df %>%
          ShrubSpp01, 
          ShrubSpp02, 
          ShrubSpp03, 
-         #IAG, 
-         #ShrG1, 
          BasDia2016.cm, 
          vol_pre_cm2, 
          heatload,
          incidrad) 
 ```
+
+**NOTE: transforming vol_pre_cm2 before running VSURF does NOT change the VSURF outcome, so I chose to save transformations for the linear model. 
 
 ## Normalize the numeric ones
 ```{r}
@@ -172,21 +167,44 @@ varImpPlot(forest)
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Slope.Deg, ShrubSpp02, shrubarea3, Ht1.3) %>% 
+  mutate(log_vol_pre_cm2 = log(vol_pre_cm2)) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Fire, RGR, BasDia2016.cm, log_vol_pre_cm2, Slope.Deg, ShrubSpp02, shrubarea3, sqrt_shrubarea3, Ht1.3) %>% 
   mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
 summary(LMdf$ShrubSpp02)
 ```
 
+## See whether model with shrubarea3 or sqrt_shrubarea3 is better
+```{r}
+AIC(lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + shrubarea3+ log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML"))
+AIC(lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + sqrt_shrubarea3+ log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+)
+```
+
+This shows that untransformed shrubarea is better
+
+## See whether model with interaction or no interaction is better
+```{r}
+AIC(lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + log_vol_pre_cm2 + Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML"))
+AIC(lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+)
+```
+
+This shows that including an interaction is better.
+
 ## Linear model
 ```{r}
-LM <-  lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + shrubarea3+ vol_pre_cm2+ Ht1.3 + vol_pre_cm2:Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+LM <-  lme(RGR ~ BasDia2016.cm+  Slope.Deg+ ShrubSpp02 + shrubarea3+ log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
 
 ### Look at individual effects
 ```{r}
+interaction <- effect("log_vol_pre_cm2:Ht1.3", LM)
+plot(interaction)
+
 eff_shrubarea <- effect("shrubarea3", LM)
 plot(eff_shrubarea)
 
@@ -199,16 +217,19 @@ plot(eff_shrubspp)
 
 ### Compare to model with no shrub data
 ```{r}
-LMnull <- lme(RGR ~ BasDia2016.cm+  Slope.Deg+ vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
+LMnull <- lme(RGR ~ BasDia2016.cm+  Slope.Deg+ log_vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
 anova(LM, LMnull)
 ```
 
 ### Residuals
 ```{r}
 E <- resid(LM, type = "normalized")
+df$E <- E
 pred <- predict(LM)
 plot(LM)
-plot(df$shrubarea2_sqrt_norm, E)
-plot(df$tree_Ht_log_norm, E)
-plot(log(df$vol_pre_cm2), E)
+plot(df$shrubarea3, E)
+plot(df$tree_Ht_cm, E)
+ggplot(df, aes(x = log(df$vol_pre_cm2), y = E))+
+  geom_point()+
+  geom_smooth()
 ```

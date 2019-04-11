@@ -257,7 +257,7 @@ $(document).ready(function () {
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg)</code></pre>
-<pre><code>## # A tibble: 112 x 50
+<pre><code>## # A tibble: 112 x 51
 ##    Sdlg  Species Fire  FirePatch Elevation Slope.Deg Aspect.deg
 ##    &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt; &lt;fct&gt;         &lt;int&gt;     &lt;int&gt;      &lt;int&gt;
 ##  1 159   PIPO    STAR  STAR-NW          NA        19        112
@@ -270,7 +270,7 @@ $(document).ready(function () {
 ##  8 162   ABCO    STAR  STAR-NW          NA        12        132
 ##  9 163   ABCO    STAR  STAR-NW          NA        12        132
 ## 10 163   ABCO    STAR  STAR-NW          NA        12        132
-## # ... with 102 more rows, and 43 more variables: BasDia2016.cm &lt;dbl&gt;,
+## # ... with 102 more rows, and 44 more variables: BasDia2016.cm &lt;dbl&gt;,
 ## #   LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;fct&gt;, DIFN.all &lt;dbl&gt;,
 ## #   ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;, ShrubSpp01 &lt;fct&gt;,
 ## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;int&gt;, Cov2 &lt;int&gt;,
@@ -280,8 +280,8 @@ $(document).ready(function () {
 ## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;dbl&gt;,
 ## #   BasDia2017.mm.2 &lt;dbl&gt;, notes &lt;chr&gt;, BasDia2017.mm.ave &lt;dbl&gt;,
 ## #   BasDia2016.mm &lt;dbl&gt;, DiaGrowth.mm &lt;dbl&gt;, Year &lt;fct&gt;, VertGrowth &lt;dbl&gt;,
-## #   shrubarea2 &lt;dbl&gt;, shrubarea3 &lt;dbl&gt;, Ht_cm &lt;dbl&gt;, VertGrowth_Rel &lt;dbl&gt;,
-## #   Ht_norm &lt;dbl&gt;, shrubarea2_sqrt_norm &lt;dbl&gt;</code></pre>
+## #   shrubarea1 &lt;dbl&gt;, shrubarea2 &lt;dbl&gt;, shrubarea3 &lt;dbl&gt;, Ht_cm &lt;dbl&gt;,
+## #   VertGrowth_Rel &lt;dbl&gt;, Ht_norm &lt;dbl&gt;, shrubarea2_sqrt_norm &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-elevation-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding elevation data to an individual seedling</h2>
 <pre class="r"><code>elv &lt;- function(sdlg, elev){

@@ -677,17 +677,33 @@ fix &lt;- subset(df, !is.na(df$DIFN.all) &amp; is.na(df$DIFN.53))</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   filter(Species %in% c(&quot;ABCO&quot;, &quot;PIPO&quot;))</code></pre>
 </div>
+<div id="look-at-breakdown-by-fire-and-species" class="section level2">
+<h2>Look at breakdown by fire and species</h2>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, Fire) %&gt;% 
+  summarise(n())</code></pre>
+<pre><code>## # A tibble: 12 x 3
+## # Groups:   Species [2]
+##    Species Fire  `n()`
+##    &lt;fct&gt;   &lt;fct&gt; &lt;int&gt;
+##  1 ABCO    AMCR     88
+##  2 ABCO    CLVD     12
+##  3 ABCO    FRDS      2
+##  4 ABCO    PLKN      1
+##  5 ABCO    STAR     11
+##  6 ABCO    WRTS     13
+##  7 PIPO    AMCR     35
+##  8 PIPO    CLVD     15
+##  9 PIPO    FRDS     34
+## 10 PIPO    PLKN      1
+## 11 PIPO    STAR      8
+## 12 PIPO    WRTS      2</code></pre>
+</div>
 <div id="save" class="section level2">
 <h2>Save</h2>
 <pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/compiled_data/&quot;)
 save(df, file=&quot;master_data_2016.Rdata&quot;)
 write.csv(df, file = &quot;master_data_2016.csv&quot;, row.names = F)</code></pre>
-<div id="next-steps-add-slope-values-and-elevation-values-where-theyre-missing-look-for-more-difn-values-build" class="section level3">
-<h3>NEXT STEPS: ADD SLOPE VALUES AND ELEVATION VALUES WHERE THEY’RE MISSING, LOOK FOR MORE DIFN VALUES, BUILD</h3>
-</div>
-<div id="a-regression-model-and-add-lat-and-long-table-for-each-seedling-from-pins-on-avenza" class="section level3">
-<h3>A REGRESSION MODEL, AND ADD LAT AND LONG TABLE FOR EACH SEEDLING FROM PINS ON AVENZA</h3>
-</div>
 </div>
 </div>
 

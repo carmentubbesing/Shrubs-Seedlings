@@ -1,5 +1,5 @@
 ---
-title: Fir volume growth analysis exploration - fire footprints
+title: Pine volume growth analysis exploration - fire footprints
 author: Carmen
 date: November 19, 2017
 output: 
@@ -81,16 +81,13 @@ Following the methods of Battles, J.J., Bell, D.M., Kennedy, R.E., Saah, D.S., C
 ```{r}
 xdf <- df %>% 
   select(Fire, 
-         #FirePatch,
          Elevation,
          Slope.Deg,
          Aspect.rad.fold.NESW,
-         #DIFN.all,
          Years,
-         #LAI,
-         #DIFN.53,
          tree_Ht_cm,
-         #Lat.rad,
+         Lat.rad,
+         shrubarea1,
          shrubarea2, 
          shrubarea3,
          Cov1, 
@@ -102,12 +99,13 @@ xdf <- df %>%
          ShrubSpp01, 
          ShrubSpp02, 
          ShrubSpp03, 
-         ShrG1, 
          BasDia2016.cm, 
          vol_pre_cm2, 
          heatload,
          incidrad) 
 ```
+
+**NOTE: transforming vol_pre_cm2 before running VSURF does NOT change the VSURF outcome, so I chose to save transformations for the linear model. 
 
 ## Normalize the numeric variables
 ```{r}
@@ -134,16 +132,29 @@ varImpPlot(forest)
 # RGR linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
 ## Structure data for LM
+
 ```{r}
 LMdf <- df %>% 
-  select(Fire, RGR, BasDia2016.cm, vol_pre_cm2, Elevation, Ht1.3) %>% 
+  mutate(log_vol_pre_cm2 = log(vol_pre_cm2)) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Fire, RGR, BasDia2016.cm, log_vol_pre_cm2, Elevation, Ht1.3) %>% 
   mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
 ```
 
+
+## See whether model with interaction or no interaction is better
+```{r}
+AIC(lme(RGR ~ BasDia2016.cm + Ht1.3 + Elevation + log_vol_pre_cm2 + Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML"))
+AIC(lme(RGR ~ BasDia2016.cm + Ht1.3 + Elevation + log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+)
+```
+
+No interaction was better. 
+
 ## Linear model
 ```{r}
-LM <-  lme(RGR ~ BasDia2016.cm + Elevation + vol_pre_cm2+ Ht1.3 ,data = LMdf, random = ~ 1| Fire, method = "ML")
+LM <-  lme(RGR ~ log_vol_pre_cm2 + BasDia2016.cm + Ht1.3 + Elevation + Ht1.3+ log_vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -157,20 +168,15 @@ eff_shrubspp <- effect("Elevation", LM)
 plot(eff_shrubspp)
 ```
 
-### Compare to model with no shrub data
-```{r}
-LMnull <- lme(RGR ~ BasDia2016.cm + Elevation + vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
-anova(LM, LMnull)
-```
-
 ### Residuals
 ```{r}
 E <- resid(LM, type = "normalized")
 pred <- predict(LM)
 plot(LM)
-plot(df$shrubarea2_sqrt_norm, E)
+plot(df$shrubarea3, E)
 plot(df$tree_Ht_cm, E)
 plot(log(df$vol_pre_cm2), E)
+plot(df$Elevation, E)
 ```
 
 # Variable selection for the vert:dia growth ratio using VSURF
@@ -198,7 +204,12 @@ forest <- randomForest(x = xdf, y = df$grthratio, importance = TRUE, scale = TRU
 varImpPlot(forest)
 ```
 
+#### STILL NEED TO CREATE LMdf AS ABOVE FOR GRTHRATIO ANALYSIS - MAYBE DO IT IN SEPARATE SCRIPT?
+
 # Linear model of dia:vert growth ratio using variables identified above
+```{r}
+LM2 <- lme(log(grthratio) ~ Lat.rad + Cov1.3 + shrubarea1,data = LMdf, random = ~ 1| Fire, method = "ML"))
+```
 
 
 # **NEXT STEPS: FIX THE SHRUB VARIABLES FOR GROWTH RATIO, REPEAT THAT STEP FOR FIRS, AND DECIDE ON FINAL VARIABLES TO INCLUDE**

@@ -198,6 +198,7 @@ df$VertGrowth <- as.numeric(df$VertGrowth)
 ## Create shrubarea variables for each distance from the seedling
 ```{r}
 df <- df %>% 
+  mutate(shrubarea1 = Ht1 * Cov1) %>% 
   mutate(shrubarea2 = Ht1.2 * Cov1.2) %>% 
   mutate(shrubarea3 = Ht1.3 * Cov1.3)
 ```

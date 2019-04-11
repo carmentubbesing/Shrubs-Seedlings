@@ -278,7 +278,7 @@ df %&gt;%
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 ## -60.200   0.050   1.400   2.721   5.400  26.600      13</code></pre>
 <pre class="r"><code>df %&gt;% filter(is.na(DiaGrowth.mm))</code></pre>
-<pre><code>## # A tibble: 13 x 60
+<pre><code>## # A tibble: 13 x 61
 ##    Sdlg  Species Fire  FirePatch Elevation Slope.Deg Aspect.deg
 ##    &lt;chr&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
 ##  1 197   PIPO    FRDS  FRDS-SE        1366        18        185
@@ -294,7 +294,7 @@ df %&gt;%
 ## 11 195   PIPO    FRDS  FRDS-SE        1366        20        187
 ## 12 197   PIPO    FRDS  FRDS-SE        1366        18        185
 ## 13 198   PIPO    FRDS  FRDS-SE        1366        15        197
-## # ... with 53 more variables: BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## # ... with 54 more variables: BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
 ## #   Light_File &lt;fct&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
 ## #   ImmedAboveHt.cm &lt;int&gt;, ShrubSpp01 &lt;fct&gt;, ShrubSpp02 &lt;fct&gt;,
 ## #   ShrubSpp03 &lt;fct&gt;, Cov1 &lt;int&gt;, Cov2 &lt;int&gt;, Cov3 &lt;int&gt;, Ht1 &lt;dbl&gt;,
@@ -303,10 +303,10 @@ df %&gt;%
 ## #   Date &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;,
 ## #   Status &lt;chr&gt;, BasDia2017.mm.1 &lt;dbl&gt;, BasDia2017.mm.2 &lt;dbl&gt;,
 ## #   notes &lt;chr&gt;, BasDia2017.mm.ave &lt;dbl&gt;, BasDia2016.mm &lt;dbl&gt;,
-## #   DiaGrowth.mm &lt;dbl&gt;, Year &lt;fct&gt;, VertGrowth &lt;dbl&gt;, shrubarea2 &lt;dbl&gt;,
-## #   shrubarea3 &lt;dbl&gt;, Ht_cm &lt;dbl&gt;, VertGrowth_Rel &lt;dbl&gt;, Ht_norm &lt;dbl&gt;,
-## #   shrubarea2_sqrt_norm &lt;dbl&gt;, Y &lt;dbl&gt;, X &lt;dbl&gt;, file_lat &lt;chr&gt;,
-## #   Aspect.rad &lt;dbl&gt;, Slope.rad &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
+## #   DiaGrowth.mm &lt;dbl&gt;, Year &lt;fct&gt;, VertGrowth &lt;dbl&gt;, shrubarea1 &lt;dbl&gt;,
+## #   shrubarea2 &lt;dbl&gt;, shrubarea3 &lt;dbl&gt;, Ht_cm &lt;dbl&gt;, VertGrowth_Rel &lt;dbl&gt;,
+## #   Ht_norm &lt;dbl&gt;, shrubarea2_sqrt_norm &lt;dbl&gt;, Y &lt;dbl&gt;, X &lt;dbl&gt;,
+## #   file_lat &lt;chr&gt;, Aspect.rad &lt;dbl&gt;, Slope.rad &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
 ## #   Aspect.rad.fold.NS &lt;dbl&gt;, Aspect.rad.fold.NESW &lt;dbl&gt;, incidrad &lt;dbl&gt;,
 ## #   heatload &lt;dbl&gt;</code></pre>
 <pre class="r"><code>df %&gt;% group_by(Species) %&gt;% 
@@ -1004,8 +1004,8 @@ figure_summary</code></pre>
 pdf(&quot;pine_dia.pdf&quot;, width = 5.5, height = 7.25, pointsize = 30,useDingbats = F)
 figure_summary
 dev.off()</code></pre>
-<pre><code>## png 
-##   2</code></pre>
+<pre><code>## RStudioGD 
+##         2</code></pre>
 </div>
 <div id="calculate-pseudo-r-squared" class="section level1">
 <h1>Calculate pseudo r squared</h1>

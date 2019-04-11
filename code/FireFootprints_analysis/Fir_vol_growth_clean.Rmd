@@ -88,8 +88,8 @@ df <- df %>%
 
 ```{r}
 nrow(df)
-hist(df$DiaGrowth_rel, breaks = 10)
-hist(df$DiaGrowth_rel)
+hist(df$DiaGrowth.mm_rel, breaks = 10)
+hist(df$DiaGrowth.mm_rel)
 nrow(df)
 ```
 
@@ -97,30 +97,30 @@ nrow(df)
 ## Take out outliers on both ends, defined as greater than two SD from the mean
 ```{r}
 nrow(df)
-hist(df$DiaGrowth, breaks = 20)
-mean_minSD <- mean(df$DiaGrowth) - 2*sd(df$DiaGrowth)
+hist(df$DiaGrowth.mm, breaks = 20)
+mean_minSD <- mean(df$DiaGrowth.mm) - 2*sd(df$DiaGrowth.mm)
 mean_minSD
-mean_plusSD <- mean(df$DiaGrowth) + 2*sd(df$DiaGrowth)
+mean_plusSD <- mean(df$DiaGrowth.mm) + 2*sd(df$DiaGrowth.mm)
 mean_plusSD
 df <- df %>% 
-  filter(!(DiaGrowth < mean_minSD |
-             DiaGrowth > mean_plusSD))
-hist(df$DiaGrowth)
+  filter(!(DiaGrowth.mm < mean_minSD |
+             DiaGrowth.mm > mean_plusSD))
+hist(df$DiaGrowth.mm)
 nrow(df)
 ```
 
 
 ## Adjust diameter growth so that all values are > 0
 ```{r}
-hist(df$DiaGrowth)
+hist(df$DiaGrowth.mm)
 min(df$BasDia2017.mm.ave)
 hist(df$BasDia2017.mm.ave)
 df <- df %>% 
-  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth)))
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth.mm)))
 min(df$BasDia2017.mm.ave)
 hist(df$BasDia2017.mm.ave)
 df <- df %>% 
-  mutate(DiaGrowth = (DiaGrowth - min(DiaGrowth)))
+  mutate(DiaGrowth.mm = (DiaGrowth.mm - min(DiaGrowth.mm)))
 ```
 
 ## Check for seedlings with more than one row
@@ -141,18 +141,24 @@ df <- df %>%
    mutate(VertGr_2016 = ifelse(is.na(VertGr_2016), 0, VertGr_2016))
 ```
 
-## Calculate pre volume
+## Calculate pre volume assuming parabolic cone shape (https://www.grc.nasa.gov/www/k-12/airplane/volume.html)
 ```{r}
 df <- df %>% 
-  mutate(vol_pre_cm2 = ((BasDia2016.mm/10)^2) * (tree_Ht_cm - VertGr_2017  - VertGr_2016) * (pi/12))
+  mutate(vol_pre_cm2 = (2*pi*((BasDia2016.mm/10)^2)*(tree_Ht_cm - VertGr_2017  - VertGr_2016))/15)
 hist(df$vol_pre_cm2)
 ```
 
 ## Calculate post volume
 ```{r}
 df <- df %>% 
-  mutate(vol_post_cm2 = ((BasDia2017.mm.ave/10)^2) * tree_Ht_cm * (pi/12))
+  mutate(vol_post_cm2 = (2*pi*((BasDia2017.mm.ave/10)^2)*tree_Ht_cm)/15)
+
 hist(df$vol_post_cm2)
+```
+
+### Compare to pre
+```{r}
+plot(log(df$vol_post_cm2), log(df$vol_pre_cm2))
 ```
 
 ## Calculate volume growth 
@@ -162,7 +168,7 @@ df <- df %>%
 ```
 
 
-## Calculate RGR
+## Calculate RGR, using a demonimator of 2 since there were 2 growing seasons between initial and final measurements
 ```{r}
 df <- df %>% 
   mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2))/2)
