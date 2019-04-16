@@ -21,8 +21,70 @@ require(effects)
 
 # Load data
 ```{r}
-setwd("../../compiled_data/")
-load(file="fire_footprints/master_seedlings2.Rdata")
+load(file="../../compiled_data/fire_footprints/master_seedlings2.Rdata")
+```
+
+```{r}
+head(df)
+df_bu <- df
+```
+
+# Add 2015 height - use 2017 height minus growth unless there's no 2017 height value
+```{r}
+tbl_df(df) %>% select(Growth_15, Growth_16, Growth_17)
+df <- df %>% 
+  mutate_at(c("Growth_15", "Growth_16","Growth_17"), as.numeric) %>% 
+  mutate(Ht2015.cm = Ht2017.cm-Growth_16-Growth_17)
+df <- df %>% 
+  mutate(Ht2015.cm = ifelse(is.na(Ht2015.cm), Ht2016.cm - LastYearGrth.cm, Ht2015.cm))
+tbl_df(df) %>% select(Ht2015.cm, Ht2016.cm, Ht2017.cm, Growth_15, Growth_16, Growth_17, LastYearGrth.cm, notes)
+```
+
+## Check for NAs
+```{r}
+nrow(df %>% 
+  filter(is.na(Ht2015.cm)))
+```
+
+
+# Create data frame with one row per growth measurement
+```{r}
+df <- tbl_df(df)
+df <- df %>% 
+  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
+df <- gather(df, "Year", "VertGrowth_cm",41:43)
+df$Year <- as.factor(df$Year)
+```
+
+```{r}
+head(df)
+```
+
+# Remove bad rows
+
+## Take out 2017 vertical growth measurements for trees that died since last measure
+```{r}
+summary(as.factor(df$Status))
+df <- df %>% 
+  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
+```
+
+## Take out 2016 and 2017 vertical growth measurements for trees that were not found
+```{r}
+df <- df %>% 
+  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
+```
+
+## Check out NA values and delete years that broke off
+```{r}
+df %>% 
+  filter(is.na(VertGrowth_cm)) %>% 
+  select(Sdlg, Year, VertGrowth_cm, Status, notes) %>% 
+  arrange(Sdlg)
+df <- df %>% 
+  filter(!(Sdlg %in% c("6","185","131","226","6","74","98") & Year %in% c("2017","2016"))) %>% 
+  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
+  filter(!(Sdlg == 75 & Year == 2017))  
 ```
 
 # Take out unnecessary variables
@@ -30,6 +92,61 @@ load(file="fire_footprints/master_seedlings2.Rdata")
 names(df)
 df <- df %>% 
   select (-Light_File, -DIFN.all, -ImmedAboveSpp, -ImmedAboveHt.cm, -IAG, -DIFN.53)
+```
+
+## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
+```{r}
+df %>% 
+  filter(is.na(VertGrowth_cm)) %>% 
+  select(Sdlg, VertGrowth_cm, LastYearGrth.cm, Ht2016.cm, Ht2017.cm, notes)
+df <- df %>% 
+  mutate(VertGrowth_cm = ifelse(is.na(VertGrowth_cm) & Year == "2015", LastYearGrth.cm, VertGrowth_cm))
+``` 
+
+
+## Look at odd vertical growth value
+```{r}
+df %>% 
+  filter(Sdlg == "195") %>% 
+  select(Sdlg, Year, LastYearGrth.cm, VertGrowth_cm, Ht2016.cm, Ht2017.cm, Ht2015.cm)
+```
+
+### Replace its 2015 growth with LastYearGrowth measured in 2016
+```{r}
+df <- df %>% 
+  mutate(VertGrowth_cm = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth_cm))
+```
+
+# Make VertGrowth numeric
+```{r}
+df$VertGrowth_cm <- as.numeric(df$VertGrowth_cm)
+```
+
+# Add height column that changes depending on year
+```{r}
+df %>% 
+  arrange(Year) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, Year, Ht2016.cm, Ht2017.cm, VertGrowth_cm, LastYearGrth.cm)
+```
+
+```{r}
+df <- df %>% 
+  mutate(Ht_cm = ifelse(Year == "2016", Ht2017.cm-VertGrowth_cm, 
+                        ifelse(Year == "2017", Ht2017.cm, 
+                               ifelse(Year == "2015", Ht2015.cm, 0)))) 
+```
+
+```{r}
+df %>% 
+  arrange(Year) %>% 
+  arrange(Sdlg) %>% 
+  select(Sdlg, Year, Ht_cm, Ht2015.cm, Ht2016.cm, Ht2017.cm, VertGrowth_cm, LastYearGrth.cm)
+```
+
+```{r}
+df %>% 
+  filter(is.na(Ht_cm))
 ```
 
 # Change years since fire depending on year of growth
@@ -52,81 +169,80 @@ df %>%
   summarize(n())
 ```
 
-# Change height to represent the year of growth measured
-
-
-
-## Fill in height if it was not taken in 2017
+# Calculate relative vertical growth
 ```{r}
 df <- df %>% 
-  mutate(Ht_cm = ifelse(is.na(Ht2017.cm), Ht2016.cm, Ht2017.cm)) %>% 
-  select(-Ht2016.cm, -Ht2017.cm)
+  mutate(VertGrowth_Rel = VertGrowth_cm/Ht_cm)
 ```
 
-
-## See how it is now
-```{r}
-df %>% filter(Sdlg == 10) %>% select(Sdlg, Ht_cm, Year, VertGrowth, VertGrowth_Rel)
-```
-
-```{r}
-
-```
-
-
-# Get data ready to analyze vertical growth
-
-## Create data frame with one row per growth measurement
-```{r}
-df <- tbl_df(df)
-names(df)
-df <- df %>% 
-  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
-df <- gather(df, "Year", "VertGrowth",41:43)
-df$Year <- as.factor(df$Year)
-```
-
-## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
-```{r}
-df <- df %>% 
-  mutate(VertGrowth = ifelse(is.na(VertGrowth) & Year == "2015", LastYearGrth.cm, VertGrowth))
-``` 
-
-## Take out 2017 vertical growth measurements for trees that died since last measure
-```{r}
-summary(as.factor(df$Status))
-df <- df %>% 
-  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
-```
-
-## Take out 2016 and 2017 vertical growth measurements for trees that were not found
-```{r}
-df <- df %>% 
-  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
-```
-
-## Check out NA values and delete years that broke off
+# Consolidate shrub species into fewer categories 
 ```{r}
 df %>% 
-  filter(is.na(VertGrowth)) %>% 
-  select(Sdlg, Year, VertGrowth, Status, notes) %>% 
-  arrange(Sdlg)
-df <- df %>% 
-  filter(!(Sdlg %in% c("6","185","131","226","6","74","98") & Year %in% c("2017","2016"))) %>% 
-  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
-  filter(!(Sdlg == 75 & Year == 2017))  
+  group_by(Species, ShrubSpp01) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "ABCO")
+df %>% 
+  group_by(Species, ShrubSpp02) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "ABCO")
+df %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "ABCO")
 ```
 
-## Look at odd vertical growth value
+For ABCO, the winning set is CECO, ARPA, CHSE, CEPR, PREM, and CEIN.
+
+```{r}
+df %>% 
+  group_by(Species, ShrubSpp01) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "PIPO")
+df %>% 
+  group_by(Species, ShrubSpp02) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "PIPO")
+df %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "PIPO")
+```
+
+For PIPO, the winning set is CECO, ARPA, CHFO, CEIN, LIDE.
+
 ```{r}
 df <- df %>% 
-  mutate(VertGrowth = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth))
-df$VertGrowth <- as.numeric(df$VertGrowth)
+  mutate(ShrubSpp01 = ifelse(Species == "ABCO" & !ShrubSpp01 %in% c("CECO", "ARPA", "CHSE", "CEPR", "PREM", "CEIN"), "Other", as.character(ShrubSpp01)))
+df <- df %>% 
+  mutate(ShrubSpp02 = ifelse(Species == "ABCO" & !ShrubSpp02 %in% c("CECO", "ARPA", "CHSE", "CEPR", "PREM", "CEIN"), "Other", as.character(ShrubSpp02)))
+df <- df %>% 
+  mutate(ShrubSpp03 = ifelse(Species == "ABCO" & !ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CEPR", "PREM", "CEIN"), "Other", as.character(ShrubSpp03)))
+```
+
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp01 = ifelse(Species == "PIPO" & !ShrubSpp01 %in% c("CECO", "ARPA", "CHFO", "LIDE", "CEIN"), "Other", as.character(ShrubSpp01)))
+df <- df %>% 
+  mutate(ShrubSpp02 = ifelse(Species == "PIPO" & !ShrubSpp02 %in% c("CECO", "ARPA", "CHFO", "LIDE", "CEIN"), "Other", as.character(ShrubSpp02)))
+df <- df %>% 
+  mutate(ShrubSpp03 = ifelse(Species == "PIPO" & !ShrubSpp03 %in% c("CECO", "ARPA", "CHFO", "LIDE", "CEIN"), "Other", as.character(ShrubSpp03)))
+```
+
+## Make them factors
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp01 = as.factor(ShrubSpp01), ShrubSpp02 = as.factor(ShrubSpp02), ShrubSpp03 = as.factor(ShrubSpp03))
 ```
 
 
 # Save
 ```{r}
-save(df, file = "../../compiled_data/master_seedlings_vert.Rdate")
+save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 

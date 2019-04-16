@@ -199,9 +199,27 @@ $(document).ready(function () {
 <div id="TOC">
 <ul>
 <li><a href="#load-data">Load data</a></li>
-<li><a href="#take-out-unnecessary-variables">Take out unnecessary variables</a></li>
+<li><a href="#add-2015-height---use-2017-height-minus-growth-unless-theres-no-2017-height-value">Add 2015 height - use 2017 height minus growth unless there’s no 2017 height value</a><ul>
+<li><a href="#check-for-nas">Check for NAs</a></li>
+</ul></li>
+<li><a href="#create-data-frame-with-one-row-per-growth-measurement">Create data frame with one row per growth measurement</a></li>
+<li><a href="#remove-bad-rows">Remove bad rows</a><ul>
+<li><a href="#take-out-2017-vertical-growth-measurements-for-trees-that-died-since-last-measure">Take out 2017 vertical growth measurements for trees that died since last measure</a></li>
+<li><a href="#take-out-2016-and-2017-vertical-growth-measurements-for-trees-that-were-not-found">Take out 2016 and 2017 vertical growth measurements for trees that were not found</a></li>
+<li><a href="#check-out-na-values-and-delete-years-that-broke-off">Check out NA values and delete years that broke off</a></li>
+</ul></li>
+<li><a href="#take-out-unnecessary-variables">Take out unnecessary variables</a><ul>
+<li><a href="#use-growth-measured-in-2016-which-was-2015-growth-if-2015-growth-couldnt-be-measured-in-2017">Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn’t be measured in 2017</a></li>
+<li><a href="#look-at-odd-vertical-growth-value">Look at odd vertical growth value</a></li>
+</ul></li>
+<li><a href="#make-vertgrowth-numeric">Make VertGrowth numeric</a></li>
+<li><a href="#add-height-column-that-changes-depending-on-year">Add height column that changes depending on year</a></li>
 <li><a href="#change-years-since-fire-depending-on-year-of-growth">Change years since fire depending on year of growth</a><ul>
 <li><a href="#check">Check</a></li>
+</ul></li>
+<li><a href="#calculate-relative-vertical-growth">Calculate relative vertical growth</a></li>
+<li><a href="#consolidate-shrub-species-into-fewer-categories">Consolidate shrub species into fewer categories</a><ul>
+<li><a href="#make-them-factors">Make them factors</a></li>
 </ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
@@ -209,33 +227,338 @@ $(document).ready(function () {
 
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
-<pre class="r"><code>setwd(&quot;../../compiled_data/&quot;)
-load(file=&quot;fire_footprints/master_seedlings2.Rdata&quot;)</code></pre>
+<pre class="r"><code>load(file=&quot;../../compiled_data/fire_footprints/master_seedlings2.Rdata&quot;)</code></pre>
+<pre class="r"><code>head(df)</code></pre>
+<pre><code>##   Sdlg Species Fire FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
+## 1    2    PIPO CLVD    CLVD-N    143.00       186      1631        18
+## 2    4    PIPO CLVD    CLVD-N     88.00        87      1631        18
+## 3    5    PIPO CLVD    CLVD-N    191.00       217      1631        14
+## 4    6    ABCO CLVD    CLVD-N      9.45        14      1631        22
+## 5    8    PIPO CLVD    CLVD-N    110.00       229      1632        15
+## 6    9    ABCO CLVD    CLVD-N    146.00       175      1632        15
+##   Aspect.deg BasDia2016.cm LastYearGrth.cm Light_File DIFN.all
+## 1          2          3.44            6.70          4    0.031
+## 2          2          1.85            3.09         18    0.366
+## 3          2          6.19           19.00         21    0.406
+## 4         85          0.30            1.92         16    0.296
+## 5         41          7.20           16.00         13    0.909
+## 6         34          3.52           18.00      15,26    0.283
+##   ImmedAboveSpp ImmedAboveHt.cm ShrubSpp01 ShrubSpp02 ShrubSpp03 Cov1 Cov2
+## 1          none               0       ARPA       ARPA       ARPA  300  630
+## 2          ARPA             180       ARPA       ARPA       ARPA  490  440
+## 3          none               0       CHSE       CHSE       ARPA  260  310
+## 4          ARPA             200       ARPA       ARPA       ARPA  400  490
+## 5          none               0       CEIN       CEIN       CEIN  370  450
+## 6          ARPA             190       ARPA       ARPA       ARPA  400  540
+##   Cov3       Ht1       Ht2       Ht3 Cov1.2 Cov1.3     Ht1.2     Ht1.3
+## 1  440 103.12500 112.22222  99.37500    930   1370 107.67361 104.90741
+## 2  520  91.11111  80.71429  98.57143    930   1450  85.91270  90.13228
+## 3  430  70.00000  71.87500  80.00000    570   1000  70.93750  73.95833
+## 4  290 116.66667 125.83333  95.83333    890   1180 121.25000 112.77778
+## 5  280  75.55556 110.00000 104.00000    820   1100  92.77778  96.51852
+## 6  500 100.00000  96.66667 146.66667    940   1440  98.33333 114.44444
+##   Genus     ShrG1   IAG Years              Date  LAI DIFN.53 DataSheet2017
+## 1 Pinus     Arcto Other    24 20160527 08:38:47 6.20   0.031          &lt;NA&gt;
+## 2 Pinus     Arcto Arcto    24 20160610 05:06:53 1.53   0.370          &lt;NA&gt;
+## 3 Pinus      CHSE Other    24 20160610 05:22:51 1.28   0.423          &lt;NA&gt;
+## 4 Abies     Arcto Arcto    24 20160531 20:32:01 1.67   0.331          &lt;NA&gt;
+## 5 Pinus Ceanothus Other    24 20160531 19:48:46 0.15   0.909          &lt;NA&gt;
+## 6 Abies     Arcto Arcto    24              &lt;NA&gt;   NA   0.298          &lt;NA&gt;
+##                   Map Status    BasDia2017.mm.1    BasDia2017.mm.2
+## 1 Cleveland Lines - N   DONE               30.7 32.299999999999997
+## 2 Cleveland Lines - N   DONE 16.600000000000001 16.600000000000001
+## 3 Cleveland Lines - N   DONE                 79                 79
+## 4 Cleveland Lines - N   DONE                3.7 4.0999999999999996
+## 5 Cleveland Lines - N   DONE                 79                 85
+## 6 Cleveland Lines - N   DONE 40.299999999999997 39.799999999999997
+##   Growth_17 Growth_16 Growth_15
+## 1      14.5       6.6       7.5
+## 2       3.2       6.1       3.1
+## 3      12.5      24.8      20.5
+## 4      &lt;NA&gt;      &lt;NA&gt;       2.1
+## 5      11.5        15      17.5
+## 6      11.5      23.3      17.7
+##                                                            notes
+## 1                      height measured wrong in 2016, very bendy
+## 2                    basal diameters measured with diameter tape
+## 3                                                           &lt;NA&gt;
+## 4 leader died, no vertical growth measurements for 2017 and 2016
+## 5                            height measured incorrectly in 2016
+## 6                                                           &lt;NA&gt;
+##   shrubarea1 shrubarea2 shrubarea3        Y         X  file_lat Aspect.rad
+## 1   30937.50  100136.46  143723.15 38.85433 -120.4150 CLVDN.csv 0.03490659
+## 2   44644.44   79898.81  130691.80 38.85433 -120.4150 CLVDN.csv 0.03490659
+## 3   18200.00   40434.38   73958.33 38.85439 -120.4149 CLVDN.csv 0.03490659
+## 4   46666.67  107912.50  133077.78 38.85481 -120.4141 CLVDN.csv 1.48352986
+## 5   27955.56   76077.78  106170.37 38.85541 -120.4141 CLVDN.csv 0.71558499
+## 6   40000.00   92433.33  164800.00 38.85516 -120.4143 CLVDN.csv 0.59341195
+##   Slope.rad   Lat.rad Aspect.rad.fold.NS Aspect.rad.fold.NESW  incidrad
+## 1 0.3141593 0.6781360         0.03490659           0.75049158 0.7505763
+## 2 0.3141593 0.6781360         0.03490659           0.75049158 0.7505763
+## 3 0.2443461 0.6781370         0.03490659           0.75049158 0.8032517
+## 4 0.3839724 0.6781443         1.48352986           0.69813170 0.8606044
+## 5 0.2617994 0.6781548         0.71558499           0.06981317 0.8207996
+## 6 0.2617994 0.6781505         0.59341195           0.19198622 0.8115295
+##    heatload
+## 1 0.7904994
+## 2 0.7904994
+## 3 0.8345065
+## 4 0.7380240
+## 5 0.7905034
+## 6 0.7924938</code></pre>
+<pre class="r"><code>df_bu &lt;- df</code></pre>
+</div>
+<div id="add-2015-height---use-2017-height-minus-growth-unless-theres-no-2017-height-value" class="section level1">
+<h1>Add 2015 height - use 2017 height minus growth unless there’s no 2017 height value</h1>
+<pre class="r"><code>tbl_df(df) %&gt;% select(Growth_15, Growth_16, Growth_17)</code></pre>
+<pre><code>## # A tibble: 227 x 3
+##    Growth_15 Growth_16 Growth_17
+##    &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;    
+##  1 7.5       6.6       14.5     
+##  2 3.1       6.1       3.2      
+##  3 20.5      24.8      12.5     
+##  4 2.1       &lt;NA&gt;      &lt;NA&gt;     
+##  5 17.5      15        11.5     
+##  6 17.7      23.3      11.5     
+##  7 23.3      25        14       
+##  8 3         3.7       1.8      
+##  9 17        17.7      17.2     
+## 10 1.2       1.4       0.6      
+## # ... with 217 more rows</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate_at(c(&quot;Growth_15&quot;, &quot;Growth_16&quot;,&quot;Growth_17&quot;), as.numeric) %&gt;% 
+  mutate(Ht2015.cm = Ht2017.cm-Growth_16-Growth_17)</code></pre>
+<pre><code>## Warning: NAs introduced by coercion
+
+## Warning: NAs introduced by coercion
+
+## Warning: NAs introduced by coercion</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(Ht2015.cm = ifelse(is.na(Ht2015.cm), Ht2016.cm - LastYearGrth.cm, Ht2015.cm))
+tbl_df(df) %&gt;% select(Ht2015.cm, Ht2016.cm, Ht2017.cm, Growth_15, Growth_16, Growth_17, LastYearGrth.cm, notes)</code></pre>
+<pre><code>## # A tibble: 227 x 8
+##    Ht2015.cm Ht2016.cm Ht2017.cm Growth_15 Growth_16 Growth_17
+##        &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+##  1    165.      143          186       7.5       6.6      14.5
+##  2     77.7      88           87       3.1       6.1       3.2
+##  3    180.      191          217      20.5      24.8      12.5
+##  4      7.53      9.45        14       2.1      NA        NA  
+##  5    202.      110          229      17.5      15        11.5
+##  6    140.      146          175      17.7      23.3      11.5
+##  7    146       163          185      23.3      25        14  
+##  8     21.5      27           27       3         3.7       1.8
+##  9    122.      123          157      17        17.7      17.2
+## 10     13        11.8         15       1.2       1.4       0.6
+## # ... with 217 more rows, and 2 more variables: LastYearGrth.cm &lt;dbl&gt;,
+## #   notes &lt;chr&gt;</code></pre>
+<div id="check-for-nas" class="section level2">
+<h2>Check for NAs</h2>
+<pre class="r"><code>nrow(df %&gt;% 
+  filter(is.na(Ht2015.cm)))</code></pre>
+<pre><code>## [1] 0</code></pre>
+</div>
+</div>
+<div id="create-data-frame-with-one-row-per-growth-measurement" class="section level1">
+<h1>Create data frame with one row per growth measurement</h1>
+<pre class="r"><code>df &lt;- tbl_df(df)
+df &lt;- df %&gt;% 
+  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
+df &lt;- gather(df, &quot;Year&quot;, &quot;VertGrowth_cm&quot;,41:43)
+df$Year &lt;- as.factor(df$Year)</code></pre>
+<pre class="r"><code>head(df)</code></pre>
+<pre><code>## # A tibble: 6 x 57
+##   Sdlg  Species Fire  FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
+##   &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 2     PIPO    CLVD  CLVD-N       143          186      1631        18
+## 2 4     PIPO    CLVD  CLVD-N        88           87      1631        18
+## 3 5     PIPO    CLVD  CLVD-N       191          217      1631        14
+## 4 6     ABCO    CLVD  CLVD-N         9.45        14      1631        22
+## 5 8     PIPO    CLVD  CLVD-N       110          229      1632        15
+## 6 9     ABCO    CLVD  CLVD-N       146          175      1632        15
+## # ... with 49 more variables: Aspect.deg &lt;dbl&gt;, BasDia2016.cm &lt;dbl&gt;,
+## #   LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;fct&gt;, DIFN.all &lt;dbl&gt;,
+## #   ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;, ShrubSpp01 &lt;fct&gt;,
+## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;int&gt;, Cov2 &lt;int&gt;,
+## #   Cov3 &lt;int&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;int&gt;,
+## #   Cov1.3 &lt;int&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, Genus &lt;fct&gt;, ShrG1 &lt;fct&gt;,
+## #   IAG &lt;fct&gt;, Years &lt;int&gt;, Date &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
+## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;,
+## #   BasDia2017.mm.2 &lt;chr&gt;, notes &lt;chr&gt;, shrubarea1 &lt;dbl&gt;,
+## #   shrubarea2 &lt;dbl&gt;, shrubarea3 &lt;dbl&gt;, Y &lt;dbl&gt;, X &lt;dbl&gt;, file_lat &lt;chr&gt;,
+## #   Aspect.rad &lt;dbl&gt;, Slope.rad &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
+## #   Aspect.rad.fold.NS &lt;dbl&gt;, Aspect.rad.fold.NESW &lt;dbl&gt;, incidrad &lt;dbl&gt;,
+## #   heatload &lt;dbl&gt;, Ht2015.cm &lt;dbl&gt;, Year &lt;fct&gt;, VertGrowth_cm &lt;dbl&gt;</code></pre>
+</div>
+<div id="remove-bad-rows" class="section level1">
+<h1>Remove bad rows</h1>
+<div id="take-out-2017-vertical-growth-measurements-for-trees-that-died-since-last-measure" class="section level2">
+<h2>Take out 2017 vertical growth measurements for trees that died since last measure</h2>
+<pre class="r"><code>summary(as.factor(df$Status))</code></pre>
+<pre><code>##          alive could not find           dead           DEAD           done 
+##             63              6             15              6             84 
+##           DONE          eaten      herbicide     herbicided      not found 
+##            408              3             15             24             54 
+##         unsure 
+##              3</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(!(Status %in% c(&quot;DEAD&quot;, &quot;dead&quot;) &amp; Year == &quot;2017&quot;))</code></pre>
+</div>
+<div id="take-out-2016-and-2017-vertical-growth-measurements-for-trees-that-were-not-found" class="section level2">
+<h2>Take out 2016 and 2017 vertical growth measurements for trees that were not found</h2>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(!(Status %in% c(&quot;could not find&quot;,&quot;not found&quot;, &quot;eaten&quot;, &quot;herbicide&quot;,&quot;herbicided&quot;) &amp; Year %in% c(&quot;2016&quot;, &quot;2017&quot;)))</code></pre>
+</div>
+<div id="check-out-na-values-and-delete-years-that-broke-off" class="section level2">
+<h2>Check out NA values and delete years that broke off</h2>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(VertGrowth_cm)) %&gt;% 
+  select(Sdlg, Year, VertGrowth_cm, Status, notes) %&gt;% 
+  arrange(Sdlg)</code></pre>
+<pre><code>## # A tibble: 56 x 5
+##    Sdlg  Year  VertGrowth_cm Status     notes                              
+##    &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;                              
+##  1 100   2015             NA not found  &lt;NA&gt;                               
+##  2 103   2015             NA not found  &lt;NA&gt;                               
+##  3 106   2015             NA not found  &lt;NA&gt;                               
+##  4 107   2015             NA not found  &lt;NA&gt;                               
+##  5 123   2015             NA could not~ &lt;NA&gt;                               
+##  6 131   2017             NA DONE       leader broke off; 2017 and 2016 gr~
+##  7 131   2016             NA DONE       leader broke off; 2017 and 2016 gr~
+##  8 135   2015             NA could not~ &lt;NA&gt;                               
+##  9 145   2016             NA dead       &lt;NA&gt;                               
+## 10 145   2015             NA dead       &lt;NA&gt;                               
+## # ... with 46 more rows</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(!(Sdlg %in% c(&quot;6&quot;,&quot;185&quot;,&quot;131&quot;,&quot;226&quot;,&quot;6&quot;,&quot;74&quot;,&quot;98&quot;) &amp; Year %in% c(&quot;2017&quot;,&quot;2016&quot;))) %&gt;% 
+  filter(!(Sdlg %in% c(145, 195,78) &amp; Year == &quot;2016&quot;)) %&gt;% 
+  filter(!(Sdlg == 75 &amp; Year == 2017))  </code></pre>
+</div>
 </div>
 <div id="take-out-unnecessary-variables" class="section level1">
 <h1>Take out unnecessary variables</h1>
 <pre class="r"><code>names(df)</code></pre>
 <pre><code>##  [1] &quot;Sdlg&quot;                 &quot;Species&quot;              &quot;Fire&quot;                
-##  [4] &quot;FirePatch&quot;            &quot;Elevation&quot;            &quot;Slope.Deg&quot;           
-##  [7] &quot;Aspect.deg&quot;           &quot;BasDia2016.cm&quot;        &quot;LastYearGrth.cm&quot;     
-## [10] &quot;Light_File&quot;           &quot;DIFN.all&quot;             &quot;ImmedAboveSpp&quot;       
-## [13] &quot;ImmedAboveHt.cm&quot;      &quot;ShrubSpp01&quot;           &quot;ShrubSpp02&quot;          
-## [16] &quot;ShrubSpp03&quot;           &quot;Cov1&quot;                 &quot;Cov2&quot;                
-## [19] &quot;Cov3&quot;                 &quot;Ht1&quot;                  &quot;Ht2&quot;                 
-## [22] &quot;Ht3&quot;                  &quot;Cov1.2&quot;               &quot;Cov1.3&quot;              
-## [25] &quot;Ht1.2&quot;                &quot;Ht1.3&quot;                &quot;Genus&quot;               
-## [28] &quot;ShrG1&quot;                &quot;IAG&quot;                  &quot;Years&quot;               
-## [31] &quot;Date&quot;                 &quot;LAI&quot;                  &quot;DIFN.53&quot;             
-## [34] &quot;DataSheet2017&quot;        &quot;Map&quot;                  &quot;Status&quot;              
-## [37] &quot;BasDia2017.mm.1&quot;      &quot;BasDia2017.mm.2&quot;      &quot;notes&quot;               
-## [40] &quot;Year&quot;                 &quot;VertGrowth&quot;           &quot;shrubarea1&quot;          
-## [43] &quot;shrubarea2&quot;           &quot;shrubarea3&quot;           &quot;Ht_cm&quot;               
-## [46] &quot;VertGrowth_Rel&quot;       &quot;Y&quot;                    &quot;X&quot;                   
-## [49] &quot;file_lat&quot;             &quot;Aspect.rad&quot;           &quot;Slope.rad&quot;           
-## [52] &quot;Lat.rad&quot;              &quot;Aspect.rad.fold.NS&quot;   &quot;Aspect.rad.fold.NESW&quot;
-## [55] &quot;incidrad&quot;             &quot;heatload&quot;</code></pre>
+##  [4] &quot;FirePatch&quot;            &quot;Ht2016.cm&quot;            &quot;Ht2017.cm&quot;           
+##  [7] &quot;Elevation&quot;            &quot;Slope.Deg&quot;            &quot;Aspect.deg&quot;          
+## [10] &quot;BasDia2016.cm&quot;        &quot;LastYearGrth.cm&quot;      &quot;Light_File&quot;          
+## [13] &quot;DIFN.all&quot;             &quot;ImmedAboveSpp&quot;        &quot;ImmedAboveHt.cm&quot;     
+## [16] &quot;ShrubSpp01&quot;           &quot;ShrubSpp02&quot;           &quot;ShrubSpp03&quot;          
+## [19] &quot;Cov1&quot;                 &quot;Cov2&quot;                 &quot;Cov3&quot;                
+## [22] &quot;Ht1&quot;                  &quot;Ht2&quot;                  &quot;Ht3&quot;                 
+## [25] &quot;Cov1.2&quot;               &quot;Cov1.3&quot;               &quot;Ht1.2&quot;               
+## [28] &quot;Ht1.3&quot;                &quot;Genus&quot;                &quot;ShrG1&quot;               
+## [31] &quot;IAG&quot;                  &quot;Years&quot;                &quot;Date&quot;                
+## [34] &quot;LAI&quot;                  &quot;DIFN.53&quot;              &quot;DataSheet2017&quot;       
+## [37] &quot;Map&quot;                  &quot;Status&quot;               &quot;BasDia2017.mm.1&quot;     
+## [40] &quot;BasDia2017.mm.2&quot;      &quot;notes&quot;                &quot;shrubarea1&quot;          
+## [43] &quot;shrubarea2&quot;           &quot;shrubarea3&quot;           &quot;Y&quot;                   
+## [46] &quot;X&quot;                    &quot;file_lat&quot;             &quot;Aspect.rad&quot;          
+## [49] &quot;Slope.rad&quot;            &quot;Lat.rad&quot;              &quot;Aspect.rad.fold.NS&quot;  
+## [52] &quot;Aspect.rad.fold.NESW&quot; &quot;incidrad&quot;             &quot;heatload&quot;            
+## [55] &quot;Ht2015.cm&quot;            &quot;Year&quot;                 &quot;VertGrowth_cm&quot;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   select (-Light_File, -DIFN.all, -ImmedAboveSpp, -ImmedAboveHt.cm, -IAG, -DIFN.53)</code></pre>
+<div id="use-growth-measured-in-2016-which-was-2015-growth-if-2015-growth-couldnt-be-measured-in-2017" class="section level2">
+<h2>Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn’t be measured in 2017</h2>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(VertGrowth_cm)) %&gt;% 
+  select(Sdlg, VertGrowth_cm, LastYearGrth.cm, Ht2016.cm, Ht2017.cm, notes)</code></pre>
+<pre><code>## # A tibble: 40 x 6
+##    Sdlg  VertGrowth_cm LastYearGrth.cm Ht2016.cm Ht2017.cm notes           
+##    &lt;chr&gt;         &lt;dbl&gt;           &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;           
+##  1 20               NA           19.5         81        NA &lt;NA&gt;            
+##  2 21               NA           20.5         83        NA &lt;NA&gt;            
+##  3 22               NA           12.5         91        NA &lt;NA&gt;            
+##  4 23               NA            9.5         41        NA &lt;NA&gt;            
+##  5 58               NA            3.03        30        NA &lt;NA&gt;            
+##  6 72               NA            3.94        23        25 leader died in ~
+##  7 80               NA            3.93        49        NA &lt;NA&gt;            
+##  8 80               NA            3.93        49        NA &lt;NA&gt;            
+##  9 81               NA           11.4         57        NA &lt;NA&gt;            
+## 10 81               NA           11.4         57        NA &lt;NA&gt;            
+## # ... with 30 more rows</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(VertGrowth_cm = ifelse(is.na(VertGrowth_cm) &amp; Year == &quot;2015&quot;, LastYearGrth.cm, VertGrowth_cm))</code></pre>
+</div>
+<div id="look-at-odd-vertical-growth-value" class="section level2">
+<h2>Look at odd vertical growth value</h2>
+<pre class="r"><code>df %&gt;% 
+  filter(Sdlg == &quot;195&quot;) %&gt;% 
+  select(Sdlg, Year, LastYearGrth.cm, VertGrowth_cm, Ht2016.cm, Ht2017.cm, Ht2015.cm)</code></pre>
+<pre><code>## # A tibble: 1 x 7
+##   Sdlg  Year  LastYearGrth.cm VertGrowth_cm Ht2016.cm Ht2017.cm Ht2015.cm
+##   &lt;chr&gt; &lt;fct&gt;           &lt;dbl&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 195   2015             20.3          20.3       182        NA      162.</code></pre>
+<div id="replace-its-2015-growth-with-lastyeargrowth-measured-in-2016" class="section level3">
+<h3>Replace its 2015 growth with LastYearGrowth measured in 2016</h3>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(VertGrowth_cm = ifelse(Sdlg == &quot;195&quot; &amp; Year == &quot;2015&quot;, LastYearGrth.cm, VertGrowth_cm))</code></pre>
+</div>
+</div>
+</div>
+<div id="make-vertgrowth-numeric" class="section level1">
+<h1>Make VertGrowth numeric</h1>
+<pre class="r"><code>df$VertGrowth_cm &lt;- as.numeric(df$VertGrowth_cm)</code></pre>
+</div>
+<div id="add-height-column-that-changes-depending-on-year" class="section level1">
+<h1>Add height column that changes depending on year</h1>
+<pre class="r"><code>df %&gt;% 
+  arrange(Year) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, Year, Ht2016.cm, Ht2017.cm, VertGrowth_cm, LastYearGrth.cm)</code></pre>
+<pre><code>## # A tibble: 590 x 6
+##    Sdlg  Year  Ht2016.cm Ht2017.cm VertGrowth_cm LastYearGrth.cm
+##    &lt;chr&gt; &lt;fct&gt;     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;           &lt;dbl&gt;
+##  1 10    2015        163       185          23.3           23   
+##  2 10    2016        163       185          25             23   
+##  3 10    2017        163       185          14             23   
+##  4 100   2015        117        NA          20.6           20.6 
+##  5 103   2015        102        NA          29.6           29.6 
+##  6 104   2015         62        70          10.8            9.3 
+##  7 104   2016         62        70          13.5            9.3 
+##  8 104   2017         62        70           3.9            9.3 
+##  9 105   2015         28        32           3.5            3.72
+## 10 105   2016         28        32           2.1            3.72
+## # ... with 580 more rows</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(Ht_cm = ifelse(Year == &quot;2016&quot;, Ht2017.cm-VertGrowth_cm, 
+                        ifelse(Year == &quot;2017&quot;, Ht2017.cm, 
+                               ifelse(Year == &quot;2015&quot;, Ht2015.cm, 0)))) </code></pre>
+<pre class="r"><code>df %&gt;% 
+  arrange(Year) %&gt;% 
+  arrange(Sdlg) %&gt;% 
+  select(Sdlg, Year, Ht_cm, Ht2015.cm, Ht2016.cm, Ht2017.cm, VertGrowth_cm, LastYearGrth.cm)</code></pre>
+<pre><code>## # A tibble: 590 x 8
+##    Sdlg  Year  Ht_cm Ht2015.cm Ht2016.cm Ht2017.cm VertGrowth_cm
+##    &lt;chr&gt; &lt;fct&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;
+##  1 10    2015  146       146         163       185          23.3
+##  2 10    2016  160       146         163       185          25  
+##  3 10    2017  185       146         163       185          14  
+##  4 100   2015   96.4      96.4       117        NA          20.6
+##  5 103   2015   72.4      72.4       102        NA          29.6
+##  6 104   2015   52.6      52.6        62        70          10.8
+##  7 104   2016   56.5      52.6        62        70          13.5
+##  8 104   2017   70        52.6        62        70           3.9
+##  9 105   2015   24.2      24.2        28        32           3.5
+## 10 105   2016   29.9      24.2        28        32           2.1
+## # ... with 580 more rows, and 1 more variable: LastYearGrth.cm &lt;dbl&gt;</code></pre>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(Ht_cm))</code></pre>
+<pre><code>## # A tibble: 0 x 52
+## # ... with 52 variables: Sdlg &lt;chr&gt;, Species &lt;chr&gt;, Fire &lt;fct&gt;,
+## #   FirePatch &lt;fct&gt;, Ht2016.cm &lt;dbl&gt;, Ht2017.cm &lt;dbl&gt;, Elevation &lt;dbl&gt;,
+## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;, BasDia2016.cm &lt;dbl&gt;,
+## #   LastYearGrth.cm &lt;dbl&gt;, ShrubSpp01 &lt;fct&gt;, ShrubSpp02 &lt;fct&gt;,
+## #   ShrubSpp03 &lt;fct&gt;, Cov1 &lt;int&gt;, Cov2 &lt;int&gt;, Cov3 &lt;int&gt;, Ht1 &lt;dbl&gt;,
+## #   Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;int&gt;, Cov1.3 &lt;int&gt;, Ht1.2 &lt;dbl&gt;,
+## #   Ht1.3 &lt;dbl&gt;, Genus &lt;fct&gt;, ShrG1 &lt;fct&gt;, Years &lt;int&gt;, Date &lt;fct&gt;,
+## #   LAI &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;,
+## #   BasDia2017.mm.1 &lt;chr&gt;, BasDia2017.mm.2 &lt;chr&gt;, notes &lt;chr&gt;,
+## #   shrubarea1 &lt;dbl&gt;, shrubarea2 &lt;dbl&gt;, shrubarea3 &lt;dbl&gt;, Y &lt;dbl&gt;,
+## #   X &lt;dbl&gt;, file_lat &lt;chr&gt;, Aspect.rad &lt;dbl&gt;, Slope.rad &lt;dbl&gt;,
+## #   Lat.rad &lt;dbl&gt;, Aspect.rad.fold.NS &lt;dbl&gt;, Aspect.rad.fold.NESW &lt;dbl&gt;,
+## #   incidrad &lt;dbl&gt;, heatload &lt;dbl&gt;, Ht2015.cm &lt;dbl&gt;, Year &lt;fct&gt;,
+## #   VertGrowth_cm &lt;dbl&gt;, Ht_cm &lt;dbl&gt;</code></pre>
 </div>
 <div id="change-years-since-fire-depending-on-year-of-growth" class="section level1">
 <h1>Change years since fire depending on year of growth</h1>
@@ -290,9 +613,151 @@ load(file=&quot;fire_footprints/master_seedlings2.Rdata&quot;)</code></pre>
 ## 15 WRTS      1981 2017     36    13</code></pre>
 </div>
 </div>
+<div id="calculate-relative-vertical-growth" class="section level1">
+<h1>Calculate relative vertical growth</h1>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(VertGrowth_Rel = VertGrowth_cm/Ht_cm)</code></pre>
+</div>
+<div id="consolidate-shrub-species-into-fewer-categories" class="section level1">
+<h1>Consolidate shrub species into fewer categories</h1>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp01) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;ABCO&quot;)</code></pre>
+<pre><code>## # A tibble: 10 x 3
+## # Groups:   Species [1]
+##    Species ShrubSpp01 count
+##    &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+##  1 ABCO    CECO         182
+##  2 ABCO    ARPA          74
+##  3 ABCO    CHSE          32
+##  4 ABCO    PREM          15
+##  5 ABCO    CEPR          12
+##  6 ABCO    CEIN           6
+##  7 ABCO    willow         4
+##  8 ABCO    ARNE           3
+##  9 ABCO    LIDE           3
+## 10 ABCO    other          3</code></pre>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp02) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;ABCO&quot;)</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Species [1]
+##   Species ShrubSpp02 count
+##   &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+## 1 ABCO    CECO         205
+## 2 ABCO    ARPA          60
+## 3 ABCO    CHSE          29
+## 4 ABCO    CEPR          12
+## 5 ABCO    PREM           9
+## 6 ABCO    conifer        7
+## 7 ABCO    CEIN           6
+## 8 ABCO    LIDE           3
+## 9 ABCO    QUVA           3</code></pre>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp03) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;ABCO&quot;)</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Species [1]
+##   Species ShrubSpp03 count
+##   &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+## 1 ABCO    CECO         214
+## 2 ABCO    ARPA          57
+## 3 ABCO    CHSE          26
+## 4 ABCO    CEPR          12
+## 5 ABCO    PREM           9
+## 6 ABCO    CEIN           6
+## 7 ABCO    willow         4
+## 8 ABCO    LIDE           3
+## 9 ABCO    QUVA           3</code></pre>
+<p>For ABCO, the winning set is CECO, ARPA, CHSE, CEPR, PREM, and CEIN.</p>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp01) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;PIPO&quot;)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+## # Groups:   Species [1]
+##    Species ShrubSpp01 count
+##    &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+##  1 PIPO    CECO          70
+##  2 PIPO    ARPA          54
+##  3 PIPO    CHFO          39
+##  4 PIPO    CEIN          33
+##  5 PIPO    LIDE          15
+##  6 PIPO    pea           12
+##  7 PIPO    none           9
+##  8 PIPO    PREM           7
+##  9 PIPO    QUVA           7
+## 10 PIPO    ARNE           3
+## 11 PIPO    CHSE           3
+## 12 PIPO    other          1</code></pre>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp02) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;PIPO&quot;)</code></pre>
+<pre><code>## # A tibble: 12 x 3
+## # Groups:   Species [1]
+##    Species ShrubSpp02 count
+##    &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+##  1 PIPO    CECO          70
+##  2 PIPO    ARPA          53
+##  3 PIPO    CHFO          40
+##  4 PIPO    CEIN          35
+##  5 PIPO    LIDE          21
+##  6 PIPO    pea           12
+##  7 PIPO    QUVA           7
+##  8 PIPO    PREM           5
+##  9 PIPO    ARNE           3
+## 10 PIPO    CHSE           3
+## 11 PIPO    none           3
+## 12 PIPO    other          1</code></pre>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species, ShrubSpp03) %&gt;% 
+  summarize(count = n()) %&gt;% 
+  arrange(desc(count)) %&gt;% 
+  filter(Species == &quot;PIPO&quot;)</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Species [1]
+##   Species ShrubSpp03 count
+##   &lt;chr&gt;   &lt;fct&gt;      &lt;int&gt;
+## 1 PIPO    ARPA          71
+## 2 PIPO    CECO          63
+## 3 PIPO    CHFO          40
+## 4 PIPO    CEIN          31
+## 5 PIPO    LIDE          24
+## 6 PIPO    pea           12
+## 7 PIPO    QUVA           7
+## 8 PIPO    PREM           4
+## 9 PIPO    other          1</code></pre>
+<p>For PIPO, the winning set is CECO, ARPA, CHFO, CEIN, LIDE.</p>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(ShrubSpp01 = ifelse(Species == &quot;ABCO&quot; &amp; !ShrubSpp01 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHSE&quot;, &quot;CEPR&quot;, &quot;PREM&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp01)))
+df &lt;- df %&gt;% 
+  mutate(ShrubSpp02 = ifelse(Species == &quot;ABCO&quot; &amp; !ShrubSpp02 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHSE&quot;, &quot;CEPR&quot;, &quot;PREM&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp02)))
+df &lt;- df %&gt;% 
+  mutate(ShrubSpp03 = ifelse(Species == &quot;ABCO&quot; &amp; !ShrubSpp03 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHSE&quot;, &quot;CEPR&quot;, &quot;PREM&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp03)))</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(ShrubSpp01 = ifelse(Species == &quot;PIPO&quot; &amp; !ShrubSpp01 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHFO&quot;, &quot;LIDE&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp01)))
+df &lt;- df %&gt;% 
+  mutate(ShrubSpp02 = ifelse(Species == &quot;PIPO&quot; &amp; !ShrubSpp02 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHFO&quot;, &quot;LIDE&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp02)))
+df &lt;- df %&gt;% 
+  mutate(ShrubSpp03 = ifelse(Species == &quot;PIPO&quot; &amp; !ShrubSpp03 %in% c(&quot;CECO&quot;, &quot;ARPA&quot;, &quot;CHFO&quot;, &quot;LIDE&quot;, &quot;CEIN&quot;), &quot;Other&quot;, as.character(ShrubSpp03)))</code></pre>
+<div id="make-them-factors" class="section level2">
+<h2>Make them factors</h2>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(ShrubSpp01 = as.factor(ShrubSpp01), ShrubSpp02 = as.factor(ShrubSpp02), ShrubSpp03 = as.factor(ShrubSpp03))</code></pre>
+</div>
+</div>
 <div id="save" class="section level1">
 <h1>Save</h1>
-<pre class="r"><code>save(df, file = &quot;../../compiled_data/master_seedlings_vert.Rdate&quot;)</code></pre>
+<pre class="r"><code>save(df, file = &quot;../../compiled_data/fire_footprints/master_seedlings_vert.Rdata&quot;)</code></pre>
 </div>
 
 

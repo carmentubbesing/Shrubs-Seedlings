@@ -21,8 +21,7 @@ require(effects)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings2.Rdata")
+load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
 # Filter to just white firs
@@ -102,16 +101,16 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Run a random forest on the ones that come up to see whether to delete heatload or incidrad from VSURF
+## Run a random forest on the ones that come up to see whether to delete heatload, incidrad, or aspect from VSURF
 ```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, incidrad, shrubarea2, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+forest <- randomForest(x = xdf %>% select(heatload, Years, Ht_cm, incidrad, shrubarea3, Aspect.rad.fold.NESW), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
-### Delete incidrad based on the results of the above randomforest
+### Delete incidrad and aspect based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
-  select(-incidrad)
+  select(-incidrad, -Aspect.rad.fold.NESW)
 ```
 
 ### Then run VSURF again
@@ -122,18 +121,23 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Repeat for shrubarea2 and shrubarea3
+## Repeat for Ht1.2 and Ht1.3
 
 ### Run a random forest
 ```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, Aspect.rad.fold.NESW, shrubarea3, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+forest <- randomForest(
+  x = xdf %>% 
+    select(heatload, Years, Ht_cm, shrubarea3, Ht1.2, Ht1.3, Slope.Deg, BasDia2016.cm, Elevation, Year), 
+  y = df$VertGrowth_Rel, 
+  importance = TRUE, 
+  scale = TRUE)
 varImpPlot(forest)
 ```
 
 ### Delete SHRUBAREA2 based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
-  select(-shrubarea2)
+  select(-Ht1.2)
 ```
 
 ### Then run VSURF again

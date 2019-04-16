@@ -21,8 +21,7 @@ require(effects)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings_vert.Rdata")
+load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
 ## Filter to just PIPO
@@ -100,16 +99,48 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Check out shrubarea3 and cov1.2
+## Check out shrubarea3/shrubarea2 and ShrubSpp01/03
 
 ### See how correlated they are
 ```{r}
-ggplot(df, aes(x = shrubarea3, y = Cov1.2))+
+ggplot(df, aes(x = shrubarea3, y = shrubarea2))+
   geom_point()+
   geom_smooth(method = "loess")
 ```
 
-Meh, they're fine.
+### Run a random forest
+```{r}
+forest <- randomForest(x = xdf %>% select(Ht_cm, Years, shrubarea3, shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year, ShrubSpp03, incidrad), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+### Delete SHRUBAREA3 and SHRUBSPP03 based on the results of the above randomforest
+```{r}
+xdf <- xdf %>% 
+  select(-shrubarea3, -ShrubSpp03)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+
+# RESUME HERE
+
+## Look at final random forest
+```{r}
+forest <- randomForest(
+  x = xdf %>% 
+    select(Ht_cm, Years, shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year), 
+  y = df$VertGrowth_Rel, 
+  importance = TRUE, 
+  scale = TRUE)
+varImpPlot(forest)
+```
 
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
@@ -117,25 +148,28 @@ Meh, they're fine.
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
-  select(Sdlg, VertGrowth_Rel, shrubarea3, sqrt_shrubarea3, BasDia2016.cm, Year, Cov1.2, incidrad, Year) %>% 
+  mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>% 
+  select(Sdlg, VertGrowth_Rel, Year, Ht_cm, shrubarea2, sqrt_shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year) %>% 
  mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
 ```
 
 ## See whether model with shrubarea3 or sqrt_shrubarea3 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML"))
-AIC(lme(VertGrowth_Rel ~  sqrt_shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+AIC(lme(VertGrowth_Rel ~ Year + Ht_cm + shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,
+        data = LMdf, random = ~ 1| Sdlg, method = "ML"))
+
+AIC(lme(VertGrowth_Rel ~  Year + Ht_cm + sqrt_shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,
+        data = LMdf, random = ~ 1| Sdlg, method = "ML")
 )
 ```
 
-Untransformed wins.
+Transformed wins.
 
 
 ## Linear model
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+LM <-  lme(VertGrowth_Rel ~ Year + Ht_cm + sqrt_shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -180,7 +214,7 @@ ggplot(effects_df)+
   ylab("Predicted relative growth (cm/cm)")+
   ggtitle("Pine growth in relation to shrub environment within 3 m")+
   geom_rug(data = df, aes(x = shrubarea3/10000, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.025,0.2))
+  ylim(c(0,0.25))
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png")
 ```
 
