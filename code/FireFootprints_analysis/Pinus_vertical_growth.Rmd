@@ -13,35 +13,199 @@ require(nlme)
 require(randomForest)
 require(tree)
 require(knitr)
-require(dplyr)
-require(tidyr)
+require(tidyverse)
 require(ggplot2)
-library(effects)
-library(sjPlot)
-library(sjmisc)
-library(sjlabelled)
+require(VSURF)
+require(effects)
 ```
 
 # Load data
-```{r, include=F}
-setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings2.Rdata")
-```
-
-## Filter to just pines
 ```{r}
-df <- df[df$Species%in%c("PIPO","PILA") & !df$Fire %in% c("PLKN","WRTS"),]
+setwd("~/Shrubs-Seedlings/compiled_data/")
+load(file="fire_footprints/master_seedlings_vert.Rdata")
 ```
 
-## Change species to factor
+## Filter to just PIPO
+```{r}
+df %>% 
+  filter(Species == "PIPO") %>% 
+  group_by(Fire) %>% 
+  summarize(n()) %>% 
+  arrange(`n()`)
+df <- df %>% 
+  filter(Species == "PIPO")
+```
+
+## Change species and Sdlg to factor
 ```{r}
 df <- df %>% 
-  mutate(Species = as.factor(Species))
+  mutate(Species = as.factor(Species)) %>% 
+  mutate(Sdlg = as.factor(Sdlg)) 
+summary(df$Species)
+summary(df$Sdlg)
+
 ```
 
+# Count the seedlings
+```{r}
+length(unique(df$Sdlg))
+nrow(df)
+```
+
+
+# Try using VSURF
+
+## Make df of just the predictor variables I want to include
+```{r}
+xdf <- df %>% 
+  select(Elevation,
+         Slope.Deg,
+         Aspect.rad.fold.NESW,
+         heatload,
+         incidrad,
+         Year,
+         Years,
+         BasDia2016.cm, 
+         Ht_cm,
+         shrubarea1,
+         shrubarea2, 
+         shrubarea3,
+         Cov1, 
+         Cov1.2, 
+         Cov1.3, 
+         Ht1, 
+         Ht1.2, 
+         Ht1.3,
+         ShrubSpp01, 
+         ShrubSpp02, 
+         ShrubSpp03
+         ) 
+```
+
+## Normalize the numeric ones
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+xdf <- xdf %>% mutate_if(is.numeric, normalize)
+```
+
+# STOP HERE TO SAVE TIME
+
+## Apply VSURF to vertical growth
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Check out shrubarea3 and cov1.2
+
+### See how correlated they are
+```{r}
+ggplot(df, aes(x = shrubarea3, y = Cov1.2))+
+  geom_point()+
+  geom_smooth(method = "loess")
+```
+
+Meh, they're fine.
+
+
+# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
+
+## Structure data for LM
+```{r}
+LMdf <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Sdlg, VertGrowth_Rel, shrubarea3, sqrt_shrubarea3, BasDia2016.cm, Year, Cov1.2, incidrad, Year) %>% 
+ mutate_if(is.numeric, normalize)
+LMdf <- droplevels(LMdf)
+```
+
+## See whether model with shrubarea3 or sqrt_shrubarea3 is better
+```{r}
+AIC(lme(VertGrowth_Rel ~ shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML"))
+AIC(lme(VertGrowth_Rel ~  sqrt_shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+)
+```
+
+Untransformed wins.
+
+
+## Linear model
+```{r}
+LM <-  lme(VertGrowth_Rel ~ shrubarea3 + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+### Look at individual effects
+
+Note: the plots look exactly the same but with different axes if you don't normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data
+
+#### Re-run model with non-normalized data
+```{r}
+LMdf <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Sdlg, VertGrowth_Rel, shrubarea3, BasDia2016.cm, Year, Cov1.2, incidrad, Year) %>% 
+  mutate(shrubarea3_m = shrubarea3/10000)
+LMdf <- droplevels(LMdf)
+```
+
+```{r}
+
+LM <-  lme(VertGrowth_Rel ~ shrubarea3_m + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+```{r}
+eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
+plot(eff_shrubarea)
+
+eff_year <- predictorEffect("Year", LM)
+plot(eff_year)
+```
+
+### Re-create effects plot using predictorEffects() and ggplot
+```{r}
+eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
+effects_df <- as.data.frame(eff_shrubarea)
+ggplot(effects_df)+
+  geom_line(aes(x = shrubarea3_m, y = fit))+
+  geom_ribbon(aes(x = shrubarea3_m, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  theme_bw()+
+  xlab(bquote('Shrub cross-sectional area ' (m^2)))+
+  ylab("Predicted relative growth (cm/cm)")+
+  ggtitle("Pine growth in relation to shrub environment within 3 m")+
+  geom_rug(data = df, aes(x = shrubarea3/10000, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(0.025,0.2))
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png")
+```
+
+
+### Compare to model with no shrub data
+```{r}
+LMnull <- lme(VertGrowth_Rel ~ BasDia2016.cm + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+anova(LM, LMnull)
+```
+
+### Residuals
+```{r}
+E <- resid(LM, type = "normalized")
+df$E <- E
+pred <- predict(LM)
+plot(LM)
+plot(df$shrubarea3, E)
+plot(df$Ht_cm, E)
+ggplot(df, aes(x = log(df$shrubarea3), y = E))+
+  geom_point()+
+  geom_smooth()
+```
 
 
 ## Save final data
 ```{r}
-save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata")
+save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vert.Rdata")
 ```

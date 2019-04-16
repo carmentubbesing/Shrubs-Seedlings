@@ -18,98 +18,21 @@ library(lme4)
 
 # Load data
 ```{r}
-load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata")
+load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_dia.Rdata")
 ```
 
-# Filter out firs and fires with very few firs
+# Filter out pines and fires with very few firs
 ```{r}
-df <- df[df$Species%in%c("ABCO","ABMA", "PSME") & !df$Fire %in% c("PLKN","FRDS"),]
-df$Species <- as.factor(df$Species)
-df %>% 
+df_dia <- df_dia[df_dia$Species%in%c("ABCO","ABMA", "PSME") & !df_dia$Fire %in% c("PLKN","FRDS"),]
+df_dia$Species <- as.factor(df_dia$Species)
+df_dia %>% 
   group_by(Fire) %>% 
   summarise(n())
 ```
 
-# Take a look
-```{r}
-hist(as.numeric(df$DiaGrowth.mm))
-summary(df$DiaGrowth.mm)
-df %>% filter(is.na(DiaGrowth.mm))
-```
+# STATS
 
-```{r}
-df %>% group_by(Species) %>% 
-  summarise(n())
-```
-
-
-# Clean
-
-## Take out trees with no second dia measurement
-```{r}
-df <- df %>% filter(!(BasDia2017.mm.2== 0 & BasDia2017.mm.1 == 0))
-```
-
-## Restructure so there's only one row per seedling 
-```{r}
-df_dia <- df %>% 
-  select(-VertGrowth, -VertGrowth_Rel, -Year) %>% 
-  distinct()
-remove(df)
-```
-
-### A seedling was defined as an outlier using analysis of residuals after the fact
-It had suspiciously lower basal diameter in 2017 compared to 2016, and I take it out here
-```{r}
-df_dia <- df_dia %>% filter(!(Fire == "CLVD" & Sdlg == "11"))
-```
-
-## Lump quercus with "other" shrub genus since it only has 3 observations
-```{r}
-df_dia <- df_dia %>% 
-  ungroup() %>% 
-  mutate(ShrG1 = ifelse(ShrG1 == "Quercus", "Other", as.character(ShrG1)))
-df_dia$ShrG1 <- as.factor(df_dia$ShrG1)
-```
-
-# Calculate relative diameter growth
-```{r}
-df_dia <- df_dia %>% 
-  mutate(DiaGrowth.mm_rel = DiaGrowth.mm/(BasDia2016.cm*10))
-hist(df_dia$DiaGrowth.mm_rel)
-```
-
-## Take out repeat row
-```{r}
-nrow(df_dia)
-df_dia <- df_dia %>% 
-  filter(!(Sdlg == "117" & LAI == 0))
-nrow(df_dia)
-```
-
-## Take out outliers on both ends, defined as greater than two SD from the mean
-```{r}
-mean(df_dia$DiaGrowth.mm_rel) - 2*sd(df_dia$DiaGrowth.mm_rel)
-mean(df_dia$DiaGrowth.mm_rel) + 2*sd(df_dia$DiaGrowth.mm_rel)
-df_dia <- df_dia %>% 
-  filter(!(DiaGrowth.mm_rel < (mean(df_dia$DiaGrowth.mm_rel) - 2*sd(df_dia$DiaGrowth.mm_rel)) |
-             DiaGrowth.mm_rel > mean(df_dia$DiaGrowth.mm_rel) + 2*sd(df_dia$DiaGrowth.mm_rel)))
-hist(df_dia$DiaGrowth.mm_rel)
-df_dia %>% 
-  filter(DiaGrowth.mm_rel < 0) %>% 
-  summarise(n())
-39/nrow(df_dia)
-```
-
-
-## Adjust so that no values are below 0 
-```{r}
-df_dia <- df_dia %>% 
-  mutate(DiaGrowth.mm_rel = (DiaGrowth.mm_rel - min(df_dia$DiaGrowth.mm_rel)))
-```
-
-
-# Normalize variables that still need it
+## Normalize variables that still need it
 ```{r}
 normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
@@ -124,149 +47,7 @@ df_dia <- df_dia %>%
   mutate(Ht_log_norm = normalize(log(Ht_cm)))
 ```
 
-
-# Stats
-
-## Mixed effects model: How does relative diameter growth relate to shrub area?
-```{r}
-f <- DiaGrowth.mm_rel ~  shrubarea2_sqrt_norm + Ht_log_norm 
-f_noshrubs <- DiaGrowth.mm_rel ~  Ht_norm
-LM1 <- lme(f,data = df_dia, random = ~ 1|Fire, method = "ML")
-LM1_noshrubs <- lme(f_noshrubs,data = df_dia, random = ~ 1|Fire, method = "ML")
-anova(LM1, LM1_noshrubs)
-```
-
-# Look for patterns in residuals of mixed effects model
-
-## In relation to fitted values
-```{r}
-E <- resid(LM1, type="normalized")
-df_dia$resid <- E
-plot(LM1, col = df_dia$Fire)
-df_dia[fitted.values(LM1)<0,]$resid
-plot(df_dia$Ht_norm, E)
-```
-
-## In relation to height
-```{r}
-plot(E~df_dia$Ht_norm)
-coplot(E ~ Ht_norm | Fire, data=df_dia, ylab="Normalized residuals", col=df_dia$Fire)
-```
-
-## In relation to shrub area and fire
-```{r}
-plot(df_dia$shrubarea2_sqrt_norm, E)
-plot(df_dia$Fire, E)
-```
-
-# Is the variance different between larger and smaller seedlings? 
-```{r}
-sd(unlist(df_dia[df_dia$Ht_cm < median(df_dia$Ht_cm),"resid"]))
-sd(unlist(df_dia[df_dia$Ht_cm >= median(df_dia$Ht_cm),"resid"]))
-sd(df_dia$resid)
-(sd(unlist(df_dia[df_dia$Ht_cm < median(df_dia$Ht_cm),"resid"])))/(sd(unlist(df_dia[df_dia$Ht_cm >= median(df_dia$Ht_cm),"resid"])))
-```
-
-Not bad.
-
-# Plot 
-
-## Make fake data
-```{r}
-MyData <-  rbind(
-  expand.grid( 
-    Fire = unique(df_dia$Fire), 
-    shrubarea2 = seq(min(df_dia$shrubarea2), max(df_dia$shrubarea2), length = 20),
-    Ht_cm = seq(min(df_dia$Ht_cm), max(df_dia$Ht_cm), length = 20),
-    Cov1.2 = seq(min(df_dia$Cov1.2), max(df_dia$Cov1.2), length = 20)
-    ) 
-)
-```
-
-## "Normalize" fake data, but use mean and sd from actual data
-```{r}
-normalize <- function(x) {
-    return ((x - mean(x)) / sd(x))
-  }
-```
-
-```{r}
-MyData$shrubarea2_sqrt_norm <- (sqrt(MyData$shrubarea2) - mean(sqrt(df_dia$shrubarea2)))/sd(sqrt(df_dia$shrubarea2))
-
-MyData$Ht_log_norm <- normalize(log(MyData$Ht_cm))
-MyData$Cov1.2_norm <- (MyData$Cov1.2 - mean(df_dia$Cov1.2))/sd(df_dia$Cov1.2)
-```
-
-## Plot
-```{r}
-MyData$pred_simple <- predict(LM1, level = 0, newdata = MyData, type = "response")
-```
-
-### Summary plot
-```{r}
-MyData_summary_simple <- MyData %>% 
-  group_by(shrubarea2, Fire) %>% 
-  mutate(pred_simple = mean(pred_simple))
-
-figure_summary <- ggplot(MyData_summary_simple)+
-  labs(title = "Predicted fir seedling diameter growth (lines) \nand actual growth (points)")+
-  ylab("Predicted relative seedling growth")+
-  xlab("shrub cover * shrub height 0-2 m from seedling")+
-  geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)))+
-  geom_point(data=df_dia, aes(x = sqrt(shrubarea2), y = DiaGrowth.mm_rel))
-dev.off()
-figure_summary
-remove(MyData_summary_simple)
-```
-
-```{r}
-df_dia %>% 
-  group_by(ShrG1) %>% 
-  summarise(n())
-```
-
-# Add date measured in 2016??
-
-# AIC table
-
-## Find all possible variable combinations
-```{r}
-v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm:Ht_norm", "Cov1.2_norm:Ht_norm")
-combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list)))
-list.bad <- list()
-for(i in 1:length(combs)){
-  if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]])
-    {
-    list.bad <- c(list.bad, i)
-    }
-  if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){
-    list.bad <- c(list.bad, i)
-    } 
-}
-list.bad <- unlist(list.bad)
-combs.bad <- combs[list.bad]
-combs <- setdiff(combs, combs.bad)
-length(combs)
-```
-
-## Table
-```{r}
-table <- data.frame(Model = character(), Formula = character(), AIC = numeric())
-for(i in 1:length(combs)){
-  vars <- combs[i]
-  vars <- paste(vars[[1]], collapse="+")
-  f <- formula(paste("(DiaGrowth.mm_rel ~ Ht_norm +", vars,")"))
-  M <- lme(f,data = df_dia, random = ~ 1| Fire)
-  ModelName <- paste("M", i, sep="_")
-  add <- data.frame(c(ModelName),c(vars), c(AIC(M)))
-  table <- rbind(table, add)
-}
-colnames(table) <- c("Model","Variables", "AIC")
-table_final <- kable(table %>% arrange(AIC), format = "markdown") 
-table_final
-```
-
-# Re-analyse and plot using best model from above that sticks with 0-2 m
+# Re-analyse and plot using best model that sticks with 0-2 m (AIC model selection deleted)
 ```{r}
 f <- DiaGrowth.mm_rel ~  Cov1.2_norm + Ht_norm 
 f_noshrubs <- DiaGrowth.mm_rel ~  Ht_norm

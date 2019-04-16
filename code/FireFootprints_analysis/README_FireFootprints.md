@@ -32,29 +32,42 @@ Files are dependent in the following order:
 * creates:
     *  `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
 
+    
+#### **clean_dia_both_species.Rmd**
+* uses:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+* creates:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_dia.Rdata`
+
 #### **fir_dia_growth_all_years**
 * uses: 
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_dia.Rdata`
 * creates: 
     * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_dia.Rdata`
 * figures:
     * `fir_dia.pdf`
+    
+#### **Clean_vert_growth**
+* uses:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+* creates:
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
 
 #### **fir_vert_growth_all_years**
 * uses: 
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
 * creates: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata`
     
 #### **Pine_dia_growth**
 * uses:
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_dia.Rdata`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_dia.Rdata`
     
 #### **Pine_vertical_growth**
 * uses:
-    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata`
+    * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
 * creates:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata`
     

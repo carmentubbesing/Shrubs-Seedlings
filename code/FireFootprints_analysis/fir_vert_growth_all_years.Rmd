@@ -13,221 +13,313 @@ require(nlme)
 require(randomForest)
 require(tree)
 require(knitr)
-require(dplyr)
-require(tidyr)
+require(tidyverse)
 require(ggplot2)
+require(VSURF)
+require(effects)
 ```
 
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/compiled_data/")
-load(file="fire_footprints/master_seedlings1.Rdata")
+load(file="fire_footprints/master_seedlings2.Rdata")
 ```
 
-## Filter to just firs
+# Filter to just white firs
 ```{r}
-df <- df[df$Species%in%c("ABCO","ABMA", "PSME") & !df$Fire %in% c("PLKN","FRDS"),]
-df <- df %>% filter(!is.na(shrubarea2))
+df %>% 
+  group_by(Fire,Species) %>% 
+  summarize(n())
 ```
 
 
-## Change species to factor
 ```{r}
 df <- df %>% 
-  mutate(Species = as.factor(Species))
+  filter(Species == "ABCO" & !df$Fire %in% c("PLKN","FRDS"))
 ```
 
+## Change species and Sdlg to factor
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species)) %>% 
+  mutate(Sdlg = as.factor(Sdlg)) 
+summary(df$Species)
+summary(df$Sdlg)
+
+```
+
+# Count
+```{r}
+length(unique(df$Sdlg))
+nrow(df)
+```
+
+
+# Try using VSURF
+
+## Make df of just the predictor variables I want to include
+```{r}
+xdf <- df %>% 
+  select(Elevation,
+         Slope.Deg,
+         Aspect.rad.fold.NESW,
+         Years,
+         Ht_cm,
+         shrubarea1,
+         shrubarea2, 
+         shrubarea3,
+         Cov1, 
+         Cov1.2, 
+         Cov1.3, 
+         Ht1, 
+         Ht1.2, 
+         Ht1.3,
+         ShrubSpp01, 
+         ShrubSpp02, 
+         ShrubSpp03, 
+         BasDia2016.cm, 
+         heatload,
+         incidrad,
+         Year,
+         Years) 
+```
+
+## Normalize the numeric ones
 ```{r}
 normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
   }
+xdf <- xdf %>% mutate_if(is.numeric, normalize)
 ```
 
-# Normalize variables that still need it
+# STOP HERE IF YOU DON'T WANT THINGS TO TAKE FOREVER
+
+## Apply VSURF to vertical growth
 ```{r}
-df <- df %>% 
-  mutate(Cov1.2_norm = normalize(Cov1.2)) %>% 
-  mutate(Cov1.3_norm = normalize(Cov1.3)) %>% 
-  mutate(shrubarea3_sqrt_norm = normalize(sqrt(shrubarea3)))
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
 ```
 
-
-# Conditional inference tree
+## Run a random forest on the ones that come up to see whether to delete heatload or incidrad from VSURF
 ```{r}
-tree_df <- tree(VertGrowth_Rel ~  Fire + FirePatch + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3, df)
-summary(tree_df)
-plot(tree_df)
-text(tree_df, pretty = 0)
-pruned <- prune.tree(tree_df, best = 5)
-plot(pruned)
-text(pruned, pretty = 0)
+forest <- randomForest(x = xdf %>% select(heatload, Years, incidrad, shrubarea2, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
 ```
 
-
-## Look at random forest
+### Delete incidrad based on the results of the above randomforest
 ```{r}
-fit <- randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + ShrubSpp01 + ShrubSpp02 + ShrubSpp03 + IAG, 
-                    data = df,
-                    importance = TRUE,
-                    mtry = 13)
-fit
-varImpPlot(fit)
+xdf <- xdf %>% 
+  select(-incidrad)
 ```
 
-## See how well random forest predicts data
+### Then run VSURF again
 ```{r}
-train = sample(1:nrow(df), nrow(df)/2)
-tree_train = randomForest(formula = VertGrowth_Rel ~ Fire + Year + Species + Ht_cm + shrubarea2 + shrubarea3 + Cov1 + Cov1.2 + Cov1.3 + Ht1 + Ht1.2 + Ht1.3 + ShrubSpp01 + ShrubSpp02 + ShrubSpp03 + IAG, 
-                    data = df,
-                    importance = TRUE,
-                    mtry = 13,
-                    subset = train)
-yhat.bag = predict(tree_train, newdata = df[-train,])
-growth.test = unlist(df[-train, "VertGrowth_Rel"])
-plot(yhat.bag, growth.test)
-abline(0,1)
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
 ```
+
+## Repeat for shrubarea2 and shrubarea3
+
+### Run a random forest
+```{r}
+forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, Aspect.rad.fold.NESW, shrubarea3, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+### Delete SHRUBAREA2 based on the results of the above randomforest
+```{r}
+xdf <- xdf %>% 
+  select(-shrubarea2)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Repeat for heatload and Aspect
+
+### Run a random forest
+```{r}
+forest <- randomForest(x = xdf %>% select(heatload, Years, Aspect.rad.fold.NESW, shrubarea3, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+### See how correlated they are
+```{r}
+ggplot(df, aes(x = heatload, y = Aspect.rad.fold.NESW))+
+  geom_point()+
+  geom_smooth(method = "loess")
+```
+
+### Delete ASPECT based on the results of the above randomforest
+```{r}
+xdf <- xdf %>% 
+  select(-Aspect.rad.fold.NESW)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Repeat for shrubarea3 and Ht1.3
+
+### Run a random forest
+```{r}
+forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea3, Ht1.3, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+### See how correlated they are
+```{r}
+ggplot(df, aes(x = shrubarea3, y = Ht1.3))+
+  geom_point()+
+  geom_smooth(method = "loess")
+```
+
+### Delete HT1.3 based on the results of the above randomforest
+```{r}
+xdf <- xdf %>% 
+  select(-Ht1.3)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Run a randomforest using those variables
+```{r}
+forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea3, Cov1, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+Check the correlation of Cov1 and shrubarea3 to see if one needs to be deleted
+
+```{r}
+ggplot(df, aes(x = shrubarea3, y = Cov1))+
+   geom_point()+
+   geom_smooth(method = "loess")
+```
+
+Looks ok.
+
+# RESUME HERE
+
+# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
+
+## Structure data for LM
+```{r}
+LMdf <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, Cov1, Elevation, Year) %>% 
+  mutate_if(is.numeric, normalize)
+LMdf <- droplevels(LMdf)
+```
+
+## See whether model with shrubarea3 or sqrt_shrubarea3 is better
+```{r}
+AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ sqrt_shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML"))
+AIC(lme(VertGrowth_Rel ~  heatload+ Years+ shrubarea3+ shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+)
+```
+
+Untransformed wins.
+
+
+## Linear model
+```{r}
+LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+Note: the plots look exactly the same but with different axes if you don't normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data
+
+#### Re-run model with non-normalized data
+```{r}
+LMdf <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Sdlg, VertGrowth_Rel, shrubarea3, heatload, Year, Cov1, Elevation, Years) %>% 
+  mutate(shrubarea3_m = shrubarea3/10000)
+LMdf <- droplevels(LMdf)
+```
+
+```{r}
+LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3_m+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+### Look at individual effects
+```{r}
+eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
+plot(eff_shrubarea)
+
+eff_shrubcov<- predictorEffect("Cov1", LM)
+plot(eff_shrubcov)
+
+eff_shrubspp <- predictorEffect("heatload", LM)
+plot(eff_shrubspp)
+
+eff_shrubspp <- predictorEffect("Year", LM)
+plot(eff_shrubspp)
+```
+
+
+### Re-create effects plot using predictorEffects() and ggplot
+```{r}
+effects_df <- as.data.frame(eff_shrubcov)
+ggplot(effects_df)+
+  geom_line(aes(x = 100*Cov1/400, y = fit))+
+  geom_ribbon(aes(x = 100*Cov1/400, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  theme_bw()+
+  xlab("Shrub cover (%)")+
+  ylab("Predicted relative growth (cm/cm)")+
+  ggtitle("Fir growth in relation to shrub environment within 1 m")+
+  geom_rug(data = df, aes(x = 100*Cov1/400, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+    ylim(c(0.025,0.2))
+setwd("../code/FireFootprints_analysis/")
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png")
+```
+
+
+### Compare to model with no shrub data
+```{r}
+LMnull <- lme(VertGrowth_Rel ~ heatload+ Years+  Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+anova(LM, LMnull)
+```
+
+### Residuals
+```{r}
+E <- resid(LM, type = "normalized")
+df$E <- E
+pred <- predict(LM)
+plot(LM)
+plot(df$shrubarea3, E)
+plot(df$Ht_cm, E)
+ggplot(df, aes(x = shrubarea3, y = E))+
+  geom_point()+
+  geom_smooth()
+```
+
 
 
 ## Save final data
 ```{r}
 save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
 ```
-
-<!-- ## Initial look at regression model -->
-<!-- ```{r} -->
-<!-- f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm + ShrG1 + shrubarea2_sqrt_norm*Ht_norm + Species -->
-<!-- f_noshrubs <- VertGrowth_Rel ~  Year + Ht_norm  + ShrG1 + Species -->
-<!-- LM1 <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML") -->
-<!-- LM1_noshrubs <- lme(f_noshrubs,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "ML") -->
-<!-- anova(LM1, LM1_noshrubs) -->
-<!-- ``` -->
-
-<!-- ## Find all possible variable combinations -->
-<!-- ```{r} -->
-<!-- v1 <- c("shrubarea2_sqrt_norm", "Cov1.2_norm" , "Cov1.3_norm" , "IAG", "ShrG1", "shrubarea2_sqrt_norm*Ht_norm", "shrubarea3_sqrt_norm") -->
-<!-- combs <- do.call("c", lapply(seq_along(v1), function(i) combn(v1, i, FUN = list))) -->
-<!-- list.bad <- list() -->
-<!-- for(i in 1:length(combs)){ -->
-<!--   if("Cov1.2_norm" %in% combs[i][[1]] & "Cov1.3_norm" %in% combs[i][[1]]) -->
-<!--     { -->
-<!--     list.bad <- c(list.bad, i) -->
-<!--     } -->
-<!--   if("shrubarea2_sqrt_norm" %in% combs[i][[1]] & ("Cov1.2_norm" %in% combs[i][[1]] | "Cov1.3_norm" %in% combs[i][[1]]     )){ -->
-<!--     list.bad <- c(list.bad, i) -->
-<!--   }  -->
-<!--     if("shrubarea3_sqrt_norm" %in% combs[i][[1]] & "shrubarea2_sqrt_norm" %in% combs[i][[1]]) -->
-<!--     { -->
-<!--     list.bad <- c(list.bad, i) -->
-<!--     } -->
-<!-- } -->
-<!-- list.bad <- unlist(list.bad) -->
-<!-- combs.bad <- combs[list.bad] -->
-<!-- combs <- setdiff(combs, combs.bad) -->
-<!-- length(combs) -->
-<!-- ``` -->
-
-<!-- ## Table -->
-<!-- ```{r} -->
-<!-- table <- data.frame(Model = character(), Formula = character(), AIC = numeric()) -->
-<!-- for(i in 1:length(combs)){ -->
-<!--   vars <- combs[i] -->
-<!--   vars <- paste(vars[[1]], collapse="+") -->
-<!--   f <- formula(paste("(VertGrowth_Rel ~  Year  + Ht_norm +", vars,")")) -->
-<!--   M <- lme(f,data = df, random = list(~ 1| Fire, ~1| Sdlg), method = "REML", weights = varExp(form=~Ht_norm)) -->
-<!--   ModelName <- paste("M", i, sep="_") -->
-<!--   add <- data.frame(c(ModelName),c(vars), c(AIC(M))) -->
-<!--   table <- rbind(table, add) -->
-<!-- } -->
-<!-- colnames(table) <- c("Model","Variables", "AIC") -->
-<!-- table_final <- kable(table %>% arrange(AIC), format = "markdown")  -->
-<!-- table_final -->
-<!-- ``` -->
-
-<!-- ## Compare best model to null -->
-
-<!-- ## AIC model selection shows that this is the best model, when year and height are included: -->
-<!-- ```{r} -->
-<!-- f <- VertGrowth_Rel ~  Year + shrubarea2_sqrt_norm + Ht_norm  -->
-<!-- f_null <- VertGrowth_Rel ~  Year + Ht_norm  -->
-<!-- LM2 <- lme(f, -->
-<!--            data = df,  -->
-<!--            random = list(~ 1| Fire, ~1| Sdlg),  -->
-<!--            method = "ML", -->
-<!--            weights = varExp(form=~Ht_norm)) -->
-<!-- LM2_null <- lme(f_null, -->
-<!--                 data = df,  -->
-<!--                 random = list(~ 1| Fire, ~1| Sdlg), -->
-<!--                 method = "ML", -->
-<!--                 weights = varExp(form=~Ht_norm)) -->
-<!-- anova(LM2, LM2_null) -->
-<!-- ``` -->
-
-<!-- # Plot  -->
-
-<!-- ## Create MyData -->
-<!-- ```{r} -->
-<!-- MyData <-  rbind( -->
-<!--   expand.grid(  -->
-<!--     Fire = unique(df$Fire),  -->
-<!--     Year = unique(df$Year),  -->
-<!--     shrubarea2 = seq(min(df$shrubarea2), max(df$shrubarea2), length = 100), -->
-<!--     #shrubarea3 = seq(min(df$shrubarea3), max(df$shrubarea3), length = 100), -->
-<!--     Ht_cm = seq(min(df$Ht_cm), max(df$Ht_cm), length = 10), -->
-<!--     Species = c("PIPO","PILA"), -->
-<!--     ShrG1 = unique(df$ShrG1), -->
-<!--     Cov1.2 = seq(min(df$Cov1.2), max(df$Cov1.2), length = 10) -->
-<!--     ) -->
-<!-- ) -->
-<!-- ``` -->
-
-
-<!-- ### Normalize MyData variables -->
-
-<!-- ```{r} -->
-<!-- MyData <- MyData %>%  -->
-<!--   mutate(Ht_norm = normalize(Ht_cm)) %>%  -->
-<!--   mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) ) %>%  -->
-<!--   mutate(cov1.2_norm = normalize(Cov1.2))  -->
-<!-- #%>%  -->
-<!--  # mutate(shrubarea3_sqrt_norm = normalize(sqrt(shrubarea3))) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- MyData$pred_simple <- predict(LM2, level = 0,newdata = MyData) -->
-<!-- ``` -->
-
-<!-- ### Summary plot -->
-<!-- ```{r} -->
-<!-- MyData_summary_simple <- MyData %>%  -->
-<!--   group_by(shrubarea2) %>%  -->
-<!--   mutate(pred_simple = mean(pred_simple)) -->
-<!-- MyData_summary_simple -->
-<!-- figure_summary <- ggplot(MyData_summary_simple)+ -->
-<!--   labs(title = "Predicted vertical fir seedling growth (lines) \nand actual growth (points)")+ -->
-<!--   ylab("Relative vertical growth (cm/cm)")+ -->
-<!--   xlab( -->
-<!--     expression( -->
-<!--       paste( -->
-<!--         sqrt("shrub cover * shrub height"), -->
-<!--     " 0-2 m from seedling")) -->
-<!--     )+ -->
-<!--   geom_line(aes(y = pred_simple, x = sqrt(shrubarea2)), size = 1.5, col = "#a02313")+ -->
-<!--   geom_point(data=df, aes(x = sqrt(shrubarea2), y = VertGrowth_Rel), col = "#a02313")+ -->
-<!--   theme_bw()+ -->
-<!--   theme(plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'), -->
-<!--         panel.background = element_rect(fill="#e9ebe8")) -->
-<!-- figure_summary -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- E <- resid(LM2, type="normalized") -->
-<!-- plot(LM2) -->
-<!-- plot(LM1) -->
-<!-- plot(sqrt(df$shrubarea2), E) -->
-<!-- plot((df$Ht_norm), E) -->
-<!-- coplot(E ~ Ht_cm | Fire, data=df, ylab="Normalized residuals", col=df$Fire) -->
-<!-- ``` -->
-
-
-<!-- # RESULT: best model has higher AIC than null, so there is no effect -->

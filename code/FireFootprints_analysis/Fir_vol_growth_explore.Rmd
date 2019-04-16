@@ -40,6 +40,11 @@ df <- df %>%
   mutate(ShrubSpp03 = as.factor(ShrubSpp03))
 ```
 
+# Count the seedlings
+```{r}
+nrow(df)
+```
+
 
 # Visualize pre and post volumes on a log scale
 ```{r}
@@ -102,19 +107,13 @@ anova(MM1, MM1_null)
 summary(MM1)
 ```
 
-```{r}
-decdf <- read.csv("~/Shrubs-Seedlings-master_Dec2018/code/FireFootprints_analysis/df_firvol_Dec2018.csv")
-setdiff(as.numeric(df$Sdlg), decdf$Sdlg)
-setdiff(decdf$Sdlg, as.numeric(df$Sdlg))
-```
 
 # Try using VSURF
 
 ## Make df of just the predictor variables I want to include
 ```{r}
 xdf <- df %>% 
-  select(Fire, 
-         Elevation,
+  select(Elevation,
          Slope.Deg,
          Aspect.rad.fold.NESW,
          Years,

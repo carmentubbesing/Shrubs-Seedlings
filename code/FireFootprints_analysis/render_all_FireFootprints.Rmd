@@ -23,6 +23,9 @@ print(Sys.time()-strt)
 ```{r intermediary_analysis}
 strt <- Sys.time()
 rmarkdown::render("Heat_load.Rmd", "html_document")
+
+rmarkdown::render("clean_dia_both_species.Rmd", "html_document")
+
 rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
 rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
 

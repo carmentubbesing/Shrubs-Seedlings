@@ -86,42 +86,32 @@ df <- df %>%
 
 ## Clean up extreme and negative values
 
-```{r}
-nrow(df)
-hist(df$DiaGrowth.mm_rel, breaks = 10)
-hist(df$DiaGrowth.mm_rel)
-nrow(df)
-```
+<!-- ## Take out outliers on both ends, defined as greater than two SD from the mean -->
+<!-- ```{r} -->
+<!-- nrow(df) -->
+<!-- mean_minSD <- mean(df$DiaGrowth.mm) - 2*sd(df$DiaGrowth.mm) -->
+<!-- mean_minSD -->
+<!-- mean_plusSD <- mean(df$DiaGrowth.mm) + 2*sd(df$DiaGrowth.mm) -->
+<!-- mean_plusSD -->
+<!-- df <- df %>%  -->
+<!--   filter(!(DiaGrowth.mm < mean_minSD | -->
+<!--              DiaGrowth.mm > mean_plusSD)) -->
+<!-- hist(df$DiaGrowth.mm) -->
+<!-- nrow(df) -->
+<!-- ``` -->
 
 
-## Take out outliers on both ends, defined as greater than two SD from the mean
-```{r}
-nrow(df)
-hist(df$DiaGrowth.mm, breaks = 20)
-mean_minSD <- mean(df$DiaGrowth.mm) - 2*sd(df$DiaGrowth.mm)
-mean_minSD
-mean_plusSD <- mean(df$DiaGrowth.mm) + 2*sd(df$DiaGrowth.mm)
-mean_plusSD
-df <- df %>% 
-  filter(!(DiaGrowth.mm < mean_minSD |
-             DiaGrowth.mm > mean_plusSD))
-hist(df$DiaGrowth.mm)
-nrow(df)
-```
-
-
-## Adjust diameter growth so that all values are > 0
-```{r}
-hist(df$DiaGrowth.mm)
-min(df$BasDia2017.mm.ave)
-hist(df$BasDia2017.mm.ave)
-df <- df %>% 
-  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth.mm)))
-min(df$BasDia2017.mm.ave)
-hist(df$BasDia2017.mm.ave)
-df <- df %>% 
-  mutate(DiaGrowth.mm = (DiaGrowth.mm - min(DiaGrowth.mm)))
-```
+<!-- ## Adjust diameter growth so that all values are > 0 -->
+<!-- ```{r} -->
+<!-- min(df$BasDia2017.mm.ave) -->
+<!-- hist(df$BasDia2017.mm.ave) -->
+<!-- df <- df %>%  -->
+<!--   mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth.mm))) -->
+<!-- min(df$BasDia2017.mm.ave) -->
+<!-- hist(df$BasDia2017.mm.ave) -->
+<!-- df <- df %>%  -->
+<!--   mutate(DiaGrowth.mm = (DiaGrowth.mm - min(DiaGrowth.mm))) -->
+<!-- ``` -->
 
 ## Check for seedlings with more than one row
 ```{r}

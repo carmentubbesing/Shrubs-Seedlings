@@ -56,6 +56,12 @@ ggplot(df)+
   scale_y_continuous(limits = c(-5,7.5))
 ```
 
+## How many are there?
+```{r}
+nrow(df)
+```
+
+
 ## Plot relative growth rate vs. volume to check for a possible relationship
 
 ### least squares

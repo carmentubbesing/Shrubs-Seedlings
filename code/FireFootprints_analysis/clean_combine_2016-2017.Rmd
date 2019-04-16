@@ -56,6 +56,16 @@ df <- df %>%
   select(-Species.x, -Species.y)
 ```
 
+
+## Correct species names
+```{r}
+summary(as.factor(df$Species))
+df %>% 
+  filter(Species == 2)
+df <- df %>% 
+  mutate(Species = ifelse(Sdlg %in% c(20:23), "PIPO", Species))
+```
+
 ## Sync fire and fire patch
 ```{r}
 df %>% 
@@ -116,86 +126,7 @@ summary(as.factor(df$Status))
 ```
 
 
-# Calculate diameter growth
-
-## Calculate diameter average in 2017
-```{r}
-df <- df %>% 
-  mutate(BasDia2017.mm.1 = as.numeric(BasDia2017.mm.1)) %>% 
-  mutate(BasDia2017.mm.2 = as.numeric(BasDia2017.mm.2)) 
-df <- replace_na(df, replace = list(BasDia2017.mm.2 = 0, BasDia2017.mm.1 = 0))
-df <- df %>% 
-  mutate(BasDia2017.mm.ave = (BasDia2017.mm.1+BasDia2017.mm.2)/2)
-```
-
-## Adjust 2016 diameters to mm and correct for calipers error
-```{r}
-df <- df %>% 
-  mutate(BasDia2016.mm = BasDia2016.cm*10-1.1)
-```
-
-## Calculate growth
-```{r}
-df <- df %>% 
-  mutate(DiaGrowth.mm = ifelse(BasDia2017.mm.1 >0, BasDia2017.mm.ave - BasDia2016.mm, NA))
-df %>% 
-  filter(BasDia2017.mm.ave >0 & !is.na(DiaGrowth.mm)) %>% 
-  summarise(mean(DiaGrowth.mm))
-hist(df$DiaGrowth.mm, breaks = 30)
-```
-
-# Get data ready to analyze vertical growth
-
-## Create data frame with one row per growth measurement
-```{r}
-df <- tbl_df(df)
-names(df)
-df <- df %>% 
-  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
-df <- gather(df, "Year", "VertGrowth",41:43)
-df$Year <- as.factor(df$Year)
-```
-
-## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
-```{r}
-df <- df %>% 
-  mutate(VertGrowth = ifelse(is.na(VertGrowth) & Year == "2015", LastYearGrth.cm, VertGrowth))
-``` 
-
-## Take out 2017 vertical growth measurements for trees that died since last measure
-```{r}
-summary(as.factor(df$Status))
-df <- df %>% 
-  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
-```
-
-## Take out 2016 and 2017 vertical growth measurements for trees that were not found
-```{r}
-df <- df %>% 
-  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
-```
-
-## Check out NA values and delete years that broke off
-```{r}
-df %>% 
-  filter(is.na(VertGrowth)) %>% 
-  select(Sdlg, Year, VertGrowth, Status, notes) %>% 
-  arrange(Sdlg)
-df <- df %>% 
-  filter(!(Sdlg %in% c("6","185","131","226","6","74","98") & Year %in% c("2017","2016"))) %>% 
-  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
-  filter(!(Sdlg == 75 & Year == 2017))  
-```
-
-## Look at odd vertical growth value
-```{r}
-df <- df %>% 
-  mutate(VertGrowth = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth))
-df$VertGrowth <- as.numeric(df$VertGrowth)
-```
-
-
-## Create shrubarea variables for each distance from the seedling
+# Create shrubarea variables for each distance from the seedling
 ```{r}
 df <- df %>% 
   mutate(shrubarea1 = Ht1 * Cov1) %>% 
@@ -206,41 +137,6 @@ df <- df %>%
 ### Fix NA shrubarea
 ```{r}
 df <- df %>% filter(!(is.na(shrubarea2) & Sdlg == "17"))
-```
-
-
-## Fill in height if it was not taken in 2017
-```{r}
-df <- df %>% 
-  mutate(Ht_cm = ifelse(is.na(Ht2017.cm), Ht2016.cm, Ht2017.cm)) %>% 
-  select(-Ht2016.cm, -Ht2017.cm)
-```
-
-
-## Look at distribution of relative growth rate
-```{r}
-df$VertGrowth_Rel <- df$VertGrowth/df$Ht_cm
-hist(df$VertGrowth_Rel, breaks = 30)
-```
-
-## Look at relative growth rate in relation to DIFN
-```{r}
-ggplot(df, aes(x = DIFN.all, y = VertGrowth_Rel))+
-  geom_point()+
-  geom_smooth(method = "lm")
-```
-
-## Standardize continuous variables I plan to use in the model
-```{r}
-normalize <- function(x) {
-    return ((x - mean(x)) / sd(x))
-  }
-```
-
-```{r}
-df <- df %>% 
-  mutate(Ht_norm = normalize(Ht_cm)) %>% 
-  mutate(shrubarea2_sqrt_norm = normalize(sqrt(shrubarea2)) )
 ```
 
 # Save

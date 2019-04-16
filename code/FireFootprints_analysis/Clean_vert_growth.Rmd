@@ -1,0 +1,132 @@
+---
+title: "Clean_vert_growth"
+author: "Carmen"
+date: "April 16, 2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(VSURF)
+require(effects)
+```
+
+# Load data
+```{r}
+setwd("../../compiled_data/")
+load(file="fire_footprints/master_seedlings2.Rdata")
+```
+
+# Take out unnecessary variables
+```{r}
+names(df)
+df <- df %>% 
+  select (-Light_File, -DIFN.all, -ImmedAboveSpp, -ImmedAboveHt.cm, -IAG, -DIFN.53)
+```
+
+# Change years since fire depending on year of growth
+```{r}
+df %>% 
+  group_by(Fire, Year, Years) %>% 
+  summarize(n())
+```
+
+```{r}
+df <- df %>% 
+  mutate(FireYear = ifelse(Fire == "AMCR", 2008, ifelse(Fire == "CLVD", 1992, ifelse(Fire == "FRDS", 2004, ifelse(Fire == "STAR", 2001, 1981))))) %>% 
+  mutate(Years = as.numeric(paste(Year))-FireYear)
+```
+
+## Check
+```{r}
+df %>% 
+  group_by(Fire, FireYear, Year, Years) %>% 
+  summarize(n())
+```
+
+# Change height to represent the year of growth measured
+
+
+
+## Fill in height if it was not taken in 2017
+```{r}
+df <- df %>% 
+  mutate(Ht_cm = ifelse(is.na(Ht2017.cm), Ht2016.cm, Ht2017.cm)) %>% 
+  select(-Ht2016.cm, -Ht2017.cm)
+```
+
+
+## See how it is now
+```{r}
+df %>% filter(Sdlg == 10) %>% select(Sdlg, Ht_cm, Year, VertGrowth, VertGrowth_Rel)
+```
+
+```{r}
+
+```
+
+
+# Get data ready to analyze vertical growth
+
+## Create data frame with one row per growth measurement
+```{r}
+df <- tbl_df(df)
+names(df)
+df <- df %>% 
+  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
+df <- gather(df, "Year", "VertGrowth",41:43)
+df$Year <- as.factor(df$Year)
+```
+
+## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
+```{r}
+df <- df %>% 
+  mutate(VertGrowth = ifelse(is.na(VertGrowth) & Year == "2015", LastYearGrth.cm, VertGrowth))
+``` 
+
+## Take out 2017 vertical growth measurements for trees that died since last measure
+```{r}
+summary(as.factor(df$Status))
+df <- df %>% 
+  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
+```
+
+## Take out 2016 and 2017 vertical growth measurements for trees that were not found
+```{r}
+df <- df %>% 
+  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
+```
+
+## Check out NA values and delete years that broke off
+```{r}
+df %>% 
+  filter(is.na(VertGrowth)) %>% 
+  select(Sdlg, Year, VertGrowth, Status, notes) %>% 
+  arrange(Sdlg)
+df <- df %>% 
+  filter(!(Sdlg %in% c("6","185","131","226","6","74","98") & Year %in% c("2017","2016"))) %>% 
+  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
+  filter(!(Sdlg == 75 & Year == 2017))  
+```
+
+## Look at odd vertical growth value
+```{r}
+df <- df %>% 
+  mutate(VertGrowth = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth))
+df$VertGrowth <- as.numeric(df$VertGrowth)
+```
+
+
+# Save
+```{r}
+save(df, file = "../../compiled_data/master_seedlings_vert.Rdate")
+```
+
