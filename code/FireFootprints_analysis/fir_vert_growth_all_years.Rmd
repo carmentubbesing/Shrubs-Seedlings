@@ -134,7 +134,7 @@ forest <- randomForest(
 varImpPlot(forest)
 ```
 
-### Delete SHRUBAREA2 based on the results of the above randomforest
+### Delete HT1.2 based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
   select(-Ht1.2)
@@ -148,51 +148,27 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Repeat for heatload and Aspect
-
-### Run a random forest
+## Run a randomforest using those variables
 ```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, Aspect.rad.fold.NESW, shrubarea3, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+forest <- randomForest(x = xdf %>% select(Years, heatload, Ht_cm, shrubarea3, Ht1.3, Cov1.3), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
-### See how correlated they are
+Check the correlations of Cov3, Ht1.3, and shrubarea3 to see if one needs to be deleted
+
 ```{r}
-ggplot(df, aes(x = heatload, y = Aspect.rad.fold.NESW))+
-  geom_point()+
-  geom_smooth(method = "loess")
+ggplot(df, aes(x = shrubarea3, y = Cov1.3))+
+   geom_point()+
+   geom_smooth(method = "loess")
 ```
 
-### Delete ASPECT based on the results of the above randomforest
-```{r}
-xdf <- xdf %>% 
-  select(-Aspect.rad.fold.NESW)
-```
-
-### Then run VSURF again
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
-
-## Repeat for shrubarea3 and Ht1.3
-
-### Run a random forest
-```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea3, Ht1.3, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-varImpPlot(forest)
-```
-
-### See how correlated they are
 ```{r}
 ggplot(df, aes(x = shrubarea3, y = Ht1.3))+
-  geom_point()+
-  geom_smooth(method = "loess")
+   geom_point()+
+   geom_smooth(method = "loess")
 ```
 
-### Delete HT1.3 based on the results of the above randomforest
+Looks like I should delete height
 ```{r}
 xdf <- xdf %>% 
   select(-Ht1.3)
@@ -206,22 +182,6 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Run a randomforest using those variables
-```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea3, Cov1, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-varImpPlot(forest)
-```
-
-Check the correlation of Cov1 and shrubarea3 to see if one needs to be deleted
-
-```{r}
-ggplot(df, aes(x = shrubarea3, y = Cov1))+
-   geom_point()+
-   geom_smooth(method = "loess")
-```
-
-Looks ok.
-
 # RESUME HERE
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
@@ -230,24 +190,28 @@ Looks ok.
 ```{r}
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
-  select(Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, Cov1, Elevation, Year) %>% 
+  select(Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, Cov1, Elevation, Year, BasDia2016.cm) %>% 
   mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
 ```
 
 ## See whether model with shrubarea3 or sqrt_shrubarea3 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ sqrt_shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML"))
-AIC(lme(VertGrowth_Rel ~  heatload+ Years+ shrubarea3+ shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ BasDia2016.cm,
+        data = LMdf, random = ~ 1| Sdlg, method = "ML"))
+
+AIC(lme(VertGrowth_Rel ~  heatload+ Years+ sqrt_shrubarea3+ BasDia2016.cm,
+        data = LMdf, random = ~ 1| Sdlg, method = "ML")
 )
 ```
 
-Untransformed wins.
+Transformed wins, but by so little that I'm going to keep the untransformed version to match pines.
 
 
 ## Linear model
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ BasDia2016.cm,
+           data = LMdf, random = ~ 1| Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -258,13 +222,13 @@ Note: the plots look exactly the same but with different axes if you don't norma
 ```{r}
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
-  select(Sdlg, VertGrowth_Rel, shrubarea3, heatload, Year, Cov1, Elevation, Years) %>% 
+  select(Sdlg, VertGrowth_Rel, shrubarea3, heatload, Year, BasDia2016.cm, Years) %>% 
   mutate(shrubarea3_m = shrubarea3/10000)
 LMdf <- droplevels(LMdf)
 ```
 
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3_m+ Cov1+ Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+LM <-  lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3_m+ BasDia2016.cm,data = LMdf, random = ~ 1| Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -274,38 +238,29 @@ drop1(LM, test = "Chisq")
 eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
 plot(eff_shrubarea)
 
-eff_shrubcov<- predictorEffect("Cov1", LM)
-plot(eff_shrubcov)
+eff_heat <- predictorEffect("heatload", LM)
+plot(eff_heat)
 
-eff_shrubspp <- predictorEffect("heatload", LM)
-plot(eff_shrubspp)
+eff_years <- predictorEffect("Years", LM)
+plot(eff_years)
 
-eff_shrubspp <- predictorEffect("Year", LM)
-plot(eff_shrubspp)
+plot(predictorEffect("BasDia2016.cm", LM))
 ```
 
 
 ### Re-create effects plot using predictorEffects() and ggplot
 ```{r}
-effects_df <- as.data.frame(eff_shrubcov)
+effects_df <- as.data.frame(eff_shrubarea)
 ggplot(effects_df)+
-  geom_line(aes(x = 100*Cov1/400, y = fit))+
-  geom_ribbon(aes(x = 100*Cov1/400, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = 100*shrubarea3_m/400, y = fit))+
+  geom_ribbon(aes(x = 100*shrubarea3_m/400, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
-  xlab("Shrub cover (%)")+
+  xlab(bquote('Shrub cross-sectional area ' (m^2)))+
   ylab("Predicted relative growth (cm/cm)")+
-  ggtitle("Fir growth in relation to shrub environment within 1 m")+
-  geom_rug(data = df, aes(x = 100*Cov1/400, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
-    ylim(c(0.025,0.2))
-setwd("../code/FireFootprints_analysis/")
+  ggtitle("Fir growth in relation to shrub environment within 3 m")+
+  geom_rug(data = df, aes(x = 100*(shrubarea3/10000)/400, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+    ylim(c(0,0.28))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png")
-```
-
-
-### Compare to model with no shrub data
-```{r}
-LMnull <- lme(VertGrowth_Rel ~ heatload+ Years+  Elevation+ Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
-anova(LM, LMnull)
 ```
 
 ### Residuals

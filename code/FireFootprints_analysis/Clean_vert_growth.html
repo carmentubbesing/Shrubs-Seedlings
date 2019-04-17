@@ -217,7 +217,7 @@ $(document).ready(function () {
 <li><a href="#change-years-since-fire-depending-on-year-of-growth">Change years since fire depending on year of growth</a><ul>
 <li><a href="#check">Check</a></li>
 </ul></li>
-<li><a href="#calculate-relative-vertical-growth">Calculate relative vertical growth</a></li>
+<li><a href="#calculate-relative-vertical-growth-lnht2---lnht1">Calculate relative vertical growth = ln(ht2) - ln(ht1)</a></li>
 <li><a href="#consolidate-shrub-species-into-fewer-categories">Consolidate shrub species into fewer categories</a><ul>
 <li><a href="#make-them-factors">Make them factors</a></li>
 </ul></li>
@@ -613,10 +613,10 @@ df$Year &lt;- as.factor(df$Year)</code></pre>
 ## 15 WRTS      1981 2017     36    13</code></pre>
 </div>
 </div>
-<div id="calculate-relative-vertical-growth" class="section level1">
-<h1>Calculate relative vertical growth</h1>
+<div id="calculate-relative-vertical-growth-lnht2---lnht1" class="section level1">
+<h1>Calculate relative vertical growth = ln(ht2) - ln(ht1)</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(VertGrowth_Rel = VertGrowth_cm/Ht_cm)</code></pre>
+  mutate(VertGrowth_Rel = log(Ht_cm) - log(Ht_cm - VertGrowth_cm))</code></pre>
 </div>
 <div id="consolidate-shrub-species-into-fewer-categories" class="section level1">
 <h1>Consolidate shrub species into fewer categories</h1>

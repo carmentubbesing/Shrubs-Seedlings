@@ -169,10 +169,10 @@ df %>%
   summarize(n())
 ```
 
-# Calculate relative vertical growth
+# Calculate relative vertical growth = ln(ht2) - ln(ht1)
 ```{r}
 df <- df %>% 
-  mutate(VertGrowth_Rel = VertGrowth_cm/Ht_cm)
+  mutate(VertGrowth_Rel = log(Ht_cm) - log(Ht_cm - VertGrowth_cm))
 ```
 
 # Consolidate shrub species into fewer categories 

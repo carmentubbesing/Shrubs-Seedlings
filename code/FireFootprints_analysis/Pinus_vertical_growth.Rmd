@@ -99,7 +99,7 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Check out shrubarea3/shrubarea2 and ShrubSpp01/03
+## Check out shrubarea3/shrubarea2 and heatload/incidrad
 
 ### See how correlated they are
 ```{r}
@@ -110,14 +110,68 @@ ggplot(df, aes(x = shrubarea3, y = shrubarea2))+
 
 ### Run a random forest
 ```{r}
-forest <- randomForest(x = xdf %>% select(Ht_cm, Years, shrubarea3, shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year, ShrubSpp03, incidrad), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+forest <- randomForest(x = xdf %>% select(Ht_cm, Years, shrubarea3, shrubarea2, Ht1.3, BasDia2016.cm, Year, heatload, incidrad, ShrubSpp03), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
-### Delete SHRUBAREA3 and SHRUBSPP03 based on the results of the above randomforest
+### Delete SHRUBAREA2 and HEATLOAD based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
-  select(-shrubarea3, -ShrubSpp03)
+  select(-shrubarea2, -heatload)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Repeat for Ht1.3/Ht1.2/Ht1
+
+### See how correlated they are
+```{r}
+ggplot(df, aes(x = Ht1.3, y = Ht1))+
+  geom_point()+
+  geom_smooth(method = "loess")
+```
+
+### Run a random forest
+```{r}
+forest <- randomForest(
+  x = xdf %>% select(Ht_cm, Years, shrubarea3, Ht1.3, Ht1.2, BasDia2016.cm, Ht1, Year, incidrad, ShrubSpp03), 
+  y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+### Delete ht1.2 and ht1.3 based on the results of the above randomforest
+```{r}
+xdf <- xdf %>% 
+  select(-Ht1.2, -Ht1.3)
+```
+
+### Then run VSURF again
+```{r}
+vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Repeat for shrubarea3/shrubarea1
+
+### See how correlated they are
+```{r}
+ggplot(df, aes(x = shrubarea3, y = shrubarea1))+
+  geom_point()+
+  geom_smooth(method = "loess")
+```
+
+### Just delete shrubarea1 since shrubarea3 has been in the model for multiple steps
+```{r}
+xdf <- xdf %>% 
+  select(-shrubarea1)
 ```
 
 ### Then run VSURF again
@@ -129,13 +183,14 @@ xdf[vsurf$varselect.pred]
 ```
 
 
+
 # RESUME HERE
 
 ## Look at final random forest
 ```{r}
 forest <- randomForest(
   x = xdf %>% 
-    select(Ht_cm, Years, shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year), 
+    select(Ht_cm, Years, shrubarea3, BasDia2016.cm, incidrad, ShrubSpp03, Year), 
   y = df$VertGrowth_Rel, 
   importance = TRUE, 
   scale = TRUE)
@@ -148,28 +203,28 @@ varImpPlot(forest)
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>% 
-  select(Sdlg, VertGrowth_Rel, Year, Ht_cm, shrubarea2, sqrt_shrubarea2, Ht1.3, BasDia2016.cm, ShrubSpp01, Year) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Sdlg, VertGrowth_Rel, Years, Ht_cm, shrubarea3, sqrt_shrubarea3, BasDia2016.cm, incidrad, ShrubSpp03, Year) %>% 
  mutate_if(is.numeric, normalize)
 LMdf <- droplevels(LMdf)
 ```
 
 ## See whether model with shrubarea3 or sqrt_shrubarea3 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ Year + Ht_cm + shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,
+AIC(lme(VertGrowth_Rel ~ Years + Ht_cm + shrubarea3 + BasDia2016.cm + incidrad + ShrubSpp03 + Year,
         data = LMdf, random = ~ 1| Sdlg, method = "ML"))
 
-AIC(lme(VertGrowth_Rel ~  Year + Ht_cm + sqrt_shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,
+AIC(lme(VertGrowth_Rel ~  Years + Ht_cm + sqrt_shrubarea3 + BasDia2016.cm + incidrad + ShrubSpp03 + Year,
         data = LMdf, random = ~ 1| Sdlg, method = "ML")
 )
 ```
 
-Transformed wins.
+Transformed wins, but by such a small margin that I'm going with untransformed.
 
 
 ## Linear model
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ Year + Ht_cm + sqrt_shrubarea2 + sqrt_shrubarea2 + Ht1.3 + BasDia2016.cm + ShrubSpp01 + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+LM <-  lme(VertGrowth_Rel ~ Years + Ht_cm + shrubarea3 + BasDia2016.cm + incidrad + ShrubSpp03 + Year, data = LMdf, random = ~ 1| Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -181,48 +236,51 @@ Note: the plots look exactly the same but with different axes if you don't norma
 #### Re-run model with non-normalized data
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
-  select(Sdlg, VertGrowth_Rel, shrubarea3, BasDia2016.cm, Year, Cov1.2, incidrad, Year) %>% 
-  mutate(shrubarea3_m = shrubarea3/10000)
+  select(Sdlg, VertGrowth_Rel, Years, Ht_cm, shrubarea3, BasDia2016.cm, incidrad, ShrubSpp03, Year)  %>% 
+  mutate(shrubarea3 = shrubarea3/10000)
 LMdf <- droplevels(LMdf)
 ```
 
 ```{r}
-
-LM <-  lme(VertGrowth_Rel ~ shrubarea3_m + BasDia2016.cm + Cov1.2 + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
+LM <-  lme(VertGrowth_Rel ~ Years + Ht_cm + shrubarea3 + BasDia2016.cm + incidrad + ShrubSpp03 + Year, data = LMdf, random = ~ 1| Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
 
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
+eff_years <- predictorEffect("Years", LM)
+plot(eff_years)
+
+eff_shrubarea <- predictorEffect("shrubarea3", LM)
 plot(eff_shrubarea)
 
-eff_year <- predictorEffect("Year", LM)
-plot(eff_year)
+eff_ht <- predictorEffect("Ht_cm", LM)
+plot(eff_ht)
+
+eff_shrspp <- predictorEffect("ShrubSpp03", LM)
+plot(eff_shrspp)
+
+plot(predictorEffect("BasDia2016.cm", LM))
+
+plot(predictorEffect("incidrad", LM))
+
+plot(predictorEffect("Year", LM))
 ```
 
 ### Re-create effects plot using predictorEffects() and ggplot
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea3_m", LM)
+eff_shrubarea <- predictorEffect("shrubarea3", LM)
 effects_df <- as.data.frame(eff_shrubarea)
 ggplot(effects_df)+
-  geom_line(aes(x = shrubarea3_m, y = fit))+
-  geom_ribbon(aes(x = shrubarea3_m, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = shrubarea3, y = fit))+
+  geom_ribbon(aes(x = shrubarea3, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
   xlab(bquote('Shrub cross-sectional area ' (m^2)))+
   ylab("Predicted relative growth (cm/cm)")+
   ggtitle("Pine growth in relation to shrub environment within 3 m")+
   geom_rug(data = df, aes(x = shrubarea3/10000, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0,0.25))
+  ylim(c(0,0.28))
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png")
-```
-
-
-### Compare to model with no shrub data
-```{r}
-LMnull <- lme(VertGrowth_Rel ~ BasDia2016.cm + incidrad + Year,data = LMdf, random = ~ 1| Sdlg, method = "ML")
-anova(LM, LMnull)
 ```
 
 ### Residuals
@@ -231,8 +289,13 @@ E <- resid(LM, type = "normalized")
 df$E <- E
 pred <- predict(LM)
 plot(LM)
-plot(df$shrubarea3, E)
+plot(df$shrubarea2, E)
 plot(df$Ht_cm, E)
+plot(df$Years, E)
+plot(df$Ht1.3, E)
+plot(df$BasDia2016.cm, E)
+plot(df$incidrad, E)
+plot(df$Year, E)
 ggplot(df, aes(x = log(df$shrubarea3), y = E))+
   geom_point()+
   geom_smooth()
