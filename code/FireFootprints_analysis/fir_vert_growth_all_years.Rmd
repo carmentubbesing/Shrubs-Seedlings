@@ -19,6 +19,11 @@ require(VSURF)
 require(effects)
 ```
 
+{r, set.seed(333)}
+```{r}
+knitr::opts_chunk$set(cache = T)
+```
+
 # Load data
 ```{r}
 load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
@@ -54,7 +59,7 @@ nrow(df)
 ```
 
 
-# Try using VSURF
+# Apply VSURF
 
 ## Make df of just the predictor variables I want to include
 ```{r}
@@ -101,9 +106,10 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Run a random forest on the ones that come up to see whether to delete heatload, incidrad, or aspect from VSURF
+## Run a random forest on the ones that come up to see whether to delete heatload or incidrad
 ```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, Ht_cm, incidrad, shrubarea3, Aspect.rad.fold.NESW), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+forest <- randomForest(x = xdf %>% select(heatload, Years, Ht_cm, incidrad, shrubarea3, Ht1.2), 
+                       y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
 varImpPlot(forest)
 ```
 
@@ -121,13 +127,21 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Repeat for Ht1.2 and Ht1.3
+## Repeat for shrubarea3 and Cov1.3
+
+```{r}
+ggplot(xdf, aes(x = shrubarea3, y = Ht1.2))+
+  geom_point()+
+  geom_smooth(method = "lm")
+summary(lm(shrubarea3 ~ Ht1.2, data = xdf))
+summary(lm(shrubarea3 ~ Cov1.3, data = xdf))
+```
 
 ### Run a random forest
 ```{r}
 forest <- randomForest(
   x = xdf %>% 
-    select(heatload, Years, Ht_cm, shrubarea3, Ht1.2, Ht1.3, Slope.Deg, BasDia2016.cm, Elevation, Year), 
+    select(heatload, Years, Ht_cm, shrubarea3, Cov1.3, Slope.Deg, Elevation), 
   y = df$VertGrowth_Rel, 
   importance = TRUE, 
   scale = TRUE)
@@ -142,10 +156,10 @@ xdf <- xdf %>%
 
 ### Then run VSURF again
 ```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
+#vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+#summary(vsurf)
+#vsurf$varselect.pred
+#xdf[vsurf$varselect.pred]
 ```
 
 ## Run a randomforest using those variables
@@ -176,13 +190,25 @@ xdf <- xdf %>%
 
 ### Then run VSURF again
 ```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
+#vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+#summary(vsurf)
+#vsurf$varselect.pred
+#xdf[vsurf$varselect.pred]
 ```
 
 # RESUME HERE
+
+## Look at final random forest
+```{r}
+forest <- randomForest(
+  x = xdf %>% 
+    select(Years, shrubarea3, heatload, Elevation), 
+  y = df$VertGrowth_Rel, 
+  importance = TRUE, 
+  scale = TRUE)
+varImpPlot(forest)
+```
+
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
@@ -247,8 +273,7 @@ plot(eff_years)
 plot(predictorEffect("BasDia2016.cm", LM))
 ```
 
-
-### Re-create effects plot using predictorEffects() and ggplot
+# Re-create effects plot using predictorEffects() and ggplot
 ```{r}
 effects_df <- as.data.frame(eff_shrubarea)
 ggplot(effects_df)+
@@ -260,10 +285,10 @@ ggplot(effects_df)+
   ggtitle("Fir growth in relation to shrub environment within 3 m")+
   geom_rug(data = df, aes(x = 100*(shrubarea3/10000)/400, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
     ylim(c(0,0.28))
-ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png")
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 6, height = 5, dpi = 400)
 ```
 
-### Residuals
+# Residuals
 ```{r}
 E <- resid(LM, type = "normalized")
 df$E <- E

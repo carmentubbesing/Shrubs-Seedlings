@@ -17,6 +17,7 @@ require(tidyverse)
 require(ggplot2)
 require(VSURF)
 require(effects)
+set.seed(12345)
 ```
 
 # Load data
@@ -267,7 +268,9 @@ plot(predictorEffect("incidrad", LM))
 plot(predictorEffect("Year", LM))
 ```
 
-### Re-create effects plot using predictorEffects() and ggplot
+# Re-create effects plots using predictorEffects() and ggplot
+
+## Shrubarea
 ```{r}
 eff_shrubarea <- predictorEffect("shrubarea3", LM)
 effects_df <- as.data.frame(eff_shrubarea)
@@ -280,8 +283,25 @@ ggplot(effects_df)+
   ggtitle("Pine growth in relation to shrub environment within 3 m")+
   geom_rug(data = df, aes(x = shrubarea3/10000, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
   ylim(c(0,0.28))
-ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png")
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 6, height = 5, dpi = 400)
 ```
+
+## Years
+```{r}
+eff_years <- predictorEffect("Years", LM)
+effects_df <- as.data.frame(eff_years)
+ggplot(effects_df)+
+  geom_line(aes(x = Years, y = fit))+
+  geom_ribbon(aes(x = Years, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  theme_bw()+
+  xlab("Years since fire")+
+  ylab("Predicted relative growth (cm/cm)")+
+  ggtitle("Pine growth in relation to time since fire")+
+  geom_rug(data = df, aes(x = Years, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(-0.01,0.28))
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel_years.png", width = 6, height = 5, dpi = 400)
+```
+
 
 ### Residuals
 ```{r}
