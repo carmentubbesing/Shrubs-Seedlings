@@ -1,0 +1,103 @@
+---
+title: "Mortality_counts"
+author: "Carmen"
+date: "April 18, 2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(tree)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(effects)
+require(readxl)
+set.seed(12345)
+```
+
+# Load data
+```{r}
+df180 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx")
+df380 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_380_counts_compiled_Oct1_2017.xlsx")
+```
+
+# Join
+
+```{r}
+df180 <- df180 %>% 
+  mutate(COMP = 180)
+df380 <- df380 %>% 
+  mutate(COMP = 380)
+```
+
+```{r}
+df <- full_join(df180, df380, by = c("ABCO_ALIVE" = "Abco, alive", "ABCO_DEAD" = "Abco, dead", "PIPO_ALIVE" = "Pipo, alive", "PIPO_DEAD" = "Pipo, dead", "POINT" ="Plot", "NOTES"="notes", "COMP"="COMP"))
+df
+```
+
+# Take out points that weren't measured
+```{r}
+df <- df %>% 
+  filter(!is.na(ABCO_ALIVE & ABCO_DEAD))
+df
+```
+
+# Gather
+```{r}
+df <- gather(df, key = "col", value = "count", 3:6)
+```
+
+```{r}
+df <- df %>% 
+  mutate(SPECIES = ifelse(col %in% c("ABCO_ALIVE", "ABCO_DEAD"), "ABCO", "PIPO")) %>% 
+  mutate(STATUS = ifelse(col %in% c("ABCO_ALIVE", "PIPO_ALIVE"), "ALIVE", "DEAD"))
+```
+
+## Check and delete intermediary column
+```{r}
+df %>% 
+  group_by(col, SPECIES, STATUS) %>% 
+  summarize(n())
+df <- df %>% 
+  select(-col)
+```
+
+# Look at NA values
+```{r}
+df %>% 
+  filter(is.na(count))
+df %>% 
+  filter(POINT==9 & COMP == 380)
+```
+
+## It looks like they just forgot to put in the 0, so I'll add it
+```{r}
+df <- df %>% 
+  mutate(count = ifelse(is.na(count), 0, count))
+```
+
+# Sum mortality rates
+```{r}
+sums <- df %>% 
+  group_by(SPECIES, STATUS) %>% 
+  summarize(sum = sum(count)) %>% 
+  group_by(SPECIES) %>% 
+  mutate(sum_total = sum(sum)) %>% 
+  mutate(rate = sum/sum_total)
+sums
+```
+
+# Count points and their area
+```{r}
+n_plots <- df %>% 
+  distinct(POINT, COMP) %>% 
+  summarize(n())
+n_plots
+area <- pi*1
+n_plots*area
+```
+

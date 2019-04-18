@@ -1,0 +1,148 @@
+---
+title: "Clean growth ~ mortality data"
+author: "Carmen"
+date: "April 17, 2019"
+output: html_document
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+```
+
+# Load data
+```{r}
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
+```
+
+# Delete rows with no data
+```{r}
+df <- df %>% 
+  filter(!is.na(SEEDLING))
+```
+
+
+# Delete seedlings with missing data or pathogen damage
+```{r}
+summary(as.factor(df$Practice))
+df <- df %>% 
+  filter(is.na(Practice) | Practice != "1") %>% 
+  filter(is.na(PATH_DAMAGE) | PATH_DAMAGE != "1")
+```
+
+# Fix typos
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "alive", "ALIVE", DEAD_ALIVE)) %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "dead", "DEAD", DEAD_ALIVE)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "abco", "ABCO", SPECIES)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "pipo", "PIPO", SPECIES))
+```
+
+# Make numeric
+```{r}
+df <- df %>% 
+  mutate(LAST_YR_GR_cm = as.numeric(LAST_YR_GR_cm)) %>% 
+  mutate(MINUS_1_GR_cm = as.numeric(MINUS_1_GR_cm)) %>% 
+  mutate(MINUS_2_GR_cm = as.numeric(MINUS_2_GR_cm))
+```
+
+```{r}
+df <- df %>% 
+  mutate(DEAD = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+```
+
+# Fix duplicates
+```{r}
+df %>% 
+  filter(duplicated(SEEDLING))
+df %>% 
+  filter(SEEDLING %in% c("183", "183B"))
+```
+
+## Fix duplicates
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "ABCO", "183-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "PIPO", "183-P", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "PIPO", "183B-P", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "ABCO", "183B-A", SEEDLING)) 
+```
+
+# Look at missing growth data
+```{r}
+df %>% filter(is.na(as.numeric(df$LAST_YR_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))
+```
+
+## Delete trees that are missing any year of growth
+```{r}
+nrow(df)
+df <- df %>% 
+  filter(!(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)))
+nrow(df)
+```
+
+# Correct mis-recorded growth based on photos
+```{r}
+df <- df %>% 
+  mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 98, 7.1, MINUS_2_GR_cm)) %>% 
+  mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 77, 6.4, MINUS_2_GR_cm))
+``` 
+
+
+# Calculate relative growth rate using the ln formula
+
+## Calculate pre- and post-heights and years of growth measured
+```{r}
+df <- df %>% 
+  mutate(ht_pre = HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm) 
+
+```
+
+# Check for NA heights
+```{r}
+summary(df$HEIGHT)
+summary(df$ht_pre)
+```
+
+## Calculate relative growth rate
+```{r}
+df <- df %>% 
+  mutate(growth_vert_rel = (log(HEIGHT) - log(ht_pre))/3)
+```
+
+## Check out outliers
+```{r}
+df %>% 
+  filter(growth_vert_rel > .5)
+```
+
+## Remove the two outliers that are so extreme they were probably due to measurement error.
+Especially for the dead pine, whose photo shows that no branches remained, and therefore the vertical growth was probably very difficult to measure
+```{r}
+df <- df %>% 
+  filter(growth_vert_rel<.5)
+```
+
+# Make live/dead status a factor
+```{r}
+df <- df %>% 
+  mutate(DEAD = as.factor(DEAD))
+```
+
+# Calculate average diameter
+```{r}
+df <- df %>% 
+  mutate(BAS_DIA_AVE = (BAS_DIA_1_mm+BAS_DIA_2_mm)/2)
+```
+
+# Save 
+```{r}
+save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+```
+
