@@ -57,6 +57,15 @@ length(unique(df$Sdlg))
 nrow(df)
 ```
 
+# Find average growth rate
+```{r}
+mean(df$VertGrowth_Rel)
+sd(df$VertGrowth_Rel)
+sd(df$VertGrowth_Rel)/sqrt(nrow(df))
+ggplot(df)+
+  geom_boxplot(aes(y = VertGrowth_Rel))
+```
+
 
 # Apply VSURF
 
@@ -214,23 +223,170 @@ varImpPlot(forest)
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
-  select(Fire, Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, Cov1, Elevation, Year, BasDia2016.cm) %>% 
-  mutate_if(is.numeric, normalize)
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  mutate(log_shrubarea3 = log(shrubarea3)) %>% 
+  select(Fire, Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Cov1, Elevation, Year, BasDia2016.cm) %>% 
+  mutate_if(is.numeric, normalize) %>% 
+  mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
 ```
 
+
 ## See whether model with shrubarea3 or sqrt_shrubarea3 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3+ BasDia2016.cm,
+AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3*BasDia2016.cm,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
-AIC(lme(VertGrowth_Rel ~  heatload+ Years+ sqrt_shrubarea3+ BasDia2016.cm,
+AIC(lme(VertGrowth_Rel ~  heatload+ Years+ sqrt_shrubarea3*BasDia2016.cm,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+)
+
+AIC(lme(VertGrowth_Rel ~  heatload+ Years+ log_shrubarea3*BasDia2016.cm,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 )
 ```
 
-Transformed wins, but by so little that I'm going to keep the untransformed version to match pines.
+Sqrt transformed wins by a tiny amount. Since the difference is so small and pines use untransformed, and beacuse it's better to err on the side of untransformed, I'll use untransformed.
+
+## See whether model with or without interaction is better
+```{r}
+AIC(lme(VertGrowth_Rel ~ Years + shrubarea3*BasDia2016.cm + heatload, 
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
+
+AIC(lme(VertGrowth_Rel ~ Years + shrubarea3 + BasDia2016.cm + heatload, 
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
+
+```
+
+With interaction is better.
+
+## Linear model
+```{r}
+LM <-  lme(VertGrowth_Rel ~Years + shrubarea3*BasDia2016.cm + heatload, 
+           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+### Test dropping shrubarea3 and diameter individually
+
+#### Diameter
+```{r}
+LM_noht <- lme(VertGrowth_Rel ~ Years + shrubarea3 + heatload, 
+               data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM, LM_noht)
+```
+
+#### Shrubarea
+```{r}
+LM_noshrub <- lme(VertGrowth_Rel ~ Years + BasDia2016.cm + heatload, 
+                  data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM, LM_noshrub)
+```
+
+Note: anova here is performing likelihood ratio tests
+
+### Look at individual effects
+
+Note: the plots look exactly the same but with different axes if you don't normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data
+
+```{r}
+eff_years <- predictorEffect("Years", LM)
+plot(eff_years)
+
+eff_shrubarea <- predictorEffect("shrubarea3", LM)
+plot(eff_shrubarea)
+
+eff_ht <- predictorEffect("BasDia2016.cm", LM)
+plot(eff_ht)
+
+plot(predictorEffect("heatload", LM))
+```
+
+# Re-create effects plots using predictorEffects() and ggplot
+
+## Create df for effects and confidence intervals using mean +/- 1 SD
+```{r}
+quartiles <- c(mean(df$BasDia2016.cm)-sd(df$BasDia2016.cm), mean(df$BasDia2016.cm)+sd(df$BasDia2016.cm))
+quartiles
+quartiles <- c(mean(LMdf$BasDia2016.cm)-sd(LMdf$BasDia2016.cm), mean(LMdf$BasDia2016.cm)+sd(LMdf$BasDia2016.cm))
+quartiles
+
+eff_shrubarea <- predictorEffect("shrubarea3", LM, xlevels = list(BasDia2016.cm = quartiles))
+effects_df <- as.data.frame(eff_shrubarea)
+head(effects_df)
+```
+
+## Transform variables back to original units
+```{r}
+effects_df <- effects_df %>% 
+  mutate(BasDia2016.cm = BasDia2016.cm*sd(df$BasDia2016.cm)+mean(df$BasDia2016.cm))
+  
+effects_df <- effects_df %>% 
+  mutate(shrubarea3 = shrubarea3*sd(df$shrubarea3)+mean(df$shrubarea3)) 
+```
+
+### test
+```{r}
+summary(as.factor(effects_df$BasDia2016.cm))
+hist(effects_df$shrubarea3)
+hist(df$shrubarea3)
+```
+
+## Make shrubarea in m instead of cm
+```{r}
+effects_df <- effects_df %>% 
+  mutate(shrubarea3 = shrubarea3/10000)
+```
+
+## Round the values of dia
+```{r}
+effects_df <- effects_df %>% 
+  mutate(BasDia2016.cm = round(BasDia2016.cm, digits = 1))
+```
+
+## Plot effects of shrubarea
+```{r}
+ggplot(effects_df)+
+  geom_line(aes(x = shrubarea3, y = fit, group = as.factor(BasDia2016.cm)))+
+  geom_ribbon(aes(x = shrubarea3, group = as.factor(BasDia2016.cm), fill = as.factor(BasDia2016.cm), ymin = lower, ymax = upper), alpha = .5)+
+  theme_bw()+
+  xlab(bquote('Shrub competition ' (m^2)))+
+  ylab("Relative growth rate")+
+  ggtitle("Fir growth in relation to shrub environment within 3 m")+
+  geom_rug(data = df, aes(x = shrubarea3/10000, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(-0.1,0.7))+
+  labs(fill = "Juvenile tree diameter (cm)")+
+  theme(legend.position = c(0.8, 0.15))
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel_int.png", width = 6, height = 6, dpi = 400)
+```
+
+## Years
+```{r}
+eff_years <- predictorEffect("Years", LM)
+effects_df <- as.data.frame(eff_years)
+effects_df <- effects_df %>% 
+  mutate(Years = Years*sd(df$Years)+mean(df$Years)) 
+
+ggplot(effects_df)+
+  geom_line(aes(x = Years, y = fit))+
+  geom_ribbon(aes(x = Years, ymin = lower, ymax = upper), alpha = .5, fill = "#fdbb84")+
+  theme_bw()+
+  xlab("Years since fire")+
+  ylab("Predicted relative growth (cm/cm)")+
+  ggtitle("Pine growth in relation to time since fire")+
+  geom_rug(data = df, aes(x = Years, y = VertGrowth_Rel), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(-0.02,0.28))
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel_years.png", width = 6, height = 5, dpi = 400)
+```
+
+# Look at relationship between years and shrubarea
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
+ggplot(df)+
+  geom_boxplot(aes(x = Fire, y = shrubarea3))
+```
 
 ## Linear model
 ```{r}
