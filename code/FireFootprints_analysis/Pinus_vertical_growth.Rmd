@@ -17,7 +17,7 @@ require(tidyverse)
 require(ggplot2)
 require(VSURF)
 require(effects)
-set.seed(12345)
+set.seed(12346)
 ```
 
 # Load data
@@ -52,7 +52,6 @@ length(unique(df$Sdlg))
 nrow(df)
 ```
 
-
 # Try using VSURF
 
 ## Make df of just the predictor variables I want to include
@@ -66,7 +65,7 @@ xdf <- df %>%
          Year,
          Years,
          BasDia2016.cm, 
-         Ht_cm,
+         Ht_cm1,
          shrubarea1,
          shrubarea2, 
          shrubarea3,
@@ -111,7 +110,7 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Check out shrubarea3/shrubarea2 and heatload/incidrad
+## Check out shrubarea3/shrubarea2 
 
 ### See how correlated they are
 ```{r}
@@ -120,16 +119,30 @@ ggplot(df, aes(x = shrubarea3, y = shrubarea2))+
   geom_smooth(method = "loess")
 ```
 
-### Run a random forest
+
+## Run 10 random forests on the ones that come up to see whether to delete heatload or incidrad
 ```{r}
-forest <- randomForest(x = xdf %>% select(Ht_cm, Years, shrubarea3, shrubarea2, Ht1.3, BasDia2016.cm, Year, heatload, incidrad, ShrubSpp03), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-varImpPlot(forest)
+forests100 <- function(vars){
+  forest <- randomForest(
+    x = xdf %>% select(Years, Ht_cm1, shrubarea3, shrubarea2, Ht1.3, Year, ShrubSpp01), 
+    y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+  forest$importance
+  imp <- as.data.frame(forest$importance) 
+  imp$var <- row.names(imp)
+  imp <- imp %>% filter(var %in% vars)
+  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
+}
+forests100(c("shrubarea3", "shrubarea2"))
+reps <- replicate(100, forests10(c("shrubarea3", "shrubarea2")))
+summary(as.factor(unlist(reps)))
 ```
 
-### Delete SHRUBAREA2 and HEATLOAD based on the results of the above randomforest
+This shows that shrubarea3 has a higher importance value than shrubarea2 most of the time, so I should delete shrubarea2.
+
+### Delete SHRUBAREA2 based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
-  select(-shrubarea2, -heatload)
+  select(-shrubarea2)
 ```
 
 ### Then run VSURF again

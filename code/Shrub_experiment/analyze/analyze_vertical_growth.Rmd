@@ -10,7 +10,7 @@ output:
 This code analyzes how shrub removal affected seedling vertical growth.
 
 ```{r, include = F}
-library(dplyr)
+library(tidyverse)
 library(readxl)
 library(ggplot2)
 library(nlme)
@@ -18,186 +18,237 @@ library(effects)
 ```
 
 # Load data
+
 ```{r}
-df <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert.csv")
-dfshrub <- read.csv(file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/dfshrub.csv")
+load(file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
 ```
 
-## Throw out outlier, for which growth in 2017 is more than 5 times greater than growth in 2016
+# Plot
 ```{r}
-npre <- nrow(df)
-npre
-df %>% filter(gr_17_over_16>5)
-df <- df %>% filter(gr_17_over_16<5)
-npost <- nrow(df)
-npost
+ggplot(df %>% filter(species == "PIPO"))+
+  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
+ggplot(df %>% filter(species == "PIPO"))+
+  geom_boxplot(aes(x = shrubs, y = pre_removal_growth_rel))
+ggplot(df %>% filter(species == "ABCO"))+
+  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
+ggplot(df %>% filter(species == "ABCO"))+
+  geom_boxplot(aes(x = shrubs, y = pre_removal_growth_rel))
 ```
 
-### This removed `r npre-npost` tree, bringing the df_vert total to `r npost`
+# BACI ANALYSIS FOR FIRS for 2018 GROWTH
 
-# Add shrub data
+# Restructure
 ```{r}
-df <- full_join(df, dfshrub)
-summary(df$shrubarea)
-```
-
-# Stats
-
-## Look at sample sizes
-```{r}
-df %>% group_by(species, shrub_species, shrubs) %>% 
-  summarise(n())
-```
-
-
-## Use multiple regression on sqrt(gr_17_over_16), including retained/removed, seedling height, shrub species, and seedling species, AND interaction between removal and seedling species and height and removal
-```{r}
-LM1 <- lm(sqrt(gr_17_over_16) ~ shrubs + ht_cm +  species + shrub_species + shrubs:species, data = df)
-LM1_noremoval <- lm(sqrt(gr_17_over_16) ~ ht_cm + species + shrub_species, data = df)
-summary(LM1)
-drop1(LM1, test = "F")
-anova(LM1, LM1_noremoval)
-```
-
-# Look at residuals
-```{r}
-E <- residuals(LM1)
-pred <- predict(LM1)
-plot(LM1, which=c(1))
-plot(df$shrubs, E)
-plot(df$species, E)
-plot(df$shrub_species, E)
-```
-
-## Use multiple regression on sqrt(gr_17_over_16)
-including retained/removed, seedling height, shrub species, pre-removal shrub area, and seedling species, AND interaction between removal and seedling species
-```{r}
-LM1 <- lm(sqrt(gr_17_over_16) ~ shrubs + ht_cm +  species + shrub_species + shrubs:species + shrubs:ht_cm + shrubarea, data = df)
-LM1_noremoval <- lm(sqrt(gr_17_over_16) ~ ht_cm + species + shrub_species + shrubarea, data = df)
-drop1(LM1, test = "F")
-anova(LM1, LM1_noremoval)
-```
-
-### Look at residuals
-```{r}
-E <- residuals(LM1)
-pred <- predict(LM1)
-plot(LM1, which=c(1))
-plot(df$shrubs, E)
-plot(df$species, E)
-plot(df$shrub_species, E)
-plot(df$shrubarea, E)
+dfg2 <- gather(df, key = "pre_post", value = "relative_growth", c("growth_rel_2018", "pre_removal_growth_rel"))
+dfg2 <- dfg2 %>% 
+  mutate(pre_post = as.factor(paste(pre_post)))
 ```
 
 ```{r}
-df %>% 
-  group_by(species, shrubs) %>% 
-  summarise(mean(gr_2017_rel))
+ggplot(dfg2 %>% filter(species == "ABCO"))+
+  geom_boxplot(aes(x = interaction(shrubs, pre_post), y = relative_growth))
 ```
 
-## Mixed effects with island effect
-```{r}
-MM1 <- lme(sqrt(gr_17_over_16) ~ shrubs + ht_cm +  species + shrub_species + shrubarea + shrubs:species + shrubs:shrub_species + shrubs:ht_cm, random =~1|island, data = df, method = "ML")
-MM1_noremoval <- lme(sqrt(gr_17_over_16) ~ ht_cm + species + shrub_species + shrubarea, random =~1|island, method = "ML",data = df)
-anova(MM1, MM1_noremoval)
-```
-
-### Residuals
-```{r}
-E <- residuals(MM1)
-pred <- predict(MM1)
-plot(MM1, which=c(1))
-plot(df$shrubs, E)
-plot(df$species, E)
-plot(df$shrub_species, E)
-```
-
-## Outlier: Strangely low growth in 2016 - throw it out 
-```{r}
-df <- df[E<1.3,]
-```
-
-
-## Re-run analyses
-
-### No random effect
-```{r}
-LM1 <- lm(sqrt(gr_17_over_16) ~ shrubs + ht_cm +  species + shrub_species + shrubarea + shrubs:species + shrubs:shrub_species + shrubs:ht_cm, data = df)
-LM1_noremoval <- lm(sqrt(gr_17_over_16) ~ ht_cm + species + shrub_species + shrubarea, data = df)
-drop1(LM1, test = "F")
-anova(LM1, LM1_noremoval)
-AIC(LM1)
-```
-
-### Mixed effects with island effect
-```{r}
-MM1 <- lme(sqrt(gr_17_over_16) ~ shrubs + ht_cm +  species + shrubarea + shrub_species + shrubs:species + shrubs:shrub_species + shrubs:ht_cm, random =~1|island, data = df, method = "ML")
-MM1_noremoval <- lme(sqrt(gr_17_over_16) ~ ht_cm + species + shrub_species + shrubarea, random =~1|island, method = "ML",data = df)
-anova(MM1, MM1_noremoval)
-```
-
-
-
-# Result: shrub removal POSITIVELY affected seedling vertical growth
-
-# Plot predictions
-
-### Create MyData
-```{r}
-MyData <- expand.grid(shrubs = c("retained", "removed"), ht_cm = c(seq(10,300, length = 20)), species = c("ABCO", "PIPO"), shrub_species = c("CEIN","CECO","ARPA"), shrubarea = seq(33000,120000, length = 20))
-```
-
-## Mixed effects model with island effect
+# Mixed effects linear model with island random effect
 
 ```{r}
-MyData$predMM <- predict(MM1, level = 0, newdata = MyData)
+ABCO_lm <- lme(relative_growth ~ shrubs*pre_post, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
+anova(ABCO_lm)
 ```
 
-### Overall effect
+## Check for  height effect
 ```{r}
-MyData_summary <- MyData %>% 
-  group_by(shrubs, shrub_species, species) %>% 
-  summarise(mean_predMM = mean(predMM))
-
-figure <- ggplot(MyData_summary,aes(x = shrubs, y = (mean_predMM)^2)) +
-  geom_point(aes(col = species, shape = shrub_species), size = 2)+
-  geom_line(aes(col = species, linetype = shrub_species, group = interaction(shrub_species, species)))+
-  theme_bw()+
-  scale_color_manual(values=c("#1a9850", "#d73027"))+
-  labs(y = expression(paste("predicted  ", frac("2017 relative vertical growth","2016 relative vertical growth"))))+
-  ggtitle("Removal plots had lower relative vertical growth")
-figure
-setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
-png("vert_growth.png")
-figure
-dev.off()
+ggplot(dfg2 %>% filter(species == "ABCO"))+
+  geom_point(aes(x = height_2016, y = relative_growth))
 ```
 
-### Plot effect of height
 ```{r}
-MyData$ht_cm <- as.numeric(paste(MyData$ht_cm))
-ggplot(MyData)+
-  geom_line(aes(x = ht_cm, y = (predMM^2), group = interaction(shrub_species, shrubs, species, shrubarea), col = interaction(species, shrub_species), linetype = shrubs))+
-  scale_color_manual(values = c('#d73027','#66bd63','#f46d43','#a6d96a','#fdae61','#1a9850'))+
-  theme_bw()+
-  ggtitle("The effect of removal was stronger for larger seedlings")+
-  labs(y = expression(paste("Predicted  ", frac("2017 relative vertical growth","2016 relative vertical growth"))))+
-  labs(x = "Seedling height in 2017 (cm)")
+ABCO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
+anova(ABCO_lm, ABCO_lm_ht)
+AIC(ABCO_lm_ht)
+AIC(ABCO_lm)
 ```
 
-The taller the seedling, the greater effect of removal. Huh!
+I DO need to include height
 
-### Effect of pre-treatment shrub cover was small within the range sampled
+## Check for height interaction
 ```{r}
-MyData_shrubarea_summary <- MyData %>% 
-  group_by(species, shrubs, shrubarea) %>% 
-  summarise(predMM = mean(predMM))
-ggplot(MyData_shrubarea_summary)+
-  geom_line(aes(x = shrubarea, y = (predMM^2), group = interaction(shrubs, species), linetype = shrubs, col = species))
+ABCO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_int)
+AIC(ABCO_lm_int)
+AIC(ABCO_lm_ht)
 ```
 
-#Save final data frame
+I DO need to include a shrub*height interaction
+
+
+## Check for diameter effect
 ```{r}
-save(df, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert_final.Rdata")
+ABCO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_dia)
+AIC(ABCO_lm_ht)
+AIC(ABCO_lm_dia)
 ```
 
+I should NOT include diameter
+
+## Test for shrub effect in model with interaction - the true test for BACI
+```{r}
+ABCO_lm_noshrub <- lme(relative_growth ~ pre_post + shrubs+height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+AIC(ABCO_lm_noshrub)
+AIC(ABCO_lm_ht)
+anova(ABCO_lm_noshrub, ABCO_lm_ht)
+```
+
+NO significant effect
+
+## Visual
+```{r}
+plot(predictorEffect("shrubs", ABCO_lm_ht))
+plot(predictorEffect("pre_post", ABCO_lm_ht))
+drop1(ABCO_lm_ht, test = "Chisq")
+```
+
+### Make a prettier graph in ggplot
+
+```{r}
+effects_dfg2 <- as.data.frame(predictorEffect("pre_post", ABCO_lm_ht))
+effects_dfg2 <- effects_dfg2 %>% 
+  mutate(pre_post = ifelse(pre_post == "pre_removal_growth_rel", "before", "after"))
+effects_dfg2 <- effects_dfg2 %>% 
+  mutate(pre_post = as.factor(pre_post))
+```
+
+#### Reorder levels
+```{r}
+levels(effects_dfg2$pre_post)
+effects_dfg2$pre_post = factor(effects_dfg2$pre_post,levels(effects_dfg2$pre_post)[c(2,1)])
+levels(effects_dfg2$pre_post)
+```
+
+#### Graph with reverse log transformed
+```{r}
+ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrubs))+
+  geom_point()+
+  geom_line()+
+  ylab("predicted relative growth rate")+
+  geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
+  ggtitle("ABCO shrub removal effects")+
+  xlab("timing relative to shrub removal")+
+  theme(legend.position = c(0.8, 0.8))
+```
+
+### Save graph
+```{r}
+ggsave(file = "../../../results/figures/ShrubExperiment/FirVertBACI.png", width = 6, height = 5, dpi = 400)
+```
+
+
+# BACI ANALYSIS FOR PINES for 2018 GROWTH
+
+# Restructure
+```{r}
+dfg2 <- gather(df, key = "pre_post", value = "relative_growth", c("growth_rel_2018", "pre_removal_growth_rel"))
+dfg2 <- dfg2 %>% 
+  mutate(pre_post = as.factor(paste(pre_post)))
+```
+
+```{r}
+ggplot(dfg2 %>% filter(species == "PIPO"))+
+  geom_boxplot(aes(x = interaction(shrubs, pre_post), y = relative_growth))
+```
+
+# Mixed effects linear model with island random effect
+
+```{r}
+PIPO_lm <- lme(relative_growth ~ shrubs*pre_post, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
+anova(PIPO_lm)
+```
+
+## Check for  height effect
+```{r}
+ggplot(dfg2 %>% filter(species == "PIPO"))+
+  geom_point(aes(x = height_2016, y = relative_growth))
+```
+
+```{r}
+PIPO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
+anova(PIPO_lm, PIPO_lm_ht)
+AIC(PIPO_lm_ht)
+AIC(PIPO_lm)
+```
+
+I DO need to include height
+
+## Check for height interaction
+```{r}
+PIPO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
+anova(PIPO_lm_ht, PIPO_lm_int)
+AIC(PIPO_lm_int)
+AIC(PIPO_lm_ht)
+```
+
+I DO NOT need to include a shrub*height interaction
+
+
+## Check for diameter effect
+```{r}
+PIPO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+anova(PIPO_lm_ht, PIPO_lm_dia)
+AIC(PIPO_lm_ht)
+AIC(PIPO_lm_dia)
+```
+
+I SHOULD include diameter
+
+## Test for shrub effect in model with interaction - the true test for BACI
+```{r}
+PIPO_lm_noshrub <- lme(relative_growth ~ pre_post + shrubs+height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+AIC(PIPO_lm_noshrub)
+AIC(PIPO_lm_dia)
+anova(PIPO_lm_noshrub, PIPO_lm_dia)
+```
+
+NO significant effect
+
+## Visual
+```{r}
+plot(predictorEffect("shrubs", PIPO_lm_dia))
+plot(predictorEffect("pre_post", PIPO_lm_dia))
+drop1(PIPO_lm_dia, test = "Chisq")
+```
+
+### Make a prettier graph in ggplot
+
+```{r}
+effects_dfg2 <- as.data.frame(predictorEffect("pre_post", PIPO_lm_dia))
+effects_dfg2 <- effects_dfg2 %>% 
+  mutate(pre_post = ifelse(pre_post == "pre_removal_growth_rel", "before", "after"))
+effects_dfg2 <- effects_dfg2 %>% 
+  mutate(pre_post = as.factor(pre_post))
+```
+
+#### Reorder levels
+```{r}
+levels(effects_dfg2$pre_post)
+effects_dfg2$pre_post = factor(effects_dfg2$pre_post,levels(effects_dfg2$pre_post)[c(2,1)])
+levels(effects_dfg2$pre_post)
+```
+
+#### Graph with reverse log transformed
+```{r}
+ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrubs))+
+  geom_point()+
+  geom_line()+
+  ylab("predicted relative growth rate")+
+  geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
+  ggtitle("PIPO shrub removal effects")+
+  xlab("timing relative to shrub removal")+
+  theme(legend.position = c(0.8, 0.8))
+```
+
+
+### Save graph
+```{r}
+ggsave(file = "../../../results/figures/ShrubExperiment/PineVertBACI.png", width = 6, height = 5, dpi = 400)
+```

@@ -1,0 +1,292 @@
+---
+title: "Shrub removal experiment - Analyze vertical growth"
+author: "Carmen"
+date: "April 18, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+This code analyzes how shrub removal affected seedling vertical growth.
+
+```{r, include = F}
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(nlme)
+library(effects)
+```
+
+# Load data
+```{r}
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df2018.Rdata")
+load("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_vert.Rdata")
+df17 <- tbl_df(df_vert)
+remove(df_vert)
+df18 <- tbl_df(df18)
+```
+
+## Remove and rename some columns
+```{r}
+df17 <- df17 %>% 
+  mutate(dia17_mm_Aug = (Aug_dia_1_mm + Aug_dia_2_mm)/2) %>% 
+  select(-Aug_dia_1_mm, -Aug_dia_2_mm, -spring_dia_1_mm, -spring_dia_2_mm)
+```
+
+### Check
+```{r}
+head(df17 %>% arrange(plot) %>% arrange(compartment) %>% arrange(island) %>% arrange(sdlg)  %>% select(sdlg, compartment,island, plot,dia17_mm_Aug))
+
+head(df18 %>% arrange(island) %>% arrange(plot) %>% arrange(compartment) %>% arrange(island) %>%  arrange(SEEDLING) %>% select(SEEDLING, compartment,island,plot, bas_dia_mm_1,bas_dia_mm_1))
+```
+
+```{r}
+df18 <- df18 %>% 
+  mutate(dia18_mm = (bas_dia_mm_1 + bas_dia_mm_2)/2) %>% 
+  select(-bas_dia_mm_1, -bas_dia_mm_2)
+```
+
+# Combine with 2017 data
+
+## Make unique sdlg IDs for df17 and df18
+```{r}
+df17 <- df17 %>% 
+  mutate(SdlgID = paste(compartment, island, plot, "_",sdlg, sep = "")) %>% 
+  select(SdlgID, everything())
+df17[1:5]
+```
+
+```{r}
+df18 <- df18 %>% 
+  mutate(SdlgID = paste(compartment, island, plot, "_",SEEDLING, sep = "")) %>% 
+  select(SdlgID, everything())
+df18[1:5]
+```
+
+## Check for repeat seedlings
+```{r}
+df17 %>% 
+  group_by(SdlgID) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 1) %>% 
+  select(SdlgID, notes.spring, notes.Aug) %>% 
+  arrange(SdlgID)
+```
+
+```{r}
+df18 %>% 
+  group_by(SdlgID) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 1) %>% 
+  select(SdlgID, notes_2018) %>% 
+  arrange(SdlgID)
+```
+
+### Make trees with two stems into different trees with different sdlg numbers
+
+#### Figure out which stem in 2018 aligns with which stem in 2017
+```{r}
+df18 %>% 
+  filter(SdlgID == "180J1_20")
+df17 %>% 
+  filter(SdlgID == "180J1_20")
+
+```
+
+##### 180J1_20
+```{r}
+df17 <- df17 %>% 
+  mutate(SdlgID = ifelse(SdlgID == "180J1_20" & notes.Aug == "first stem", "180J1_20A", SdlgID)) %>% 
+  mutate(SdlgID = ifelse(SdlgID == "180J1_20" & notes.Aug == "second stem", "180J1_20B", SdlgID))
+df17 %>% filter(sdlg == 20 & plot == 1 & island == "J" & compartment == 180) %>% select(1:5, gr_2017_cm, notes.Aug)
+```
+
+```{r}
+df18 <- df18 %>% 
+  mutate(SdlgID = ifelse(SdlgID == "180J1_20" & notes_2017 == "first stem", "180J1_20A", SdlgID)) %>%
+  mutate(SdlgID = ifelse(SdlgID == "180J1_20" & notes_2017 == "second stem", "180J1_20B", SdlgID))
+df18 %>% filter(SEEDLING == 20 & plot == 1 & island == "J" & compartment == 180) %>% select(1:5, gr_2017_cm, notes_2017)
+```
+
+##### 180G2_118
+```{r}
+df18 %>% 
+  filter(SdlgID == "180G2_118") %>% 
+  select(SdlgID, SEEDLING, notes_2017, ht_cm_2017) %>% 
+  arrange(SdlgID)
+```
+
+```{r}
+df17 %>% 
+  filter(SdlgID %in% c("180G2_118A","180G2_118B")) %>% 
+  select(SdlgID, ht_cm) %>% 
+  arrange(SdlgID)
+```
+
+```{r}
+df18 <- df18 %>% 
+  mutate(SdlgID = ifelse(SdlgID == "180G2_118" & ht_cm_2017==31, "180G2_118A", SdlgID)) %>% 
+  mutate(SdlgID = ifelse(SdlgID == "180G2_118" & ht_cm_2017==28, "180G2_118B", SdlgID))
+```
+
+```{r}
+df18 %>% filter(SdlgID == "180C1_100")
+df18 <- df18 %>% 
+  mutate(SEEDLING = ifelse(SdlgID =="180G2_118A", "118A", paste(SEEDLING))) %>% 
+  mutate(SEEDLING = ifelse(SdlgID =="180G2_118B", "118B", paste(SEEDLING))) 
+
+df18 %>% filter(SdlgID == "180C1_100")
+```
+
+
+## Combine
+```{r}
+df18 <- df18 %>% 
+  rename(sdlg = SEEDLING) %>% 
+  rename(leader_damage18 = leader_damage) %>% 
+  select(-ht_cm_2017, -gr_2017_cm, -notes_2017)
+df17 <- df17 %>% 
+  mutate(compartment = as.factor(compartment)) %>% 
+  mutate(plot = as.factor(plot)) %>% 
+  mutate(sdlg = as.factor(sdlg)) %>% 
+  mutate(leader_damage = as.factor(leader_damage)) %>% 
+  rename(leader_damage17 = leader_damage) %>% 
+  rename(ht_cm_2017 = ht_cm) %>% 
+  rename(notes.Aug17 = notes.Aug) %>% 
+  rename(notes.spring17 = notes.spring)
+df <- full_join(df18, df17)
+df <- df %>% 
+  mutate(shrubs = as.factor(shrubs))
+```
+
+**"Joining, by = c("compartment", "island", "plot", "sdlg", "species")**
+
+# Make things factors
+```{r}
+df <- df %>% 
+  mutate(species = as.factor(species)) %>% 
+  mutate(island = as.factor(island))
+```
+
+# Take out seedlings that were dead in 2017
+```{r}
+df <- df %>% 
+  filter(dead2017== "A")
+```
+
+# Take out seedlings that aren't ABCO or PIPO
+```{r}
+df <- df %>% 
+  filter(species %in% c("ABCO", "PIPO"))
+```
+
+
+# Take out seedlings with broken leaders in 2017 or 2016, unless it died after growth was complete
+
+The way I leave in the seadling that died after growth was complete is by not listing its `lead_damage` record below, which was `20172016,2015`
+
+### leader_damage18
+
+#### Add leader damage that was recorded in notes
+```{r}
+df <- df %>% 
+  mutate(leader_damage18 = ifelse(notes_2018 == "bad leader, not recorded", "2018", leader_damage18))
+```
+
+```{r}
+summary(as.factor(df$leader_damage18))
+df %>% filter(!is.na(leader_damage18) & leader_damage18 != 0)
+df <- df %>% 
+  filter(!leader_damage18 %in% c("2016", "2017", "2016,2017", "2017 and 2016", "2017,2015", "2017,2016", "gall in 2016 growth", "2014 2018", "2018", "2017 2018", "2017, 2018", "20172016,2015", "2015, 2017", "0 2018"))
+df <- droplevels(df)
+summary(as.factor(df$leader_damage18))
+```
+
+### leader_damage17
+```{r}
+summary(as.factor(df$leader_damage17))
+df <- df %>% 
+  filter(!leader_damage17 %in% c("2016", "2017", "20172016,2015", "2016,2017"))
+df <- droplevels(df)
+summary(as.factor(df$leader_damage17))
+```
+
+# Take out thrown_out seedling
+```{r}
+df <- df %>% 
+  filter(thrown_out != 1)
+```
+
+# Look at seedlings with bad 2018 growth
+```{r}
+df %>% filter(is.na(gr_2018_cm))
+```
+
+# Calculate total growth
+```{r}
+df <- df %>% 
+  mutate(height_2018 = ht_cm_2017+gr_2018_cm) %>% 
+  mutate(height_2016 = ht_cm_2017-gr_2017_cm) %>% 
+   mutate(height_2015 = height_2016 - gr_2016_cm) %>% 
+  mutate(height_2014 = height_2016 - gr_2016_cm - gr_2015_cm) %>% 
+   mutate(growth_rel_2017 = (ht_cm_2017-height_2016)/height_2016) %>% 
+  mutate(growth_rel_2018 = (height_2018-ht_cm_2017)/ht_cm_2017) %>% 
+  mutate(growth_rel_2015 = (height_2015-height_2014)/height_2014) %>% 
+  mutate(growth_rel_2016 = (height_2016-height_2015)/height_2015) %>% 
+  mutate(post_removal_growth_rel = (growth_rel_2017+growth_rel_2018)/2) %>% 
+  mutate(pre_removal_growth_rel = (growth_rel_2016+growth_rel_2015)/2) %>% 
+  mutate(pre_removal_growth_rel = log(pre_removal_growth_rel)) %>% 
+  mutate(post_removal_growth_rel = log(post_removal_growth_rel)) %>% 
+  mutate(growth_rel_2018 = log(growth_rel_2018))
+```
+
+# Check seedlings with 0 height in 2014
+```{r}
+df %>% filter(height_2014==0) %>% 
+  select(height_2018, height_2016, ht_cm_2017, height_2014, gr_2015_cm, gr_2016_cm, gr_2017_cm, gr_2018_cm, notes.Aug17)
+```
+
+## It looks like it wasn't alive in 2014. I'll just delete it. 
+```{r}
+df <- df %>% 
+  filter(height_2014>0)
+```
+
+
+# Remove if the seedling was dead or otherwise didn't have 2018 growth
+```{r}
+df <- df %>% 
+ filter(dead2018 != "D")
+```
+
+## Check
+```{r}
+df %>% filter(is.na(post_removal_growth_rel))
+```
+
+```{r}
+df %>% filter(is.na(pre_removal_growth_rel))
+```
+
+# Take a look
+```{r}
+ggplot(df %>% filter(species == "ABCO" & !is.na(shrubs)))+
+  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
+  
+```
+
+```{r}
+ggplot(df %>% filter(species == "PIPO" & !is.na(shrubs)))+
+  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
+```
+
+```{r}
+ggplot(df %>% filter(species == "PIPO" & !is.na(shrubs)))+
+  geom_boxplot(aes(x = shrubs, y = pre_removal_growth_rel))
+```
+
+# Save data
+```{r}
+save(df, file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
+```
+

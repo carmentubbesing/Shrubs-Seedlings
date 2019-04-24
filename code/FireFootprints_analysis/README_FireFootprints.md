@@ -82,6 +82,11 @@ Files are dependent in the following order:
     * `~/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vol.Rdata`
 
 ## 3. Main analyses
+#### **Pinus_vertical_growth**
+* uses:
+    * `master_seedlings_vert.Rdata`
+
+
 #### **Fir_vol_growth_analysis**
 * does:
     * filter to seedlings that have data for both vertical growth and diameter growth

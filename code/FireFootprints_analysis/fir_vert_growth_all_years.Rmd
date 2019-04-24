@@ -27,6 +27,7 @@ set.seed(333)
 
 # Load data
 ```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
@@ -66,6 +67,11 @@ ggplot(df)+
   geom_boxplot(aes(y = VertGrowth_Rel))
 ```
 
+## Take out rows with Inf log(VertGrowth) because growth = 0 cm
+```{r}
+df <- df %>% 
+  filter(is.finite(df$VertGrowth_Rel))
+```
 
 # Apply VSURF
 
@@ -76,7 +82,7 @@ xdf <- df %>%
          Slope.Deg,
          Aspect.rad.fold.NESW,
          Years,
-         Ht_cm,
+         Ht_cm1,
          shrubarea1,
          shrubarea2, 
          shrubarea3,
@@ -114,17 +120,25 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Run a random forest on the ones that come up to see whether to delete heatload or incidrad
+## Run 100 random forests on the ones that come up to see whether to delete heatload or incidrad
 ```{r}
-forest <- randomForest(x = xdf %>% select(heatload, Years, Ht_cm, incidrad, shrubarea3, Ht1.2, Aspect.rad.fold.NESW), 
-                       y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-varImpPlot(forest)
+forests100 <- function(vars){
+  forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, Ht1.3,incidrad, Ht1.2, BasDia2016.cm), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+  forest$importance
+  imp <- as.data.frame(forest$importance) 
+  imp$var <- row.names(imp)
+  imp <- imp %>% filter(var %in% vars)
+  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
+}
+forests100(c("heatload", "incirad"))
+reps <- replicate(100, forests10(c("heatload", "incirad")))
+summary(as.factor(unlist(reps)))
 ```
 
-### Delete incidrad and aspect based on the results of the above randomforest
+### Delete incidrad based on the results of the above randomforests
 ```{r}
 xdf <- xdf %>% 
-  select(-incidrad, -Aspect.rad.fold.NESW)
+  select(-incidrad)
 ```
 
 ### Then run VSURF again
@@ -135,31 +149,11 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Repeat for shrubarea3, Ht1.2, and Cov1.3
+## Delete Aspect since it wasn't in the initial comparison of heatload and incidrad, and then run vsurf again
 
-```{r}
-ggplot(xdf, aes(x = shrubarea3, y = Ht1.2))+
-  geom_point()+
-  geom_smooth(method = "lm")
-summary(lm(shrubarea3 ~ Ht1.2, data = xdf))
-summary(lm(shrubarea3 ~ Cov1.3, data = xdf))
-```
-
-### Run a random forest
-```{r}
-forest <- randomForest(
-  x = xdf %>% 
-    select(heatload, Years, Ht_cm, shrubarea3, Cov1.3, Ht1.2, Slope.Deg, Elevation), 
-  y = df$VertGrowth_Rel, 
-  importance = TRUE, 
-  scale = TRUE)
-varImpPlot(forest)
-```
-
-### Delete HT1.2 based on the results of the above randomforest
 ```{r}
 xdf <- xdf %>% 
-  select(-Ht1.2)
+  select(-Aspect.rad.fold.NESW)
 ```
 
 ### Then run VSURF again

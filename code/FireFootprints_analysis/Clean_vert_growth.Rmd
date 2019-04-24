@@ -9,18 +9,13 @@ output:
 ---
 
 ```{r, include = F}
-require(nlme)
-require(randomForest)
-require(tree)
-require(knitr)
 require(tidyverse)
 require(ggplot2)
-require(VSURF)
-require(effects)
 ```
 
 # Load data
 ```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
@@ -169,10 +164,15 @@ df %>%
   summarize(n())
 ```
 
-# Calculate relative vertical growth = ln(ht2) - ln(ht1)
+# Calculate relative vertical growth 
 ```{r}
+df %>% select(Sdlg, Year, Ht_cm, VertGrowth_cm) %>% arrange(Sdlg)
 df <- df %>% 
-  mutate(VertGrowth_Rel = log(Ht_cm) - log(Ht_cm - VertGrowth_cm))
+  rename(Ht_cm1 = Ht_cm) %>% 
+  mutate(Ht_cm2 = Ht_cm1+VertGrowth_cm) %>% 
+  mutate(VertGrowth_Rel = (Ht_cm2 - Ht_cm1)/Ht_cm1) %>% 
+  mutate(VertGrowth_Rel = log(VertGrowth_Rel))
+df %>% select(Sdlg, Year, Ht_cm1, Ht_cm2, VertGrowth_cm, VertGrowth_Rel) %>% arrange(Sdlg)
 ```
 
 # Consolidate shrub species into fewer categories 
