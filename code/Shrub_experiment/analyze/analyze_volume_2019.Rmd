@@ -1,0 +1,280 @@
+---
+title: "analyze_volume_2019"
+author: "Carmen"
+date: "April 23, 2019"
+output: html_document
+---
+
+
+```{r, include = F}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(nlme)
+library(effects)
+```
+
+# Load data
+
+```{r}
+setwd("~/Shrubs-Seedlings/code/Shrub_experiment/analyze/")
+load(file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
+```
+
+```{r}
+df %>% arrange(SdlgID) %>% select(1:5)
+```
+
+# Calculate volume
+
+Note: all heights represent the height at the END of the growing season
+
+Assuming parabolic cone shape (https://www.grc.nasa.gov/www/k-12/airplane/volume.html)
+```{r}
+df <- df %>% 
+  mutate(vol_Aug17_cm2 = (2*pi*((dia17_mm_Aug/10)^2)*(ht_cm_2017))/15) %>% 
+  mutate(vol_Aug18_cm2 = (2*pi*((dia18_mm/10)^2)*(height_2018))/15) 
+
+hist(log(df$vol_Aug17_cm2))
+hist(log(df$vol_Aug18_cm2))
+
+```
+
+# Calculate relative growth rate using volume
+```{r}
+df <- df %>% 
+  mutate(growth_rel = (vol_Aug18_cm2 - vol_Aug17_cm2)/vol_Aug17_cm2)
+hist(df$growth_rel, breaks = 50)
+hist(log(df$growth_rel), breaks = 50)
+
+```
+
+NOTE: There are 0 values and negative values for growth. This makes it hard to ln transform the response variable, which is what I did for the fire footprints analysis.
+
+# Mixed effects linear model with island random effect
+
+```{r}
+pipo_lm <- lme( growth_rel ~ shrubs, random = ~ 1|island, data = df %>% filter(species == "PIPO"), method = "ML")
+summary(pipo_lm)
+anova(pipo_lm)
+```
+
+
+```{r}
+pipo_lm <- lme( growth_rel ~ shrubs,  data = df %>% filter(species == "PIPO"), method = "ML")
+summary(pipo_lm)
+anova(pipo_lm)
+```
+
+## Check whether to include height
+```{r}
+pipo_lm_ht <- lme( growth_rel ~ shrubs+ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+anova(pipo_lm, pipo_lm_ht)
+```
+
+No.
+
+## Check for interaction between shrubs and height
+```{r}
+pipo_lm_int <- lme( growth_rel ~ shrubs*ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+anova(pipo_lm, pipo_lm_int)
+```
+
+No.
+
+## Check for diameter effect
+```{r}
+pipo_lm_dia <- lme( growth_rel ~ shrubs + dia17_mm_Aug,random = ~ 1|island,  data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+anova(pipo_lm, pipo_lm_dia)
+```
+
+No. 
+
+```{r}
+pipo_lm_dia <- lme( growth_rel ~ shrubs * dia17_mm_Aug,random = ~ 1|island,  data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+anova(pipo_lm, pipo_lm_dia)
+```
+
+No. 
+
+## Test for shrub effect in best model
+```{r}
+pipo_lm_noshrub <- lme( growth_rel ~ 1, random = ~ 1|island, data = df %>% filter(species == "PIPO"), method = "ML")
+anova(pipo_lm_noshrub, pipo_lm)
+AIC(pipo_lm_noshrub)
+AIC(pipo_lm)
+```
+
+Yes, there is a shrub effect
+
+### Residuals
+```{r}
+dfpipo <- df %>% filter(species == "PIPO")
+E <- resid(pipo_lm, type = "normalized")
+dfpipo$E <- E
+pred <- predict(pipo_lm)
+dfpipo$pred <- pred
+plot(pipo_lm)
+plot(dfpipo$ht_cm_2017, E)
+ggplot(dfpipo, aes(x = log(dfpipo$vol_Aug17_cm2), y = E))+
+  geom_point()+
+  geom_smooth()
+```
+
+### LOOK AT OUTLIER
+```{r}
+dfpipo %>% filter(E>6) %>% select(SdlgID, dia17_mm_Aug, ht_cm_2017, dia18_mm, height_2018, vol_Aug17_cm2, vol_Aug18_cm2, growth_rel, pred, E)
+```
+
+Seems like it's real data, not an error, so I'm keeping the outlier in.
+
+
+## Visualize shrub effect
+```{r}
+plot(predictorEffect("shrubs", pipo_lm))
+```
+
+#### Graph with ggplot
+```{r}
+effects_df <- as.data.frame(predictorEffect("shrubs", pipo_lm))
+```
+
+```{r}
+ggplot(effects_df, aes(x = shrubs, y = fit))+
+  geom_point()+
+  geom_line()+
+  ylab("predicted relative growth rate")+
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .2)+
+  ggtitle("PIPO shrub removal effects")+
+  ylim(c(0,.8))
+ggsave(file = "../../../results/figures/ShrubExperiment/FirVol.png", width = 3, height = 5, dpi = 400)
+
+```
+
+### Graph raw data with ggplot
+```{r}
+ggplot(dfpipo %>% filter(growth_rel<2), aes(x = shrubs, y = growth_rel))+
+  geom_point()+
+  geom_line(aes(group = interaction(island, compartment)))
+```
+
+### Graph raw data by shrub island 
+```{r}
+df_island <- dfpipo %>% 
+  group_by(island, compartment, shrubs) %>% 
+  summarize(mean_growth_rel = mean(growth_rel), n = n()) %>% 
+  ungroup() %>% 
+  group_by(compartment, island) %>% 
+  mutate(neg_pos = ifelse(shrubs=="removed"))
+
+df_island %>% 
+  ungroup() %>% 
+  group_by(compartment, island) %>% 
+  filter((mean_growth_rel | shrubs=="removed")>.2) %>% 
+  filter(shrubs == "removed") %>% 
+  summarize(min(mean_growth_rel))
+
+
+
+ggplot(df_island, aes(x = shrubs, y = mean_growth_rel))+
+  geom_point(aes(alpha = n))+
+  geom_line(aes(group = interaction(island, compartment), alpha = n))
+```
+
+```{r}
+df_island <- dfpipo %>% 
+  group_by(island, compartment, shrubs) %>% 
+  summarize(mean_growth_rel = mean(growth_rel), n = n())
+
+```
+
+
+# REPEAT FOR FIRS
+
+# Mixed effects linear model with island random effect
+
+```{r}
+ABCO_lm <- lme( growth_rel ~ shrubs, random = ~ 1|island, data = df %>% filter(species == "ABCO"), method = "ML")
+anova(ABCO_lm)
+```
+
+## Check whether to include height
+```{r}
+ABCO_lm_ht <- lme(growth_rel ~ shrubs+ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "ABCO"), method = "ML")
+anova(ABCO_lm, ABCO_lm_ht)
+AIC(ABCO_lm_ht)
+AIC(ABCO_lm)
+```
+
+YES
+
+## Check for interaction between shrubs and height
+```{r}
+ABCO_lm_int <- lme( growth_rel ~ shrubs + ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_int)
+```
+
+NO
+
+## Check for diameter effect
+```{r}
+ABCO_lm_dia <- lme( growth_rel ~ shrubs+ ht_cm_2017 + dia17_mm_Aug,random = ~ 1|island,  data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+summary(ABCO_lm_dia)
+anova(ABCO_lm_dia)
+anova(ABCO_lm_ht, ABCO_lm_dia)
+```
+
+YES, but it's borderline
+
+## Test for shrub effect in best model 
+```{r}
+ABCO_lm_noshrub <- lme( growth_rel ~ ht_cm_2017 + dia17_mm_Aug, random = ~ 1|island, data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+anova(ABCO_lm_noshrub, ABCO_lm_dia)
+AIC(ABCO_lm_noshrub)
+AIC(ABCO_lm_dia)
+```
+
+YES, there is a significant effect.
+
+### Residuals
+```{r}
+dfABCO <- df %>% filter(species == "ABCO")
+E <- resid(ABCO_lm, type = "normalized")
+dfABCO$E <- E
+pred <- predict(ABCO_lm)
+dfABCO$pred <- pred
+plot(ABCO_lm)
+plot(dfABCO$ht_cm_2017, E)
+ggplot(dfABCO, aes(x = vol_Aug17_cm2, y = E))+
+  geom_point()+
+  geom_smooth()
+```
+
+### lOOK AT OUTLIER
+```{r}
+dfABCO %>% filter(vol_Aug17_cm2>1000) %>% select(SdlgID, dia17_mm_Aug, ht_cm_2017, dia18_mm, height_2018, vol_Aug17_cm2, vol_Aug18_cm2, growth_rel, pred, E)
+```
+
+
+## Visual
+```{r}
+plot(predictorEffect("shrubs", ABCO_lm_dia))
+plot(predictorEffect("dia17_mm_Aug", ABCO_lm_dia))
+plot(predictorEffect("ht_cm_2017", ABCO_lm_dia))
+
+```
+
+#### Graph with ggplot
+```{r}
+effects_df <- as.data.frame(predictorEffect("shrubs", ABCO_lm))
+```
+
+```{r}
+ggplot(effects_df, aes(x = shrubs, y = fit, col = shrubs))+
+  geom_point()+
+  geom_line()+
+  ylab("predicted relative growth rate")+
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .2)+
+  ggtitle("ABCO shrub removal effects")+
+  ylim(c(0,.8))
+```
