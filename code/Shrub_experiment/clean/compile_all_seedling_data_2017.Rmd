@@ -18,10 +18,9 @@ library(ggplot2)
 
 # Pull in data
 ```{r}
-setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/")
-dfsp_plots <- read_excel("Spring_seedling_data_compiled_20171107.xlsx", sheet = 1)
-dfsp <- read_excel("Spring_seedling_data_compiled_20171107.xlsx", sheet = "dia")
-dfAu <- read_excel("Aug_seedling_data_compiled_110717.xlsx", sheet = "data")
+dfsp_plots <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Spring_seedling_data_compiled_20171107.xlsx", sheet = 1)
+dfsp <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Spring_seedling_data_compiled_20171107.xlsx", sheet = "dia")
+dfAu <- read_excel("~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Seedling_vert_Aug_2017_compiled_110717.xlsx", sheet = "data")
 ```
 
 # Make all island names uppercase
@@ -30,9 +29,38 @@ dfsp <- dfsp %>% mutate(island = toupper(island))
 dfAu <- dfAu %>% mutate(island = toupper(island))
 ```
 
-# Overall cleaning not specific to vert or dia
- 
-## Combine spring and August data
+
+# Combine spring and August data
+
+## Check and correct for trees with two stems
+```{r}
+dfAu %>% 
+  group_by(compartment, island, plot, `seedling tag #`) %>% 
+  mutate(n = n()) %>% 
+  filter(n>1)
+```
+
+```{r}
+dfAu %>% filter(compartment == 180 & island == "G" & plot == 2 & `seedling tag #` == 118 & notes == "first stem")
+dfAu <- dfAu %>% 
+  mutate(`seedling tag #` = ifelse(compartment == 180 & island == "G" & plot == 2 & `seedling tag #` == 118 & notes == "first stem", "118A", `seedling tag #`)) %>% 
+    mutate(`seedling tag #` = ifelse(compartment == 180 & island == "G" & plot == 2 & `seedling tag #` == 118 & notes == "second stem", "118B", `seedling tag #`))
+dfAu %>% filter(compartment == 180 & island == "G" & plot == 2 )
+```
+
+```{r}
+new_row <- dfsp %>%  
+  filter(compartment == 180 & island == "G" & plot == 2 & `seedling tag #` == 118) %>% 
+  mutate(`seedling tag #`=c("118A"))
+new_row
+dfsp <- dfsp %>% 
+  mutate(`seedling tag #` = ifelse(compartment == 180 & island == "G" & plot == 2 & `seedling tag #` == 118, "118B", `seedling tag #`))
+dfsp <- bind_rows(dfsp, new_row)
+dfsp %>% 
+  filter(compartment == 180 & island == "G" & plot == 2 )
+```
+
+## Combine data frame
 ```{r}
 dfsp
 nrow(dfsp)
@@ -45,6 +73,15 @@ df <- full_join(dfsp, dfAu, by = c("compartment", "island", "plot", "seedling ta
 nrow(df)
 str(df)
 ```
+
+## CHeck the two stemmers
+```{r}
+df %>% 
+  filter(compartment == 180 & island == "G" & plot == 2 )
+```
+
+
+# Overall cleaning not specific to vert or dia
 
 ## Rename columns
 ```{r}
@@ -121,7 +158,6 @@ filter(df, sdlg == 21)
 save(df, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df_unedited.Rdata")
 ```
 
-
 ### Seedlings with a comment to throw them out
 ```{r}
 npre <- nrow(df)
@@ -196,7 +232,6 @@ I looked at the original data sheets for all 3 of the seedlings missing spring d
 ## Calculate diameter growth and relative diameter growth
 ```{r}
 df_dia <- df_dia %>% 
-
   mutate(dia_growth_mm = Aug_dia_ave_mm - spring_dia_ave_mm) %>% 
   mutate(dia_growth_rel = dia_growth_mm/(spring_dia_ave_mm))
 ```
@@ -213,109 +248,12 @@ npost <- nrow(df_dia)
 
 ### This removed `r npre-npost` seedlings, bringing the total to `r npost`.
 
-## Plot diameter growth in relation to treatment, shrub species, and tree species
-```{r}
-dia_growth_boxplots <- ggplot(data = df_dia)+
-  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = dia_growth_rel, col = shrubs))
-dia_growth_boxplots
-df_dia %>% 
-  group_by(species, shrub_species, shrubs) %>% 
-  summarise(mean(dia_growth_rel), median(dia_growth_rel))
-setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
-png("dia_growth_boxplots.jpeg", width = 1500, height = 450, res = 72)
-dia_growth_boxplots
-dev.off()
-```
+# Establish df_Vert
 
 ```{r}
-ggplot(data = df_dia)+
-  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = dia_growth_rel, col = shrubs))
-figure <- ggplot(data = df_dia)+
-  geom_boxplot(aes(x = interaction(shrubs, species), y = dia_growth_rel, col = shrubs))+
-  labs(y = "2017 relative diameter growth")+
-  ggtitle("Relative diameter growth was higherin removal plots")
-figure
-setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
-png("dia_growth_boxplots_simple.png")
-figure
-dev.off()
+df_vert <- df
 ```
 
-# Vertical growth
-
-## Calculate relative vertical growth for each year
-```{r}
-df_vert <- df %>% 
-  mutate(gr_2017_rel = gr_2017_cm/(ht_cm-gr_2017_cm)) %>% 
-  mutate(gr_2016_rel = gr_2016_cm/(ht_cm - gr_2017_cm - gr_2016_cm)) %>% 
-  mutate(gr_2015_rel = gr_2015_cm/(ht_cm - gr_2017_cm - gr_2016_cm - gr_2015_cm)) 
-```
-
-## Take out seedlings with broken leaders in 2017 or 2016, unless it died after growth was complete
-
-The way I leave in the seadling that died after growth was complete is by not listing its `lead_damage` record below, which was `20172016,2015`
-
-```{r}
-npre <- nrow(df_vert)
-npre
-summary(as.factor(df_vert$leader_damage))
-df_vert %>% filter(!is.na(leader_damage) & leader_damage != 0)
-df_vert <- df_vert %>% 
-  filter(!leader_damage %in% c("2016", "2017", "2016,2017", "2017 and 2016", "2017,2015", "2017,2016", "gall in 2016 growth"))
-npost <- nrow(df_vert)
-npost
-```
-
-### This removed `r npre-npost` trees, bringing the total to `r npost`
-
-## Calculate vertical 2017 growth/2016 growth ratio variable and compare it between treatments
-
-### Check distribution of unaltered relative growth by year
-```{r}
-hist(df_vert$gr_2017_rel)
-hist(log(df_vert$gr_2017_rel))
-hist(df_vert$gr_2017_rel)
-hist(sqrt(df_vert$gr_2017_rel))
-```
-
-### Create gr_17_over_16 variable
-```{r}
-df_vert <- df_vert %>% 
-  mutate(gr_17_over_16 = gr_2017_rel/gr_2016_rel)
-```
-
-### Check distribution
-```{r}
-hist(df_vert$gr_17_over_16)
-hist(log(df_vert$gr_17_over_16)) # don't use log because there are some zeros (plus sqrt transformation is better)
-hist(sqrt(df_vert$gr_17_over_16))
-```
-
-## Check the NA value of `gr_17_over_16` and remove it
-```{r}
-npre <- nrow(df_vert)
-na <- df_vert %>% filter(is.na(gr_17_over_16))
-na
-df_vert <- df_vert %>% filter(!is.na(gr_17_over_16))
-npost <- nrow(df_vert)
-```
-
-### This removed `r npre-npost` trees for the reason: `r na$notes.Aug`, bringing the df_vert total to `r npost`
-
-## Plot vertical growth by treatment type and tree species and save the figure
-```{r}
-ggplot(data = df_vert)+
-  geom_boxplot(aes(x = interaction(shrubs, species, shrub_species), y = sqrt(gr_17_over_16), col = shrubs))
-figure <- ggplot(data = df_vert)+
-  geom_boxplot(aes(x = interaction(shrubs, species), y = sqrt(gr_17_over_16), col = shrubs))+
-  labs(y = "2017 relative growth/2016 relative growth, square root transformed")+
-  ggtitle("Change in vertical growth between 2017 and 2016\nwas lower in removal plots")
-figure
-setwd("~/../Dropbox (Stephens Lab)/Shrub_experiment/results/figures/")
-png("vert_growth_boxplots.png")
-figure
-dev.off()
-```
 
 # Save data frames
 ```{r}

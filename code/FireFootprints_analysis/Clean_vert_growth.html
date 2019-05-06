@@ -217,7 +217,7 @@ $(document).ready(function () {
 <li><a href="#change-years-since-fire-depending-on-year-of-growth">Change years since fire depending on year of growth</a><ul>
 <li><a href="#check">Check</a></li>
 </ul></li>
-<li><a href="#calculate-relative-vertical-growth-lnht2---lnht1">Calculate relative vertical growth = ln(ht2) - ln(ht1)</a></li>
+<li><a href="#calculate-relative-vertical-growth">Calculate relative vertical growth</a></li>
 <li><a href="#consolidate-shrub-species-into-fewer-categories">Consolidate shrub species into fewer categories</a><ul>
 <li><a href="#make-them-factors">Make them factors</a></li>
 </ul></li>
@@ -227,7 +227,8 @@ $(document).ready(function () {
 
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
-<pre class="r"><code>load(file=&quot;../../compiled_data/fire_footprints/master_seedlings2.Rdata&quot;)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
+load(file=&quot;../../compiled_data/fire_footprints/master_seedlings2.Rdata&quot;)</code></pre>
 <pre class="r"><code>head(df)</code></pre>
 <pre><code>##   Sdlg Species Fire FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
 ## 1    2    PIPO CLVD    CLVD-N    143.00       186      1631        18
@@ -613,10 +614,43 @@ df$Year &lt;- as.factor(df$Year)</code></pre>
 ## 15 WRTS      1981 2017     36    13</code></pre>
 </div>
 </div>
-<div id="calculate-relative-vertical-growth-lnht2---lnht1" class="section level1">
-<h1>Calculate relative vertical growth = ln(ht2) - ln(ht1)</h1>
+<div id="calculate-relative-vertical-growth" class="section level1">
+<h1>Calculate relative vertical growth</h1>
+<pre class="r"><code>df %&gt;% select(Sdlg, Year, Ht_cm, VertGrowth_cm) %&gt;% arrange(Sdlg)</code></pre>
+<pre><code>## # A tibble: 590 x 4
+##    Sdlg  Year  Ht_cm VertGrowth_cm
+##    &lt;chr&gt; &lt;fct&gt; &lt;dbl&gt;         &lt;dbl&gt;
+##  1 10    2017  185            14  
+##  2 10    2016  160            25  
+##  3 10    2015  146            23.3
+##  4 100   2015   96.4          20.6
+##  5 103   2015   72.4          29.6
+##  6 104   2017   70             3.9
+##  7 104   2016   56.5          13.5
+##  8 104   2015   52.6          10.8
+##  9 105   2017   32             5.7
+## 10 105   2016   29.9           2.1
+## # ... with 580 more rows</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(VertGrowth_Rel = log(Ht_cm) - log(Ht_cm - VertGrowth_cm))</code></pre>
+  rename(Ht_cm1 = Ht_cm) %&gt;% 
+  mutate(Ht_cm2 = Ht_cm1+VertGrowth_cm) %&gt;% 
+  mutate(VertGrowth_Rel = (Ht_cm2 - Ht_cm1)/Ht_cm1) %&gt;% 
+  mutate(VertGrowth_Rel = log(VertGrowth_Rel))
+df %&gt;% select(Sdlg, Year, Ht_cm1, Ht_cm2, VertGrowth_cm, VertGrowth_Rel) %&gt;% arrange(Sdlg)</code></pre>
+<pre><code>## # A tibble: 590 x 6
+##    Sdlg  Year  Ht_cm1 Ht_cm2 VertGrowth_cm VertGrowth_Rel
+##    &lt;chr&gt; &lt;fct&gt;  &lt;dbl&gt;  &lt;dbl&gt;         &lt;dbl&gt;          &lt;dbl&gt;
+##  1 10    2017   185    199            14           -2.58 
+##  2 10    2016   160    185            25           -1.86 
+##  3 10    2015   146    169.           23.3         -1.84 
+##  4 100   2015    96.4  117            20.6         -1.54 
+##  5 103   2015    72.4  102            29.6         -0.895
+##  6 104   2017    70     73.9           3.9         -2.89 
+##  7 104   2016    56.5   70            13.5         -1.43 
+##  8 104   2015    52.6   63.4          10.8         -1.58 
+##  9 105   2017    32     37.7           5.7         -1.73 
+## 10 105   2016    29.9   32             2.1         -2.66 
+## # ... with 580 more rows</code></pre>
 </div>
 <div id="consolidate-shrub-species-into-fewer-categories" class="section level1">
 <h1>Consolidate shrub species into fewer categories</h1>

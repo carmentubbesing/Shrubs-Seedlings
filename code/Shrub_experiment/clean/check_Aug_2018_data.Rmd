@@ -362,13 +362,12 @@ ggplot(df18) +
 df18 %>% 
   filter(gr_2018_cm/gr_2017_cm > 40) %>% 
   select(compartment, island, plot, SEEDLING, ht_cm_2017, gr_2017_cm, gr_2018_cm, notes_2017, notes_2018)
-```
+``` 
 
 I think this is just because the leader was damaged in 2017, and the growth that year was very small. The growth in 2018 is not crazy relative to height. 
 
 # Save edited data frame
 ```{r}
-save(df18, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/df2018.Rdata")
-write.csv(df18, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/compiled_cleaned_Aug2018.csv", row.names = F)
+save(df18, file = "../../../compiled_data/shrub_experiment/df18.Rdata")
 ```
 

@@ -69,9 +69,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -96,22 +94,92 @@ img {
 button.code-folding-btn:focus {
   outline: none;
 }
+summary {
+  display: list-item;
+}
 </style>
 
 
 
-<div class="container-fluid main-container">
-
 <!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
 <script>
 $(document).ready(function () {
   window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
 });
 </script>
 
 <!-- code folding -->
 
 
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -152,13 +220,16 @@ $(document).ready(function () {
 <li>started with 456</li>
 <li>removing those that said “thrown out” in notes: -13 = 443</li>
 <li>removing dead ones, except the one with a note that it died after completing that year’s growth: -10 = 433</li>
-<li></li>
+</ul></li>
+<li><code>df_dia</code>
+<ul>
+<li>removing those without spring 2017 diameter data: -3 = 430</li>
+<li>removing those with obvious errors in diameter measurements: -3 = 427</li>
 </ul></li>
 <li><code>df_vert</code>
 <ul>
-<li>40 trees removed because of broken leaders</li>
-<li>10 trees removed because they died</li>
-<li>1 tree removed because its vertical growth was an outlier - 380C-2-1</li>
+<li>40 trees removed because of broken leaders = 393</li>
+<li>1 tree removed because 2016 growth was not distinguishable = 392</li>
 </ul></li>
 </ul></li>
 </ul>
@@ -181,12 +252,11 @@ $(document).ready(function () {
 <ul>
 <li>uses:
 <ul>
-<li><code>Seedling_vert_Aug30_2018_1100(4).xlsx</code></li>
-<li></li>
+<li><code>~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Seedling_vert_Aug_2018_compiled.xlsx</code></li>
 </ul></li>
 <li>creates:
 <ul>
-<li><code>t</code></li>
+<li><code>../../../compiled_data/shrub_experiment/df18.Rdata</code></li>
 </ul></li>
 </ul>
 </div>

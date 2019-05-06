@@ -34,10 +34,9 @@ Files are dependent in the following order:
     
 #### **check_Aug_2018_data**
 * uses:
-    * `Seedling_vert_Aug30_2018_1100(4).xlsx`
-    * 
+    * `~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/Compiled/Seedling_vert_Aug_2018_compiled.xlsx`
 * creates:
-    * `t`
+    * `../../../compiled_data/shrub_experiment/df18.Rdata`
 
 ## 2. Intermediary Analysis
 #### **1**
