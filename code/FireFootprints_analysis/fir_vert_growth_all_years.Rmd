@@ -80,26 +80,19 @@ df <- df %>%
 xdf <- df %>% 
   select(Elevation,
          Slope.Deg,
-         Aspect.rad.fold.NESW,
+         heatload,
+         incidrad,
+         Year,
          Years,
+         BasDia2016.cm, 
          Ht_cm1,
          shrubarea1,
          shrubarea2, 
          shrubarea3,
-         Cov1, 
-         Cov1.2, 
-         Cov1.3, 
-         Ht1, 
-         Ht1.2, 
-         Ht1.3,
          ShrubSpp01, 
          ShrubSpp02, 
-         ShrubSpp03, 
-         BasDia2016.cm, 
-         heatload,
-         incidrad,
-         Year,
-         Years) 
+         ShrubSpp03
+       ) 
 ```
 
 ## Normalize the numeric ones
@@ -123,7 +116,8 @@ xdf[vsurf$varselect.pred]
 ## Run 100 random forests on the ones that come up to see whether to delete heatload or incidrad
 ```{r}
 forests100 <- function(vars){
-  forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, Ht1.3,incidrad, Ht1.2, BasDia2016.cm), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+  forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, incidrad, BasDia2016.cm, Ht_cm1, Elevation, Year), 
+                         y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
   forest$importance
   imp <- as.data.frame(forest$importance) 
   imp$var <- row.names(imp)
@@ -134,6 +128,8 @@ forests100(c("heatload", "incirad"))
 reps <- replicate(100, forests100(c("heatload", "incirad")))
 summary(as.factor(unlist(reps)))
 ```
+
+The variable with the higher number is better. 
 
 ### Delete incidrad based on the results of the above randomforests
 ```{r}
@@ -149,26 +145,12 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Delete Aspect since it wasn't in the initial comparison of heatload and incidrad
-
-```{r}
-xdf <- xdf %>% 
-  select(-Aspect.rad.fold.NESW)
-```
-
-### Then run VSURF again
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
-
+## Repeat for shrubarea2 and shrubarea3
 
 ## Run 100 random forests on the ones that come up to see whether to delete SHRUBAREA2 or SHRUBAREA3
 ```{r}
 forests100 <- function(vars){
-  forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, Ht1.3, shrubarea3, BasDia2016.cm, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
+  forest <- randomForest(x = xdf %>% select(heatload, Years, shrubarea2, shrubarea3, BasDia2016.cm, Ht_cm1, Elevation, Year), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
   forest$importance
   imp <- as.data.frame(forest$importance) 
   imp$var <- row.names(imp)
@@ -180,14 +162,14 @@ reps <- replicate(100, forests100(c("shrubarea2", "shrubarea3")))
 summary(as.factor(unlist(reps)))
 ```
 
-This shows that shrubarea3 is better, so take out shrubarea2 and run vsurf yet again
+This shows that shrubarea2 is better, so take out shrubarea3 and run vsurf yet again
 
 
-### Delete SHRUBAREA2
+### Delete SHRUBAREA3 and SHRUBAREA1
 
 ```{r}
 xdf <- xdf %>% 
-  select(-shrubarea2)
+  select(-shrubarea1, -shrubarea3)
 ```
 
 ### Then run VSURF again
@@ -197,77 +179,6 @@ summary(vsurf)
 vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
-
-## Repeat for Ht1.2 and Ht1.3
-```{r}
-forests100 <- function(vars){
-  forest <- randomForest(x = xdf %>% select(heatload, Years, Ht1.3, Ht1.2), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-  forest$importance
-  imp <- as.data.frame(forest$importance) 
-  imp$var <- row.names(imp)
-  imp <- imp %>% filter(var %in% vars)
-  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
-}
-forests100(c("Ht1.3", "Ht1.2"))
-reps <- replicate(100, forests100(c("Ht1.3", "Ht1.2")))
-summary(as.factor(unlist(reps)))
-```
-
-### Delete Ht1.2
-
-```{r}
-xdf <- xdf %>% 
-  select(-Ht1.2)
-```
-
-### Then run VSURF again
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
-
-## Check relationship between Ht1.3 and shrubarea3
-```{r}
-ggplot(df, aes(x = Ht1.3, y = shrubarea3))+
-  geom_point()+
-  geom_smooth()
-summary(lm(Ht1.3~shrubarea3, data = df))
-```
-
-Need to delete one or the other. 
-
-```{r}
-forests100 <- function(vars){
-  forest <- randomForest(x = xdf %>% select(heatload, Years, Ht1.3, shrubarea3), y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-  forest$importance
-  imp <- as.data.frame(forest$importance) 
-  imp$var <- row.names(imp)
-  imp <- imp %>% filter(var %in% vars)
-  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
-}
-forests100(c("Ht1.3", "shrubarea3"))
-reps <- replicate(100, forests100(c("Ht1.3", "shrubarea3")))
-summary(as.factor(unlist(reps)))
-```
-
-Delete Ht1.3
-
-```{r}
-xdf <- xdf %>% 
-  select(-Ht1.3)
-```
-
-
-### Then run VSURF AGAIN
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
-
 
 # RESUME HERE
 
@@ -275,7 +186,7 @@ xdf[vsurf$varselect.pred]
 ```{r}
 forest <- randomForest(
   x = xdf %>% 
-    select(Years, heatload, shrubarea3, Ht1.3), 
+    select(heatload, Years, BasDia2016.cm, shrubarea2, Elevation, Ht_cm1, Slope.Deg, Year), 
   y = df$VertGrowth_Rel, 
   importance = TRUE, 
   scale = TRUE)
@@ -287,9 +198,9 @@ varImpPlot(forest)
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
-  mutate(log_shrubarea3 = log(shrubarea3)) %>% 
-  select(Fire, Sdlg, VertGrowth_Rel, Fire, heatload, Years, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Ht1.3, Elevation) %>% 
+  mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>%
+  mutate(log_shrubarea2 = log(shrubarea2)) %>% 
+  select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea2, sqrt_shrubarea2, log_shrubarea2, Elevation, Ht_cm1, Slope.Deg, Year) %>% 
   mutate_if(is.numeric, normalize) %>% 
   mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
@@ -297,23 +208,36 @@ LMdf <- droplevels(LMdf)
 
 ## See whether model with shrubarea3 or sqrt_shrubarea3 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ heatload+ Years+ shrubarea3 + Ht1.3 ,
+AIC(lme(VertGrowth_Rel ~ heatload + Years + BasDia2016.cm + shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
-AIC(lme(VertGrowth_Rel ~  heatload+ Years+ sqrt_shrubarea3+ Ht1.3,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-)
+AIC(lme(VertGrowth_Rel ~  heatload + Years + BasDia2016.cm + sqrt_shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
-AIC(lme(VertGrowth_Rel ~  heatload+ Years+ log_shrubarea3+ Ht1.3,
+AIC(lme(VertGrowth_Rel ~  heatload + Years + BasDia2016.cm + log_shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 )
 ```
 
-Sqrt transformed wins by a tiny amount. Since the difference is so small and pines use untransformed, and beacuse it's better to err on the side of untransformed, I'll use untransformed.
+Untransformed wins.
+
+## See whether model with or without interaction is better
+```{r}
+without <- lme(VertGrowth_Rel ~ 
+           heatload + Years + BasDia2016.cm + shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+
+with <- lme(VertGrowth_Rel ~  
+           heatload + Years + BasDia2016.cm + shrubarea2*Ht_cm1 + Elevation + Slope.Deg + Year,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(with, without)
+```
+
+No difference, so I'll leave out the interaction
 
 ## Linear model
 ```{r}
-LM <-  lme(VertGrowth_Rel ~heatload+ Years+ shrubarea3 + Ht1.3,
+LM <-  lme(VertGrowth_Rel ~ heatload + Years + BasDia2016.cm + shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 drop1(LM, test = "Chisq")
 ```
@@ -326,7 +250,7 @@ Note: the plots look exactly the same but with different axes if you don't norma
 eff_years <- predictorEffect("Years", LM)
 plot(eff_years)
 
-eff_shrubarea <- predictorEffect("shrubarea3", LM)
+eff_shrubarea <- predictorEffect("shrubarea2", LM)
 plot(eff_shrubarea)
 
 plot(predictorEffect("heatload", LM))
@@ -336,7 +260,7 @@ plot(predictorEffect("heatload", LM))
 
 ## Create df for effects 
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea3", LM)
+eff_shrubarea <- predictorEffect("shrubarea2", LM)
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
@@ -344,52 +268,42 @@ head(effects_df)
 ## Transform variables back to original units
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(shrubarea3 = shrubarea3*sd(df$shrubarea3)+mean(df$shrubarea3)) 
+  mutate(shrubarea2 = shrubarea2*sd(df$shrubarea2)+mean(df$shrubarea2)) 
 ```
 
 ### test
 ```{r}
-hist(effects_df$shrubarea3)
-hist(df$shrubarea3)
+hist(effects_df$shrubarea2)
+hist(df$shrubarea2)
 ```
 
 ## Make shrubarea in m instead of cm
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(shrubarea3 = shrubarea3/10000)
+  mutate(shrubarea2 = shrubarea2/10000)
 ```
 
 ## Plot effects of shrubarea
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = shrubarea3, y = exp(fit)))+
-  geom_ribbon(aes(x = shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = shrubarea2, y = exp(fit)))+
+  geom_ribbon(aes(x = shrubarea2, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
   xlab(bquote('Shrub competition ' (m^2)))+
   ylab("Relative growth rate")+
   ggtitle("Fir growth in relation to shrub environment within 2 m")+
-  geom_rug(data = df, aes(x = shrubarea3/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0, .325))
+  geom_rug(data = df, aes(x = shrubarea2/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(0.04,0.215))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel_int.png", width = 6, height = 6, dpi = 400)
 ```
 
 # Look at relationship between years and shrubarea
 ```{r}
 ggplot(df)+
-  geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
+  geom_boxplot(aes(x = as.factor(Years), y = shrubarea2))
 ggplot(df)+
-  geom_boxplot(aes(x = Fire, y = shrubarea3))
+  geom_boxplot(aes(x = Fire, y = shrubarea2))
 ```
-
-
-# Look at relationship between years and shrubarea
-```{r}
-ggplot(df)+
-  geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
-ggplot(df)+
-  geom_boxplot(aes(x = Fire, y = shrubarea3))
-```
-
 
 # Residuals
 ```{r}
@@ -397,11 +311,11 @@ E <- resid(LM, type = "normalized")
 df$E <- E
 pred <- predict(LM)
 plot(LM)
-plot(df$shrubarea3, E)
+plot(df$shrubarea2, E)
 plot(df$Ht_cm1, E)
 plot(df$Years, E)
 
-ggplot(df, aes(x = shrubarea3, y = E))+
+ggplot(df, aes(x = shrubarea2, y = E))+
   geom_point()+
   geom_smooth()
 ```
