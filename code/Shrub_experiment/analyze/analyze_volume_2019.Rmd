@@ -2,7 +2,9 @@
 title: "analyze_volume_2019"
 author: "Carmen"
 date: "April 23, 2019"
-output: html_document
+output: 
+    html_document:
+      toc: TRUE
 ---
 
 
@@ -54,21 +56,17 @@ NOTE: There are 0 values and negative values for growth. This makes it hard to l
 # Mixed effects linear model with island random effect
 
 ```{r}
-pipo_lm <- lme( growth_rel ~ shrubs, random = ~ 1|island, data = df %>% filter(species == "PIPO"), method = "ML")
-summary(pipo_lm)
-anova(pipo_lm)
-```
-
-
-```{r}
-pipo_lm <- lme( growth_rel ~ shrubs,  data = df %>% filter(species == "PIPO"), method = "ML")
+dfpipo <- df %>% filter(species == "PIPO")
+pipo_lm <- lme( growth_rel ~ shrubs, random = ~ 1|island, 
+                data = dfpipo, method = "ML")
 summary(pipo_lm)
 anova(pipo_lm)
 ```
 
 ## Check whether to include height
 ```{r}
-pipo_lm_ht <- lme( growth_rel ~ shrubs+ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+pipo_lm_ht <- lme( growth_rel ~ shrubs + ht_cm_2017, random = ~ 1|island, 
+                   data = dfpipo, method = "ML")
 anova(pipo_lm, pipo_lm_ht)
 ```
 
@@ -76,7 +74,8 @@ No.
 
 ## Check for interaction between shrubs and height
 ```{r}
-pipo_lm_int <- lme( growth_rel ~ shrubs*ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+pipo_lm_int <- lme( growth_rel ~ shrubs*ht_cm_2017, random = ~ 1|island, 
+                    data = dfpipo, method = "ML")
 anova(pipo_lm, pipo_lm_int)
 ```
 
@@ -84,14 +83,16 @@ No.
 
 ## Check for diameter effect
 ```{r}
-pipo_lm_dia <- lme( growth_rel ~ shrubs + dia17_mm_Aug,random = ~ 1|island,  data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+pipo_lm_dia <- lme( growth_rel ~ shrubs + dia17_mm_Aug,random = ~ 1|island,  
+                    data = dfpipo, method = "ML")
 anova(pipo_lm, pipo_lm_dia)
 ```
 
 No. 
 
 ```{r}
-pipo_lm_dia <- lme( growth_rel ~ shrubs * dia17_mm_Aug,random = ~ 1|island,  data = df %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
+pipo_lm_dia <- lme( growth_rel ~ shrubs * dia17_mm_Aug,random = ~ 1|island,  
+                    data = dfpipo, method = "ML")
 anova(pipo_lm, pipo_lm_dia)
 ```
 
@@ -99,7 +100,8 @@ No.
 
 ## Test for shrub effect in best model
 ```{r}
-pipo_lm_noshrub <- lme( growth_rel ~ 1, random = ~ 1|island, data = df %>% filter(species == "PIPO"), method = "ML")
+pipo_lm_noshrub <- lme( growth_rel ~ 1, random = ~ 1|island, 
+                        data = dfpipo, method = "ML")
 anova(pipo_lm_noshrub, pipo_lm)
 AIC(pipo_lm_noshrub)
 AIC(pipo_lm)
@@ -147,15 +149,6 @@ ggplot(effects_df, aes(x = shrubs, y = fit))+
   geom_errorbar(aes(ymin = lower, ymax = upper), width = .2)+
   ggtitle("PIPO shrub removal effects")+
   ylim(c(0,.8))
-ggsave(file = "../../../results/figures/ShrubExperiment/FirVol.png", width = 3, height = 5, dpi = 400)
-
-```
-
-### Graph raw data with ggplot
-```{r}
-ggplot(dfpipo %>% filter(growth_rel<2), aes(x = shrubs, y = growth_rel))+
-  geom_point()+
-  geom_line(aes(group = interaction(island, compartment)))
 ```
 
 ### Graph raw data by shrub island 
@@ -164,30 +157,40 @@ df_island <- dfpipo %>%
   group_by(island, compartment, shrubs) %>% 
   summarize(mean_growth_rel = mean(growth_rel), n = n()) %>% 
   ungroup() %>% 
-  group_by(compartment, island) %>% 
-  mutate(neg_pos = ifelse(shrubs=="removed"))
+  group_by(compartment, island) 
 
-df_island %>% 
-  ungroup() %>% 
-  group_by(compartment, island) %>% 
-  filter((mean_growth_rel | shrubs=="removed")>.2) %>% 
-  filter(shrubs == "removed") %>% 
-  summarize(min(mean_growth_rel))
+df_island_diff <- spread(df_island %>% select(-n), key = shrubs, value = mean_growth_rel) %>% 
+  arrange(island) %>% 
+  mutate(higher = ifelse(removed > retained, "rem", "ret")) %>% 
+  select(island, compartment, higher)
 
+df_island_diff
 
+df_island <- full_join(df_island, df_island_diff) %>% 
+  group_by(island, compartment) %>% 
+  mutate(n_island = sum(n))
 
 ggplot(df_island, aes(x = shrubs, y = mean_growth_rel))+
-  geom_point(aes(alpha = n))+
-  geom_line(aes(group = interaction(island, compartment), alpha = n))
+  geom_point(aes(col = higher, alpha = n_island), size = 2)+
+  geom_line(aes(group = interaction(island, compartment), alpha = n_island, col = higher), size = 1)+
+  theme_bw()+
+  ylab("Mean plot volumetric relative growth rate")+
+  scale_color_discrete(name = "Plot with higher growth", labels = c("Removed", "Retained"))+
+  scale_alpha_continuous(name = "n", range = c(.2, 1))
+
+ggsave(file = "../../../results/figures/ShrubExperiment/PipoVol.png", width = 3, height = 5, dpi = 400)
+
 ```
 
+## Count how many plot pairs had increases vs. decreases
 ```{r}
-df_island <- dfpipo %>% 
-  group_by(island, compartment, shrubs) %>% 
-  summarize(mean_growth_rel = mean(growth_rel), n = n())
+df_island %>% 
+  select(island, compartment, higher) %>% 
+  distinct() %>% 
+  group_by(higher) %>% 
+  summarize(n())
 
 ```
-
 
 # REPEAT FOR FIRS
 
@@ -202,15 +205,13 @@ anova(ABCO_lm)
 ```{r}
 ABCO_lm_ht <- lme(growth_rel ~ shrubs+ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "ABCO"), method = "ML")
 anova(ABCO_lm, ABCO_lm_ht)
-AIC(ABCO_lm_ht)
-AIC(ABCO_lm)
 ```
 
 YES
 
 ## Check for interaction between shrubs and height
 ```{r}
-ABCO_lm_int <- lme( growth_rel ~ shrubs + ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+ABCO_lm_int <- lme( growth_rel ~ shrubs*ht_cm_2017, random = ~ 1|island, data = df %>% filter(species == "ABCO"), method = "ML")
 anova(ABCO_lm_ht, ABCO_lm_int)
 ```
 
@@ -224,7 +225,7 @@ anova(ABCO_lm_dia)
 anova(ABCO_lm_ht, ABCO_lm_dia)
 ```
 
-YES, but it's borderline
+YES
 
 ## Test for shrub effect in best model 
 ```{r}
@@ -266,7 +267,7 @@ plot(predictorEffect("ht_cm_2017", ABCO_lm_dia))
 
 #### Graph with ggplot
 ```{r}
-effects_df <- as.data.frame(predictorEffect("shrubs", ABCO_lm))
+effects_df <- as.data.frame(predictorEffect("shrubs", ABCO_lm_dia))
 ```
 
 ```{r}
@@ -278,3 +279,45 @@ ggplot(effects_df, aes(x = shrubs, y = fit, col = shrubs))+
   ggtitle("ABCO shrub removal effects")+
   ylim(c(0,.8))
 ```
+
+### Graph raw data by shrub island 
+```{r}
+df_island <- dfABCO %>% 
+  group_by(island, compartment, shrubs) %>% 
+  summarize(mean_growth_rel = mean(growth_rel), n = n()) %>% 
+  ungroup() %>% 
+  group_by(compartment, island) 
+
+df_island_diff <- spread(df_island %>% select(-n), key = shrubs, value = mean_growth_rel) %>% 
+  arrange(island) %>% 
+  mutate(higher = ifelse(removed > retained, "rem", "ret")) %>% 
+  select(island, compartment, higher)
+
+df_island_diff
+
+df_island <- full_join(df_island, df_island_diff) %>% 
+  group_by(island, compartment) %>% 
+  mutate(n_island = sum(n))
+
+ggplot(df_island %>% filter(!is.na(higher)), aes(x = shrubs, y = mean_growth_rel))+
+  geom_point(aes(col = higher, alpha = n_island), size = 2)+
+  geom_line(aes(group = interaction(island, compartment), alpha = n_island, col = higher), size = 1)+
+  theme_bw()+
+  ylab("Mean plot volumetric relative growth rate")+
+  scale_color_discrete(name = "Plot with higher growth", labels = c("Removed", "Retained"))+
+  scale_alpha_continuous(name = "n", range = c(.2, 1))
+
+ggsave(file = "../../../results/figures/ShrubExperiment/PipoVol.png", width = 3, height = 5, dpi = 400)
+
+```
+
+## Count how many plot pairs had increases vs. decreases
+```{r}
+df_island %>% 
+  select(island, compartment, higher) %>% 
+  distinct() %>% 
+  group_by(higher) %>% 
+  summarize(n())
+
+```
+
