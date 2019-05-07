@@ -1,4 +1,4 @@
-*.Rhistory
-*_cache/*
-*_files/*
+**.Rhistory
+**_cache/*
+**_files/*
 code/FireFootprints_analysis/fir_vert_growth_all_years_cache/*
