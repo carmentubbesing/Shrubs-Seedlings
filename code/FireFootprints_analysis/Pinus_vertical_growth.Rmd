@@ -367,7 +367,7 @@ ggplot(effects_df)+
   ylim(c(0.04,0.215))+
   labs(fill = "Juvenile tree height (cm)")+
   theme(legend.position = c(0.8, 0.8))
-ggsave(file = "../../results/figures/FireFootprints/PineVertRel_int.png", width = 6, height = 6, dpi = 400)
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 6, height = 6, dpi = 400)
 ```
 
 # Look at relationship between years and shrubarea

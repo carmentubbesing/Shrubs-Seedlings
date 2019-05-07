@@ -20,6 +20,7 @@ library(effects)
 # Load data
 
 ```{r}
+setwd("~/Shrubs-Seedlings/code/Shrub_experiment/analyze/")
 load(file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
 ```
 
@@ -133,8 +134,8 @@ ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrub
   geom_line()+
   ylab("predicted relative growth rate")+
   geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
-  ggtitle("ABCO shrub removal effects")+
   xlab("timing relative to shrub removal")+
+  theme_bw()+
   theme(legend.position = c(0.8, 0.8))
 ```
 
@@ -242,8 +243,8 @@ ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrub
   geom_line()+
   ylab("predicted relative growth rate")+
   geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
-  ggtitle("PIPO shrub removal effects")+
   xlab("timing relative to shrub removal")+
+  theme_bw()+
   theme(legend.position = c(0.8, 0.8))
 ```
 
