@@ -239,7 +239,7 @@ Note: I took out elevation because it looked totally useless
 
 ## Linear model without ELevation
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ heatload + Years + BasDia2016.cm + shrubarea2 + Ht_cm1 + Slope.Deg + Year,
+LM <-  lme(VertGrowth_Rel ~ heatload + Years + BasDia2016.cm + shrubarea2 + Elevation + Ht_cm1 + Slope.Deg + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -298,6 +298,7 @@ ggplot(effects_df)+
   geom_rug(data = df, aes(x = shrubarea2/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
   ylim(c(0.04,0.215))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 6, height = 6, dpi = 400)
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel_int.png", width = 6, height = 6, dpi = 400)
 ```
 
 # Look at relationship between years and shrubarea
