@@ -25,14 +25,6 @@ df <- df %>%
 ```
 
 
-# Delete seedlings with missing data or pathogen damage
-```{r}
-summary(as.factor(df$Practice))
-df <- df %>% 
-  filter(is.na(Practice) | Practice != "1") %>% 
-  filter(is.na(PATH_DAMAGE) | PATH_DAMAGE != "1")
-```
-
 # Fix typos
 ```{r}
 df <- df %>% 
@@ -79,14 +71,6 @@ df %>% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))
 df %>% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))
 ```
 
-## Delete trees that are missing any year of growth
-```{r}
-nrow(df)
-df <- df %>% 
-  filter(!(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)))
-nrow(df)
-```
-
 # Correct mis-recorded growth based on photos
 ```{r}
 df <- df %>% 
@@ -94,39 +78,38 @@ df <- df %>%
   mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 77, 6.4, MINUS_2_GR_cm))
 ``` 
 
+# Restructure so there's a column for each year of growth
 
-# Calculate relative growth rate using the ln formula
-
-## Calculate pre- and post-heights and years of growth measured
+## Height
 ```{r}
 df <- df %>% 
-  mutate(ht_pre = HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm) 
-
+  mutate(ht1 = HEIGHT) %>% 
+  mutate(ht2 = HEIGHT - LAST_YR_GR_cm) %>% 
+  mutate(ht3 = HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm) %>% 
+  mutate(ht4 = HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm)
 ```
 
-# Check for NA heights
-```{r}
-summary(df$HEIGHT)
-summary(df$ht_pre)
-```
-
-## Calculate relative growth rate
+## Growth
 ```{r}
 df <- df %>% 
-  mutate(growth_vert_rel = (log(HEIGHT) - log(ht_pre))/3)
+  mutate(gr1 = (ht1-ht2)/ht2) %>% 
+  mutate(gr2 = (ht2-ht3)/ht3) %>% 
+  mutate(gr3 = (ht3-ht4)/ht4)
+
 ```
 
-## Check out outliers
-```{r}
-df %>% 
-  filter(growth_vert_rel > .5)
-```
-
-## Remove the two outliers that are so extreme they were probably due to measurement error.
-Especially for the dead pine, whose photo shows that no branches remained, and therefore the vertical growth was probably very difficult to measure
+# Calculate average relative growth rate per seedling
 ```{r}
 df <- df %>% 
-  filter(growth_vert_rel<.5)
+  mutate(gr_rel_ave = (gr1+gr2+gr3)/3)
+hist(df$gr_rel_ave)
+```
+
+## Add column for log growth
+```{r}
+df <- df %>% 
+  mutate(log_gr_rel_ave = log(gr_rel_ave))
+hist(df$log_gr_rel_ave)
 ```
 
 # Make live/dead status a factor
@@ -141,8 +124,105 @@ df <- df %>%
   mutate(BAS_DIA_AVE = (BAS_DIA_1_mm+BAS_DIA_2_mm)/2)
 ```
 
+# Create a column for PAIR, or dead #
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = toupper(SEEDLING))
+df$PAIR <- NA
+bs <- grep("B", df$SEEDLING, value = T)
+bs <- substr(bs, 1, nchar(bs)-1)
+df[grep("B", df$SEEDLING), "PAIR"] <- bs
+head(bs)
+df <- df %>% 
+  mutate(PAIR = ifelse(is.na(PAIR), SEEDLING, PAIR))
+
+tail(df %>% 
+  dplyr::select(SEEDLING, PAIR))
+```
+
+## Fix the funky 183/184/185 ones - INCOMPLETE
+```{r}
+df$PAIR[222:235]
+df <- df %>% 
+  mutate(PAIR = ifelse(SEEDLING == "184B-P", "184-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "184B-A", "184-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "183B-P", "183-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "183B-A", "183-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "185B-P", "185-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "185B-A", "185-A",PAIR)) 
+```
+
+# Look at the ones missing pairs in df_bu
+
+## Find mateless seedlings
+```{r}
+df %>% 
+  group_by(PAIR) %>% 
+  mutate(count = n()) %>% 
+  select(SEEDLING, PAIR, count) %>% 
+  arrange(PAIR) %>% 
+  filter(count != 2) 
+```
+
+# Delete pairs needing to be thrown out by creating a df with all the bad pairs
+
+## Missing data or pathogen damage
+```{r}
+summary(as.factor(df$Practice))
+df_toss <- df %>% 
+  filter(Practice == "1") %>% 
+  filter(PATH_DAMAGE == "1")
+nrow(df_toss)
+```
+
+## seedlings marked "thrown out"
+```{r}
+nrow(df_toss)
+df_toss <- full_join(df_toss, df %>% 
+  filter(thrown_out == "1"))
+nrow(df_toss)
+```
+
+## trees that are missing any year of growth
+```{r}
+nrow(df_toss)
+df_toss <- full_join(df_toss, df %>% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)))
+nrow(df_toss)
+```
+
+## delete pairs in df_toss from df
+```{r}
+length(unique(df_toss$PAIR))
+length(unique(df$PAIR))
+
+nrow(df)
+df <- df %>% 
+  filter(!PAIR %in% df_toss$PAIR)
+nrow(df)
+```
+
+
+# Check for mateless seedlings again
+```{r}
+df %>% 
+  group_by(PAIR) %>% 
+  mutate(count = n()) %>% 
+  filter(count != 2)
+```
+
+# Check out how many usable seedlings I have as of now of each species
+```{r}
+df %>% 
+  filter(DEAD_ALIVE == "DEAD") %>% 
+  group_by(SPECIES) %>% 
+  summarise(n())
+```
+
+
 # Save 
 ```{r}
 save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
 ```
 
+# NEXT STEP: MAYBE TRY TO PAIR UP MATELESS SEEDLINGS WITH EACH OTHER SO I DON'T HAVE TO DELETE AS MANY PAIRS

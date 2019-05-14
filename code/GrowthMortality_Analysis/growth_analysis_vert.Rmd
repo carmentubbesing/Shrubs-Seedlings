@@ -1,0 +1,145 @@
+---
+title: "Vertical growth analysis"
+author: "Carmen"
+date: "November 18, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+```
+
+#  Make dead a factor
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
+```
+
+# Plot distributions
+```{r}
+df %>% 
+  filter(DEAD_ALIVE == "DEAD") %>% 
+  ggplot+geom_histogram(aes(log_gr_rel_ave), bins = 20)
+df %>% 
+  filter(DEAD_ALIVE == "ALIVE") %>% 
+
+ggplot()+
+  geom_histogram(data = df %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = df %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave), bins = 20, alpha = .2, col = "dark green", fill = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive.png")
+
+```
+
+
+# Plot seedling growth rate against whether it's dead
+```{r}
+ggplot(df %>% filter(SPECIES == "ABCO"))+
+  geom_boxplot(aes(x = DEAD, y = gr_rel_ave))
+```
+
+```{r}
+ggplot(df %>% filter(SPECIES == "PIPO"))+
+  geom_violin(aes(x = DEAD, y = gr_rel_ave))
+ggplot(df %>% filter(SPECIES == "PIPO"))+
+  geom_boxplot(aes(x = DEAD, y = gr_rel_ave))
+```
+
+## Nice pipo graph for publication
+```{r}
+ggplot(df %>% filter(SPECIES == "PIPO", gr_rel_ave<.8))+
+  geom_boxplot(aes(x = DEAD, y = gr_rel_ave, fill = DEAD))+
+  scale_fill_manual(values = c("#91cf60", "#fc8d59"))+
+  xlab("")+
+  scale_x_discrete(labels = c("Alive", "Dead"))+
+  ylab("Relative growth rate")+
+  theme(legend.position = "none")+
+  ggtitle("one data point in DEAD excluded for better visualization")
+ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot.png", width = 4, height = 4, dpi = 400)
+```
+
+# Make separate df for each species
+```{r}
+dfa <- df %>% filter(SPECIES == "ABCO")
+dfp <- df %>% filter(SPECIES == "PIPO")
+```
+
+# GLM for abco
+
+## Test whether to include height, diameter, or the interaction with height or diameter
+
+### Height
+```{r}
+AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = "logit"), data = dfa))
+AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = "logit"), data = dfa))
+AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa))
+```
+
+Best is no height
+
+### Diameter
+```{r}
+AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = "logit"), data = dfa))
+AIC(glm(DEAD ~ log_gr_rel_ave+BAS_DIA_AVE, family = binomial(link = "logit"), data = dfa))
+AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa))
+```
+
+Best model has no height and no diameter
+
+## Run the model
+```{r}
+GLM_abco <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa)
+anova(GLM_abco, test = "Chi")
+```
+
+No significant difference.
+
+# GLM for pipo
+
+## Test whether to include height or the interaction with height and diameter
+
+### Height
+```{r}
+AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = "logit"), data = dfp))
+AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = "logit"), data = dfp))
+AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp))
+
+```
+
+No height
+
+### Diameter
+```{r}
+AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
+AIC(glm(DEAD ~ log_gr_rel_ave + BAS_DIA_AVE, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
+AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
+```
+
+No diameter.
+
+## Look at drop1
+```{r}
+GLM_pipo <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp)
+summary(GLM_pipo)
+anova(GLM_pipo, test = "Chi")
+```
+
+## plot growth effect and height effect
+```{r}
+plot(predictorEffect("log_gr_rel_ave", GLM_pipo))
+```
+
+MAIN RESULT: Significant for pines but not firs

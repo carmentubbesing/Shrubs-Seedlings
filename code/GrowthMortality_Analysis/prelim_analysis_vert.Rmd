@@ -1,0 +1,184 @@
+---
+title: "prelim_analysis"
+author: "Carmen"
+date: "November 18, 2017"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+```
+
+
+# Load data
+```{r}
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_Nov08_2017.xlsx", sheet = 2)
+```
+
+# Delete seedlings with missing data or pathogen damage
+```{r}
+summary(as.factor(df$Practice))
+df <- df %>% 
+  filter(is.na(Practice) | Practice != "1") %>% 
+  filter(is.na(PATH_DAMAGE) | PATH_DAMAGE != "1")
+```
+
+# Clean
+
+## Fix typos
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "alive", "ALIVE", DEAD_ALIVE)) %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "dead", "DEAD", DEAD_ALIVE)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "abco", "ABCO", SPECIES)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "pipo", "PIPO", SPECIES))
+```
+
+```{r}
+df %>% filter(is.na(as.numeric(df$LAST_YR_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))
+```
+
+## Make numeric
+```{r}
+df <- df %>% 
+  mutate(LAST_YR_GR_cm = as.numeric(LAST_YR_GR_cm)) %>% 
+  mutate(MINUS_1_GR_cm = as.numeric(MINUS_1_GR_cm)) %>% 
+  mutate(MINUS_2_GR_cm = as.numeric(MINUS_2_GR_cm))
+```
+
+```{r}
+df <- df %>% 
+  mutate(DEAD = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+```
+
+
+
+# calculate relative growth rate
+```{r}
+df <- df %>% 
+  mutate(LAST_YR_GR_rel = LAST_YR_GR_cm/(HEIGHT - LAST_YR_GR_cm)) %>% 
+  mutate(MINUS_1_GR_rel = MINUS_1_GR_cm/(HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm)) %>% 
+  mutate(MINUS_2_GR_rel = MINUS_2_GR_cm/(HEIGHT - LAST_YR_GR_cm - MINUS_2_GR_cm - MINUS_1_GR_cm)) %>% 
+  select(LAST_YR_GR_rel, MINUS_1_GR_rel, MINUS_2_GR_rel, everything())
+```
+
+
+# Restructure
+```{r}
+df <- gather(df, "Year","VertGrowth",1:3)
+```
+
+# Remove obvious errors
+```{r}
+df <- df %>% filter(VertGrowth<60)
+```
+
+
+
+# Calculate average growth rate for past 3 years
+```{r}
+df <- df %>% 
+  group_by(SEEDLING, SPECIES, DEAD, HEIGHT) %>% 
+  summarise(vert_ave = mean(VertGrowth))
+```
+
+
+# Plot seedling growth rate against whether it's dead
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = interaction(SPECIES, DEAD), y = vert_ave))
+```
+
+# GLM for abco
+
+
+```{r}
+dfa <- df %>% filter(SPECIES == "ABCO")
+dfp <- df %>% filter(SPECIES == "PIPO")
+```
+
+```{r}
+dfa <- dfa %>% filter(vert_ave>0)
+```
+
+```{r}
+dfa %>% group_by(DEAD) %>% 
+  summarise(mean(vert_ave))
+```
+
+```{r}
+dfp <- dfp %>% filter(vert_ave<.8)
+```
+
+
+```{r}
+GLM_abco <- glm(DEAD ~ log(vert_ave)*HEIGHT, family = binomial(link = "logit"), data = dfa)
+anova(GLM_abco, test = "Chi")
+GLM_a_null <- glm(DEAD ~ 1, family = binomial(link = "logit"), data = dfa)
+AIC(GLM_a_null)
+AIC(GLM_abco)
+anova(GLM_a_null, GLM_abco, test = "Chi")
+```
+
+
+# GLM for pipo
+```{r}
+GLM_pipo <- glm(DEAD ~ log(vert_ave)+HEIGHT, family = binomial(link = "logit"), data = dfp)
+anova(GLM_pipo, test = "Chi")
+drop1(GLM_pipo, test = "Chisq")
+GLM_p_null <- glm(DEAD ~ 1, family = binomial(link = "logit"), data = dfp)
+AIC(GLM_p_null)
+AIC(GLM_pipo)
+anova(GLM_p_null, GLM_pipo, test = "Chi")
+```
+
+
+## plot effects
+```{r}
+plot(predictorEffect("vert_ave", GLM_pipo))
+
+```
+
+
+Significant for pines but not firs
+
+# Plot
+```{r}
+MyData <- data.frame(vert_ave = seq(min(dfp$vert_ave), max(dfp$vert_ave), length = 100))
+```
+
+
+```{r}
+ MyData$pred <- predict(GLM_pipo, newdata = MyData, type = "response")
+figure <-ggplot(MyData)+
+  geom_line(aes(x = vert_ave, y = pred), size = 2, col = "#a02313")+
+  theme_bw()+
+  xlab("Mean relative vertical growth")+
+  ylab("Predicted probability of mortality")+
+  ggtitle("Pine mortality in relation to vertical growth")+
+   theme(
+    plot.background = element_rect(fill = '#e9ebe8', colour = '#e9ebe8'),
+        panel.background = element_rect(fill="#e9ebe8"),
+        text = element_text(size=20),
+        axis.title = element_text(colour = "#a02313"),
+        plot.title = element_text(colour = "#a02313")
+    )
+figure
+```
+
+```{r}
+setwd("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/results/figures/")
+pdf("pine_vert_mort.pdf", width = 7.5, height = 4.5, pointsize = 30,useDingbats = F)
+figure
+dev.off()
+```
+
+# NEXT STEPS: RE-ANALYZE EVERTHING USING THE PROPER FORMULA FOR RELATIVE GROWTH RATE

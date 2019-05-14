@@ -1,0 +1,161 @@
+---
+title: "Seedling dendro inventory"
+author: "Carmen"
+date: "June 25, 2018"
+output: 
+    html_document:
+      toc: TRUE
+---
+
+```{r, include =F}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+```
+
+# Read in data
+```{r}
+file <- "~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx"
+df <- read_excel(file, sheet = 2)
+boards <- read_excel(file, sheet = 3)
+```
+
+# Clean
+
+## Take out NA rows
+```{r}
+df <- df %>% filter(!is.na(SEEDLING))
+```
+
+## Make everything uppercase
+```{r}
+df <- df %>% 
+  mutate(SPECIES = toupper(SPECIES))
+```
+
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = toupper(SEEDLING))
+boards <- boards %>% 
+  mutate(SEEDLING = toupper(SEEDLING))
+```
+
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = toupper(DEAD_ALIVE))
+```
+
+### Correct -A and -P
+```{r}
+setdiff(boards$SEEDLING, df$SEEDLING)
+setdiff(df$SEEDLING, boards$SEEDLING)
+```
+
+
+# Combine the two sheets
+
+## Rename boards notes
+```{r}
+boards <- boards %>% 
+  rename(Mount_notes = Notes)
+```
+
+## Sync up seedling names in the two sheets
+```{r}
+nrow(df)
+df <- full_join(df, boards)
+nrow(df)
+```
+
+
+# Find boards with fewer than 5 seedlings
+```{r}
+df %>% 
+  group_by(Board) %>% 
+  summarise(n = n()) %>% 
+  filter(n != 5) 
+```
+
+
+
+# If two rows for one seedling, remove the one that's not backup
+
+## Create duplicates list
+```{r}
+dups <- df %>% 
+  group_by(SEEDLING) %>% 
+  filter(n()>1) %>% 
+  select(SEEDLING, Backup) %>% 
+  arrange(SEEDLING)
+dups
+```
+
+## Take out seedling that's duplicated but one isn't backup
+```{r}
+dups <- dups %>% filter(!is.na(SEEDLING))
+dups_nobackup <- dups %>% 
+  group_by(SEEDLING) %>% 
+  tally(Backup) %>% 
+  filter(n==0)
+dups_nobackup
+dups <- dups %>% filter(!SEEDLING %in% dups_nobackup$SEEDLING)
+```
+
+## Remove dups rows that aren't backups from df
+```{r}
+df <- df %>% 
+  filter(!(SEEDLING %in% dups$SEEDLING & Backup==0)) 
+nrow(df)
+```
+
+# See whether all seedlings that weren't thrown out have been mounted
+```{r}
+summary(as.factor(df$thrown_out))
+summary(as.factor(df$Board))
+df %>% 
+  filter(thrown_out==0) %>% 
+  filter(is.na(Board))
+```
+
+# Compare # of seedlings of each species that weren't thrown out and have been mounted
+
+## All
+```{r}
+df %>% 
+  filter(thrown_out==0) %>% 
+  filter(!is.na(Board)) %>% 
+  group_by(SPECIES) %>% 
+  summarise(n())
+```
+
+## Dead
+```{r}
+df %>% 
+  filter(thrown_out==0) %>% 
+  filter(!is.na(Board)) %>% 
+  filter(DEAD_ALIVE == "DEAD") %>% 
+  group_by(SPECIES) %>% 
+  summarise(n())
+```
+
+# Look at dia distributions
+```{r}
+ggplot(df %>% filter(SPECIES == "ABCO"))+
+  geom_histogram(aes(x = BAS_DIA_1_mm), bins = 40)
+ggplot(df)+
+  geom_histogram(aes(x = BAS_DIA_1_mm, group = SPECIES, fill = SPECIES), bins = 40, position = "dodge2")
+```
+
+# Find seedlings that may not have been read yet whose mates are thrown out
+```{r}
+df %>% 
+  filter(thrown_out == 1) %>% 
+  filter(Board >65)
+```
+
+# Find seedlings that weren't thrown out but maybe should be
+```{r}
+df %>% 
+  filter(thrown_out=="0" & PATH_DAMAGE != "0") %>% 
+  select(SEEDLING, SPECIES, Board, PATH_DAMAGE, Notes, Mount_notes)
+```
