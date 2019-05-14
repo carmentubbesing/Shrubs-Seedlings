@@ -222,7 +222,7 @@ df <- df %>%
 df %>% filter(is.na(gr_2018_cm))
 ```
 
-# Calculate total growth
+# Calculate growth
 ```{r}
 df <- df %>% 
   mutate(height_2018 = ht_cm_2017+gr_2018_cm) %>% 

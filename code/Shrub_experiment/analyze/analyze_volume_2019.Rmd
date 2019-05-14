@@ -74,7 +74,9 @@ df_island_diff <- spread(df_island %>% select(-n), key = shrubs, value = mean_gr
 df_island <- full_join(df_island, df_island_diff) %>% 
   group_by(island, compartment) %>% 
   mutate(n_island = sum(n))
+```
 
+```{r}
 ggplot(df_island, aes(x = shrubs, y = mean_growth_rel))+
   geom_point(aes(col = higher, alpha = n_island), size = 2)+
   geom_line(aes(group = interaction(island, compartment), alpha = n_island, col = higher), size = 1)+
@@ -84,10 +86,9 @@ ggplot(df_island, aes(x = shrubs, y = mean_growth_rel))+
   scale_color_discrete(name = "Plot with higher\ngrowth", labels = c("Removed", "Retained"))+
   scale_alpha_continuous(name = "n", range = c(.2, 1))
   
-
 ggsave(file = "../../../results/figures/ShrubExperiment/PipoVol.png", width = 6, height = 6, dpi = 400)
-
 ```
+
 
 ## Count how many plot pairs had increases vs. decreases
 ```{r}
@@ -96,7 +97,32 @@ df_island %>%
   distinct() %>% 
   group_by(higher) %>% 
   summarize(n())
+```
 
+# Plot deltas
+```{r}
+df_island <- df %>% 
+  group_by(island, compartment, shrubs, species) %>% 
+  summarize(mean_growth_rel = mean(growth_rel), n = n()) %>% 
+  ungroup() %>% 
+  group_by(compartment, island, species) 
+
+df_delta <- spread(df_island %>% 
+                           select(-n), key = shrubs, value = mean_growth_rel) %>% 
+  arrange(island) %>% 
+  mutate(higher = ifelse(removed > retained, "rem", "ret")) %>% 
+  mutate(diff = removed-retained) %>% 
+  filter(!is.na(diff))
+
+means <-  df_delta %>% group_by(species) %>% summarize(mean = mean(diff))
+means
+ggplot(df_delta)+
+  geom_boxplot(aes(y = diff, x = species))+
+  ylab("Growth in removal plot - growth in control plot")+
+  geom_point(data = means, aes(x = species, y = mean), col = "red", size = 2)+
+  theme_bw()
+
+ggsave(file = "../../../results/figures/ShrubExperiment/PipoVol_boxplot.png", width = 6, height = 6, dpi = 400)
 ```
 
 
@@ -148,13 +174,33 @@ anova(pipo_lm, pipo_lm_dia)
 
 No. 
 
+## Check for shrub species effect
+```{r}
+dfpipo$shrub_species <- as.factor(dfpipo$shrub_species)
+pipo_lm_shspp <- lme( growth_rel ~ shrubs + shrub_species,random = ~ 1|island,  
+                    data = dfpipo, method = "ML")
+anova(pipo_lm, pipo_lm_shspp)
+pipo_lm_shspp <- lme( growth_rel ~ shrubs*shrub_species,random = ~ 1|island,  
+                    data = dfpipo, method = "ML")
+anova(pipo_lm, pipo_lm_shspp)
+
+```
+
+No. 
+
+## Establish best model
+```{r}
+pipo_lm_best <- lme( growth_rel ~ shrubs,
+                     random = ~ 1|island, data = dfpipo, method = "ML")
+summary(pipo_lm_best)
+```
+
 ## Test for shrub effect in best model
 ```{r}
-pipo_lm_noshrub <- lme( growth_rel ~ 1, random = ~ 1|island, 
+pipo_lm_noshrub <- lme( growth_rel ~ 1, 
+                        random = ~ 1|island, 
                         data = dfpipo, method = "ML")
 anova(pipo_lm_noshrub, pipo_lm)
-AIC(pipo_lm_noshrub)
-AIC(pipo_lm)
 ```
 
 Yes, there is a shrub effect
@@ -297,19 +343,43 @@ anova(ABCO_lm_ht, ABCO_lm_dia)
 
 YES
 
+
+## Check for shrub species effect
+```{r}
+dfABCO$shrub_species <- as.factor(dfABCO$shrub_species)
+summary(dfABCO$shrub_species)
+ABCO_lm_shspp <- lme( growth_rel ~ shrubs+ ht_cm_2017 + dia17_mm_Aug + shrub_species,random = ~ 1|island,  
+                    data = dfABCO, method = "ML")
+anova(ABCO_lm, ABCO_lm_shspp)
+
+ABCO_lm_shspp_int <- lme( growth_rel ~ shrubs*shrub_species + ht_cm_2017 + dia17_mm_Aug,random = ~ 1|island,  
+                    data = dfABCO, method = "ML")
+anova(ABCO_lm_shspp, ABCO_lm_shspp_int)
+
+```
+
+YES, but no interaction
+
+## Establish best model
+```{r}
+ABCO_lm_best <- lme( growth_rel ~ shrubs+ ht_cm_2017 + dia17_mm_Aug + shrub_species,
+                     random = ~ 1|island, data = dfABCO, method = "ML")
+summary(ABCO_lm_best)
+```
+
+
 ## Test for shrub effect in best model 
 ```{r}
-ABCO_lm_noshrub <- lme( growth_rel ~ ht_cm_2017 + dia17_mm_Aug, random = ~ 1|island, data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
-anova(ABCO_lm_noshrub, ABCO_lm_dia)
+ABCO_lm_noshrub <- lme( growth_rel ~ ht_cm_2017 + dia17_mm_Aug+ shrub_species, random = ~ 1|island, data = df %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
+anova(ABCO_lm_noshrub, ABCO_lm_best)
 AIC(ABCO_lm_noshrub)
-AIC(ABCO_lm_dia)
+AIC(ABCO_lm_best)
 ```
 
 YES, there is a significant effect.
 
 ### Residuals
 ```{r}
-dfABCO <- df %>% filter(species == "ABCO")
 E <- resid(ABCO_lm, type = "normalized")
 dfABCO$E <- E
 pred <- predict(ABCO_lm)
@@ -319,6 +389,8 @@ plot(dfABCO$ht_cm_2017, E)
 ggplot(dfABCO, aes(x = vol_Aug17_cm2, y = E))+
   geom_point()+
   geom_smooth()
+ggplot(dfABCO)+
+  geom_boxplot(aes(x=shrub_species, y = E))
 ```
 
 ### LOOK AT OUTLIER
@@ -328,15 +400,16 @@ dfABCO %>% filter(vol_Aug17_cm2>1000) %>% select(SdlgID, dia17_mm_Aug, ht_cm_201
 
 ## Visual
 ```{r}
-plot(predictorEffect("shrubs", ABCO_lm_dia))
-plot(predictorEffect("dia17_mm_Aug", ABCO_lm_dia))
-plot(predictorEffect("ht_cm_2017", ABCO_lm_dia))
+plot(predictorEffect("shrubs", ABCO_lm_best))
+plot(predictorEffect("shrub_species", ABCO_lm_best))
+plot(predictorEffect("dia17_mm_Aug", ABCO_lm_best))
+plot(predictorEffect("ht_cm_2017", ABCO_lm_best))
 
 ```
 
 #### Graph with ggplot
 ```{r}
-effects_df <- as.data.frame(predictorEffect("shrubs", ABCO_lm_dia))
+effects_df <- as.data.frame(predictorEffect("shrubs", ABCO_lm_best))
 ```
 
 ```{r}

@@ -24,19 +24,7 @@ setwd("~/Shrubs-Seedlings/code/Shrub_experiment/analyze/")
 load(file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
 ```
 
-# Plot
-```{r}
-ggplot(df %>% filter(species == "PIPO"))+
-  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
-ggplot(df %>% filter(species == "PIPO"))+
-  geom_boxplot(aes(x = shrubs, y = pre_removal_growth_rel))
-ggplot(df %>% filter(species == "ABCO"))+
-  geom_boxplot(aes(x = shrubs, y = post_removal_growth_rel))
-ggplot(df %>% filter(species == "ABCO"))+
-  geom_boxplot(aes(x = shrubs, y = pre_removal_growth_rel))
-```
-
-# BACI ANALYSIS FOR FIRS for 2018 GROWTH
+# BACI ANALYSIS FOR PINES for 2018 GROWTH
 
 # Restructure
 ```{r}
@@ -46,74 +34,240 @@ dfg2 <- dfg2 %>%
 ```
 
 ```{r}
-ggplot(dfg2 %>% filter(species == "ABCO"))+
+ggplot(dfg2 %>% filter(species == "PIPO"))+
   geom_boxplot(aes(x = interaction(shrubs, pre_post), y = relative_growth))
 ```
+
+# Define pipo-only df
+```{r}
+dfpipo <- dfg2 %>% filter(species == "PIPO")
+```
+
 
 # Mixed effects linear model with island random effect
 
 ```{r}
-ABCO_lm <- lme(relative_growth ~ shrubs*pre_post, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
-anova(ABCO_lm)
+PIPO_lm <- lme(relative_growth ~ shrubs*pre_post, 
+               random = ~ 1|island, 
+               data = dfpipo, 
+               method = "ML")
+anova(PIPO_lm)
 ```
 
 ## Check for  height effect
-```{r}
-ggplot(dfg2 %>% filter(species == "ABCO"))+
-  geom_point(aes(x = height_2016, y = relative_growth))
-```
 
 ```{r}
-ABCO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
-anova(ABCO_lm, ABCO_lm_ht)
-AIC(ABCO_lm_ht)
-AIC(ABCO_lm)
+PIPO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, 
+                  random = ~ 1|island, 
+                  data = dfpipo, 
+                  method = "ML")
+anova(PIPO_lm, PIPO_lm_ht)
 ```
 
 I DO need to include height
 
 ## Check for height interaction
 ```{r}
-ABCO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO"), method = "ML")
-anova(ABCO_lm_ht, ABCO_lm_int)
-AIC(ABCO_lm_int)
-AIC(ABCO_lm_ht)
+PIPO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, 
+                   random = ~ 1|island, 
+                   data = dfpipo, method = "ML")
+anova(PIPO_lm_ht, PIPO_lm_int)
 ```
 
-I DO need to include a shrub*height interaction
+I DO NOT need to include a shrub*height interaction
 
 
 ## Check for diameter effect
 ```{r}
-ABCO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
-anova(ABCO_lm_ht, ABCO_lm_dia)
-AIC(ABCO_lm_ht)
-AIC(ABCO_lm_dia)
+PIPO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, 
+                   random = ~ 1|island, 
+                   data = dfpipo, 
+                   method = "ML")
+anova(PIPO_lm_ht, PIPO_lm_dia)
 ```
 
-I should NOT include diameter
+I SHOULD include diameter
+
+
+## Check for shrub species effect
+```{r}
+dfpipo$shrub_species <- as.factor(dfpipo$shrub_species)
+summary(dfpipo$shrub_species)
+PIPO_lm_shspp <- lme(relative_growth ~ shrubs*pre_post + height_2016 + dia17_mm_Aug + shrub_species,
+                      random = ~ 1|island,
+                      data = dfpipo, method = "ML")
+anova(PIPO_lm_dia, PIPO_lm_shspp)
+
+PIPO_lm_shspp <- lme(relative_growth ~ shrubs*pre_post + height_2016 + dia17_mm_Aug + shrubs*shrub_species,
+                      random = ~ 1|island,
+                      data = dfpipo, method = "ML")
+anova(PIPO_lm_dia, PIPO_lm_shspp)
+```
+
+No shrub species effect
+
+
+## Establish best model
+```{r}
+pipo_lm_best <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, 
+                   random = ~ 1|island, 
+                   data = dfpipo, 
+                   method = "ML")
+```
+
 
 ## Test for shrub effect in model with interaction - the true test for BACI
 ```{r}
-ABCO_lm_noshrub <- lme(relative_growth ~ pre_post + shrubs+height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "ABCO" & !is.na(shrubs)), method = "ML")
-AIC(ABCO_lm_noshrub)
-AIC(ABCO_lm_ht)
-anova(ABCO_lm_noshrub, ABCO_lm_ht)
+PIPO_lm_noshrub <- lme(relative_growth ~ shrubs + pre_post + height_2016 + dia17_mm_Aug, 
+                       random = ~ 1|island, 
+                       data = dfpipo, 
+                       method = "ML")
+anova(PIPO_lm_noshrub, PIPO_lm_dia)
+```
+
+NO significant effect - but almost
+
+## Visual
+```{r}
+plot(predictorEffect("shrubs", PIPO_lm_dia))
+plot(predictorEffect("pre_post", PIPO_lm_dia))
+drop1(PIPO_lm_dia, test = "Chisq")
+```
+
+### Make a prettier graph in ggplot
+
+```{r}
+effects_dfpipo <- as.data.frame(predictorEffect("pre_post", PIPO_lm_dia))
+effects_dfpipo <- effects_dfpipo %>% 
+  mutate(pre_post = ifelse(pre_post == "pre_removal_growth_rel", "before", "after"))
+effects_dfpipo <- effects_dfpipo %>% 
+  mutate(pre_post = as.factor(pre_post))
+```
+
+#### Reorder levels
+```{r}
+levels(effects_dfpipo$pre_post)
+effects_dfpipo$pre_post = factor(effects_dfpipo$pre_post,levels(effects_dfpipo$pre_post)[c(2,1)])
+levels(effects_dfpipo$pre_post)
+```
+
+#### Graph with reverse log transformed
+```{r}
+ggplot(effects_dfpipo, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrubs))+
+  geom_point()+
+  geom_line()+
+  ylab("predicted relative growth rate")+
+  geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
+  xlab("timing relative to shrub removal")+
+  theme_bw()+
+  theme(legend.position = c(0.8, 0.8))
+```
+
+
+### Save graph
+```{r}
+ggsave(file = "../../../results/figures/ShrubExperiment/PineVertBACI.png", width = 6, height = 5, dpi = 400)
+```
+
+# BACI ANALYSIS FOR FIRS for 2018 GROWTH
+
+
+# Define ABCO-only df
+```{r}
+dfABCO <- dfg2 %>% filter(species == "ABCO")
+```
+
+# Mixed effects linear model with island random effect
+
+```{r}
+ABCO_lm <- lme(relative_growth ~ shrubs*pre_post, 
+               random = ~ 1|island, 
+               data = dfABCO, 
+               method = "ML")
+anova(ABCO_lm)
+```
+
+## Check for  height effect
+```{r}
+ABCO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, 
+                  random = ~ 1|island, 
+                  data = dfABCO, 
+                  method = "ML")
+anova(ABCO_lm, ABCO_lm_ht)
+```
+
+YES
+
+## Check for height interaction
+```{r}
+ABCO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, 
+                   random = ~ 1|island, 
+                   data = dfABCO, 
+                   method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_int)
+```
+
+NO
+
+## Check for diameter effect
+```{r}
+ABCO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, 
+                   random = ~ 1|island, 
+                   data = dfABCO, 
+                   method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_dia)
+```
+
+NO
+
+## Check for shrub species effect
+```{r}
+dfABCO$shrub_species <- as.factor(dfABCO$shrub_species)
+summary(dfABCO$shrub_species)
+ABCO_lm_shspp <- lme(relative_growth ~ shrubs*pre_post + height_2016 + shrub_species,
+                      random = ~ 1|island,
+                      data = dfABCO, method = "ML")
+anova(ABCO_lm_ht, ABCO_lm_shspp)
+
+ABCO_lm_shspp_int <- lme(relative_growth ~ shrubs*pre_post + height_2016 + shrubs*shrub_species,
+                      random = ~ 1|island,
+                      data = dfABCO, method = "ML")
+anova(ABCO_lm_shspp_int, ABCO_lm_shspp)
+```
+
+YES, but no interaction
+
+## Establish best model
+```{r}
+ABCO_lm_best <- lme(relative_growth ~ shrubs*pre_post + height_2016 + shrub_species, 
+                   random = ~ 1|island, 
+                   data = dfABCO, 
+                   method = "ML")
+summary(ABCO_lm_best)
+```
+
+## Test for shrub effect in model with interaction - the true test for BACI
+```{r}
+ABCO_lm_noshrub <- lme(relative_growth ~ shrubs + pre_post + height_2016 + shrub_species, 
+                       random = ~ 1|island, 
+                       data = dfABCO, 
+                       method = "ML")
+anova(ABCO_lm_noshrub, ABCO_lm_best)
 ```
 
 NO significant effect
 
 ## Visual
 ```{r}
-plot(predictorEffect("shrubs", ABCO_lm_ht))
-plot(predictorEffect("pre_post", ABCO_lm_ht))
-drop1(ABCO_lm_ht, test = "Chisq")
+plot(predictorEffect("shrubs", ABCO_lm_best))
+plot(predictorEffect("shrub_species", ABCO_lm_best))
+drop1(ABCO_lm_best, test = "Chisq")
 ```
 
 ### Make a prettier graph in ggplot
 
 ```{r}
-effects_dfg2 <- as.data.frame(predictorEffect("pre_post", ABCO_lm_ht))
+effects_dfg2 <- as.data.frame(predictorEffect("pre_post", ABCO_lm_best))
 effects_dfg2 <- effects_dfg2 %>% 
   mutate(pre_post = ifelse(pre_post == "pre_removal_growth_rel", "before", "after"))
 effects_dfg2 <- effects_dfg2 %>% 
@@ -142,114 +296,4 @@ ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrub
 ### Save graph
 ```{r}
 ggsave(file = "../../../results/figures/ShrubExperiment/FirVertBACI.png", width = 6, height = 5, dpi = 400)
-```
-
-
-# BACI ANALYSIS FOR PINES for 2018 GROWTH
-
-# Restructure
-```{r}
-dfg2 <- gather(df, key = "pre_post", value = "relative_growth", c("growth_rel_2018", "pre_removal_growth_rel"))
-dfg2 <- dfg2 %>% 
-  mutate(pre_post = as.factor(paste(pre_post)))
-```
-
-```{r}
-ggplot(dfg2 %>% filter(species == "PIPO"))+
-  geom_boxplot(aes(x = interaction(shrubs, pre_post), y = relative_growth))
-```
-
-# Mixed effects linear model with island random effect
-
-```{r}
-PIPO_lm <- lme(relative_growth ~ shrubs*pre_post, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
-anova(PIPO_lm)
-```
-
-## Check for  height effect
-```{r}
-ggplot(dfg2 %>% filter(species == "PIPO"))+
-  geom_point(aes(x = height_2016, y = relative_growth))
-```
-
-```{r}
-PIPO_lm_ht <- lme(relative_growth ~ shrubs*pre_post + height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
-anova(PIPO_lm, PIPO_lm_ht)
-AIC(PIPO_lm_ht)
-AIC(PIPO_lm)
-```
-
-I DO need to include height
-
-## Check for height interaction
-```{r}
-PIPO_lm_int <- lme(relative_growth ~ shrubs*pre_post + shrubs*height_2016, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO"), method = "ML")
-anova(PIPO_lm_ht, PIPO_lm_int)
-AIC(PIPO_lm_int)
-AIC(PIPO_lm_ht)
-```
-
-I DO NOT need to include a shrub*height interaction
-
-
-## Check for diameter effect
-```{r}
-PIPO_lm_dia <- lme(relative_growth ~ shrubs*pre_post +height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
-anova(PIPO_lm_ht, PIPO_lm_dia)
-AIC(PIPO_lm_ht)
-AIC(PIPO_lm_dia)
-```
-
-I SHOULD include diameter
-
-## Test for shrub effect in model with interaction - the true test for BACI
-```{r}
-PIPO_lm_noshrub <- lme(relative_growth ~ pre_post + shrubs+height_2016 +dia17_mm_Aug, random = ~ 1|island, data = dfg2 %>% filter(species == "PIPO" & !is.na(shrubs)), method = "ML")
-AIC(PIPO_lm_noshrub)
-AIC(PIPO_lm_dia)
-anova(PIPO_lm_noshrub, PIPO_lm_dia)
-```
-
-NO significant effect
-
-## Visual
-```{r}
-plot(predictorEffect("shrubs", PIPO_lm_dia))
-plot(predictorEffect("pre_post", PIPO_lm_dia))
-drop1(PIPO_lm_dia, test = "Chisq")
-```
-
-### Make a prettier graph in ggplot
-
-```{r}
-effects_dfg2 <- as.data.frame(predictorEffect("pre_post", PIPO_lm_dia))
-effects_dfg2 <- effects_dfg2 %>% 
-  mutate(pre_post = ifelse(pre_post == "pre_removal_growth_rel", "before", "after"))
-effects_dfg2 <- effects_dfg2 %>% 
-  mutate(pre_post = as.factor(pre_post))
-```
-
-#### Reorder levels
-```{r}
-levels(effects_dfg2$pre_post)
-effects_dfg2$pre_post = factor(effects_dfg2$pre_post,levels(effects_dfg2$pre_post)[c(2,1)])
-levels(effects_dfg2$pre_post)
-```
-
-#### Graph with reverse log transformed
-```{r}
-ggplot(effects_dfg2, aes(x = pre_post, y = exp(fit), group = shrubs, col = shrubs))+
-  geom_point()+
-  geom_line()+
-  ylab("predicted relative growth rate")+
-  geom_errorbar(aes(ymin = exp(lower), ymax = exp(upper)), width = .2)+
-  xlab("timing relative to shrub removal")+
-  theme_bw()+
-  theme(legend.position = c(0.8, 0.8))
-```
-
-
-### Save graph
-```{r}
-ggsave(file = "../../../results/figures/ShrubExperiment/PineVertBACI.png", width = 6, height = 5, dpi = 400)
 ```
