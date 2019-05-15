@@ -92,11 +92,23 @@ ggplot(df)+
   geom_boxplot(aes(y = VertGrowth_Rel))
 ```
 
+# Run a random forest on everything
+```{r}
+forest <- randomForest(
+     x = xdf,
+     y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE, ntree=5000)
+varImpPlot(forest)
+```
+
+
 # STOP HERE TO SAVE TIME
 
 ## Apply VSURF to vertical growth
 ```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
+vsurf <- VSURF(x = xdf, 
+               y = df$VertGrowth_Rel, 
+               na.action = na.omit,
+               parallel = T)
 summary(vsurf)
 vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
@@ -207,11 +219,18 @@ varImpPlot(forest)
 LMdf <- df %>% 
   mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>%
   mutate(log_shrubarea2 = log(shrubarea2+1)) %>%
-  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea2, sqrt_shrubarea2, log_shrubarea2, BasDia2016.cm, ShrubSpp01, Year, Elevation) %>% 
+  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea2, shrubarea1, sqrt_shrubarea2, log_shrubarea2, BasDia2016.cm, incidrad, ShrubSpp01, Year, Elevation) %>% 
  mutate_if(is.numeric, normalize) %>% 
   mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
 ```
+
+```{r}
+both <- lme(VertGrowth_Rel ~ 
+          Years + Ht_cm1 + shrubarea2 + shrubarea1 + Year + ShrubSpp01 + BasDia2016.cm + incidrad, 
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
 
 ## See whether model with shrubarea2 or sqrt_shrubarea2 is better
 ```{r}
@@ -312,7 +331,7 @@ Note: the plots look exactly the same but with different axes if you don't norma
 eff_years <- predictorEffect("Years", LM)
 plot(eff_years)
 
-eff_shrubarea <- predictorEffect("shrubarea2", LM)
+eff_shrubarea <- predictorEffect("shrubarea2", both)
 plot(eff_shrubarea)
 
 eff_ht <- predictorEffect("Ht_cm1", LM)
@@ -331,7 +350,7 @@ plot(predictorEffect("Elevation", LM))
 # Re-create effects plots using predictorEffects() and ggplot
 
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea2", LM)
+eff_shrubarea <- predictorEffect("shrubarea2", both)
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
