@@ -218,6 +218,9 @@ $(document).ready(function () {
 <li><a href="#create-shrubarea-variables-for-each-distance-from-the-seedling">Create shrubarea variables for each distance from the seedling</a><ul>
 <li><a href="#fix-na-shrubarea">Fix NA shrubarea</a></li>
 </ul></li>
+<li><a href="#add-soil-data">Add soil data</a><ul>
+<li><a href="#add-soil-orders-and-soborders">Add soil orders and soborders</a></li>
+</ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
@@ -429,6 +432,127 @@ summary(as.factor(df$Status))</code></pre>
 <div id="fix-na-shrubarea" class="section level3">
 <h3>Fix NA shrubarea</h3>
 <pre class="r"><code>df &lt;- df %&gt;% filter(!(is.na(shrubarea2) &amp; Sdlg == &quot;17&quot;))</code></pre>
+</div>
+</div>
+<div id="add-soil-data" class="section level1">
+<h1>Add soil data</h1>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-NW&quot;, &quot;McCarthy&quot;, 0)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-3&quot;, &quot;Hurlbut&quot;, soil_type_dom)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-NE&quot;, &quot;Smokey&quot;, soil_type_dom)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;STAR-NW&quot;, &quot;McCarthy&quot;, soil_type_dom)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;STAR-S&quot;, &quot;Ahart&quot;, soil_type_dom)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;CLVD-N&quot;, &quot;Jocal&quot;, soil_type_dom)) %&gt;% 
+  mutate(soil_type_dom = ifelse(FirePatch == &quot;CLVD-SE&quot;, &quot;Holland&quot;, soil_type_dom)) 
+  
+df &lt;- df %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-NW&quot;, &quot;SMG&quot;, 0)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-3&quot;, &quot;HUG&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-NE&quot;, &quot;SMG&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;STAR-NW&quot;, &quot;MCG&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;STAR-S&quot;, &quot;ACF&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;CLVD-N&quot;, &quot;153&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;CLVD-SE&quot;, &quot;149&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(123, 124, 122), &quot;128&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(!(Sdlg %in% c(123, 124, 122)) &amp; FirePatch == &quot;WRTS-1&quot;, &quot;222&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(177, 178), &quot;PVG&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(175, 176), &quot;PTE&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 215, 216:219, 214, 221, 220, 222:225), &quot;HUG&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(103, 100, 101, 102, 98, 99, 97, 226), &quot;MCE&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(82:84, 104:107, 88, 85:97, 81, 90, 91:93, 94, 78, 79, 105, 80, 76, 95, 96, 73:75, 77, 76), &quot;MCE&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(20:25), &quot;149&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(131:132, 130, 129, 125), &quot;149&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(Sdlg %in% c(128, 127, 133:134), &quot;193&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;FRDS-mid&quot; | Sdlg %in% c(26, 27), &quot;108&quot;, soil_series)) %&gt;% 
+  mutate(soil_series = ifelse(FirePatch == &quot;FRDS-SE&quot;, &quot;108&quot;, soil_series))
+  
+
+  
+summary(as.factor(df$soil_type_dom))</code></pre>
+<pre><code>##        0    Ahart  Holland  Hurlbut    Jocal McCarthy   Smokey 
+##      110        6        3       15       22       30       31</code></pre>
+<pre class="r"><code>df %&gt;% 
+  group_by(FirePatch, soil_series) %&gt;% 
+  summarize(n())</code></pre>
+<pre><code>## # A tibble: 18 x 3
+## # Groups:   FirePatch [15]
+##    FirePatch soil_series `n()`
+##    &lt;fct&gt;     &lt;chr&gt;       &lt;int&gt;
+##  1 AMCR-2    HUG            24
+##  2 AMCR-2    MCE            34
+##  3 AMCR-3    HUG            15
+##  4 AMCR-NE   SMG            31
+##  5 AMCR-NW   SMG            18
+##  6 CLVD-N    153            22
+##  7 CLVD-SE   149             3
+##  8 FRDS-A    108             2
+##  9 FRDS-JB   149             4
+## 10 FRDS-mid  108             9
+## 11 FRDS-N    149             3
+## 12 FRDS-N    193             1
+## 13 FRDS-SE   108            17
+## 14 STAR-mid  PTE             1
+## 15 STAR-NW   MCG            12
+## 16 STAR-S    ACF             6
+## 17 WRTS-1    128             3
+## 18 WRTS-1    222            12</code></pre>
+<pre class="r"><code>df %&gt;% 
+  filter(Fire == &quot;FRDS&quot; &amp; soil_series == 0) %&gt;% 
+  select(Sdlg)</code></pre>
+<pre><code>## [1] Sdlg
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<div id="add-soil-orders-and-soborders" class="section level2">
+<h2>Add soil orders and soborders</h2>
+<p>sources: - NRCS. 2019. Web Soil Survey, USDA Natural Resources Conservation Service. <a href="http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx" class="uri">http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx</a>. - <a href="https://soilseries.sc.egov.usda.gov/osdname.aspx" class="uri">https://soilseries.sc.egov.usda.gov/osdname.aspx</a> - <a href="https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf" class="uri">https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf</a></p>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(soil_order = ifelse(soil_series == &quot;HUG&quot;, &quot;Inceptisol&quot;, 0)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;HUG&quot;, &quot;Xerept&quot;, 0)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series %in% c(&quot;MCE&quot;, &quot;MCG&quot;), &quot;Andisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series %in% c(&quot;MCE&quot;, &quot;MCG&quot;), &quot;Xerand&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;HUG&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;HUG&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;153&quot;, &quot;Ultisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;153&quot;, &quot;Xerult&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;149&quot;, &quot;Alfisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;149&quot;, &quot;Xeralf&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;108&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;108&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;SMG&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;SMG&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;222&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;222&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;128&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;128&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;193&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;193&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;PTE&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;PTE&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
+  
+  mutate(soil_order = ifelse(soil_series == &quot;ACF&quot;, &quot;Andisol&quot;, soil_order)) %&gt;% 
+  mutate(soil_suborder = ifelse(soil_series == &quot;ACF&quot;, &quot;Xerand&quot;, soil_suborder))
+  
+df %&gt;% 
+  group_by(soil_order, soil_suborder) %&gt;% 
+  arrange(soil_order) %&gt;% 
+  summarize(n())</code></pre>
+<pre><code>## # A tibble: 4 x 3
+## # Groups:   soil_order [4]
+##   soil_order soil_suborder `n()`
+##   &lt;chr&gt;      &lt;chr&gt;         &lt;int&gt;
+## 1 Alfisol    Xeralf           10
+## 2 Andisol    Xerand           52
+## 3 Inceptisol Xerept          133
+## 4 Ultisol    Xerult           22</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">
