@@ -37,14 +37,12 @@ df <- df %>%
   filter(Species == "PIPO")
 ```
 
-## Change species and Sdlg to factor
+## Change species and Sdlg and soil order to factor
 ```{r}
 df <- df %>% 
   mutate(Species = as.factor(Species)) %>% 
-  mutate(Sdlg = as.factor(Sdlg)) 
-summary(df$Species)
-summary(df$Sdlg)
-
+  mutate(Sdlg = as.factor(Sdlg)) %>% 
+  mutate(soil_order = as.factor(soil_order))
 ```
 
 # Count the seedlings
@@ -62,17 +60,14 @@ xdf <- df %>%
          Slope.Deg,
          heatload,
          incidrad,
+         Aspect.rad.fold.NESW,
+         soil_order,
          Year,
          Years,
          BasDia2016.cm, 
          Ht_cm1,
-         shrubarea1,
-         shrubarea2, 
          shrubarea3,
-         ShrubSpp01, 
-         ShrubSpp02, 
-         ShrubSpp03
-         ) 
+         ShrubSpp03) 
 ```
 
 ## Normalize the numeric ones
@@ -96,14 +91,16 @@ ggplot(df)+
 ```{r}
 forest <- randomForest(
      x = xdf,
-     y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE, ntree=5000)
+     y = df$VertGrowth_Rel, 
+     importance = TRUE, 
+     scale = TRUE, 
+     ntree=5000)
 varImpPlot(forest)
 ```
 
-
 # STOP HERE TO SAVE TIME
 
-## Apply VSURF to vertical growth
+# Apply VSURF to vertical growth
 ```{r}
 vsurf <- VSURF(x = xdf, 
                y = df$VertGrowth_Rel, 
@@ -114,88 +111,30 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Check out shrubarea1/shrubarea2 
-
-### See how correlated they are
+## Save the results
 ```{r}
-ggplot(df, aes(x = shrubarea1, y = shrubarea2))+
-  geom_point()+
-  geom_smooth(method = "loess")
+vars <- names(xdf[vsurf$varselect.pred])
+vars
 ```
 
-### Run 10 random forests on the ones that come up to see whether to delete heatload or incidrad
+## See how soil order tracks with shrub species & Fire
 ```{r}
-forests100 <- function(vars){
-  forest <- randomForest(
-    x = xdf %>% select(Years, Ht_cm1, shrubarea2, shrubarea1, Year, ShrubSpp01, BasDia2016.cm, incidrad), 
-    y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-  forest$importance
-  imp <- as.data.frame(forest$importance) 
-  imp$var <- row.names(imp)
-  imp <- imp %>% filter(var %in% vars)
-  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
-}
-forests100(c("shrubarea1", "shrubarea2"))
-reps <- replicate(100, forests100(c("shrubarea3", "shrubarea2")))
-summary(as.factor(unlist(reps)))
+df_count <- df %>% 
+  group_by(soil_order, ShrubSpp03) %>% 
+  summarize(n = n())
+ggplot(df_count)+
+  geom_col(aes(x = soil_order, y = n, fill = ShrubSpp03))
+ggsave(file = "../../results/figures/FireFootprints/PineOrderShrubSpp.png", width = 6, height = 6, dpi = 400)
 ```
 
-This shows that shrubarea2 is better, so delete shrubarea1.
-
-### Delete SHRUBAREA1 and SHRUBAREA3 based on the results of the above randomforest
 ```{r}
-xdf <- xdf %>% 
-  select(-shrubarea1, -shrubarea3)
-```
+df_count <- df %>% 
+  group_by(soil_order, Fire) %>% 
+  summarize(n = n())
+ggplot(df_count)+
+  geom_col(aes(x = Fire, y = n, fill = soil_order))
+ggsave(file = "../../results/figures/FireFootprints/PineOrderFire.png", width = 6, height = 6, dpi = 400)
 
-### Then run VSURF again
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
-
-## Repeat for heatload and incidrad
-
-### See how correlated they are
-```{r}
-ggplot(df, aes(x = heatload, y = incidrad))+
-  geom_point()+
-  geom_smooth(method = "loess")
-```
-
-### Run 100 random forests on the ones that come up to see whether to delete heatload or incidrad
-```{r}
-forests100 <- function(vars){
-  forest <- randomForest(
-    x = xdf %>% select(Years, Ht_cm1, shrubarea2, heatload, Year, ShrubSpp01, BasDia2016.cm, incidrad), 
-    y = df$VertGrowth_Rel, importance = TRUE, scale = TRUE)
-  forest$importance
-  imp <- as.data.frame(forest$importance) 
-  imp$var <- row.names(imp)
-  imp <- imp %>% filter(var %in% vars)
-  imp %>% filter(`%IncMSE` == max(imp$`%IncMSE`)) %>% select(var)
-}
-forests100(c("heatload", "incidrad"))
-reps <- replicate(100, forests100(c("heatload", "incidrad")))
-summary(as.factor(unlist(reps)))
-```
-
-This shows that heatload is better, so delete incidrad.
-
-### Delete INCIDRAD based on the results of the above randomforest
-```{r}
-xdf <- xdf %>% 
-  select(-incidrad)
-```
-
-### Then run VSURF again
-```{r}
-vsurf <- VSURF(x = xdf, y = df$VertGrowth_Rel, na.action = na.omit)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
 ```
 
 # RESUME HERE
@@ -204,46 +143,45 @@ xdf[vsurf$varselect.pred]
 ```{r}
 forest <- randomForest(
   x = xdf %>% 
-    select(Years, Ht_cm1, shrubarea2, BasDia2016.cm, ShrubSpp01, Year, Elevation), 
+    select(vars), 
   y = df$VertGrowth_Rel, 
   importance = TRUE, 
   scale = TRUE)
 varImpPlot(forest)
 ```
 
-
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
 ## Structure data for LM
 ```{r}
 LMdf <- df %>% 
-  mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>%
-  mutate(log_shrubarea2 = log(shrubarea2+1)) %>%
-  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea2, shrubarea1, sqrt_shrubarea2, log_shrubarea2, BasDia2016.cm, incidrad, ShrubSpp01, Year, Elevation) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  mutate(log_shrubarea3 = log(shrubarea3+1)) %>%
+  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea3, sqrt_shrubarea3, log_shrubarea3, BasDia2016.cm, incidrad, Year, Elevation, heatload, ShrubSpp03, soil_order) %>% 
  mutate_if(is.numeric, normalize) %>% 
   mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
 ```
 
 ```{r}
-both <- lme(VertGrowth_Rel ~ 
-          Years + Ht_cm1 + shrubarea2 + shrubarea1 + Year + ShrubSpp01 + BasDia2016.cm + incidrad, 
+vars
+LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+summary(LM)
 ```
-
 
 ## See whether model with shrubarea2 or sqrt_shrubarea2 is better
 ```{r}
 AIC(lme(VertGrowth_Rel ~ 
-          Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation, 
+         Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 AIC(lme(VertGrowth_Rel ~  
-          Years + Ht_cm1 + sqrt_shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation, 
+          Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + soil_order + incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 AIC(lme(VertGrowth_Rel ~  
-           Years + Ht_cm1 + log_shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation, 
+           Years +  Ht_cm1 + log_shrubarea3 + heatload + soil_order + incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 ```
@@ -253,11 +191,11 @@ Untransformed wins
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
-           Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+           Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 with <- lme(VertGrowth_Rel ~  
-           Years + Ht_cm1*shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+           Years +  Ht_cm1*shrubarea3 + heatload + soil_order + incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 anova(with, without)
 ```
@@ -267,7 +205,7 @@ No difference, so I should not include an interaction.
 ## Look at drop1 results
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -278,14 +216,14 @@ No need to include interaction after all
 # See whether residuals are better for log transformed or not
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
 
 ```{r}
 LM <-  lme(exp(VertGrowth_Rel) ~ 
-            Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
@@ -295,7 +233,7 @@ Log transformed looks better to me.
 # Re-establish the best LM so far:
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years + Ht_cm1 + shrubarea2 + BasDia2016.cm + ShrubSpp01 + Year + Elevation,
+           Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -321,6 +259,7 @@ plot(df$Year, E)
 ggplot(df, aes(x = log(df$shrubarea3), y = E))+
   geom_point()+
   geom_smooth()
+plot(df$soil_order, E)
 ```
 
 # Look at individual effects
@@ -331,26 +270,22 @@ Note: the plots look exactly the same but with different axes if you don't norma
 eff_years <- predictorEffect("Years", LM)
 plot(eff_years)
 
-eff_shrubarea <- predictorEffect("shrubarea2", both)
+eff_shrubarea <- predictorEffect("shrubarea3", LM)
 plot(eff_shrubarea)
 
 eff_ht <- predictorEffect("Ht_cm1", LM)
 plot(eff_ht)
 
-eff_shrspp <- predictorEffect("ShrubSpp01", LM)
+eff_shrspp <- predictorEffect("soil_order", LM)
 plot(eff_shrspp)
 
-plot(predictorEffect("BasDia2016.cm", LM))
-
 plot(predictorEffect("Year", LM))
-
-plot(predictorEffect("Elevation", LM))
 ```
 
 # Re-create effects plots using predictorEffects() and ggplot
 
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea2", both)
+eff_shrubarea <- predictorEffect("shrubarea3", LM)
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
@@ -358,31 +293,31 @@ head(effects_df)
 ## Transform variables back to original units
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(shrubarea2 = shrubarea2*sd(df$shrubarea2)+mean(df$shrubarea2)) 
+  mutate(shrubarea3 = shrubarea3*sd(df$shrubarea3)+mean(df$shrubarea3)) 
 ```
 
 ### test
 ```{r}
-hist(effects_df$shrubarea2)
-hist(df$shrubarea2)
+hist(effects_df$shrubarea3)
+hist(df$shrubarea3)
 ```
 
 ## Make shrubarea in m instead of cm
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(shrubarea2 = shrubarea2/10000)
+  mutate(shrubarea3 = shrubarea3/10000)
 ```
 
 ## Plot effects of shrubarea
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = shrubarea2, y = exp(fit)))+
-  geom_ribbon(aes(x = shrubarea2, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = shrubarea3, y = exp(fit)))+
+  geom_ribbon(aes(x = shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
   xlab(bquote('Shrub competition ' (m^2)))+
   ylab("Relative growth rate")+
   ggtitle("Pine growth in relation to shrub environment within 2 m")+
-  geom_rug(data = df, aes(x = shrubarea2/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  geom_rug(data = df, aes(x = shrubarea3/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
   ylim(c(0.04,0.215))+
   labs(fill = "Juvenile tree height (cm)")+
   theme(legend.position = c(0.8, 0.8))
@@ -392,9 +327,9 @@ ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 6,
 # Look at relationship between years and shrubarea
 ```{r}
 ggplot(df)+
-  geom_boxplot(aes(x = as.factor(Years), y = shrubarea2))
+  geom_boxplot(aes(x = Fire, y = shrubarea3))
 ggplot(df)+
-  geom_boxplot(aes(x = Fire, y = shrubarea2))
+  geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
 ```
 
 ## Save final data

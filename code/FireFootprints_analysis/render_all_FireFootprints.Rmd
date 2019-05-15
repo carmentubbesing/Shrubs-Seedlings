@@ -10,7 +10,7 @@ output:
 This code contains all of the steps necessary to clean and analyze Fire Footprint data
 
 # Cleaning
-```{r cleaning}
+```{r cleaning, message = F, warning = F}
 library(knitr)
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 strt <- Sys.time()
@@ -20,11 +20,13 @@ print(Sys.time()-strt)
 ```
 
 # Intermediary Analysis
-```{r intermediary_analysis}
+```{r intermediary_analysis, message = F, warning = F}
 strt <- Sys.time()
 rmarkdown::render("Heat_load.Rmd", "html_document")
 
 rmarkdown::render("clean_dia_both_species.Rmd", "html_document")
+rmarkdown::render("Clean_vert_growth.Rmd", "html_document")
+
 
 rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
 rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
@@ -35,7 +37,7 @@ print(strt-Sys.time())
 ```
 
 # Intermediary Cleaning
-```{r}
+```{r, message = F, warning = F}
 strt <- Sys.time()
 rmarkdown::render("fir_vol_growth_clean.Rmd", "html_document")
 rmarkdown::render("Pine_vol_growth_clean.Rmd", "html_document")
@@ -43,7 +45,7 @@ print(strt-Sys.time())
 ```
 
 # Main Analysis
-```{r main_analysis}
+```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
 rmarkdown::render("Fir_vol_growth_explore.Rmd", "html_document")
 print(strt-Sys.time())
