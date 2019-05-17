@@ -15,6 +15,7 @@ require(readxl)
 
 # Read in and compile dendro files
 ```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
 ```
 
@@ -49,7 +50,7 @@ for(i in 1:length(files)){
 ## Rearrange
 ```{r}
 df <- df %>% 
-  select(series, board, everything())
+  dplyr::select(series, board, everything())
 df_bu <- df
 ```
 
@@ -350,7 +351,7 @@ join %>%
   filter(count != 6) %>% 
   arrange(PAIR) %>% 
   filter(mateless == 0) %>% 
-  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
+  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
   filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
 ```
 
@@ -363,7 +364,7 @@ join <- join %>%
 ```{r}
 join %>% 
   filter(PAIR == "183B-") %>% 
-  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) 
+  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) 
 ```
 
 ```{r}
@@ -384,7 +385,7 @@ join %>%
   filter(count != 6) %>% 
   arrange(PAIR) %>% 
   filter(mateless == 0) %>% 
-  select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
+  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
   filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
 ```
 
@@ -423,7 +424,7 @@ join %>%
 # Check for seedlings with <3 years worth of growth data
 ```{r}
 nas <- join %>% 
-    select(5:17) %>% 
+    dplyr::select(5:17) %>% 
     is.na %>% 
     `!` %>% 
     rowSums
@@ -465,6 +466,146 @@ join <- join %>%
   mutate(mateless = ifelse(tree %in% c("222","207", "91"), "?", mateless))
 ```
 
+
+# Take out thrown out seedlings from rwl
+
+## Make colnames of rwl all caps
+```{r}
+rwl_bu <- rwl
+colnames(rwl) <- toupper(colnames(rwl))
+```
+
+
+```{r}
+thrown_out <- join %>% 
+  filter(thrown_out != 0 | mateless == 1) %>% 
+  dplyr::select(series) %>% 
+  distinct()
+nrow(thrown_out)
+ncol_old <- ncol(rwl)
+ncol_old
+sum(colnames(rwl) %in% thrown_out$series)
+rwl <- rwl[, !colnames(rwl) %in% thrown_out$series]
+ncol_old - ncol(rwl) == nrow(thrown_out)
+ncol(rwl)
+```
+
+# Calculate means across radii for each tree
+```{r}
+ncol(rwl)
+list <- join %>% filter(series %in% names(rwl)) %>% dplyr::select(tree) %>% distinct()
+
+list <- list[,1]
+list <- sort(list)
+
+for(i in 1:length(list)){
+  treei <- list[i]
+  series <- join %>% filter(tree == treei) %>% dplyr::select(series) %>% distinct()
+  if(length(grep("BU", series))>0){
+    seriesnew <- series %>% mutate(series = gsub("BU", "",series))
+    series <- bind_rows(series, seriesnew)
+  }
+  series
+  rwl_subset <- rwl[,names(rwl)%in% unlist(series)]
+  rwl_subset
+  rwl[ncol(rwl)+1] <- rowMeans(rwl_subset)
+  colnames(rwl)[ncol(rwl)] <- treei
+  ncol(rwl)
+  rwl <- rwl[,!(names(rwl) %in% c(names(rwl_subset)))]
+  ncol(rwl)
+}
+ncol(rwl)
+ncol(rwl)*3
+```
+
+## Check on the ones that didn't get means calculated
+```{r}
+names(rwl[,!(names(rwl) %in% join$tree)])
+```
+
+## Delete those ones
+```{r}
+rwl <- rwl[,(names(rwl) %in% join$tree)]
+ncol(rwl)
+```
+
+
+# Save rwl separately for live, dead for each species
+```{r}
+summary(as.factor(join$SPECIES))
+```
+
+```{r}
+head(rwl[1:10])
+```
+
+## Separate live from dead
+```{r}
+ncol(rwl)
+rwl_live <- rwl[,grep("B", names(rwl))]
+ncol(rwl_live)
+rwl_dead <- rwl[,!names(rwl) %in% names(rwl_live)]
+ncol(rwl_dead)
+ncol(rwl_dead)+ncol(rwl_live) == ncol(rwl)
+```
+
+```{r}
+ncol(rwl_live)
+rwl_live_pipo <- rwl_live[,names(rwl_live) %in% join$tree[join$SPECIES=="PIPO"]]
+ncol(rwl_live_pipo)
+rwl_live_abco <- rwl_live[,names(rwl_live) %in% join$tree[join$SPECIES=="ABCO"]]
+ncol(rwl_live_abco)
+```
+
+
+# Save 
+```{r}
+save(rwl, file = "../../data/GrowthMortality/rwl.Rdata")
+save(rwl_live_pipo, file = "../../data/GrowthMortality/live_pipo_rwl.Rdata")
+save(rwl_live_abco, file = "../../data/GrowthMortality/live_abco_rwl.Rdata")
+write.rwl(rwl_live_pipo, fname = "../../data/GrowthMortality/live_pipo.rwl")
+write.rwl(rwl_live_abco, fname = "../../data/GrowthMortality/live_abco.rwl")
+```
+
+## Take out trees with only a few years
+```{r}
+rwl_live_pipo_t <- rwl_live_pipo
+rwl_live_pipo_t[!is.na(rwl_live_pipo_t)] <- 1
+rwl_live_pipo_t[is.na(rwl_live_pipo_t)] <- 0
+
+sums <- t(rwl_live_pipo_t) %>% rowSums()
+hist(sums)
+head(sums)
+summary(as.factor(sums))
+sums <- sums[sums>4]
+
+rwl_live_pipo_gr4 <- rwl_live_pipo[,names(rwl_live_pipo) %in% names(sums)]
+ncol(rwl_live_pipo_gr4)
+```
+
+
+##  Save filtered set
+```{r}
+write.rwl(rwl_live_pipo_gr4, fname = "../../data/GrowthMortality/live_pipo_gr4.rwl")
+```
+
+
+# MAJOR THINGS I NEED TO DO:
+
+Seedlings needing checking: 12, 155, 26, 98, 63B, 163B, 159B, 195B, 205B
+
+1. Which 12 is the real 12?
+2. Check why Seedling 155 was thrown out - it's on board 32 but no data 
+3. Look for seedling 26 on board 39 - it doesn't have measurements in the original board 39 data
+2. seedlings 98, 63B, and 163B - they're not listed as having a board, so look for it in the thrown out pile
+3. Seedling 159B - not listed as having a board
+4. Look for seedling 195B - on board 28 but not in data
+5. 205B - missing
+4. See which trees do and don't have mates
+3. APPLY THESE CHANGES TO THE rwl DATA FRAME
+6. ASK JODI WHETHER DIAMETER CHANGES AS TREES AGE AFTER DEATH
+
+
 # Just for funsies, compare growth in dead trees vs. live trees, roughly
 
 ## Tidy growth data
@@ -493,47 +634,3 @@ ggplot(prelim)+
 ```
 
 # It looks preliminarily like dead seedlings have greater radial growth and lower vertical growth than live seedlings
-
-# Take out thrown out seedlings from rwl
-
-## Make colnames of rwl all caps
-```{r}
-rwl_bu <- rwl
-colnames(rwl) <- toupper(colnames(rwl))
-```
-
-
-```{r}
-thrown_out <- join %>% 
-  filter(thrown_out != 0 | mateless == 1) %>% 
-  dplyr::select(series) %>% 
-  distinct()
-nrow(thrown_out)
-ncol_old <- ncol(rwl)
-ncol_old
-sum(colnames(rwl) %in% thrown_out$series)
-rwl <- rwl[, !colnames(rwl) %in% thrown_out$series]
-ncol_old - ncol(rwl) == nrow(thrown_out)
-```
-
-# save rwl
-```{r}
-save(rwl, file = "../../data/GrowthMortality/rwl.Rdata")
-```
-
-
-# MAJOR THINGS I NEED TO DO:
-
-Seedlings needing checking: 12, 155, 26, 98, 63B, 163B, 159B, 195B, 205B
-
-1. Which 12 is the real 12?
-2. Check why Seedling 155 was thrown out - it's on board 32 but no data 
-3. Look for seedling 26 on board 39 - it doesn't have measurements in the original board 39 data
-2. seedlings 98, 63B, and 163B - they're not listed as having a board, so look for it in the thrown out pile
-3. Seedling 159B - not listed as having a board
-4. Look for seedling 195B - on board 28 but not in data
-5. 205B - missing
-4. See which trees do and don't have mates
-3. APPLY THESE CHANGES TO THE rwl DATA FRAME
-6. ASK JODI WHETHER DIAMETER CHANGES AS TREES AGE AFTER DEATH
-

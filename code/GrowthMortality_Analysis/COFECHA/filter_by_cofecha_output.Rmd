@@ -1,0 +1,152 @@
+---
+title: "filter by COFECHA output"
+author: "Carmen"
+date: "May 16, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+```{r, include = F}
+require(tidyverse)
+require(dplR)
+require(readxl)
+```
+
+# Bring in data
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/COFECHA/")
+abco_corr <- read.table("../../../data/GrowthMortality/COFECHA_output/ABCO1COF_edited.txt")
+pipo_corr <- read.table("../../../data/GrowthMortality/COFECHA_output/PIPO1COF_edited.txt")
+```
+
+# reformat correlation data
+```{r}
+abco_corr <- abco_corr[2:nrow(abco_corr),]
+abco_corr <- abco_corr %>% 
+  dplyr::select(V1, V7) %>% 
+  rename(Seq = V1, Corr = V7) 
+  
+head(abco_corr)
+```
+
+# Separate into negs and pos
+```{r}
+abco_chron <- abco_corr %>% 
+  mutate(Corr = as.numeric(paste(Corr))) %>% 
+  filter(Corr>0)
+head(abco_chron)
+```
+
+```{r}
+abco_nochron <- abco_corr %>% 
+  mutate(Corr = as.numeric(paste(Corr))) %>% 
+  filter(Corr<=0)
+head(abco_nochron)
+max(abco_nochron$Corr)
+```
+
+# Check
+```{r}
+nrow(abco_corr) == nrow(abco_chron)+nrow(abco_nochron)
+```
+
+# reformat correlation data
+```{r}
+pipo_corr <- pipo_corr[2:nrow(pipo_corr),]
+pipo_corr <- pipo_corr %>% 
+  dplyr::select(V1, V7) %>% 
+  rename(Seq = V1, Corr = V7) 
+  
+pipo_corr
+```
+
+# Separate into negs and pos
+```{r}
+pipo_chron <- pipo_corr %>% 
+  mutate(Corr = as.numeric(paste(Corr))) %>% 
+  filter(Corr>0)
+head(pipo_chron)
+```
+
+```{r}
+pipo_nochron <- pipo_corr %>% 
+  mutate(Corr = as.numeric(paste(Corr))) %>% 
+  filter(Corr<=0)
+head(pipo_nochron)
+max(pipo_nochron$Corr)
+```
+
+# Check
+```{r}
+nrow(pipo_corr) == nrow(pipo_chron)+nrow(pipo_nochron)
+```
+
+
+# Use these lists to modify .rwl files
+
+## Bring in the pipo and abco .rwl files
+```{r}
+load(file = "../../../data/GrowthMortality/live_pipo_rwl.Rdata")
+load(file = "../../../data/GrowthMortality/live_abco_rwl.Rdata")
+```
+
+## Take out the dashes
+```{r}
+head(rwl_live_pipo[1:20])
+names(rwl_live_pipo) <- gsub("-", "", names(rwl_live_pipo))
+head(rwl_live_pipo[1:20])
+```
+
+```{r}
+head(rwl_live_abco[1:20])
+names(rwl_live_abco) <- gsub("-", "", names(rwl_live_abco))
+head(rwl_live_abco[1:20])
+```
+
+
+
+## Filter
+```{r}
+ncol(rwl_live_abco)
+rwl_live_abco_chron <- rwl_live_abco[,names(rwl_live_abco) %in% abco_chron$Seq]
+ncol(rwl_live_abco_chron)
+rwl_live_abco_nochron <- rwl_live_abco[,names(rwl_live_abco) %in% abco_nochron$Seq]
+ncol(rwl_live_abco_nochron)
+ncol(rwl_live_abco_chron) + ncol(rwl_live_abco_nochron) == ncol(rwl_live_abco)
+ncol(rwl_live_abco_chron) + ncol(rwl_live_abco_nochron)
+```
+
+## Find mismatches
+```{r}
+names(rwl_live_abco)[!names(rwl_live_abco) %in% abco_chron$Seq & !names(rwl_live_abco) %in%abco_nochron$Seq]
+```
+
+
+
+## Filter
+```{r}
+ncol(rwl_live_pipo)
+rwl_live_pipo_chron <- rwl_live_pipo[,names(rwl_live_pipo) %in% pipo_chron$Seq]
+ncol(rwl_live_pipo_chron)
+rwl_live_pipo_nochron <- rwl_live_pipo[,names(rwl_live_pipo) %in% pipo_nochron$Seq]
+ncol(rwl_live_pipo_nochron)
+ncol(rwl_live_pipo_chron) + ncol(rwl_live_pipo_nochron) == ncol(rwl_live_pipo)
+ncol(rwl_live_pipo_chron) + ncol(rwl_live_pipo_nochron)
+```
+
+## Find mismatches
+```{r}
+names(rwl_live_pipo)[!names(rwl_live_pipo) %in% pipo_chron$Seq & !names(rwl_live_pipo) %in%pipo_nochron$Seq]
+```
+
+# Save
+```{r}
+write.rwl(rwl_live_pipo_chron, fname = "../../../data/GrowthMortality/live_pipo_chron.rwl")
+write.rwl(rwl_live_abco_chron, fname = "../../../data/GrowthMortality/live_abco_chron.rwl")
+write.rwl(rwl_live_pipo_nochron, fname = "../../../data/GrowthMortality/live_pipo_nochron.rwl")
+write.rwl(rwl_live_abco_nochron, fname = "../../../data/GrowthMortality/live_abco_nochron.rwl")
+
+```
+

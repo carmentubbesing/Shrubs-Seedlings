@@ -1,0 +1,316 @@
+---
+title: "simulations"
+author: "Carmen"
+date: "May 16, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+require(MASS)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+```
+
+#  Make dead a factor
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
+```
+
+# Make separate df for each species
+```{r}
+dfa <- df %>% filter(SPECIES == "ABCO")
+dfp <- df %>% filter(SPECIES == "PIPO")
+```
+
+# SIMULATIONS
+
+## Determine normal distributions to draw from
+```{r}
+means <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(sd = sd(log_gr_rel_ave))
+sd
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+ggplot(pdf_dead, aes(x = x, y = y))+
+  geom_line()
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+ggplot(pdf_live, aes(x = x, y = y))+
+  geom_line()
+```
+
+#### PIPO w/log 
+```{r}
+ggplot()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+
+```
+
+# Actual simulations for PIPO
+
+## Draw growth values randomly from each pipo distribution the # of times I observed each of live and dead, 
+```{r}
+gr_sim_live <- rnorm(524, mean=means[[1,2]], sd=sd[[1,2]])
+gr_sim_dead <- rnorm(6, mean=means[[2,2]], sd=sd[[2,2]])
+```
+
+
+### Restructure into df
+```{r}
+live_df <- data.frame(gr = c(gr_sim_live))
+live_df$dead <- 0
+head(live_df)
+```
+
+```{r}
+dead_df <- data.frame(gr = c(gr_sim_dead))
+dead_df$dead <- 1
+head(dead_df)
+```
+
+```{r}
+df <- bind_rows(dead_df, live_df)
+```
+
+
+### binomial model
+```{r}
+glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+summary(glm)
+plot(predictorEffect("gr", glm))
+glm$coefficients[2]
+```
+
+## Loop it 
+```{r}
+coefficient_gr <- c()
+coefficient_int <- c()
+for(i in 1:1000){
+  gr_sim_live <- rnorm(524, mean=means[[1,2]], sd=sd[[1,2]])
+  gr_sim_dead <- rnorm(6, mean=means[[2,2]], sd=sd[[2,2]])
+  live_df <- data.frame(gr = c(gr_sim_live))
+  live_df$dead <- 0
+  dead_df <- data.frame(gr = c(gr_sim_dead))
+  dead_df$dead <- 1
+  df <- bind_rows(dead_df, live_df)
+  glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
+  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+}
+mean_coef_gr <- mean(coefficient_gr)
+mean_coef_int <- mean(coefficient_int)
+```
+
+## Plot the mean coefficient and CI
+```{r}
+log_gr_rel <- seq(min(dfp$log_gr_rel_ave), max(dfp$log_gr_rel_ave), length=1000)
+dfplot <- as.data.frame(log_gr_rel)
+dfplot$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
+```
+
+### CI
+```{r}
+CI_low_int <- sort(coefficient_int)[25]
+CI_high_int <- sort(coefficient_int)[975]
+CI_low_gr <- sort(coefficient_gr)[25]
+CI_high_gr <- sort(coefficient_gr)[975]
+
+```
+
+```{r}
+log_gr_rel <- seq(min(dfp$log_gr_rel_ave), max(dfp$log_gr_rel_ave), length=1000)
+head(log_gr_rel)
+dfplot_lower <- as.data.frame(log_gr_rel)
+dfplot_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
+```
+
+```{r}
+log_gr_rel <- seq(min(dfp$log_gr_rel_ave), max(dfp$log_gr_rel_ave), length=1000)
+head(log_gr_rel)
+dfplot_upper <- as.data.frame(log_gr_rel)
+dfplot_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
+```
+
+```{r}
+ggplot()+
+  geom_line(data = dfplot, aes(x = exp(log_gr_rel), y = prob*100))+
+  geom_line(data = dfplot_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  geom_line(data = dfplot_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  theme_bw()+
+  xlim(0, .3)+
+  ylim(0,90)+
+  ylab("% Probability of being found dead")+
+  xlab("(height_2 - height_1)/\nheight_1")
+```
+
+# REPEAT WITH GAMMA DISTRIBUTION
+
+
+## Do the same for gamma distributions based on untransformed data - gamma distribution was used in this way by Wyckoff, P. H., and J. S. Clark. 2000. Predicting tree mortality from diameter growth: a comparison of maximum likelihood and Bayesian approaches. Canadian Journal of Forest Research 30:156-167.
+
+### Plot distributions
+```{r}
+scale_dead <- var(dfp$gr_rel_ave[dfp$DEAD==1])/mean(dfp$gr_rel_ave[dfp$DEAD==1])
+shape_dead <- mean(dfp$gr_rel_ave[dfp$DEAD==1])*mean(dfp$gr_rel_ave[dfp$DEAD==1])/var(dfp$gr_rel_ave[dfp$DEAD==1])
+```
+
+```{r}
+x <- seq(0,1, length=1000)
+y <- dgamma(x, shape= shape_dead, scale = scale_dead)
+pdf_dead <- as.data.frame(cbind(x, y))
+ggplot(pdf_dead, aes(x = x, y = y))+
+  geom_line()
+```
+
+```{r}
+scale_live <- var(dfp$gr_rel_ave[dfp$DEAD==0])/mean(dfp$gr_rel_ave[dfp$DEAD==0])
+shape_live <- mean(dfp$gr_rel_ave[dfp$DEAD==0])*mean(dfp$gr_rel_ave[dfp$DEAD==0])/var(dfp$gr_rel_ave[dfp$DEAD==0])
+```
+
+#### Estimate gamma distribution using MASS package
+```{r}
+distr_live <- fitdistr(dfp$gr_rel_ave[dfp$DEAD==0], "gamma")
+shape_live <-  distr_live$estimate[1]
+rate_live <- distr_live$estimate[2]
+distr_dead <- fitdistr(dfp$gr_rel_ave[dfp$DEAD==1], "gamma")
+shape_dead <-  distr_dead$estimate[1]
+rate_dead <- distr_dead$estimate[2]
+```
+
+```{r}
+x <- seq(0,1, length=1000)
+y <- dgamma(x, shape= shape_dead, rate = rate_dead)
+pdf_dead <- as.data.frame(cbind(x, y))
+x <- seq(0,1, length=1000)
+y <- dgamma(x, shape= shape_live, rate = rate_live)
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+
+### Test fit of gamma distributions
+```{r}
+ks.test(dfp$gr_rel_ave[dfp$DEAD==0], "pgamma", shape = shape_live, rate = rate_live)
+ks.test(dfp$gr_rel_ave[dfp$DEAD==1], "pgamma", shape = shape_live, rate = rate_dead)
+
+ks.test(dfp$log_gr_rel_ave[dfp$DEAD==0], "pnorm", mean=means[[1,2]], sd=sd[[1,2]])
+ks.test(dfp$log_gr_rel_ave[dfp$DEAD==1], "pnorm", mean=means[[2,2]], sd=sd[[2,2]])
+
+
+ggplot()+
+  geom_histogram(aes(dfp$gr_rel_ave[dfp$DEAD==1], stat(density)))+
+    geom_line(aes(x = x, y = dgamma(x, shape = shape_dead, rate = rate_dead)))
+
+ggplot()+
+  geom_histogram(aes(dfp$gr_rel_ave[dfp$DEAD==0], stat(density)))+
+    geom_line(aes(x = x, y = dgamma(x, shape = shape_live, rate = rate_live)))
+```
+
+
+#### PIPO w/o log (gamma)
+```{r}
+ggplot()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="DEAD"), aes(gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="ALIVE"), aes(gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = dfp %>% group_by(DEAD_ALIVE), aes(xintercept = mean(gr_rel_ave), col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+```
+
+## Loop it 
+```{r}
+coefficient_gr <- c()
+coefficient_int <- c()
+for(i in 1:1000){
+  gr_sim_live <- rgamma(524, shape = shape_live, rate = rate_live)
+  gr_sim_dead <- rgamma(6, shape = shape_dead, rate = rate_dead)
+  live_df <- data.frame(gr = c(gr_sim_live))
+  live_df$dead <- 0
+  dead_df <- data.frame(gr = c(gr_sim_dead))
+  dead_df$dead <- 1
+  df <- bind_rows(dead_df, live_df)
+  glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
+  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+}
+ggplot(df)+geom_histogram(aes(gr, stat(density), group = dead, fill = dead), position = "dodge")
+mean_coef_gr <- mean(coefficient_gr)
+mean_coef_int <- mean(coefficient_int)
+```
+
+## Plot the mean coefficient and CI
+```{r}
+gr_rel <- seq(min(dfp$gr_rel_ave), max(dfp$gr_rel_ave), length=1000)
+dfplot <- as.data.frame(gr_rel)
+dfplot$prob <- exp(mean_coef_int + mean_coef_gr*gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*gr_rel))
+```
+
+### CI
+```{r}
+CI_low_int <- sort(coefficient_int)[25]
+CI_high_int <- sort(coefficient_int)[975]
+CI_low_gr <- sort(coefficient_gr)[25]
+CI_high_gr <- sort(coefficient_gr)[975]
+
+```
+
+```{r}
+gr_rel_ave <- seq(min(dfp$gr_rel_ave), max(dfp$gr_rel_ave), length=1000)
+head(gr_rel_ave)
+dfplot_lower <- as.data.frame(gr_rel_ave)
+dfplot_lower$prob <- exp(mean_coef_int + CI_low_gr*gr_rel_ave)/(1+exp(mean_coef_int + CI_low_gr*gr_rel_ave))
+```
+
+```{r}
+gr_rel_ave <- seq(min(dfp$gr_rel_ave), max(dfp$gr_rel_ave), length=1000)
+head(gr_rel_ave)
+dfplot_upper <- as.data.frame(gr_rel_ave)
+dfplot_upper$prob <- exp(mean_coef_int + CI_high_gr*gr_rel_ave)/(1+exp(mean_coef_int + CI_high_gr*gr_rel_ave))
+```
+
+```{r}
+ggplot()+
+  geom_line(data = dfplot, aes(x = gr_rel_ave, y = prob*100))+
+  geom_line(data = dfplot_lower, aes(x = gr_rel_ave, y = prob*100), linetype = "dashed")+
+  geom_line(data = dfplot_upper, aes(x = gr_rel_ave, y = prob*100), linetype = "dashed")+
+  theme_bw()+
+  xlim(0, .8)+
+  ylim(0,9)+
+  ylab("% Probability of being found dead")+
+  xlab("(height_2 - height_1)/\nheight_1")
+```
+
+

@@ -1,0 +1,76 @@
+---
+title: "live chrnology"
+author: "Carmen"
+date: "May 16, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = F}
+require(tidyverse)
+require(dplR)
+require(readxl)
+```
+
+# Read in and compile dendro files
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load(file = "../../data/GrowthMortality/live_pipo_rwl.Rdata")
+rwl <- rwl_live_pipo
+```
+
+# Plot data before detrending
+
+## Gather
+```{r}
+rwl2 <- rwl %>% 
+  mutate(year = row.names(rwl))
+rwl2 <- gather(rwl2, key = "tree", value = "growth", 1:ncol(rwl)) %>% 
+  filter(!is.na(growth))
+head(rwl2)
+```
+
+## Plot average growth rates
+```{r}
+rwl3 <- rwl2 %>% 
+  group_by(year) %>% 
+  mutate(means = mean(na.omit(growth))) %>% 
+  mutate(n = n()) %>% 
+  ungroup()
+ggplot(rwl3)+
+  geom_point(aes(x = year, y = means, size = n))
+```
+
+## Count observations per year
+```{r}
+rwl2 %>%
+  group_by(year) %>% 
+  summarize(count = n()) %>% 
+  arrange(year)
+```
+
+
+# Detrend
+```{r}
+rwl_dt <- rwl[4:nrow(rwl),]
+rwl_dt <- detrend(rwl = rwl_dt, method = "ModNegExp")
+```
+
+# Build mean chronology
+```{r}
+rwl_chron <- chron(rwl, prefix = "CAM")
+rwl_chron
+plot(rwl_chron, add.spline = T)
+ ```
+
+```{r}
+ggplot(rwl_chron %>% 
+           mutate(year = row.names(rwl_chron)) %>% 
+         ungroup() %>% 
+          filter(samp.depth>20) 
+       )+
+  geom_point(aes(x = year, y = CAMstd))+
+  geom_line(aes(x = year, y = CAMstd, group = 1))
+```
+

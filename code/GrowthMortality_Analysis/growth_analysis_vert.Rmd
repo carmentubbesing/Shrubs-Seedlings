@@ -27,24 +27,6 @@ df <- df %>%
   mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
 ```
 
-# Plot distributions
-```{r}
-df %>% 
-  filter(DEAD_ALIVE == "DEAD") %>% 
-  ggplot+geom_histogram(aes(log_gr_rel_ave), bins = 20)
-df %>% 
-  filter(DEAD_ALIVE == "ALIVE") %>% 
-
-ggplot()+
-  geom_histogram(data = df %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave), bins = 20, alpha = .2, col = "red", fill = "red")+
-  theme_bw()+
-  geom_histogram(data = df %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave), bins = 20, alpha = .2, col = "dark green", fill = "dark green")
-  
-ggsave("../../results/figures/GrowthMortality/histogram_dead_alive.png")
-
-```
-
-
 # Plot seedling growth rate against whether it's dead
 ```{r}
 ggplot(df %>% filter(SPECIES == "ABCO"))+
