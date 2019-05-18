@@ -1,0 +1,279 @@
+---
+title: "Dendro_analysis"
+author: "Carmen Tubbesing"
+date: "5/18/2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+require(MASS)
+```
+
+```{r}
+load("../../data/GrowthMortality/rwl.Rdata")
+load("../../data/GrowthMortality/dendro_all_vars.Rdata")
+```
+
+# Reconfigure rwl to ease analysis
+```{r}
+head(rwl[300:321])
+rwl <- t(rwl)
+head(rwl)
+names <- row.names(rwl)
+```
+
+```{r}
+df <- tbl_df(rwl)
+df <- df %>% 
+  mutate(tree = names)
+head(df)
+```
+
+```{r}
+join <- join %>% 
+  mutate(dia_mm = (BAS_DIA_1_mm + BAS_DIA_2_mm)/2) %>% 
+  dplyr::select(tree, SPECIES, DEAD_ALIVE, dia_mm)
+df <- left_join(df, join) 
+summary(as.factor(df$SPECIES))
+summary(as.factor(df$DEAD_ALIVE))
+summary(df$dia_mm)
+```
+
+
+# Plot growth by year
+```{r}
+df2 <- gather(df, key = "year", value = "gr_rel", c(`2016`, `2015`, `2014`, `2013`)) %>% 
+  mutate(year = ifelse(year == "2016", "outer ring", year)) %>% 
+  mutate(year = ifelse(year == "2015", "outer ring - 1", year)) %>% 
+  mutate(year = ifelse(year == "2014", "outer ring - 2", year)) %>% 
+  mutate(year = ifelse(year == "2013", "outer ring - 3", year)) %>% 
+  mutate(year = as.factor(year))
+
+df2$year <-  factor(df2$year, levels = rev(levels(df2$year)))
+
+df2 %>% dplyr::select(year, gr_rel, tree, SPECIES)
+ggplot(df2)+
+  geom_boxplot(aes(x = year, y = log(gr_rel), fill = SPECIES))+
+  facet_wrap(~SPECIES)+
+  ylim(-3, .5)
+```
+
+
+# FIRS
+
+# Narrow down to just firs
+```{r}
+dfa <- df %>% 
+  filter(SPECIES == "ABCO") %>% 
+  distinct()
+dfa
+```
+
+# Find average relative growth for last 3 years
+```{r}
+dfa <- dfa %>% 
+  mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+
+dfa <- dfa %>% 
+  dplyr::select(`2013`, `2014`, `2015`, `2016`, tree, SPECIES, DEAD_ALIVE, dia_mm, dead) %>%
+  rename(gr1 = `2016`, gr2 = `2015`, gr3 = `2014`, gr4 = `2013`) %>% 
+  rename(dia1 = dia_mm) %>% 
+  mutate(dia2 = dia1 - gr1*2) %>%
+  mutate(dia3 = dia1 - gr1*2 - gr2*2) %>% 
+  mutate(dia4 = dia1 - gr1*2 - gr2*2 - gr3*2) %>% 
+  mutate(dia5 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2) %>% 
+  mutate(gr_rel_1 = (dia1 - dia2)/dia1) %>% 
+  mutate(gr_rel_2 = (dia2 - dia3)/dia2) %>% 
+  mutate(gr_rel_3 = (dia3 - dia4)/dia3) %>% 
+  mutate(gr_rel_4 = (dia4 - dia5)/dia4) 
+dfa <- dfa %>% 
+  rowwise() %>% 
+  mutate(gr_rel_ave = ifelse(dead == 1, 
+                             mean(c(gr_rel_1, gr_rel_2, gr_rel_3), na.rm=T),
+                             mean(c(gr_rel_2, gr_rel_3, gr_rel_4), na.rm=T)))
+
+summary(dfa$gr_rel_ave)
+hist(dfa$gr_rel_ave)
+```
+
+# Plot growth by year
+```{r}
+df2 <- gather(dfa, key = "year", value = "gr_rel", c(gr1, gr2, gr3, gr4)) %>% 
+  mutate(year = ifelse(year == "gr1", "outer ring", year)) %>% 
+  mutate(year = ifelse(year == "gr2", "outer ring - 1", year)) %>% 
+  mutate(year = ifelse(year == "gr3", "outer ring - 2", year)) %>% 
+  mutate(year = ifelse(year == "gr4", "outer ring - 3", year)) %>% 
+  mutate(year = as.factor(year))
+
+df2$year <-  factor(df2$year, levels = rev(levels(df2$year)))
+
+df2 %>% dplyr::select(year, gr_rel, tree, SPECIES, DEAD_ALIVE)
+ggplot(df2)+
+  geom_boxplot(aes(x = year, y = log(gr_rel), fill = DEAD_ALIVE))+
+  facet_wrap(~SPECIES)+
+  ylim(-3, .5)
+```
+
+
+
+## Throw out trees with too few years to calculate growth
+```{r}
+dfa <- dfa %>% 
+  filter(!is.na(gr_rel_ave))
+```
+
+
+```{r}
+ggplot(dfa)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = gr_rel_ave))
+```
+
+# Test with glm
+```{r}
+cor(dfa$gr_rel_ave, dfa$dead)
+cor(log(dfa$gr_rel_ave), dfa$dead)
+summary(glm(dead ~ log(gr_rel_ave), family = binomial(link = "logit"), data = dfa))
+dfa$log_gr_rel_ave <- log(dfa$gr_rel_ave)
+```
+
+# Visually compare distributions
+```{r}
+dfa <- dfa %>% ungroup()
+means <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+ summarize(sd = sd(log_gr_rel_ave))
+means
+sd
+```
+
+```{r}
+x <- seq(min(dfa$log_gr_rel_ave), max(dfa$log_gr_rel_ave), length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+ggplot()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_abco_dendro.png")
+
+```
+
+
+# PINES
+
+# Narrow down to just pines
+```{r}
+dfp <- df %>% 
+  filter(SPECIES == "PIPO") %>% 
+  distinct()
+dfp
+```
+
+# Find average relative growth for last 3 years - WHICH 3 YEARS DEPENDS ON WHETHER IT'S DEAD OR ALIVE
+```{r}
+dfp <- dfp %>% 
+  mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+
+dfp <- dfp %>% 
+  dplyr::select(`2013`, `2014`, `2015`, `2016`, tree, SPECIES, DEAD_ALIVE, dia_mm, dead) %>%
+  rename(gr1 = `2016`, gr2 = `2015`, gr3 = `2014`, gr4 = `2013`) %>% 
+  rename(dia1 = dia_mm) %>% 
+  mutate(dia2 = dia1 - gr1*2) %>%
+  mutate(dia3 = dia1 - gr1*2 - gr2*2) %>% 
+  mutate(dia4 = dia1 - gr1*2 - gr2*2 - gr3*2) %>% 
+  mutate(dia5 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2) %>% 
+  mutate(gr_rel_1 = (dia1 - dia2)/dia1) %>% 
+  mutate(gr_rel_2 = (dia2 - dia3)/dia2) %>% 
+  mutate(gr_rel_3 = (dia3 - dia4)/dia3) %>% 
+  mutate(gr_rel_4 = (dia4 - dia5)/dia4) 
+dfp <- dfp %>% 
+  rowwise() %>% 
+  mutate(gr_rel_ave = ifelse(dead == 1, 
+                             mean(c(gr_rel_1, gr_rel_2), na.rm=T),
+                             mean(c(gr_rel_3, gr_rel_4), na.rm=T)))
+
+summary(dfp$gr_rel_ave)
+hist(dfp$gr_rel_ave)
+```
+
+## Throw out trees with too few years to calculate growth
+```{r}
+dfp <- dfp %>% 
+  filter(!is.na(gr_rel_ave))
+```
+
+```{r}
+ggplot(dfp)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = gr_rel_ave))
+```
+
+# Test with glm
+```{r}
+dfp <- dfp %>% 
+  mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+cor(dfp$gr_rel_ave, dfp$dead)
+cor(log(dfp$gr_rel_ave), dfp$dead)
+summary(glm(dead ~ log(gr_rel_ave), family = binomial(link = "logit"), data = dfp))
+dfp$log_gr_rel_ave <- log(dfp$gr_rel_ave)
+```
+
+# Visually compare distributions
+```{r}
+dfp <- dfp %>% ungroup()
+means <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+ summarize(sd = sd(log_gr_rel_ave))
+means
+sd
+```
+
+```{r}
+x <- seq(min(dfp$log_gr_rel_ave), max(dfp$log_gr_rel_ave), length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+ggplot()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo_dendro.png")
+```
+

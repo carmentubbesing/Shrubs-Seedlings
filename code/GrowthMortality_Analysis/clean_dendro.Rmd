@@ -16,7 +16,12 @@ require(readxl)
 # Read in and compile dendro files
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
-files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
+if(Sys.info()[1]=="Darwin"){
+  files <- list.files("../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/",full.names = T, pattern = ".raw")
+} else{
+  files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
+}
+
 ```
 
 ## Make a dendro rwl and a separate data frame, so that you can manipulate the data frame without it losing rwl status
@@ -183,7 +188,13 @@ df <- df %>%
 
 ## Read in excel data
 ```{r}
-meta <- read_excel("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = "data")
+if(Sys.info()[1]=="Darwin"){
+  meta <- read_excel("../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = "data")
+} else{
+  meta <- read_excel("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = "data")
+}
+
+
 ```
 
 ## Make all caps
@@ -527,6 +538,11 @@ names(rwl[,!(names(rwl) %in% join$tree)])
 ```{r}
 rwl <- rwl[,(names(rwl) %in% join$tree)]
 ncol(rwl)
+```
+
+# Save df with all columns
+```{r}
+save(join, file = "../../data/GrowthMortality/dendro_all_vars.Rdata")
 ```
 
 

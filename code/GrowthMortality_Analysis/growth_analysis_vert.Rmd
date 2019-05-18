@@ -40,6 +40,24 @@ ggplot(df %>% filter(SPECIES == "PIPO"))+
   geom_boxplot(aes(x = DEAD, y = gr_rel_ave))
 ```
 
+# Plot growth by year
+```{r}
+df2 <- gather(df, key = "year", value = "gr_rel", c(gr1, gr2, gr3)) %>% 
+  mutate(year = ifelse(year == "gr1", "top growth", year)) %>% 
+  mutate(year = ifelse(year == "gr2", "top growth - 1", year)) %>% 
+  mutate(year = ifelse(year == "gr3", "top growth - 2", year)) %>% 
+  mutate(year = as.factor(year))
+
+df2$year <-  factor(df2$year, levels = rev(levels(df2$year)))
+
+df2 %>% dplyr::select(year, gr_rel, SEEDLING)
+ggplot(df2)+
+  geom_boxplot(aes(x = year, y = log(gr_rel), fill = DEAD_ALIVE))+
+  facet_wrap(~SPECIES)
+```
+
+
+
 ## Nice pipo graph for publication
 ```{r}
 ggplot(df %>% filter(SPECIES == "PIPO", gr_rel_ave<.8))+
