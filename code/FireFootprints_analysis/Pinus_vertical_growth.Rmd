@@ -332,6 +332,43 @@ ggplot(df)+
   geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
 ```
 
+# Find the shrubarea values associated with each quartile, and the mean growth for each of those
+```{r}
+summary <- summary(df$shrubarea3/10000)
+quart1 <- summary[2]
+quart3 <- summary[5]
+median <- summary[3]
+min <- summary[1]
+max <- summary[6]
+mean <- mean(df$shrubarea3/10000)
+fit_quart1 <- effects_df[which.min(abs(effects_df$shrubarea3 - quart1)),]$fit
+fit_quart3 <- effects_df[which.min(abs(effects_df$shrubarea3 - quart3)),]$fit
+fit_median <- effects_df[which.min(abs(effects_df$shrubarea3 - median)),]$fit
+fit_min <- effects_df[which.min(abs(effects_df$shrubarea3 - min)),]$fit
+fit_mean <- effects_df[which.min(abs(effects_df$shrubarea3 - mean)),]$fit
+mean <- mean(df$shrubarea3/10000)
+print(paste("fit_quart1 = ", exp(fit_quart1)))
+print(paste("fit_quart3 = ", exp(fit_quart3)))
+print(paste("fit_median = ", exp(fit_median)))
+print(paste("fit_min = ", exp(fit_min)))
+print(paste("fit_max = ", exp(fit_max)))
+
+
+print(paste("fit_quart1_log = ", fit_quart1))
+print(paste("fit_quart3_log = ", fit_quart3))
+print(paste("fit_median_log = ", fit_median))
+print(paste("fit_min_log = ", fit_min))
+print(paste("fit_max_log = ", fit_max))
+print(paste("fit_mean_log = ", fit_mean))
+
+```
+
+```{r}
+
+sd <- sd(df$shrubarea3/10000)
+```
+
+
 ## Save final data
 ```{r}
 save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vert.Rdata")

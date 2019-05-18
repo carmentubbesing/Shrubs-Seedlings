@@ -240,6 +240,32 @@ df <- df %>%
   mutate(ShrubSpp01 = as.factor(ShrubSpp01), ShrubSpp02 = as.factor(ShrubSpp02), ShrubSpp03 = as.factor(ShrubSpp03))
 ```
 
+## plot shrub cover growth by shrub species
+```{r}
+df_shrubs <- df %>% 
+  mutate(Years = as.factor(Years)) %>% 
+  group_by(ShrubSpp03, Years) %>% 
+  summarize(shrub_cover = mean(Cov1.3))
+ggplot(df_shrubs)+
+  geom_line(aes(x = Years, y = shrub_cover, group=ShrubSpp03, col = ShrubSpp03))
+```
+
+## plot shrub cover growth overall
+```{r}
+df_shrubs <- df %>% 
+  group_by(Fire, Cov1.3, Ht1.3) %>% 
+  summarise(Years = mean(Years))
+ggplot(df_shrubs, aes(x = Years, y = Cov1.3))+
+  geom_point()+
+  stat_smooth(method = "loess", span = 1)
+```
+
+## plot shrub HEIGHT growth overall
+```{r}
+ggplot(df_shrubs, aes(x = Years, y = Ht1.3))+
+  geom_point()+
+  stat_smooth(method = "loess", span = 1)
+```
 
 # Save
 ```{r}
