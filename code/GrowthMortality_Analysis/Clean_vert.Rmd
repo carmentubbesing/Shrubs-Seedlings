@@ -95,7 +95,6 @@ df <- df %>%
   mutate(gr1 = (ht1-ht2)/ht2) %>% 
   mutate(gr2 = (ht2-ht3)/ht3) %>% 
   mutate(gr3 = (ht3-ht4)/ht4)
-
 ```
 
 # Calculate average relative growth rate per seedling
