@@ -82,17 +82,19 @@ dfa <- dfa %>%
   mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
 
 dfa <- dfa %>% 
-  dplyr::select(`2013`, `2014`, `2015`, `2016`, tree, SPECIES, DEAD_ALIVE, dia_mm, dead) %>%
-  rename(gr1 = `2016`, gr2 = `2015`, gr3 = `2014`, gr4 = `2013`) %>% 
+  dplyr::select(`2012`, `2013`, `2014`, `2015`, `2016`, tree, SPECIES, DEAD_ALIVE, dia_mm, dead) %>%
+  rename(gr1 = `2016`, gr2 = `2015`, gr3 = `2014`, gr4 = `2013`, gr5 = `2012`) %>% 
   rename(dia1 = dia_mm) %>% 
   mutate(dia2 = dia1 - gr1*2) %>%
   mutate(dia3 = dia1 - gr1*2 - gr2*2) %>% 
   mutate(dia4 = dia1 - gr1*2 - gr2*2 - gr3*2) %>% 
   mutate(dia5 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2) %>% 
-  mutate(gr_rel_1 = (dia1 - dia2)/dia1) %>% 
-  mutate(gr_rel_2 = (dia2 - dia3)/dia2) %>% 
-  mutate(gr_rel_3 = (dia3 - dia4)/dia3) %>% 
-  mutate(gr_rel_4 = (dia4 - dia5)/dia4) 
+  mutate(dia6 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2 - gr5*2) %>% 
+  mutate(gr_rel_1 = (dia1 - dia2)/dia2) %>% 
+  mutate(gr_rel_2 = (dia2 - dia3)/dia3) %>% 
+  mutate(gr_rel_3 = (dia3 - dia4)/dia4) %>% 
+  mutate(gr_rel_4 = (dia4 - dia5)/dia5) %>% 
+  mutate(gr_rel_5 = (dia5 - dia6)/dia6)
 dfa <- dfa %>% 
   rowwise() %>% 
   mutate(gr_rel_ave = ifelse(dead == 1, 
@@ -276,4 +278,3 @@ ggplot()+
   
 ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo_dendro.png")
 ```
-
