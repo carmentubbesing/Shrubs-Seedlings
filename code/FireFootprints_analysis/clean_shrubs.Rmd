@@ -1,0 +1,368 @@
+---
+title: "CLean_shrubs"
+author: "Carmen"
+date: "May 20, 2019"
+output: 
+    html_document:
+        toc: TRUE
+        toc_depth: 1
+---
+
+```{r, include = F}
+require(readxl)
+require(dplyr)
+require(tidyr)
+```
+
+# Load data
+```{r}
+shr <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv")
+
+sdlt <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv")
+```
+
+# Basic df cleaning
+
+## Correct typos and create variable for fire x patch
+```{r}
+sdlt$Fire[sdlt$Fire=="FRED"]<- "FRDS"
+sdlt$Fire[sdlt$Fire=="AMRC"]<- "AMCR"
+sdlt$Species[sdlt$Species=="pipo"]<- "PIPO"
+sdlt$Species[sdlt$Species=="PILA "]<- "PILA"
+sdlt$Patch[sdlt$Patch=="s"]<- "S"
+sdlt$FirePatch <- paste(sdlt$Fire, sdlt$Patch, sep = "-")
+sdlt$FirePatch <- as.factor(sdlt$FirePatch)
+```
+
+## Take out Seedling 17 because it doesn't have shrub data
+```{r}
+sdlt <- sdlt %>% 
+  filter(Seedling. != "17")
+```
+
+## Take out repeat rows
+```{r}
+sdlt <- sdlt[sdlt$Return==0,]
+```
+
+## Reduce to variables of interest
+```{r}
+df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","Light_File","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
+df <- tbl_df(df)
+df <- rename(df,Sdlg = Seedling.)
+```
+
+# Basic shrub cleaning
+
+## Replace NAs with 0
+```{r}
+shr <- tbl_df(shr)
+shr$Dead.[is.na(shr$Dead.)] <- 0
+shr$Cover.cm[is.na(shr$Cover.cm)] <- 0
+shr$Ht.cm[is.na(shr$Ht.cm)] <- 0
+```
+
+## Take out dead shrubs
+```{r}
+shr <- subset(shr, shr$Dead.!= 1)
+```
+
+## Take out "pea" shrub cover
+```{r}
+head(shr)
+shr %>% filter(ShrubSpp == "pea")
+shr <- shr %>% filter(ShrubSpp != "pea")
+```
+
+
+# Aggregate shrub data by seedling
+```{r}
+shr$Seg <- 0
+for(i in 1:nrow(shr)){
+if(shr$Segment[i] %in% c("0-1 m ","0 -1 m","0-1 m")){
+  shr$Seg[i] <- 1
+} else if (shr$Segment[i]=="1-2 m "){
+  shr$Seg[i] <- 2
+} else if (shr$Segment[i] %in% c("2-3 m","2-3m")){
+  shr$Seg[i] <- 3
+}  else
+    shr$Seg[i] <- 999
+}
+```
+
+## Summarize by segment and total cover
+```{r}
+cov <- shr %>%
+  group_by(Seedling., Seg) %>%
+  summarise(cov =sum(Cover.cm)) %>%
+  spread(Seg, cov) %>% 
+  rename(Sdlg = Seedling.) %>%
+  rename(Cov1=`1`) %>%
+  rename(Cov2=`2`) %>%
+  rename(Cov3=`3`)
+```
+
+### Replace NA with 0
+```{r}
+cov %>% filter(is.na(Cov1))
+cov %>% filter(Sdlg == 290)
+cov <- cov %>% 
+  replace_na(list(Cov1 = 0, Cov2 = 0, Cov3 = 0))
+```
+
+
+## Summarize by segment and average height
+```{r}
+ht <- shr %>%
+  group_by(Seedling., Seg) %>%
+  summarise(ht =mean(Ht.cm)) %>%
+  spread(Seg, ht) %>% 
+  rename(Sdlg = Seedling.) %>%
+  rename(Ht1=`1`) %>%
+  rename(Ht2=`2`) %>%
+  rename(Ht3=`3`)  
+```
+
+### Replace NA with 0
+```{r}
+ht %>% filter(is.na(Ht1))
+ht <- ht %>% 
+  replace_na(list(Ht1 = 0, Ht2 = 0, Ht3 = 0))
+```
+
+
+## Test - all should be TRUE
+```{r}
+sum(shr[shr$Seedling.==10 & shr$Seg==1,]$Cover.cm) == cov[cov$Sdlg==10,2]
+sum(shr[shr$Seedling.==1 & shr$Seg==3,]$Cover.cm) == cov[cov$Sdlg==1,4]
+mean(shr[shr$Seedling.==10 & shr$Seg==1,]$Ht.cm) == ht[ht$Sdlg==10,2]
+mean(shr[shr$Seedling.==1 & shr$Seg==3,]$Ht.cm) == ht[ht$Sdlg==1,4]
+```
+
+## Combine cover and ht values
+```{r}
+shr_by_sdlg <- full_join(cov,ht,by="Sdlg")
+```
+
+## Find most common shrub species in 0-1, 0-2, and 0-3
+
+### 0-1
+```{r}
+spp1 <- shr %>%
+  filter(Seg == 1) %>% 
+  group_by(Seedling., Seg, ShrubSpp) %>% 
+  mutate(cov=sum(Cover.cm)) %>%
+  ungroup %>%
+  group_by(Seedling., Seg)%>%
+  filter(cov == max(cov)) %>%
+  select(Seedling.,Seg,ShrubSpp,cov) %>%
+  distinct(.keep_all=TRUE)%>% 
+  rename(ShrubSpp01 = ShrubSpp)
+```
+
+#### Check for correct # of seedlings and correct errors
+```{r}
+length(unique(df$Sdlg))
+nrow(spp1)
+setdiff(df$Sdlg, spp1$Seedling.)
+setdiff(spp1$Seedling., df$Sdlg)
+spp1 %>% 
+  group_by(Seedling.) %>% 
+  mutate(n = n()) %>% 
+  filter(n != 1)
+shr %>% 
+  filter(Seedling. == 48 & Seg == 1)
+```
+
+Since there's a tie between LIDE and conifer, I'm choosing the one with the greater height, which in this case is LIDE
+```{r}
+spp1 <- spp1 %>% 
+  filter(!(Seedling.==48 & ShrubSpp01 =="conifer"))
+```
+
+
+### 0-2
+```{r}
+spp2 <- shr %>%
+  filter(Seg == 1|Seg ==2) %>% 
+  group_by(Seedling.,ShrubSpp) %>% 
+  mutate(cov=sum(Cover.cm)) %>%
+  ungroup %>%
+  group_by(Seedling.)%>%
+  filter(cov == max(cov)) %>%
+  select(Seedling.,ShrubSpp,cov) %>%
+  distinct(.keep_all=TRUE)%>% 
+  rename(ShrubSpp02 = ShrubSpp)
+```
+
+#### Check for correct # of seedlings and correct errors
+
+### 0-3
+```{r}
+spp3 <- shr %>%
+  group_by(Seedling.,ShrubSpp) %>% 
+  mutate(cov=sum(Cover.cm)) %>%
+  ungroup %>%
+  group_by(Seedling.)%>%
+  filter(cov == max(cov)) %>%
+  select(Seedling.,ShrubSpp,cov) %>%
+  distinct(.keep_all=TRUE) %>% 
+  rename(ShrubSpp03 = ShrubSpp)
+```
+
+
+Choose the ones with greater heights:
+##### 20
+```{r}
+shr %>% 
+  filter(Seedling. == 20 & ShrubSpp %in% c("PREM", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp)
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==20 & ShrubSpp03 =="PREM"))
+```
+
+##### 21
+```{r}
+shr %>% 
+  filter(Seedling. == 21 & ShrubSpp %in% c("PREM", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp)
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==21 & ShrubSpp03 =="PREM"))
+```
+
+##### 188
+```{r}
+shr %>% 
+  filter(Seedling. == 188 & ShrubSpp %in% c("CONU", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp) %>% 
+  mutate(math = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  summarise(sum(math))
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==188 & ShrubSpp03 =="CECO"))
+```
+
+
+##### 190
+```{r}
+shr %>% 
+  filter(Seedling. == 190 & ShrubSpp %in% c("willow", "CECO")) %>% 
+  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  arrange(ShrubSpp) %>% 
+  mutate(math = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  summarise(sum(math))
+```
+
+```{r}
+spp3 <- spp3 %>% 
+  filter(!(Seedling.==190 & ShrubSpp03 =="CECO"))
+```
+
+
+## Combine with df
+```{r}
+spp1 <- spp1 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp01)
+df <- left_join(df, spp1, by = c("Sdlg" ="Seedling."))
+spp2 <- spp2 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp02)
+df <- left_join(df, spp2, by = c("Sdlg" ="Seedling."))
+spp3 <- spp3 %>% 
+  ungroup() %>% 
+  select(Seedling., ShrubSpp03)
+df <- left_join(df, spp3, by = c("Sdlg" ="Seedling."))
+```
+
+## Check that shrub seedlings match seedlings seedlings
+```{r}
+nrow(df) - nrow(shr_by_sdlg)
+setdiff(df$Sdlg, shr_by_sdlg$Sdlg)
+setdiff(shr_by_sdlg$Sdlg, df$Sdlg)
+```
+
+# Combine seedling data with shrub data 
+
+```{r}
+df <- full_join(df, shr_by_sdlg, by="Sdlg")
+```
+
+## Combine segments into 0-1, 0-2, and 0-3 m
+```{r}
+df <- df %>%
+  mutate(Cov1.2 = Cov1+Cov2) %>%
+  mutate(Cov1.3 = Cov1.2+Cov3) %>%
+  mutate(Ht1.2 = (Ht1+Ht2)/2) %>%
+  mutate(Ht1.3 = (Ht1+Ht2+Ht3)/3)
+```
+
+## Create Column for ShrubSpp01Genus
+```{r}
+df$ShrG1 <- 0
+df$ShrubSpp01 <- as.character(df$ShrubSpp01)
+df[is.na(df$ShrubSpp01),"ShrubSpp01"] <- "NONE"
+for (i in 1:nrow(df)){
+  if(df$ShrubSpp01[i] %in% c("ARNE","ARPA","ARVI")){
+    df$ShrG1[i] <- "Arcto"    
+  } else if(df$ShrubSpp01[i] %in% c("CECO","CEIN","CEPR")){
+    df$ShrG1[i] <- "Ceanothus"    
+  } else if(df$ShrubSpp01[i] %in% c("QUVA","QUKE")){
+    df$ShrG1[i] <- "Quercus"
+  } else if(df$ShrubSpp01[i] == "LIDE"){
+    df$ShrG1[i] <- "LIDE"
+  } else if(df$ShrubSpp01[i] == "CHFO"){
+    df$ShrG1[i] <- "CHFO"
+  } else if(df$ShrubSpp01[i] == "CHSE"){
+    df$ShrG1[i] <- "CHSE"
+      } else 
+    df$ShrG1[i] <- "Other"
+}
+df$ShrG1 <- as.factor(df$ShrG1)
+summary(df$ShrG1)
+```
+
+## Create column for shrub species immediately above seedling
+```{r}
+df$IAG <- 0
+```
+
+#### Check for correct # of seedlings and correct errors
+```{r}
+length(unique(df$Sdlg))
+nrow(spp3)
+setdiff(df$Sdlg, spp3$Seedling.)
+setdiff(spp3$Seedling., df$Sdlg)
+spp3 %>% 
+  group_by(Seedling.) %>% 
+  mutate(n = n()) %>% 
+  filter(n != 1)
+```
+
+
+
+```{r}
+df <- df %>% 
+  mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0))
+summary(as.factor(df$ref))
+```
+
+# Save
+```{r}
+setwd("~/Shrubs-Seedlings/compiled_data/")
+save(df, file="shrub_master_data_2016.Rdata")
+```
+
