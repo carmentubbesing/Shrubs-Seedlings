@@ -1,0 +1,44 @@
+---
+title: "Render all"
+author: "Carmen"
+date: "March 20, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+This code contains all of the steps necessary to clean and analyze Growth Mortality data
+
+# Cleaning
+```{r cleaning, message = F, warning = F}
+library(knitr)
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis//")
+strt <- Sys.time()
+rmarkdown::render("Clean_vert.Rmd", "html_document")
+rmarkdown::render("dendro_join.Rmd", "html_document")
+rmarkdown::render("Clean_dendro.Rmd", "html_document")
+
+print(Sys.time()-strt)
+```
+
+# Intermediary Analysis
+```{r intermediary_analysis, message = F, warning = F}
+strt <- Sys.time()
+rmarkdown::render("live_chronology.Rmd", "html_document")
+rmarkdown::render("date_dead_dendro.Rmd.Rmd", "html_document")
+print(strt-Sys.time())
+```
+
+# Intermediary Cleaning
+```{r, message = F, warning = F}
+strt <- Sys.time()
+
+print(strt-Sys.time())
+```
+
+# Main Analysis
+```{r main_analysis, message = F, warning = F}
+strt <- Sys.time()
+
+print(strt-Sys.time())
+```
