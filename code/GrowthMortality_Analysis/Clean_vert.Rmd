@@ -2,7 +2,9 @@
 title: "Clean growth ~ mortality data"
 author: "Carmen"
 date: "April 17, 2019"
-output: html_document
+output: 
+  html_document:
+      toc: TRUE
 ---
 
 ```{r, include = F}
@@ -15,7 +17,7 @@ library(effects)
 
 # Load data
 ```{r}
-df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
 ```
 
 # Delete rows with no data
@@ -182,6 +184,114 @@ df_toss <- full_join(df_toss, df %>%
 nrow(df_toss)
 ```
 
+
+## delete pairs in df_toss from df
+```{r}
+length(unique(df_toss$PAIR))
+length(unique(df$PAIR))
+
+nrow(df)
+df <- df %>% 
+  filter(!PAIR %in% df_toss$PAIR)
+nrow(df)
+```
+
+## Add reasons for exclusion in the notes section of df 
+```{r}
+df <- df %>% 
+  mutate(exclude_reason = NA)
+```
+
+### Create function for Add Exclusion Reason
+```{r}
+aer <- function(seedling, reason){
+  df <<- df %>% 
+    mutate(exclude_reason = ifelse(SEEDLING == seedling, reason, exclude_reason))
+}
+```
+
+### Apply to seedlings one by one by looking at data
+```{r}
+aer("65B", "mate excluded")
+aer("65", "beetles")
+aer("94", "PATH_DAMAGE")
+aer("92", "PATH_DAMAGE")
+aer("92B", "mate excluded")
+aer(76, "beetles")
+aer(7, "PATH_DAMAGE")
+aer(6, "PATH_DAMAGE")
+aer("6B", "mate excluded")
+aer("59", "beetles")
+aer("59B", "mate excluded")
+aer("58", "beetles")
+aer(53, "PATH_DAMAGE")
+aer(5, "PATH_DAMAGE")
+aer(28, "PATH_DAMAGE")
+aer("22", "MUNCHED")
+aer("194", "TOO YOUNG")
+aer("194B", "TOO YOUNG")
+aer("189", "PATH_DAMAGE")
+aer("188", "PATH_DAMAGE")
+aer("187", "TOO YOUNG")
+aer("187B", "TOO YOUNG")
+aer("185-A", "beetles")
+aer("17", "MUNCHED")
+aer("162", "MUNCHED")
+aer("155", "unkn")
+aer("147", "MUNCHED")
+aer("149", "beetles")
+aer(146, "PATH_DAMAGE")
+aer("146B", "mate excluded")
+aer(145, "beetles")
+aer(136, "beetles")
+aer(116, "beetles")
+aer("116B", "mate excluded")
+aer(114, "pitching")
+aer(104, "PATH_DAMAGE")
+aer(104, "PATH_DAMAGE")
+aer(103, "PATH_DAMAGE")
+aer("103B", "PATH_DAMAGE")
+```
+
+The following are marked as being thrown out, but DO have data, so could potentially be used as a back-up mate if needed,
+
+So make them thrown_out = ?
+```{r}
+df <- df %>% 
+  mutate(thrown_out = ifelse(SEEDLING %in% c("58B", "53B", "7B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), "?", thrown_out))
+```
+
+### Add column to df for mateless seedlings
+```{r}
+df <- df %>% 
+  mutate(mateless = ifelse(SEEDLING %in% c("7B","76B", "58B", "53B", "5B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), 1, 0)) %>% 
+  arrange(desc(mateless))
+```
+
+## See what thrown out seedlings remain without a exclude_reason
+```{r}
+df %>% 
+  filter(thrown_out == 1 & is.na(exclude_reason)) %>% 
+  dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %>% 
+  arrange(desc(SEEDLING)) 
+```
+
+## Correct 184A/184-A/185
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "184A", "184-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "184BA", "184B-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "185BA", "185B-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "185B", "185B-P", SEEDLING))
+```
+
+# Save df
+```{r}
+save(df, file = "../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
+```
+
+# Cleaning for vertical growth analysis specifically
+
 ## trees that are missing any year of growth
 ```{r}
 nrow(df_toss)
@@ -189,6 +299,7 @@ df_toss <- full_join(df_toss, df %>%
   filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)))
 nrow(df_toss)
 ```
+
 
 ## delete pairs in df_toss from df
 ```{r}
@@ -202,7 +313,9 @@ nrow(df)
 ```
 
 
-# Check for mateless seedlings again
+# Check how it looks
+
+## Check for mateless seedlings again
 ```{r}
 df %>% 
   group_by(PAIR) %>% 
@@ -210,7 +323,7 @@ df %>%
   filter(count != 2)
 ```
 
-# Check out how many usable seedlings I have as of now of each species
+## Check out how many usable seedlings I have as of now of each species
 ```{r}
 df %>% 
   filter(DEAD_ALIVE == "DEAD") %>% 
@@ -219,7 +332,7 @@ df %>%
 ```
 
 
-# Save 
+# Save vertical growth df
 ```{r}
 save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
 ```

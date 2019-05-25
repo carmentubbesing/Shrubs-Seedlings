@@ -196,26 +196,92 @@ $(document).ready(function () {
 <h1>Growth~Mortality Study</h1>
 <p>Data wrangling, cleaning, and analysis for the growth ~ mortality study.</p>
 <p>Files are dependent in the following order:</p>
-<div id="cleaning-code" class="section level2">
-<h2>1. Cleaning code</h2>
+<div id="compiling-and-cleaning-code" class="section level2">
+<h2>1. Compiling and cleaning code</h2>
 <div id="clean_vert.rmd" class="section level4">
 <h4><strong>Clean_vert.Rmd</strong></h4>
 <ul>
 <li>uses:
 <ul>
-<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_Nov08_2017.xlsx</code></li>
+<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx</code></li>
 </ul></li>
 <li>creates:
 <ul>
 <li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata</code></li>
+<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="dendro_join.rmd" class="section level4">
+<h4><strong>dendro_join.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li>all files in <code>Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>../../compiled_data/dendro_joined.Rdata</code></li>
+<li><code>../../compiled_data/rwl_joined.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="clean_dendro.rmd" class="section level4">
+<h4><strong>Clean_dendro.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata</code></li>
+<li><code>../../compiled_data/dendro_joined.Rdata</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>../../compiled_data/growth_mortality/dendro_all_vars.Rdata</code></li>
+<li><code>../../data/GrowthMortality/live_pipo_rwl.Rdata</code></li>
+<li><code>../../data/GrowthMortality/live_pipo.rwl</code></li>
+<li><code>../../data/GrowthMortality/live_abco.rwl</code></li>
+<li><code>../../data/GrowthMortality/dead_abco_rwl.Rdata</code></li>
+<li><code>../../data/GrowthMortality/dead_pipo_rwl.Rdata</code></li>
+<li><code>../../data/GrowthMortality/dead_abco.rwl</code></li>
+<li><code>../../data/GrowthMortality/dead_pipo.rwl</code></li>
 </ul></li>
 </ul>
 </div>
 </div>
+<div id="intermediary-cleaninganalysis" class="section level2">
+<h2>Intermediary cleaning/analysis</h2>
+<div id="date_dead_dendro.rmd" class="section level4">
+<h4><strong>date_dead_dendro.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>../../data/GrowthMortality/dead_pipo_rwl.Rdata</code></li>
+<li><code>../../data/GrowthMortality/dead_abco_rwl.Rdata</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>../../compiled_data/fir_rings_detrended.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="clean_detailed_data.rmd" class="section level4">
+<h4><strong>Clean_detailed_data.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>../../compiled_data/growth_mortality/dendro_all_vars.Rdata</code></li>
+<li><code>../../compiled_data/fir_rings_detrended.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="live_chronology.rmd" class="section level4">
+<h4><strong>live_chronology.Rmd</strong></h4>
+</div>
+</div>
 <div id="main-analyses" class="section level2">
 <h2>2. Main analyses</h2>
-<div id="growth_analysis_vert" class="section level4">
-<h4><strong>Growth_analysis_vert</strong></h4>
+<div id="growth_analysis_vert.rmd" class="section level4">
+<h4><strong>Growth_analysis_vert.Rmd</strong></h4>
 <ul>
 <li>uses:
 <ul>
@@ -224,6 +290,16 @@ $(document).ready(function () {
 <li>figures:
 <ul>
 <li><code>fir_RGR.pdf</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="dendro_analysis.rmd" class="section level4">
+<h4><strong>Dendro_analysis.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>../../data/GrowthMortality/rwl.Rdata</code></li>
+<li><code>../../data/GrowthMortality/dendro_all_vars.Rdata</code></li>
 </ul></li>
 </ul>
 </div>
