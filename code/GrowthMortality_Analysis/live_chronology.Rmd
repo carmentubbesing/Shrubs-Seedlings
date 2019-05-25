@@ -1,5 +1,5 @@
 ---
-title: "live chrnology"
+title: "live chronology"
 author: "Carmen"
 date: "May 16, 2019"
 output: 
@@ -15,10 +15,23 @@ require(readxl)
 
 # Read in and compile dendro files
 ```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../data/GrowthMortality/live_pipo_rwl.Rdata")
 rwlp <- rwl_live_pipo
 load(file = "../../data/GrowthMortality/live_abco_rwl.Rdata")
 rwla <- rwl_live_abco
+load(file = "../../data/GrowthMortality/dead_pipo_rwl.Rdata")
+load(file = "../../data/GrowthMortality/dead_abco_rwl.Rdata")
+```
+
+## Add dead ABCO with green foliage to the live chronology, since we know they died in 2017
+```{r}
+rwla_dead_green <- rwl_dead_abco[,colnames(rwl_dead_abco) %in% c(201, 100, 30, 127, 16, 211, 32, 52, 55, 169, 215)]
+rwla_dead_green
+```
+
+```{r}
+rwla <- cbind(rwla, rwla_dead_green)
 ```
 
 # Plot data before detrending
@@ -35,19 +48,11 @@ head(rwlp2)
 ```
 
 ```{r}
-rwlp3 <- rwlp2 %>% 
-  group_by(year) %>% 
-  mutate(means = mean(na.omit(growth))) %>% 
-  mutate(n = n()) %>% 
-  ungroup()
-```
-
-```{r}
-rwlp3_summary <- rwlp3 %>% 
+rwlp2_summary <- rwlp2 %>% 
   group_by(tree) %>% 
   summarize(n = n()) %>% 
   arrange(desc(n))
-rwlp3_summary
+rwlp2_summary
 ```
 
 ### ABCO
@@ -60,19 +65,11 @@ head(rwla2)
 ```
 
 ```{r}
-rwla3 <- rwla2 %>% 
-  group_by(year) %>% 
-  mutate(means = mean(na.omit(growth))) %>% 
-  mutate(n = n()) %>% 
-  ungroup()
-```
-
-```{r}
-rwla3_summary <- rwla3 %>% 
+rwla2_summary <- rwla2 %>% 
   group_by(tree) %>% 
   summarize(n = n()) %>% 
   arrange(desc(n))
-rwla3_summary
+rwla2_summary
 ```
 
 ## Plot by # of rings in the series
@@ -81,7 +78,7 @@ rwla3_summary
 
 #### Pines with 8 years:
 ```{r}
-ggplot(rwlp3 %>% filter(tree %in%  rwlp3_summary$tree[1:6])) + 
+ggplot(rwlp2 %>% filter(tree %in%  rwlp2_summary$tree[1:6])) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -90,7 +87,7 @@ ggplot(rwlp3 %>% filter(tree %in%  rwlp3_summary$tree[1:6])) +
 
 #### Pines with 7 years:
 ```{r}
-ggplot(rwlp3 %>% filter(tree %in%  unlist(rwlp3_summary[rwlp3_summary$n == 7,"tree"]))) + 
+ggplot(rwlp2 %>% filter(tree %in%  unlist(rwlp2_summary[rwlp2_summary$n == 7,"tree"]))) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -99,7 +96,7 @@ ggplot(rwlp3 %>% filter(tree %in%  unlist(rwlp3_summary[rwlp3_summary$n == 7,"tr
 
 #### Pines with 6 years:
 ```{r}
-ggplot(rwlp3 %>% filter(tree %in%  unlist(rwlp3_summary[rwlp3_summary$n == 6,"tree"]))) + 
+ggplot(rwlp2 %>% filter(tree %in%  unlist(rwlp2_summary[rwlp2_summary$n == 6,"tree"]))) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -113,7 +110,7 @@ ggplot(rwlp3 %>% filter(tree %in%  unlist(rwlp3_summary[rwlp3_summary$n == 6,"tr
 
 #### Firs with 10+ years:
 ```{r}
-ggplot(rwla3 %>% filter(tree %in%  rwla3_summary$tree[1:7])) + 
+ggplot(rwla2 %>% filter(tree %in%  rwla2_summary$tree[1:7])) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -122,7 +119,7 @@ ggplot(rwla3 %>% filter(tree %in%  rwla3_summary$tree[1:7])) +
 
 #### Firs with 9 years:
 ```{r}
-ggplot(rwla3 %>% filter(tree %in%  unlist(rwla3_summary[rwla3_summary$n == 9,"tree"]))) + 
+ggplot(rwla2 %>% filter(tree %in%  unlist(rwla2_summary[rwla2_summary$n == 9,"tree"]))) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -131,7 +128,7 @@ ggplot(rwla3 %>% filter(tree %in%  unlist(rwla3_summary[rwla3_summary$n == 9,"tr
 
 #### Firs with 8 years:
 ```{r}
-ggplot(rwla3 %>% filter(tree %in%  unlist(rwla3_summary[rwla3_summary$n == 8,"tree"]))) + 
+ggplot(rwla2 %>% filter(tree %in%  unlist(rwla2_summary[rwla2_summary$n == 8,"tree"]))) + 
   stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
   geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
 ```
@@ -277,13 +274,20 @@ dfpstd
 
 #### Plot
 ```{r}
+dfpstd <- dfpstd %>% 
+  ungroup() %>% 
+  mutate(Year = as.numeric(Year))
 ggplot(dfpstd) + 
-  geom_point(aes(x = as.numeric(Year), y = mean_gr_year), col = "red")+
-  geom_line(aes(x = as.numeric(Year), y = mean_gr_year), col = "red")+
-  geom_errorbar(aes(x = as.numeric(Year),ymin = min, ymax = max), width = .2, col = "gray")+
-  geom_line(aes(x = as.numeric(Year), y = min), col = "gray")+
-  geom_line(aes(x = as.numeric(Year), y = max), col = "gray")+
-  ggtitle("PIPO standardized means +/- 2 SE")
+  geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("PIPO standardized means +/- 2 SE")+
+  scale_x_continuous(breaks = seq(min(dfpstd$Year), max(dfpstd$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+
 ```
 
 ### ABCO
@@ -300,12 +304,53 @@ dfastd <- dfa %>%
 ```
 
 #### Plot
-```{r}
+```{r, warning = F}
+dfastd <- dfastd %>% 
+  ungroup() %>% 
+  mutate(Year = as.numeric(Year))
 ggplot(dfastd) + 
-  geom_point(aes(x = as.numeric(Year), y = mean_gr_year), col = "red")+
-  geom_line(aes(x = as.numeric(Year), y = mean_gr_year), col = "red")+
-  geom_errorbar(aes(x = as.numeric(Year),ymin = min, ymax = max), width = .2, col = "gray")+
-  geom_line(aes(x = as.numeric(Year), y = min), col = "gray")+
-  geom_line(aes(x = as.numeric(Year), y = max), col = "gray")+
-  ggtitle("ABCO standardized means +/- 2 SE")
+  geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("ABCO standardized means +/- 2 SE")+
+  scale_x_continuous(breaks = seq(min(dfastd$Year), max(dfastd$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+ggsave("../../results/figures/GrowthMortality/live_chron_abco+greendead.jpg", width = 5, height = 5)
 ```
+
+# Summarize detrended live growth to compare to detrended dead growth
+```{r}
+dfa %>% 
+  ungroup() %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y = growth_detrended))
+dfa %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ungroup() %>% 
+  summarize(mean(growth_detrended))
+
+```
+
+```{r}
+dfp %>% 
+  ungroup() %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y = growth_detrended))
+dfp %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ungroup() %>% 
+  summarize(mean(growth_detrended))
+
+```
+
+# Save detrended data
+```{r}
+save(dfa, file = "../../compiled_data/live_chron_abco.Rdata")
+save(dfp, file = "../../compiled_data/live_chron_pipo.Rdata")
+```
+
