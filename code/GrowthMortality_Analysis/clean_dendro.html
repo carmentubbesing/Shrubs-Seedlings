@@ -210,7 +210,6 @@ $(document).ready(function () {
 <li><a href="#rearrange-names">Rearrange names</a></li>
 <li><a href="#throw-out-trees-from-sample-board">Throw out trees from sample board</a></li>
 <li><a href="#find-trees-that-dont-have-the-right-number-of-radii">Find trees that don’t have the right number of radii</a></li>
-<li><a href="#correct-tree-mislabeled-as-the-wrong-species">Correct tree mislabeled as the wrong species</a></li>
 <li><a href="#make-seedling-color-column-all-lower-case">Make seedling color column all lower case</a><ul>
 <li><a href="#fix-duplicates">Fix duplicates</a></li>
 </ul></li>
@@ -411,21 +410,20 @@ df %&gt;%
 ## 5   NA   NA      2  184A
 ## 6   NA   NA      3  184A</code></pre>
 <pre class="r"><code>df_full %&gt;% filter(SEEDLING %in% c(&quot;184-A&quot;, &quot;184B-A&quot;))</code></pre>
-<pre><code>## # A tibble: 2 x 44
+<pre><code>## # A tibble: 2 x 35
 ##    COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
 ##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ## 1   380 2017-08-29 00:00:00 0.39~ 184-A    ABCO       108    0.183
 ## 2   380 2017-08-29 00:00:00 &lt;NA&gt;  184B-A   ABCO        95    0.182
-## # ... with 37 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
+## # ... with 28 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
 ## #   BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;,
 ## #   MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK
 ## #   DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;,
 ## #   SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;,
 ## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
 ## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;,
-## #   DEAD &lt;fct&gt;, ht1 &lt;dbl&gt;, ht2 &lt;dbl&gt;, ht3 &lt;dbl&gt;, ht4 &lt;dbl&gt;, gr1 &lt;dbl&gt;,
-## #   gr2 &lt;dbl&gt;, gr3 &lt;dbl&gt;, gr_rel_ave &lt;dbl&gt;, log_gr_rel_ave &lt;dbl&gt;,
-## #   BAS_DIA_AVE &lt;dbl&gt;, PAIR &lt;chr&gt;, exclude_reason &lt;lgl&gt;, mateless &lt;dbl&gt;</code></pre>
+## #   DEAD &lt;fct&gt;, BAS_DIA_AVE &lt;dbl&gt;, PAIR &lt;chr&gt;, exclude_reason &lt;lgl&gt;,
+## #   mateless &lt;dbl&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(tree = ifelse(tree == &quot;184A&quot;, &quot;184-A&quot;, tree)) %&gt;% 
   mutate(tree = ifelse(tree == &quot;184BA&quot;, &quot;184B-A&quot;, tree))</code></pre>
@@ -480,31 +478,11 @@ head(df)</code></pre>
 ## 11 P2Bd74 19BU  19BUR2 2     
 ## 12 P2Bd74 19BU  19BUR3 3</code></pre>
 </div>
-<div id="correct-tree-mislabeled-as-the-wrong-species" class="section level2">
-<h2>Correct tree mislabeled as the wrong species</h2>
-<pre class="r"><code>df_full %&gt;% filter(SEEDLING == 202)</code></pre>
-<pre><code>## # A tibble: 1 x 44
-##    COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
-##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-## 1   380 2017-08-30 00:00:00 0.55~ 202      ABCO        22    0.164
-## # ... with 37 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
-## #   BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;,
-## #   MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK
-## #   DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;,
-## #   SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;,
-## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
-## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;,
-## #   DEAD &lt;fct&gt;, ht1 &lt;dbl&gt;, ht2 &lt;dbl&gt;, ht3 &lt;dbl&gt;, ht4 &lt;dbl&gt;, gr1 &lt;dbl&gt;,
-## #   gr2 &lt;dbl&gt;, gr3 &lt;dbl&gt;, gr_rel_ave &lt;dbl&gt;, log_gr_rel_ave &lt;dbl&gt;,
-## #   BAS_DIA_AVE &lt;dbl&gt;, PAIR &lt;chr&gt;, exclude_reason &lt;lgl&gt;, mateless &lt;dbl&gt;</code></pre>
-<pre class="r"><code>df_full &lt;- df_full %&gt;% 
-  mutate(SPECIES = ifelse(SEEDLING == 202, &quot;PIPO&quot;, SPECIES))</code></pre>
-</div>
 <div id="make-seedling-color-column-all-lower-case" class="section level2">
 <h2>Make seedling color column all lower case</h2>
 <pre class="r"><code>df_full %&gt;% 
   mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR))</code></pre>
-<pre><code>## # A tibble: 334 x 44
+<pre><code>## # A tibble: 334 x 35
 ##     COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
 ##    &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
 ##  1   180 2017-08-14 00:00:00 0.54~ 1        PIPO        19    0.137
@@ -517,17 +495,15 @@ head(df)</code></pre>
 ##  8   180 2017-08-14 00:00:00 0.64~ 13       PIPO        75    0.163
 ##  9   180 2017-08-14 00:00:00 0.65~ 14       PIPO        56    0.191
 ## 10   180 2017-08-14 00:00:00 0.65~ 15       PIPO        92    0.126
-## # ... with 324 more rows, and 37 more variables: DEAD_ALIVE &lt;chr&gt;,
+## # ... with 324 more rows, and 28 more variables: DEAD_ALIVE &lt;chr&gt;,
 ## #   BAS_DIA_1_mm &lt;dbl&gt;, BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;,
 ## #   MINUS_1_GR_cm &lt;dbl&gt;, MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;,
 ## #   NEEDLE_COLOR &lt;chr&gt;, `BLACK DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;,
 ## #   `Growing?` &lt;chr&gt;, SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;,
 ## #   MECH_DAMAGE &lt;dbl&gt;, PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops
 ## #   cut?` &lt;chr&gt;, `photo checked in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;,
-## #   Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;, DEAD &lt;fct&gt;, ht1 &lt;dbl&gt;, ht2 &lt;dbl&gt;,
-## #   ht3 &lt;dbl&gt;, ht4 &lt;dbl&gt;, gr1 &lt;dbl&gt;, gr2 &lt;dbl&gt;, gr3 &lt;dbl&gt;,
-## #   gr_rel_ave &lt;dbl&gt;, log_gr_rel_ave &lt;dbl&gt;, BAS_DIA_AVE &lt;dbl&gt;, PAIR &lt;chr&gt;,
-## #   exclude_reason &lt;lgl&gt;, mateless &lt;dbl&gt;</code></pre>
+## #   Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;, DEAD &lt;fct&gt;, BAS_DIA_AVE &lt;dbl&gt;,
+## #   PAIR &lt;chr&gt;, exclude_reason &lt;lgl&gt;, mateless &lt;dbl&gt;</code></pre>
 <div id="fix-duplicates" class="section level3">
 <h3>Fix duplicates</h3>
 <div id="tree-19" class="section level4">

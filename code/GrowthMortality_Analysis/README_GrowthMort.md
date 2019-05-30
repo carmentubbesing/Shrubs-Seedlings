@@ -5,12 +5,20 @@ Data wrangling, cleaning, and analysis for the growth ~ mortality study.
 Files are dependent in the following order:
 
 ## 1.  Compiling and cleaning code
-#### **Clean_vert.Rmd**
+#### **Clean_all.Rmd**
 * uses:
     * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx`
+    * `../../results/data/GrowthMortality/died2017.Rdata`
+    * `../../results/data/GrowthMortality/died2016.Rdata`
+    * `../../results/data/GrowthMortality/died2015.Rdata`
+* creates:
+    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
+
+#### **Clean_vert.Rmd**
+* uses:
+    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata`
-    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
 
 #### **dendro_join.Rmd**
 * uses:
@@ -50,8 +58,6 @@ Files are dependent in the following order:
     * `../../compiled_data/growth_mortality/dendro_all_vars.Rdata`
     * `../../compiled_data/fir_rings_detrended.Rdata`
 
-
-
 ## 2. Main analyses
 #### **Growth_analysis_vert.Rmd**
 * uses: 
@@ -63,6 +69,11 @@ Files are dependent in the following order:
 * uses:
     * `../../data/GrowthMortality/rwl.Rdata`
     * `../../data/GrowthMortality/dendro_all_vars.Rdata`
+    
+#### **simulations.Rmd**
+* uses:
+    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata`
+
 
             
         

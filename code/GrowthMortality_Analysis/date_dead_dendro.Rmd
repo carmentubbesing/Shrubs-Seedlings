@@ -669,6 +669,14 @@ length(died2016)
 length(died2015)
 ```
 
+# Save lists of trees that died in each year
+```{r}
+save(died2017, file = "../../results/data/GrowthMortality/died2017.Rdata")
+save(died2016, file = "../../results/data/GrowthMortality/died2016.Rdata")
+save(died2015, file = "../../results/data/GrowthMortality/died2015.Rdata")
+```
+
+
 ## Find duplicates
 ```{r}
 length(unique(c(died2017, died2016, died2015)))
@@ -717,7 +725,6 @@ dfafull %>%
   mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
   group_by(NEEDLE_COLOR) %>% 
   summarize(n())
-
 ```
 
 ## Bark
@@ -807,8 +814,6 @@ ggsave("../../results/figures/GrowthMortality/dead_chron_abco.jpg", width = 5, h
 ```{r}
 save(dfa, file = "../../compiled_data/fir_rings_detrended_dead.Rdata")
 ```
-
-
 
 # Summarize detrended dead growth to compare to detrended live growth
 ```{r}

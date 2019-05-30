@@ -1,0 +1,266 @@
+---
+title: "Clean_all"
+author: "Carmen"
+date: "May 30, 2019"
+output: 
+    html_document:
+      toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
+```
+
+# Delete rows with no data
+```{r}
+df <- df %>% 
+  filter(!is.na(SEEDLING))
+```
+
+# Fix typos
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "alive", "ALIVE", DEAD_ALIVE)) %>% 
+  mutate(DEAD_ALIVE = ifelse(DEAD_ALIVE == "dead", "DEAD", DEAD_ALIVE)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "abco", "ABCO", SPECIES)) %>% 
+  mutate(SPECIES = ifelse(SPECIES == "pipo", "PIPO", SPECIES))
+```
+
+## Correct tree mislabeled as the wrong species
+```{r}
+df %>% filter(SEEDLING == 202)
+df <- df %>% 
+  mutate(SPECIES = ifelse(SEEDLING == 202, "PIPO", SPECIES))
+```
+
+# Make numeric
+```{r}
+df <- df %>% 
+  mutate(LAST_YR_GR_cm = as.numeric(LAST_YR_GR_cm)) %>% 
+  mutate(MINUS_1_GR_cm = as.numeric(MINUS_1_GR_cm)) %>% 
+  mutate(MINUS_2_GR_cm = as.numeric(MINUS_2_GR_cm))
+```
+
+```{r}
+df <- df %>% 
+  mutate(DEAD = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
+```
+
+# Fix duplicates
+```{r}
+df %>% 
+  filter(duplicated(SEEDLING))
+df %>% 
+  filter(SEEDLING %in% c("183", "183B"))
+```
+
+## Fix duplicates
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "ABCO", "183-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "PIPO", "183-P", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "PIPO", "183B-P", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "ABCO", "183B-A", SEEDLING)) 
+```
+
+# Look at missing growth data
+```{r}
+df %>% filter(is.na(as.numeric(df$LAST_YR_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))
+df %>% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))
+```
+
+# Correct mis-recorded growth based on photos
+```{r}
+df <- df %>% 
+  mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 98, 7.1, MINUS_2_GR_cm)) %>% 
+  mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 77, 6.4, MINUS_2_GR_cm))
+``` 
+
+# Make live/dead status a factor
+```{r}
+df <- df %>% 
+  mutate(DEAD = as.factor(DEAD))
+```
+
+# Calculate average diameter
+```{r}
+df <- df %>% 
+  mutate(BAS_DIA_AVE = (BAS_DIA_1_mm+BAS_DIA_2_mm)/2)
+```
+
+# Create a column for PAIR, or dead #
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = toupper(SEEDLING))
+df$PAIR <- NA
+bs <- grep("B", df$SEEDLING, value = T)
+bs <- substr(bs, 1, nchar(bs)-1)
+df[grep("B", df$SEEDLING), "PAIR"] <- bs
+head(bs)
+df <- df %>% 
+  mutate(PAIR = ifelse(is.na(PAIR), SEEDLING, PAIR))
+
+tail(df %>% 
+  dplyr::select(SEEDLING, PAIR))
+```
+
+## Fix the funky 183/184/185 ones 
+```{r}
+df$PAIR[222:235]
+df <- df %>% 
+  mutate(PAIR = ifelse(SEEDLING == "184B-P", "184-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "184B-A", "184-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "183B-P", "183-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "183B-A", "183-A",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "185B-P", "185-P",PAIR)) %>% 
+  mutate(PAIR = ifelse(SEEDLING == "185B-A", "185-A",PAIR)) 
+```
+
+# Look at the ones missing pairs in df_bu
+
+## Find mateless seedlings
+```{r}
+df %>% 
+  group_by(PAIR) %>% 
+  mutate(count = n()) %>% 
+  dplyr::select(SEEDLING, PAIR, count) %>% 
+  arrange(PAIR) %>% 
+  filter(count != 2) 
+```
+
+# Delete pairs needing to be thrown out by creating a df with all the bad pairs
+
+## Missing data or pathogen damage
+```{r}
+summary(as.factor(df$Practice))
+df_toss <- df %>% 
+  filter(Practice == "1") %>% 
+  filter(PATH_DAMAGE == "1")
+nrow(df_toss)
+```
+
+## seedlings marked "thrown out"
+```{r}
+nrow(df_toss)
+df_toss <- full_join(df_toss, df %>% 
+  filter(thrown_out == "1"))
+nrow(df_toss)
+```
+
+
+## delete pairs in df_toss from df
+```{r}
+length(unique(df_toss$PAIR))
+length(unique(df$PAIR))
+
+nrow(df)
+df <- df %>% 
+  filter(!PAIR %in% df_toss$PAIR)
+nrow(df)
+```
+
+## Add reasons for exclusion in the notes section of df 
+```{r}
+df <- df %>% 
+  mutate(exclude_reason = NA)
+```
+
+### Create function for Add Exclusion Reason
+```{r}
+aer <- function(seedling, reason){
+  df <<- df %>% 
+    mutate(exclude_reason = ifelse(SEEDLING == seedling, reason, exclude_reason))
+}
+```
+
+### Apply to seedlings one by one by looking at data
+```{r}
+aer("65B", "mate excluded")
+aer("65", "beetles")
+aer("94", "PATH_DAMAGE")
+aer("92", "PATH_DAMAGE")
+aer("92B", "mate excluded")
+aer(76, "beetles")
+aer(7, "PATH_DAMAGE")
+aer(6, "PATH_DAMAGE")
+aer("6B", "mate excluded")
+aer("59", "beetles")
+aer("59B", "mate excluded")
+aer("58", "beetles")
+aer(53, "PATH_DAMAGE")
+aer(5, "PATH_DAMAGE")
+aer(28, "PATH_DAMAGE")
+aer("22", "MUNCHED")
+aer("194", "TOO YOUNG")
+aer("194B", "TOO YOUNG")
+aer("189", "PATH_DAMAGE")
+aer("188", "PATH_DAMAGE")
+aer("187", "TOO YOUNG")
+aer("187B", "TOO YOUNG")
+aer("185-A", "beetles")
+aer("17", "MUNCHED")
+aer("162", "MUNCHED")
+aer("155", "unkn")
+aer("147", "MUNCHED")
+aer("149", "beetles")
+aer(146, "PATH_DAMAGE")
+aer("146B", "mate excluded")
+aer(145, "beetles")
+aer(136, "beetles")
+aer(116, "beetles")
+aer("116B", "mate excluded")
+aer(114, "pitching")
+aer(104, "PATH_DAMAGE")
+aer(104, "PATH_DAMAGE")
+aer(103, "PATH_DAMAGE")
+aer("103B", "PATH_DAMAGE")
+```
+
+The following are marked as being thrown out, but DO have data, so could potentially be used as a back-up mate if needed,
+
+So make them thrown_out = ?
+```{r}
+df <- df %>% 
+  mutate(thrown_out = ifelse(SEEDLING %in% c("58B", "53B", "7B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), "?", thrown_out))
+```
+
+### Add column to df for mateless seedlings
+```{r}
+df <- df %>% 
+  mutate(mateless = ifelse(SEEDLING %in% c("7B","76B", "58B", "53B", "5B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), 1, 0)) %>% 
+  arrange(desc(mateless))
+```
+
+## See what thrown out seedlings remain without a exclude_reason
+```{r}
+df %>% 
+  filter(thrown_out == 1 & is.na(exclude_reason)) %>% 
+  dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %>% 
+  arrange(desc(SEEDLING)) 
+```
+
+## Correct 184A/184-A/185
+```{r}
+df <- df %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "184A", "184-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "184BA", "184B-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "185BA", "185B-A", SEEDLING)) %>% 
+  mutate(SEEDLING = ifelse(SEEDLING == "185B", "185B-P", SEEDLING))
+```
+
+# Save df
+```{r}
+save(df, file = "../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
+```
+
