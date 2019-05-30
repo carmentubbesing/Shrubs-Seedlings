@@ -14,10 +14,10 @@ This code contains all of the steps necessary to clean and analyze Growth Mortal
 library(knitr)
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis//")
 strt <- Sys.time()
-rmarkdown::render("Clean_all.Rmd", "html_document")
-rmarkdown::render("Clean_vert.Rmd", "html_document")
-rmarkdown::render("dendro_join.Rmd", "html_document")
-rmarkdown::render("Clean_dendro.Rmd", "html_document")
+rmarkdown::render("Clean_all.Rmd", "html_document", quiet = T)
+rmarkdown::render("Clean_vert.Rmd", "html_document", quiet = T)
+rmarkdown::render("dendro_join.Rmd", "html_document", quiet = T)
+rmarkdown::render("Clean_dendro.Rmd", "html_document", quiet = T)
 
 print(Sys.time()-strt)
 ```
@@ -25,21 +25,17 @@ print(Sys.time()-strt)
 # Intermediary Analysis
 ```{r intermediary_analysis, message = F, warning = F}
 strt <- Sys.time()
-rmarkdown::render("live_chronology.Rmd", "html_document")
-rmarkdown::render("date_dead_dendro.Rmd", "html_document")
-print(strt-Sys.time())
-```
-
-# Intermediary Cleaning
-```{r, message = F, warning = F}
-strt <- Sys.time()
-
-print(strt-Sys.time())
+rmarkdown::render("live_chronology.Rmd", "html_document", quiet = T)
+rmarkdown::render("date_dead_dendro.Rmd", "html_document", quiet = T)
+rmarkdown::render("mortality_counts.Rmd", "html_document", quiet = T)
+print(Sys.time() - strt)
 ```
 
 # Main Analysis
 ```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
-rmarkdown::render("simulations.Rmd", "html_document")
-print(strt-Sys.time())
+rmarkdown::render("simulations.Rmd", "html_document", quiet = T)
+rmarkdown::render("dendro_analysis.Rmd", "html_document", quiet = T)
+rmarkdown::render("growth_analysis_vert.Rmd", "html_document", quiet = T)
+print(Sys.time()- strt)
 ```

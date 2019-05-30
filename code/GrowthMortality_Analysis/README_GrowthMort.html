@@ -198,17 +198,32 @@ $(document).ready(function () {
 <p>Files are dependent in the following order:</p>
 <div id="compiling-and-cleaning-code" class="section level2">
 <h2>1. Compiling and cleaning code</h2>
+<div id="clean_all.rmd" class="section level4">
+<h4><strong>Clean_all.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx</code></li>
+<li><code>../../results/data/GrowthMortality/died2017.Rdata</code></li>
+<li><code>../../results/data/GrowthMortality/died2016.Rdata</code></li>
+<li><code>../../results/data/GrowthMortality/died2015.Rdata</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
 <div id="clean_vert.rmd" class="section level4">
 <h4><strong>Clean_vert.Rmd</strong></h4>
 <ul>
 <li>uses:
 <ul>
-<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx</code></li>
+<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata</code></li>
 </ul></li>
 <li>creates:
 <ul>
 <li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata</code></li>
-<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata</code></li>
 </ul></li>
 </ul>
 </div>
@@ -250,6 +265,9 @@ $(document).ready(function () {
 </div>
 <div id="intermediary-cleaninganalysis" class="section level2">
 <h2>Intermediary cleaning/analysis</h2>
+<div id="live_chronology.rmd" class="section level4">
+<h4><strong>live_chronology.Rmd</strong></h4>
+</div>
 <div id="date_dead_dendro.rmd" class="section level4">
 <h4><strong>date_dead_dendro.Rmd</strong></h4>
 <ul>
@@ -263,19 +281,6 @@ $(document).ready(function () {
 <li><code>../../compiled_data/fir_rings_detrended.Rdata</code></li>
 </ul></li>
 </ul>
-</div>
-<div id="clean_detailed_data.rmd" class="section level4">
-<h4><strong>Clean_detailed_data.Rmd</strong></h4>
-<ul>
-<li>uses:
-<ul>
-<li><code>../../compiled_data/growth_mortality/dendro_all_vars.Rdata</code></li>
-<li><code>../../compiled_data/fir_rings_detrended.Rdata</code></li>
-</ul></li>
-</ul>
-</div>
-<div id="live_chronology.rmd" class="section level4">
-<h4><strong>live_chronology.Rmd</strong></h4>
 </div>
 </div>
 <div id="main-analyses" class="section level2">
@@ -300,6 +305,18 @@ $(document).ready(function () {
 <ul>
 <li><code>../../data/GrowthMortality/rwl.Rdata</code></li>
 <li><code>../../data/GrowthMortality/dendro_all_vars.Rdata</code></li>
+<li><code>../../results/data/GrowthMortality/died2017.Rdata</code></li>
+<li><code>../../results/data/GrowthMortality/died2016.Rdata</code></li>
+<li><code>../../results/data/GrowthMortality/died2015.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
+<div id="simulations.rmd" class="section level4">
+<h4><strong>simulations.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata</code></li>
 </ul></li>
 </ul>
 </div>

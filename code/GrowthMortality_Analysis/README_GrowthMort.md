@@ -45,18 +45,29 @@ Files are dependent in the following order:
 ## Intermediary cleaning/analysis
 
 #### **live_chronology.Rmd**
-
+* uses:
+    * `../../data/GrowthMortality/live_pipo_rwl.Rdata`
+    * `../../data/GrowthMortality/live_abco_rwl.Rdata`
+    * `../../data/GrowthMortality/dead_pipo_rwl.Rdata`
+    * `../../data/GrowthMortality/dead_abco_rwl.Rdata`
+* creates:
+    * `../../compiled_data/live_chron_abco.Rdata`
+    * `../../compiled_data/live_chron_pipo.Rdata`
+* figures:
+    * `../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg`
+    * `../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg`
+    
 #### **date_dead_dendro.Rmd**
 * uses:
     * `../../data/GrowthMortality/dead_pipo_rwl.Rdata`
     * `../../data/GrowthMortality/dead_abco_rwl.Rdata`
 * creates:
     * `../../compiled_data/fir_rings_detrended.Rdata`
-
-#### **Clean_detailed_data.Rmd**
+    
+#### **mortality_counts.Rmd**
 * uses:
-    * `../../compiled_data/growth_mortality/dendro_all_vars.Rdata`
-    * `../../compiled_data/fir_rings_detrended.Rdata`
+    * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx`
+    * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_380_counts_compiled_Oct1_2017.xlsx`
 
 ## 2. Main analyses
 #### **Growth_analysis_vert.Rmd**
@@ -69,6 +80,9 @@ Files are dependent in the following order:
 * uses:
     * `../../data/GrowthMortality/rwl.Rdata`
     * `../../data/GrowthMortality/dendro_all_vars.Rdata`
+    * `../../results/data/GrowthMortality/died2017.Rdata`
+    * `../../results/data/GrowthMortality/died2016.Rdata`
+    * `../../results/data/GrowthMortality/died2015.Rdata`
     
 #### **simulations.Rmd**
 * uses:

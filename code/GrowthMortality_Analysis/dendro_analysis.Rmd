@@ -66,16 +66,6 @@ dfa <- df %>%
 dfa
 ```
 
-# Figure out how many years to go back by seeing how far the growth records go back
-```{r}
-dfa %>% 
-  filter(is.na(gr4)) %>% 
-  dplyr::select(tree, DEAD_ALIVE) %>% 
-  group_by(DEAD_ALIVE) %>% 
-  summarize(n())
-```
-
-Since there are several trees withonly 3 years of growth, I'm going to stick with going 3 years back.
 
 # Find relative growth for last 7 years
 ```{r}
@@ -104,6 +94,17 @@ dfa <- dfa %>%
   mutate(gr7 = (dia7 - dia8)/dia8)
 ```
 
+
+# Figure out how many years to go back by seeing how far the growth records go back
+```{r}
+dfa %>% 
+  filter(is.na(gr4)) %>% 
+  dplyr::select(tree, DEAD_ALIVE) %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(n())
+```
+
+Since there are several trees withonly 3 years of growth, I'm going to stick with going 3 years back.
 # Average relative growth for different years depending on when the tree died
 
 ## Check years of death from lists of trees that died in different years
