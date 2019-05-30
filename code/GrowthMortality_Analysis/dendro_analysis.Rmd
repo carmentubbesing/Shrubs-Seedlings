@@ -19,6 +19,9 @@ require(MASS)
 ```{r}
 load("../../data/GrowthMortality/rwl.Rdata")
 load("../../data/GrowthMortality/dendro_all_vars.Rdata")
+load(file = "../../results/data/GrowthMortality/died2017.Rdata")
+load(file = "../../results/data/GrowthMortality/died2016.Rdata")
+load(file = "../../results/data/GrowthMortality/died2015.Rdata")
 ```
 
 # Reconfigure rwl to ease analysis
@@ -36,35 +39,22 @@ df <- df %>%
 head(df)
 ```
 
+# Join reconfigured rwl data with dendro_all_vars data
 ```{r}
 join <- join %>% 
   mutate(dia_mm = (BAS_DIA_1_mm + BAS_DIA_2_mm)/2) %>% 
-  dplyr::select(tree, SPECIES, DEAD_ALIVE, dia_mm)
+  dplyr::select(tree, PAIR, SPECIES, DEAD_ALIVE, dia_mm, HEIGHT) %>% 
+  distinct() %>% 
+  arrange(tree)
+head(join)
 df <- left_join(df, join) 
-summary(as.factor(df$SPECIES))
-summary(as.factor(df$DEAD_ALIVE))
-summary(df$dia_mm)
 ```
 
-
-# Plot growth by year
+# Make death binary
 ```{r}
-df2 <- gather(df, key = "year", value = "gr_rel", c(`2016`, `2015`, `2014`, `2013`)) %>% 
-  mutate(year = ifelse(year == "2016", "outer ring", year)) %>% 
-  mutate(year = ifelse(year == "2015", "outer ring - 1", year)) %>% 
-  mutate(year = ifelse(year == "2014", "outer ring - 2", year)) %>% 
-  mutate(year = ifelse(year == "2013", "outer ring - 3", year)) %>% 
-  mutate(year = as.factor(year))
-
-df2$year <-  factor(df2$year, levels = rev(levels(df2$year)))
-
-df2 %>% dplyr::select(year, gr_rel, tree, SPECIES)
-ggplot(df2)+
-  geom_boxplot(aes(x = year, y = log(gr_rel), fill = SPECIES))+
-  facet_wrap(~SPECIES)+
-  ylim(-3, .5)
+df <- df %>% 
+  mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
 ```
-
 
 # FIRS
 
@@ -76,33 +66,117 @@ dfa <- df %>%
 dfa
 ```
 
-# Find average relative growth for last 3 years
+# Figure out how many years to go back by seeing how far the growth records go back
+```{r}
+dfa %>% 
+  filter(is.na(gr4)) %>% 
+  dplyr::select(tree, DEAD_ALIVE) %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(n())
+```
+
+Since there are several trees withonly 3 years of growth, I'm going to stick with going 3 years back.
+
+# Find relative growth for last 7 years
 ```{r}
 dfa <- dfa %>% 
-  mutate(dead = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
-
-dfa <- dfa %>% 
-  dplyr::select(`2012`, `2013`, `2014`, `2015`, `2016`, tree, SPECIES, DEAD_ALIVE, dia_mm, dead) %>%
-  rename(gr1 = `2016`, gr2 = `2015`, gr3 = `2014`, gr4 = `2013`, gr5 = `2012`) %>% 
+  rename(gr1 = `2016`, 
+         gr2 = `2015`, 
+         gr3 = `2014`, 
+         gr4 = `2013`, 
+         gr5 = `2012`,
+         gr6 = `2011`,
+         gr7 = `2010`) %>% 
   rename(dia1 = dia_mm) %>% 
   mutate(dia2 = dia1 - gr1*2) %>%
   mutate(dia3 = dia1 - gr1*2 - gr2*2) %>% 
   mutate(dia4 = dia1 - gr1*2 - gr2*2 - gr3*2) %>% 
   mutate(dia5 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2) %>% 
   mutate(dia6 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2 - gr5*2) %>% 
-  mutate(gr_rel_1 = (dia1 - dia2)/dia2) %>% 
-  mutate(gr_rel_2 = (dia2 - dia3)/dia3) %>% 
-  mutate(gr_rel_3 = (dia3 - dia4)/dia4) %>% 
-  mutate(gr_rel_4 = (dia4 - dia5)/dia5) %>% 
-  mutate(gr_rel_5 = (dia5 - dia6)/dia6)
-dfa <- dfa %>% 
-  rowwise() %>% 
-  mutate(gr_rel_ave = ifelse(dead == 1, 
-                             mean(c(gr_rel_1, gr_rel_2, gr_rel_3), na.rm=T),
-                             mean(c(gr_rel_2, gr_rel_3, gr_rel_4), na.rm=T)))
+  mutate(dia7 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2 - gr5*2 - gr6*2) %>% 
+  mutate(dia8 = dia1 - gr1*2 - gr2*2 - gr3*2 - gr4*2 - gr5*2 - gr6*2 - gr7*2) %>% 
+  mutate(gr1 = (dia1 - dia2)/dia2) %>% 
+  mutate(gr2 = (dia2 - dia3)/dia3) %>% 
+  mutate(gr3 = (dia3 - dia4)/dia4) %>% 
+  mutate(gr4 = (dia4 - dia5)/dia5) %>% 
+  mutate(gr5 = (dia5 - dia6)/dia6) %>% 
+  mutate(gr6 = (dia6 - dia7)/dia7) %>% 
+  mutate(gr7 = (dia7 - dia8)/dia8)
+```
 
-summary(dfa$gr_rel_ave)
+# Average relative growth for different years depending on when the tree died
+
+## Check years of death from lists of trees that died in different years
+
+### Check that all ABCO are in one of the lists
+```{r}
+dfa %>% 
+  filter(!PAIR %in% c(died2017, died2016, died2015)) %>% 
+  dplyr::select(tree) %>% 
+  distinct() %>% 
+  arrange(tree) 
+```
+
+### Delete that one
+```{r}
+dfa <- dfa %>% 
+  filter(!PAIR %in% c(98, 202))
+```
+
+## Average growth based on pair's year of death
+```{r}
+dfa <- dfa %>% 
+  mutate(death_year = ifelse(PAIR %in% died2017, 2017, 
+                             ifelse(PAIR %in% died2016, 2016, 
+                             ifelse(PAIR %in% died2015, 2015, NA)))) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2017, (gr1+gr2+gr3)/3, 999)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016 & DEAD_ALIVE == "DEAD", (gr1+gr2+gr3)/3, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016 & DEAD_ALIVE == "ALIVE", (gr2+gr3+gr4)/3, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015 & DEAD_ALIVE == "DEAD", (gr1+gr2+gr3)/3, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015 & DEAD_ALIVE == "ALIVE", (gr3+gr4+gr5)/3, gr_rel_ave))
+```
+
+### If there are fewer than 3 years of growth for live trees starting at the year its pair died, bump both # years down
+```{r}
+dfa %>% 
+  filter(is.na(gr_rel_ave)) %>% 
+  dplyr::select(SPECIES, DEAD_ALIVE, tree, PAIR, gr1, gr2, gr3, gr4, gr5, death_year, gr_rel_ave) %>% 
+  arrange(PAIR)
+```
+
+```{r}
+dfa <- dfa %>% 
+  mutate(gr_rel_ave = ifelse(tree == "141B", (gr3+gr4)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "141", (gr1+gr2)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "230B", (gr2+gr3)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "230", (gr1+gr2)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "33B", (gr2+gr3)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "33", (gr1+gr2)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "228B", gr3, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "228", gr1, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "229", gr1, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(tree == "229B", gr3, gr_rel_ave)) 
+  
+dfa %>% 
+  filter(PAIR == 33) %>% 
+  dplyr::select(SPECIES, DEAD_ALIVE, tree, PAIR, gr1, gr2, gr3, gr4, gr5, death_year, gr_rel_ave) 
+```
+
+#### Check for seedling with 0 average growth
+```{r}
+dfa %>% 
+  filter(gr_rel_ave == 0) %>% 
+  dplyr::select(SPECIES, DEAD_ALIVE, tree, PAIR, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
+  arrange(PAIR)
+```
+
+## Add column for log growth
+```{r}
+dfa <- dfa %>% 
+  mutate(log_gr_rel_ave = log(gr_rel_ave))
+summary(dfa$log_gr_rel_ave)
 hist(dfa$gr_rel_ave)
+hist(dfa$log_gr_rel_ave)
 ```
 
 # Plot growth by year
@@ -123,26 +197,24 @@ ggplot(df2)+
   ylim(-3, .5)
 ```
 
-
-
-## Throw out trees with too few years to calculate growth
+# Plot relative growth comparison between live and dead
 ```{r}
-dfa <- dfa %>% 
-  filter(!is.na(gr_rel_ave))
+ggplot(dfa)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = gr_rel_ave))+
+  geom_point(aes(x = DEAD_ALIVE, y = mean(gr_rel_ave)), col = "red")
 ```
-
 
 ```{r}
 ggplot(dfa)+
-  geom_boxplot(aes(x = DEAD_ALIVE, y = gr_rel_ave))
+  geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave))+
+  geom_point(aes(x = DEAD_ALIVE, y = mean(log_gr_rel_ave)), col = "red")
 ```
 
 # Test with glm
 ```{r}
 cor(dfa$gr_rel_ave, dfa$dead)
 cor(log(dfa$gr_rel_ave), dfa$dead)
-summary(glm(dead ~ log(gr_rel_ave), family = binomial(link = "logit"), data = dfa))
-dfa$log_gr_rel_ave <- log(dfa$gr_rel_ave)
+summary(glm(dead ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa))
 ```
 
 # Visually compare distributions
@@ -171,9 +243,9 @@ pdf_live <- as.data.frame(cbind(x, y))
 
 ```{r}
 ggplot()+
-  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 25, alpha = .2, col = "red", fill = "red")+
   theme_bw()+
-  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 25, alpha = .2, col = "dark green", fill = "dark green")+
   geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
   scale_color_manual(values = c("dark green", "red"))+
   geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
