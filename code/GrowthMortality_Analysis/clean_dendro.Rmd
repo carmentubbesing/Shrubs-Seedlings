@@ -108,6 +108,21 @@ df %>%
   dplyr::select(board, tree, series, radius)
 ```
 
+
+## Correct tree mislabeled as the wrong species
+```{r}
+df_full %>% filter(SEEDLING == 202)
+df_full <- df_full %>% 
+  mutate(SPECIES = ifelse(SEEDLING == 202, "PIPO", SPECIES))
+```
+
+## Make seedling color column all lower case 
+```{r}
+df_full %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR))
+```
+
+
 ### Fix duplicates
 
 #### Tree 19

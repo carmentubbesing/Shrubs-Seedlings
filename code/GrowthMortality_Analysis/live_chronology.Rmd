@@ -31,7 +31,7 @@ rwla_dead_green
 ```
 
 ```{r}
-rwla <- cbind(rwla, rwla_dead_green)
+#rwla <- cbind(rwla, rwla_dead_green)
 ```
 
 # Plot data before detrending
@@ -214,14 +214,14 @@ dfp %>%
 
 So, 21 trees have only 4 rings
 
-##### Take out trees with 3 or fewer rings
-```{r}
-nrow(dfp)
-dfp <- dfp %>% 
-  group_by(tree) %>% 
-  filter(n()>3)
-nrow(dfp)
-```
+<!-- ##### Take out trees with 3 or fewer rings -->
+<!-- ```{r} -->
+<!-- nrow(dfp) -->
+<!-- dfp <- dfp %>%  -->
+<!--   group_by(tree) %>%  -->
+<!--   filter(n()>3) -->
+<!-- nrow(dfp) -->
+<!-- ``` -->
 
 
 ### ABCO
@@ -248,13 +248,13 @@ dfa %>%
 So, 7 trees have only 4 rings
 
 ##### Take out trees with 4 or fewer rings
-```{r}
-nrow(dfa)
-dfa <- dfa %>% 
-  group_by(tree) %>% 
-  filter(n()>4)
-nrow(dfa)
-```
+# ```{r}
+# nrow(dfa)
+# dfa <- dfa %>% 
+#   group_by(tree) %>% 
+#   filter(n()>4)
+# nrow(dfa)
+# ```
 
 ## Plot
 
@@ -277,17 +277,18 @@ dfpstd
 dfpstd <- dfpstd %>% 
   ungroup() %>% 
   mutate(Year = as.numeric(Year))
-ggplot(dfpstd) + 
+ggplot(dfpstd  %>% filter(Year >2010)) + 
   geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
   geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
   geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
   geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
   geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
-  ggtitle("PIPO standardized means +/- 2 SE")+
+  ggtitle("Live PIPO detrended means +/- 2 SE")+
+   ylab("Mean detrended ring widths") +
   scale_x_continuous(breaks = seq(min(dfpstd$Year), max(dfpstd$Year), by = 1))+
   theme_bw()+
   theme(panel.grid.minor = element_blank())
-
+ggsave("../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg", width = 5, height = 5)
 ```
 
 ### ABCO
@@ -308,17 +309,18 @@ dfastd <- dfa %>%
 dfastd <- dfastd %>% 
   ungroup() %>% 
   mutate(Year = as.numeric(Year))
-ggplot(dfastd) + 
+ggplot(dfastd %>% filter(Year >2008)) + 
   geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
   geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
   geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
   geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
   geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
-  ggtitle("ABCO standardized means +/- 2 SE")+
+  ggtitle("Live ABCO detrended means +/- 2 SE")+
+  ylab("Mean detrended ring widths") +
   scale_x_continuous(breaks = seq(min(dfastd$Year), max(dfastd$Year), by = 1))+
   theme_bw()+
   theme(panel.grid.minor = element_blank())
-ggsave("../../results/figures/GrowthMortality/live_chron_abco+greendead.jpg", width = 5, height = 5)
+ggsave("../../results/figures/GrowthMortality/live_chron_abco_nogreendead.jpg", width = 5, height = 5)
 ```
 
 # Summarize detrended live growth to compare to detrended dead growth

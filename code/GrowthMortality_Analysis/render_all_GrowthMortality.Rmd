@@ -8,7 +8,7 @@ output:
 ---
 
 This code contains all of the steps necessary to clean and analyze Growth Mortality data
-
+ 
 # Cleaning
 ```{r cleaning, message = F, warning = F}
 library(knitr)

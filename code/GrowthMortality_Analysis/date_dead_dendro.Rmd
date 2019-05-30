@@ -26,6 +26,7 @@ require(readxl)
 
 ### compiled dendro files
 ```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../data/GrowthMortality/dead_pipo_rwl.Rdata")
 rwlp <- rwl_dead_pipo
 load(file = "../../data/GrowthMortality/dead_abco_rwl.Rdata")
@@ -42,7 +43,7 @@ dfp_live <- dfp
 remove(dfp)
 ```
 
-### detailed data to use for creating a year of death rubric
+### detailed dead seedling characteristic data to use for creating a year of death rubric
 ```{r}
 load("../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
 ```
@@ -55,22 +56,39 @@ dfpfull <- join %>%
   filter(SPECIES == "PIPO")
 ```
 
-# Create functions
 
-### Make vectors to add to for each death year
-
-"died2017" means that its "2016" year matches live trees' "2016" - AKA the tree put on a partial ring in 2017 and then died
+# Clean up Growing column
 ```{r}
-died2017 <- c()
-died2016 <- c()
-died2015 <- c()
-unkn <- c()
+dfafull_bu <- dfafull
 ```
 
-#### make a function to plot the trend for each tree
+## Standardize the response types
+```{r}
+dfafull <- dfafull_bu
+dfafull <- dfafull %>% 
+  rename(Growing = `Growing?`) %>% 
+  mutate(Growing = toupper(Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "GROWING", "YES", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "NOT GROWING", "NO", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "EARLY 2017 GROWTH", "YES", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "BEFORE 2017 GROWTH", "NO", Growing)) 
+
+unique(dfafull$Growing)
+```
+
+## Correct tree that says it's not growing but really looks like it's growing from the photo
+```{r}
+dfafull <- dfafull %>%
+  mutate(Growing = ifelse(tree == 139, "YES", Growing))
+```
+
+
+# Create functions
+
+### Make a function to plot the trend for each tree
 ```{r}
 ringplot <- function(i){
-  ggplot(data = dfa %>% filter(tree == i))+
+  ggplot(data = dfa %>% filter(tree == i) %>% filter(Year >2008))+
   geom_line(aes(x = Year, y = growth_detrended))+
   geom_point(aes(x = Year, y = growth_detrended))+
   ggtitle(paste(i))+
@@ -80,6 +98,15 @@ ringplot <- function(i){
 }
 ```
 
+### Make vectors to add to 
+
+"died2017" means that the dead tree's "2016" year matches live trees' "2016" - AKA the tree put on a partial ring in 2017 and then died
+```{r}
+died2017 <- c()
+died2016 <- c()
+died2015 <- c()
+unkn <- c()
+```
 
 ### Make functions to add and subtract trees from the vectors
 ```{r}
@@ -117,14 +144,24 @@ subtract2016 <- function(new){
 }
 ```
 
-
-#### Vector of trees I feel confident about their age assignment
+### Make a function to add to a vector of trees whose age assignment I feel confident about
 ```{r}
 sure <- c()
 addsure <- function(new){
   sure <<- c(sure, new)
 }
 ```
+
+### Make a function to look at all the physical traits of a seedling
+```{r}
+look <- function(treenum){
+  print(dfafull %>% 
+    select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+    filter(tree == treenum) %>% 
+    distinct())
+}
+```
+
 
 # Assign green trees as 2017 death
 
@@ -134,25 +171,25 @@ summary(as.factor(dfafull$NEEDLE_COLOR))
 sort(unique(dfafull[grep("green", dfafull$NEEDLE_COLOR),]$tree))
 ```
 
-## Modify needle color column if I see green in the photo that wasn't recorded
+## Check for green in the photos
+
+### Modify needle color column if I see green in the photo that wasn't recorded
 ```{r}
 dfafull <- dfafull %>% 
   mutate(NEEDLE_COLOR = ifelse(tree == 215, "red to light green", NEEDLE_COLOR))
 ```
 
-### And remove it from the 2016 list
+#### And remove it from the 2016 list
 ```{r}
 subtract2016(215)
 ```
 
-
-## Check for green in the photos
+### Make a vector of trees whose photos had green
 ```{r}
-definitely_green <- c(201, 100, 30, 127, 16, 211, 32, 52, 55, 169, 215)
+definitely_green <- c(201, 100, 30, 127, 16, 211, 32, 52, 55, 169, 215, 208)
 ```
 
-
-## If there's actually green, add that seedling to the list of trees that died in 2017 if you haven't already
+## If there's actually green in the photos, add that seedling to the list of trees that died in 2017 if you haven't already
 ```{r}
 add2017(201)
 add2017(55)
@@ -163,9 +200,9 @@ add2017(16)
 add2017(211)
 add2017(32)
 add2017(52)
-add2017(55)
 add2017(169)
 add2017(215)
+add2017(208)
 ```
 
 # Detrend using horizontal line method
@@ -180,16 +217,12 @@ rwlp_dt <- detrend(rwl = rwlp, method = "Mean")
 rwla_dt <- detrend(rwl = rwla, method = "Mean")
 ```
 
-# Reshape to identify trees with the most rings
+# Reshape data frame to identify trees with the most rings
 ```{r}
 rwla2 <- rwla %>% 
   mutate(year = row.names(rwla))
 rwla2 <- gather(rwla2, key = "tree", value = "growth", 1:ncol(rwla)) %>% 
   filter(!is.na(growth))
-head(rwla2)
-```
-
-```{r}
 rwla2_summary <- rwla2 %>% 
   group_by(tree) %>% 
   summarize(n = n()) %>% 
@@ -197,7 +230,7 @@ rwla2_summary <- rwla2 %>%
 rwla2_summary
 ```
 
-## Reshape detrended means 
+# Reshape detrended means in order to look at each tree's trend
 
 ### PIPO
 ```{r}
@@ -222,7 +255,7 @@ dfa <- dfa %>%
   mutate(Year =as.numeric(Year))
 ```
 
-#### List trees in descening age order in order to start with longest series
+# List trees in descening age order in order to start with longest series
 
 Exclude trees with green foliage
 ```{r}
@@ -231,7 +264,8 @@ rwla2_summary_unkn <- rwla2_summary %>%
 rwla2_summary_unkn 
 ```
 
-# Categorize each tree based on best guess death year
+# Categorize each tree based on best guess death year for trees 6+ y/o
+
 ```{r}
 ringplot(41)
 add2017(41)
@@ -241,28 +275,32 @@ ringplot(129)
 addunkn(129)
 
 ringplot(161)
-add2017(161)
+look(161)
+add2017(161) # Growing, so likely died earlier in the 2017 season 
 
 ringplot(51)
-addunkn(51)
+add2017(51) # based largely on color and the fact that it looks like it actually is growing
 
 ringplot(68)
-addunkn(68) 
+look(68)
+add2016(68) # based largely on rings, the fact that it's red/brown 
 
 ringplot(78)
 add2016(78)
 
 ringplot(102)
-addunkn(102)
+look(102) 
+add2017(102) # based largely on photo
 
 ringplot(112)
-addunkn(112)
+look(112)
+add2017(112) # based largely on the fact that it's growing and looks so red in photo
 
 ringplot(131)
 add2016(131)
 
 ringplot(139)
-add2016(139)
+add2017(139) # Growing and looks like it may have hints of green
 ```
 
 ```{r}
@@ -274,7 +312,8 @@ ringplot("184-A")
 addunkn("184-A")
 
 ringplot(195)
-addunkn(195)
+look(195)
+add2016(195)
 
 ringplot(203)
 add2016(203)
@@ -283,20 +322,17 @@ addsure(203)
 ringplot(206)
 addunkn(206)
 
-ringplot(208)
-addunkn(208)
-
 ringplot(234)
 add2016(234)
 
 ringplot(62)
-add2015(62)
+add2017(62)
 
 ringplot(77)
 add2015(77)
 
 ringplot(96)
-addunkn(96)
+add2016(96) # based largely on needle retention in PHOTO
 
 ringplot(128)
 add2015(128)
@@ -312,31 +348,32 @@ add2017(132)
 addsure(132)
 
 ringplot(18)
-add2016(18)
+add2017(18) # based largely on needle retention
 
 ringplot("183-A")
 add2017("183-A")
 
 ringplot(197)
-add2017(197)
+add2015(197) # based on physical characteristics
 
 ringplot(198)
-addunkn(198)
+add2017(198) # based largely on photos
 
 ringplot(207)
 add2017(207) # based in part on color and abundance of foliage
 
 ringplot(214)
-add2016(214)
+add2015(214) # based in part on color and abundance of foliage
 
 ringplot(216)
-add2015(216)
+look(216)
+add2016(216) # based mostly on the physical characteristics and the fact that it wasn't growing
 
 ringplot(224)
-add2016(224)
+add2016(224) # hard choice. Lots of needles but ring pattern matches 2016 more closely
 
 ringplot(235)
-add2017(235)
+add2016(235) # Not growing, missing some needles, and not bright red or green
 ```
 
 ```{r}
@@ -360,19 +397,18 @@ ringplot(130)
 addunkn(130)
 
 ringplot(137)
-add2015(137)
+look(137)
+add2017(137) # based largely on photo and needles and the fact that it was growing
 
 ringplot(141)
 addunkn(141)
 
-ringplot(169)
-addunkn(169)
-
 ringplot(192)
-addunkn(192) 
+look(192)
+add2017(192) 
 
 ringplot(223)
-add2016(223)
+add2017(223) # based on photo and the fact that it was growing
 ```
 
 ```{r}
@@ -384,57 +420,32 @@ ringplot(229)
 addunkn(229) # maybe 2014
 
 ringplot(230)
-add2015(230) # but the picture doesn't look that way
+add2016(230) # because of needle retention, the fact that it's not growing, and photo
 
 ringplot(29)
-add2017(29)
+add2016(29) # based largely on the fact that it's not growing and doesn't look freshly dead
 
 ringplot(31)
-add2016(31)
+add2015(31) # based largely on needle color and quantity
 
 ringplot(33)
-addunkn(33)
+add2016(33) # kind of a guess. Based largely on photo and needle retention and the fact that it's not growing
 
 ringplot(66)
 add2015(66)
 
 ringplot(93)
-addunkn(93)
+look(93)
+add2017(93)
 ```
 
-Only look at these plots down to 6 year old trees.
-
+## Look at the trees I've added to each list
 ```{r}
 died2017
 died2016
 died2015
 unkn
 ```
-
-# Clean up Growing column
-```{r}
-dfafull_bu <- dfafull
-```
-
-```{r}
-dfafull <- dfafull_bu
-dfafull <- dfafull %>% 
-  rename(Growing = `Growing?`) %>% 
-  mutate(Growing = toupper(Growing)) %>% 
-  mutate(Growing = ifelse(Growing == "GROWING", "YES", Growing)) %>% 
-  mutate(Growing = ifelse(Growing == "NOT GROWING", "NO", Growing)) %>% 
-  mutate(Growing = ifelse(Growing == "EARLY 2017 GROWTH", "YES", Growing))
-
-unique(dfafull$Growing)
-```
-
-## Correct tree that says it's not growing but really looks like it's growing from the photo
-```{r}
-dfafull <- dfafull %>%
-  mutate(Growing = ifelse(tree == 139, "YES", Growing))
-```
-
-## Assign outer ring column (note: this was not measured for ring width. Also note: can be different from year of death if the tree died before the ring was put on)
 
 # Summarize physical characteristics of trees that I think died in each year
 ```{r}
@@ -444,71 +455,15 @@ dfafull <- tbl_df(dfafull)
 ## 2017
 ```{r}
 dfafull %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
   filter(tree %in% died2017) %>% 
-  distinct() %>% 
-  arrange(PERC_NEEDLES)
-```
-
-### Recategorize trees that don't fit with the physical criteria
-```{r}
-addunkn(197)
-addunkn(161)
-```
-
-### Add trees to died2017 list if they closely match the characteristics of trees that died in 2017
-```{r}
-add2017(18)
-subtract2016(18)
-add2017(33)
-```
-
-### Look at list again
-```{r}
-dfafull %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
-  filter(tree %in% died2017) %>% 
-  distinct() %>% 
-  arrange(PERC_NEEDLES)
+  distinct
 ```
 
 ## 2016
-
-### Start with the tree I thought I was sure about
-```{r}
-dfafull %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
-  filter(tree %in% sure & !(tree %in% died2017)) %>% 
-  distinct() %>% 
-  arrange(PERC_NEEDLES)
-```
-
-### Then look at the rest
 ```{r}
 dfafull %>% 
   select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
-  filter(tree %in% died2016) %>% 
-  distinct() %>% 
-  arrange(PERC_NEEDLES) %>% 
-  arrange(Growing)
-```
-
-### If trees had red foliage, intact bark, intact buds, 90+% needles, and died while growing, then call then 2017 death and label their time of death
-```{r}
-add2017(131)
-add2017(224)
-add2017(223)
-add2017(139)
-subtract2016(131)
-subtract2016(224)
-subtract2016(223)
-subtract2016(139)
-```
-
-### Look again
-```{r}
-dfafull %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
   filter(tree %in% died2016) %>% 
   distinct() %>% 
   arrange(PERC_NEEDLES) %>% 
@@ -526,6 +481,7 @@ red90notgrowing <- dfafull %>%
 red90notgrowing
 ```
 
+#### Add to 2017 young trees that match the characteristics of other dead 2017 trees based on data and photos
 ```{r}
 add2017(4)
 add2017(232)
@@ -534,14 +490,7 @@ add2017("184-A")
 add2017(47)
 ```
 
-
-```{r}
-died2016 <- c(died2016, red90notgrowing$tree)
-died2016
-```
-
 ## 2015
-
 ```{r}
 dfafull %>% 
   select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
@@ -554,10 +503,11 @@ dfafull %>%
 ### Look if it makes sense to say all trees with <=50% needles are 2015, and then do that
 ```{r}
 needles50 <- dfafull %>%  
-  filter(PERC_NEEDLES <=50 & !tree %in% died2017 & !tree %in% died2016 ) %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  filter(PERC_NEEDLES <=50 & !tree %in% died2017 & !tree %in% died2016  & !tree %in% died2015 ) %>% 
+  select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
   arrange(PERC_NEEDLES) %>% 
   distinct() 
+needles50
 ```
 
 ```{r}
@@ -565,13 +515,243 @@ died2015 <- c(died2015, needles50$tree)
 died2015
 ```
 
+# Look at trees that haven't yet been categorized
+```{r}
+dfa <- tbl_df(dfa)
+dfa %>%
+  filter(!tree  %in% died2017 & !tree %in% died2016 & !tree %in% died2015) %>% 
+  select(tree) %>% 
+  distinct() %>% 
+  arrange()
+length(unique(dfa$tree))
+```
 
-## Assign time of death in column of dfafull
+## Go through each one and assign a year to it
+
+### 222
+```{r}
+ringplot(222)
+look(222)
+add2017(222)
+```
+
+### 101
+```{r}
+look(101)
+add2017(101)
+```
+
+### 111
+```{r}
+look(111)
+ringplot(111)
+add2016(111)
+```
+
+### 199
+```{r}
+look(199)
+ringplot(199)
+add2016(199)
+```
+
+### 212
+```{r}
+look(212)
+ringplot(212)
+add2017(212)
+```
+
+### 225
+```{r}
+look(225)
+ringplot(225)
+add2016(225)
+```
+
+### 210
+```{r}
+look(210)
+ringplot(210)
+add2016(210)
+```
+
+### 233
+```{r}
+look(233)
+ringplot(233)
+add2017(233)
+```
+
+### 221
+```{r}
+look(221)
+ringplot(221)
+add2016(221)
+```
+
+### 56
+```{r}
+look(56)
+ringplot(56)
+add2016(56)
+```
+
+### 218
+```{r}
+look(218)
+ringplot(218)
+add2016(218)
+```
+
+### 219
+```{r}
+look(219)
+ringplot(219)
+add2016(219)
+```
+
+### 220
+```{r}
+look(220)
+ringplot(220)
+add2017(220)
+```
+
+### 226
+```{r}
+look(226)
+ringplot(226)
+add2016(226)
+```
+
+### 227
+```{r}
+look(227)
+ringplot(227)
+add2017(227) # looks like it has some green
+```
+
+### 36
+```{r}
+look(36)
+ringplot(36)
+add2016(36)
+```
+
+### 91
+```{r}
+look(91)
+ringplot(91)
+add2016(91)
+```
+
+### 97
+```{r}
+look(97)
+ringplot(97)
+add2017(97)
+```
+
+# Check that everything is accounted for
+```{r}
+dfa %>%
+  filter(!tree  %in% died2017 & !tree %in% died2016 & !tree %in% died2015) %>% 
+  select(tree) %>% 
+  distinct() %>% 
+  arrange(tree)
+```
+
+# Count trees in each death year
+```{r}
+length(died2017)
+length(died2016)
+length(died2015)
+```
+
+## Find duplicates
+```{r}
+length(unique(c(died2017, died2016, died2015)))
+length(unique(dfa$tree))
+```
+
+
+# Summarize variables for each year of death
+
+## Percent needles
+```{r}
+dfafull %>% 
+  filter(tree %in% died2017) %>% 
+  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+dfafull %>% 
+  filter(tree %in% died2016) %>% 
+  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+dfafull %>% 
+  filter(tree %in% died2015) %>% 
+  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+```
+
+## Color
+```{r}
+dfafull %>% 
+  filter(tree %in% died2017) %>%
+  select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+dfafull %>% 
+  filter(tree %in% died2016) %>%
+  select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+dfafull %>% 
+  filter(tree %in% died2015) %>%
+  select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+
+```
+
+## Bark
+```{r}
+dfafull %>% 
+  filter(tree %in% died2017) %>%
+  select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+dfafull %>% 
+  filter(tree %in% died2016) %>%
+  select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+dfafull %>% 
+  filter(tree %in% died2015) %>%
+  select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+
+```
+
+
+# Assign time of death in column of dfafull
 ```{r}
 dfafull <- dfafull %>% 
   mutate(time_of_death = ifelse(tree %in% died2017 & Growing == "YES", "2017 growing season", 0))
 ```
-
 
 ```{r}
 dfafull <- dfafull %>% 
@@ -579,29 +759,48 @@ dfafull <- dfafull %>%
 ```
 
 
+## Assign outer ring column 
+**Note: this was not measured for ring width.** 
+**Also note: can be different from year of death if the tree died before the ring was put on**
+
+<still need to do this>
 
 # Re-assign death year for best guess of skeleton plot matching, then try plotting master chronology to compare to live tree master chronology
 
 ```{r}
-head(dfa)
 dfatest <- dfa %>% 
-  filter(tree %in% c(died2017, died2016, died2017)) %>% 
+  filter(tree %in% c(died2017, died2016, died2015)) %>% 
   mutate(Year = ifelse(tree %in% died2016, Year-1, Year)) %>% 
   mutate(Year = ifelse(tree %in% died2015, Year-2, Year))
 head(dfatest)
 ```
 
+# Plot with standard errors*2
+
 ```{r}
-dfatest %>% 
+dfatest <- dfatest %>% 
+  filter(Year > 2008) %>% 
   group_by(Year) %>% 
-  summarize(mean = mean(growth_detrended)) %>% 
-  ggplot(aes(x = Year, y = mean))+
-    geom_point()+
-    geom_line()+
-    scale_x_continuous(breaks = seq(min(dfa$Year), max(dfa$Year), by = 1))+
-    theme_bw()+
-    theme(panel.grid.minor = element_blank())
-  
+  mutate(mean_gr_year = mean(growth_detrended)) %>% 
+  mutate(n_year = n()) %>% 
+  mutate(stderror = sd(growth_detrended)/sqrt(n_year)) %>% 
+  mutate(min = mean_gr_year-2*stderror) %>% 
+  mutate(max = mean_gr_year+2*stderror)
+```
+
+```{r}
+ggplot(data = dfatest, aes(x = Year, y = mean_gr_year))+
+  geom_point(col = "red")+
+  geom_line(col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("Dead ABCO detrended means +/- 2 SE")+
+  ylab("Mean detrended ring widths") +
+  scale_x_continuous(breaks = seq(min(dfa$Year), max(dfa$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+ggsave("../../results/figures/GrowthMortality/dead_chron_abco.jpg", width = 5, height = 5)
 ```
 
 # Save df version of the detrended dendro data
