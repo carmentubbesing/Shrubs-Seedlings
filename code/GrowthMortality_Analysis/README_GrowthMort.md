@@ -75,6 +75,7 @@ Files are dependent in the following order:
     * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata`
 * figures:
     * `fir_RGR.pdf`
+    * `../../results/figures/GrowthMortality/Pine_vert_boxplot.png`
     
 #### **Dendro_analysis.Rmd**
 * uses:
