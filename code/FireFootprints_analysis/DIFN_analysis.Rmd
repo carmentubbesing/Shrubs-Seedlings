@@ -1,0 +1,199 @@
+---
+title: "DIFN analysis"
+author: "Carmen"
+date: "May 20, 2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(VSURF)
+require(effects)
+set.seed(12346)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file="../../compiled_data/fire_footprints/master_data_2016.Rdata")
+names(df)
+```
+
+```{r}
+summary(df$Fire)
+summary(as.factor(df$ref))
+summary(as.factor(df$ShrubSpp03))
+as.character(df$ShrubSpp03)
+class(df$ShrubSpp03)
+```
+
+# Add ShrubSpp03 where it's missing for reference measurements
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp03 = as.character(ShrubSpp03)) %>% 
+  mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
+  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("ARPA-1"), "ARPA", as.character(ShrubSpp03))) %>% 
+  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("ceco-1"), "CECO", ShrubSpp03)) %>% 
+  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("CEIN-1", "CEIN-2"), "CEIN", ShrubSpp03)) %>% 
+  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("chfo-1"), "CHFO", ShrubSpp03)) %>% 
+  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("LIDE-1", "LIDE-2", "LIDE-3", "LIDE-4"), "LIDE", ShrubSpp03)) %>% 
+  mutate(ShrubSpp03 = ifelse(ShrubSpp03 == "ARVI", "ARPA", ShrubSpp03)) 
+sort(summary(as.factor(df$ShrubSpp03)))
+tail(as.factor(df$Sdlg))
+```
+
+```{r}
+tail(as.factor(df$Sdlg))
+df %>% filter(ref == 1)
+```
+
+
+# Narrow down df to just obsv with DIFN and no repeats
+```{r}
+dfl <- df %>% 
+  filter(!is.na(DIFN.53)) %>% 
+  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File, DIFN.all, ShrubSpp03, Cov1.3, Ht1.3, ShrG1, Years, LAI, DIFN.53, Ht1, Cov1, ShrubSpp01, Ht1.2, Cov1.2, ref)
+```
+
+```{r}
+tail(as.factor(df$Sdlg))
+dfl %>% filter(ref == 1)
+```
+
+# NEED TO: FIND DIFN MEASUREMENTS FOR THE NO-SEEDLING LOCATIONS
+
+# Clean heights
+
+## Add height of 0 for seedling-less measurements
+```{r}
+dfl <- dfl %>% 
+  mutate(Ht.cm = ifelse(ref ==1, Ht.cm ==0, Ht.cm))
+summary(dfl$ref)
+tail(dfl$Sdlg)
+dfl %>% 
+  group_by(ref) %>% 
+  summarize(n())
+```
+
+## Average height for DIFN with multiple seedlings
+```{r}
+nrow(dfl)
+dfl %>% 
+  arrange(FirePatch) %>% 
+  arrange(Fire) %>% 
+  arrange(Cov1.3) %>% 
+  arrange(DIFN.all) %>% 
+  group_by(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3) %>% 
+  mutate(Ht.cm = mean(Ht.cm)) %>% 
+  select(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3, Sdlg, Ht.cm)
+dfl <- dfl %>% 
+  arrange(FirePatch) %>% 
+  arrange(Fire) %>% 
+  arrange(Cov1.3) %>% 
+  arrange(DIFN.all) %>% 
+  group_by(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3) %>% 
+  mutate(Ht.cm = mean(Ht.cm)) %>% 
+  ungroup() %>% 
+  select(-Sdlg) %>% 
+  distinct()
+nrow(dfl)
+dfl %>% 
+    filter(DIFN.all == 0.047) %>% 
+   select(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3, Ht.cm)
+```
+
+## Take out spots with >50 cm tree height
+```{r}
+dfl <- dfl %>% 
+  filter(Ht.cm<50)
+```
+
+
+# NEED TO: CORRECT 2016 HEIGHTS USING 2017 DATA
+
+# NEED TO: CHECK NOTES FROM LIGHT FILES TO SEE IF I TOOK THE LIGHT MEASUREMENTS AT THE HEIGHT OF ONE OR ANOTHER OF THE REPEATED SEEDLINGS
+
+
+# Group shrub species
+```{r}
+nrow(dfl)
+summary(as.factor(dfl$ShrubSpp03))
+dfl <- dfl %>%   
+  mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CHFO", "CEIN", "LIDE"), "Other", as.character(ShrubSpp03))) %>%   mutate(ShrubSpp01 = ifelse(!ShrubSpp01 %in% c("CECO", "ARPA", "LIDE", "CHSE", "CHFO", "CEIN"), "Other", as.character(ShrubSpp01)))
+summary(as.factor(dfl$ShrubSpp01))
+summary(as.factor(dfl$ShrubSpp03))
+dfl <- dfl %>% 
+  mutate(ShrubSpp03 = ifelse(ShrubSpp03 %in% c("CEIN", "CECO"), "Ceanothos", ShrubSpp03))
+```
+
+
+# Look at DIFN in comparison to shrub cover, area, and species
+```{r}
+ggplot(dfl)+
+  geom_point(aes(x = Cov1.3, y = DIFN.53))
+ggplot(dfl)+
+  geom_boxplot(aes(x = ShrubSpp03, y = DIFN.53))
+ggplot(dfl)+
+  geom_point(aes(x = Years, y = DIFN.53))
+
+hist(dfl$DIFN.53)
+hist(log(dfl$DIFN.53))
+```
+
+No reason to transform DIFN
+
+# Take out 2 DIFN measurements because they don't make sense
+```{r}
+dfl <- dfl %>% 
+  filter(DIFN.all != 0)
+nrow(dfl)
+```
+
+# Model DIFN in relation to shrubarea3, shrub species, years since fire
+
+```{r}
+dfl$ShrubSpp03 <- as.factor(dfl$ShrubSpp03)
+
+LM <- lm(DIFN.all ~ Years + ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+```{r}
+plot(predictorEffect("ShrubSpp03", LM))
+plot(predictorEffect("Ht1.3", LM))
+plot(predictorEffect("Cov1.3", LM))
+plot(predictorEffect("Years", LM))
+```
+
+```{r}
+plot(LM)
+dfl$E <- resid(LM)
+ggplot(dfl)+
+  geom_boxplot(aes(Fire, E))
+```
+
+# To test for the effect of Years since fire when shrubarea and species have been accounted for, model the residuals of that model against Years
+```{r}
+LM_noyears <- lm(DIFN.all ~ ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
+dfl$E_noyears <- resid(LM_noyears)
+ggplot(dfl, aes(x = as.factor(Years), y = E_noyears))+
+  geom_boxplot()
+```
+
+```{r}
+dfl$Years <- as.numeric(paste(dfl$Years))
+summary(dfl$Years)
+LM_resid <- lm(E_noyears ~ Years, data = dfl)
+summary(LM_resid)
+drop1(LM_resid, test= "F")
+plot(predictorEffect("Years",LM_resid))
+```

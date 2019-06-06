@@ -258,10 +258,10 @@ df16 &lt;- read.csv(&quot;master_data_2016.csv&quot;)</code></pre>
 ## 1       5.2              43         96    0.579          none
 ##   ImmedAboveHt.cm ShrubSpp01 ShrubSpp02 ShrubSpp03 Cov1 Cov2 Cov3 Ht1  Ht2
 ## 1               0       CHSE       CHSE       CHSE  380  320  270 110 87.5
-##   Ht3 Cov1.2 Cov1.3 Ht1.2 Ht1.3 Genus ShrG1   IAG Years            Date.x
-## 1  65    700    970 98.75  87.5 Pinus  CHSE Other    35 20160629 05:23:06
-##    LAI DIFN.53 Date.y DataSheet Fire.y FirePatch.y Species.y
-## 1 0.88   0.577     NA      &lt;NA&gt;   FRDS      FRDS-N      PILA
+##   Ht3 Cov1.2 Cov1.3 Ht1.2 Ht1.3 ShrG1 IAG ref Years            Date.x  LAI
+## 1  65    700    970 98.75  87.5  CHSE   0   0    12 20160629 05:23:06 0.88
+##   DIFN.53 Date.y DataSheet Fire.y FirePatch.y Species.y
+## 1   0.577     NA      &lt;NA&gt;   FRDS      FRDS-N      PILA
 ##                           Map Status Ht_cm Dia_1_mm           Dia_2_mm
 ## 1 Freds Topo - N - Navigation   DONE   253       67 71.099999999999994
 ##   Growth_17 Growth_16 Growth_15
@@ -278,59 +278,23 @@ df16 &lt;- read.csv(&quot;master_data_2016.csv&quot;)</code></pre>
 <div id="correct-species-names" class="section level2">
 <h2>Correct species names</h2>
 <pre class="r"><code>summary(as.factor(df$Species))</code></pre>
-<pre><code>##    1    2 ABCO PILA PIPO 
-##    1    6  126    1   88</code></pre>
+<pre><code>##    1    4 ABCO PILA PIPO PSME 
+##    1    6  126   19   88   10</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(Species == 2)</code></pre>
-<pre><code>##   Sdlg Fire.x FirePatch.x Elevation Slope.Deg Aspect.deg Ht.cm BasDia.cm
-## 1   19   CLVD     CLVD-SW      1405         4        152    60      0.68
-## 2   20   FRDS     FRDS-JB      1568        18         90    81      2.50
-## 3   21   FRDS     FRDS-JB      1568        18         90    83      2.70
-## 4   22   FRDS     FRDS-JB      1568        18         90    91      2.30
-## 5   23   FRDS     FRDS-JB      1568        18         90    41      1.60
-## 6  139   PLKN      PLKN-W      1805        15        310   151      3.78
-##   LastYearGrth.cm Light_File DIFN.all ImmedAboveSpp ImmedAboveHt.cm
-## 1            5.00                  NA          CEIN             260
-## 2           19.50                  NA          none               0
-## 3           20.50                  NA          none               0
-## 4           12.50                  NA          PREM             100
-## 5            9.50                  NA          PREM             100
-## 6           15.65        122    0.619          CEIN             185
-##   ShrubSpp01 ShrubSpp02 ShrubSpp03 Cov1 Cov2 Cov3       Ht1   Ht2      Ht3
-## 1       CEIN       CEIN       CEIN  390  320  310 142.00000 187.5 202.5000
-## 2       PREM       CEIN       CECO   10   80  200  36.66667  60.0  65.0000
-## 3       PREM       CEIN       CECO   10   80  200  36.66667  60.0  65.0000
-## 4       PREM       PREM       PREM  200  190  170  66.00000  78.0 106.6667
-## 5       PREM       PREM       CEIN  250  210  200 131.66667  98.0 126.6667
-## 6       CEIN       CEIN       CEIN  380  380  370 147.50000 185.0 167.5000
-##   Cov1.2 Cov1.3     Ht1.2     Ht1.3 Genus     ShrG1       IAG Years
-## 1    710   1020 164.75000 177.33333 Pinus Ceanothus Ceanothus    24
-## 2     90    290  48.33333  53.88889 Pinus     Other     Other    35
-## 3     90    290  48.33333  53.88889 Pinus     Other     Other    35
-## 4    390    560  72.00000  83.55556 Pinus     Other     Other    35
-## 5    460    660 114.83333 118.77778 Pinus     Other     Other    35
-## 6    760   1130 166.25000 166.66667 Pinus Ceanothus Ceanothus    43
-##              Date.x  LAI DIFN.53 Date.y DataSheet Fire.y FirePatch.y  Map
-## 1              &lt;NA&gt;   NA      NA     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-## 2              &lt;NA&gt;   NA      NA     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-## 3              &lt;NA&gt;   NA      NA     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-## 4              &lt;NA&gt;   NA      NA     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-## 5              &lt;NA&gt;   NA      NA     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-## 6 20160701 05:32:49 0.56   0.722     NA      &lt;NA&gt;   &lt;NA&gt;        &lt;NA&gt; &lt;NA&gt;
-##   Status Ht_cm Dia_1_mm Dia_2_mm Growth_17 Growth_16 Growth_15 notes
-## 1   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-## 2   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-## 3   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-## 4   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-## 5   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-## 6   &lt;NA&gt;    NA     &lt;NA&gt;     &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;      &lt;NA&gt;  &lt;NA&gt;
-##   Species
-## 1       2
-## 2       2
-## 3       2
-## 4       2
-## 5       2
-## 6       2</code></pre>
+<pre><code>##  [1] Sdlg            Fire.x          FirePatch.x     Elevation      
+##  [5] Slope.Deg       Aspect.deg      Ht.cm           BasDia.cm      
+##  [9] LastYearGrth.cm Light_File      DIFN.all        ImmedAboveSpp  
+## [13] ImmedAboveHt.cm ShrubSpp01      ShrubSpp02      ShrubSpp03     
+## [17] Cov1            Cov2            Cov3            Ht1            
+## [21] Ht2             Ht3             Cov1.2          Cov1.3         
+## [25] Ht1.2           Ht1.3           ShrG1           IAG            
+## [29] ref             Years           Date.x          LAI            
+## [33] DIFN.53         Date.y          DataSheet       Fire.y         
+## [37] FirePatch.y     Map             Status          Ht_cm          
+## [41] Dia_1_mm        Dia_2_mm        Growth_17       Growth_16      
+## [45] Growth_15       notes           Species        
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Species = ifelse(Sdlg %in% c(20:23), &quot;PIPO&quot;, Species))</code></pre>
 </div>
@@ -344,8 +308,8 @@ df16 &lt;- read.csv(&quot;master_data_2016.csv&quot;)</code></pre>
 ## [13] ImmedAboveHt.cm ShrubSpp01      ShrubSpp02      ShrubSpp03     
 ## [17] Cov1            Cov2            Cov3            Ht1            
 ## [21] Ht2             Ht3             Cov1.2          Cov1.3         
-## [25] Ht1.2           Ht1.3           Genus           ShrG1          
-## [29] IAG             Years           Date.x          LAI            
+## [25] Ht1.2           Ht1.3           ShrG1           IAG            
+## [29] ref             Years           Date.x          LAI            
 ## [33] DIFN.53         Date.y          DataSheet       Fire.y         
 ## [37] FirePatch.y     Map             Status          Ht_cm          
 ## [41] Dia_1_mm        Dia_2_mm        Growth_17       Growth_16      
@@ -416,9 +380,9 @@ df &lt;- df %&gt;%
   filter(!Status %in% c(&quot;exclude, under oak&quot;, &quot;exclude, lone in patch&quot;))
 summary(as.factor(df$Status))</code></pre>
 <pre><code>##          alive could not find           dead           DEAD           done 
-##             21              2              5              2             27 
+##             23              2              5              4             27 
 ##           DONE          eaten      herbicide     herbicided      not found 
-##            132              1              3              6             17 
+##            156              1              3              6             17 
 ##         unsure 
 ##              1</code></pre>
 </div>
@@ -470,37 +434,40 @@ df &lt;- df %&gt;%
   
 summary(as.factor(df$soil_type_dom))</code></pre>
 <pre><code>##        0    Ahart  Holland  Hurlbut    Jocal McCarthy   Smokey 
-##      110        6        3       15       22       30       31</code></pre>
+##      117       13        3       15       26       39       32</code></pre>
 <pre class="r"><code>df %&gt;% 
   group_by(FirePatch, soil_series) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## # A tibble: 18 x 3
+<pre><code>## # A tibble: 20 x 3
 ## # Groups:   FirePatch [15]
 ##    FirePatch soil_series `n()`
 ##    &lt;fct&gt;     &lt;chr&gt;       &lt;int&gt;
 ##  1 AMCR-2    HUG            24
 ##  2 AMCR-2    MCE            34
 ##  3 AMCR-3    HUG            15
-##  4 AMCR-NE   SMG            31
-##  5 AMCR-NW   SMG            18
-##  6 CLVD-N    153            22
+##  4 AMCR-NE   SMG            32
+##  5 AMCR-NW   SMG            25
+##  6 CLVD-N    153            26
 ##  7 CLVD-SE   149             3
 ##  8 FRDS-A    108             2
 ##  9 FRDS-JB   149             4
 ## 10 FRDS-mid  108             9
-## 11 FRDS-N    149             3
-## 12 FRDS-N    193             1
-## 13 FRDS-SE   108            17
-## 14 STAR-mid  PTE             1
-## 15 STAR-NW   MCG            12
-## 16 STAR-S    ACF             6
-## 17 WRTS-1    128             3
-## 18 WRTS-1    222            12</code></pre>
+## 11 FRDS-N    0               2
+## 12 FRDS-N    149             4
+## 13 FRDS-N    193             3
+## 14 FRDS-SE   108            17
+## 15 STAR-mid  PTE             1
+## 16 STAR-mid  PVG             2
+## 17 STAR-NW   MCG            14
+## 18 STAR-S    ACF            13
+## 19 WRTS-1    128             3
+## 20 WRTS-1    222            12</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(Fire == &quot;FRDS&quot; &amp; soil_series == 0) %&gt;% 
   select(Sdlg)</code></pre>
-<pre><code>## [1] Sdlg
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>##   Sdlg
+## 1  126
+## 2 125f</code></pre>
 <div id="add-soil-orders-and-soborders" class="section level2">
 <h2>Add soil orders and soborders</h2>
 <p>sources: - NRCS. 2019. Web Soil Survey, USDA Natural Resources Conservation Service. <a href="http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx" class="uri">http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx</a>. - <a href="https://soilseries.sc.egov.usda.gov/osdname.aspx" class="uri">https://soilseries.sc.egov.usda.gov/osdname.aspx</a> - <a href="https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf" class="uri">https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf</a></p>
@@ -545,14 +512,15 @@ df %&gt;%
   group_by(soil_order, soil_suborder) %&gt;% 
   arrange(soil_order) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## # A tibble: 4 x 3
-## # Groups:   soil_order [4]
+<pre><code>## # A tibble: 5 x 3
+## # Groups:   soil_order [5]
 ##   soil_order soil_suborder `n()`
 ##   &lt;chr&gt;      &lt;chr&gt;         &lt;int&gt;
-## 1 Alfisol    Xeralf           10
-## 2 Andisol    Xerand           52
-## 3 Inceptisol Xerept          133
-## 4 Ultisol    Xerult           22</code></pre>
+## 1 0          0                 4
+## 2 Alfisol    Xeralf           11
+## 3 Andisol    Xerand           61
+## 4 Inceptisol Xerept          143
+## 5 Ultisol    Xerult           26</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">

@@ -198,16 +198,32 @@ $(document).ready(function () {
 <p>Files are dependent in the following order:</p>
 <div id="cleaning-code" class="section level2">
 <h2>1. Cleaning code</h2>
+<div id="clean_shrubs.rmd" class="section level4">
+<h4><strong>clean_shrubs.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv</code></li>
+<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
 <div id="clean_combine_2016-only.rmd" class="section level4">
 <h4><strong>clean_combine_2016-only.Rmd</strong></h4>
 <ul>
 <li>uses:
 <ul>
-<li><code>Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv</code></li>
+<li><code>~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata</code></li>
+<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4</code></li>
 </ul></li>
 <li>creates:
 <ul>
 <li><code>~/Shrubs-Seedlings/compiled_data/master_data_2016.Rdata</code></li>
+<li><code>~/Shrubs-Seedlings/compiled_data/master_data_2016.csv</code></li>
 </ul></li>
 </ul>
 </div>
@@ -352,6 +368,15 @@ $(document).ready(function () {
 </div>
 <div id="main-analyses" class="section level2">
 <h2>3. Main analyses</h2>
+<div id="pinus_vertical_growth" class="section level4">
+<h4><strong>Pinus_vertical_growth</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>master_seedlings_vert.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
 <div id="fir_vol_growth_analysis" class="section level4">
 <h4><strong>Fir_vol_growth_analysis</strong></h4>
 <ul>
@@ -374,18 +399,6 @@ $(document).ready(function () {
 <li>figures:
 <ul>
 <li><code>fir_RGR.pdf</code></li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="results-summaries" class="section level2">
-<h2>5. Results summaries</h2>
-<div id="section" class="section level4">
-<h4><strong>1</strong></h4>
-<ul>
-<li>uses:
-<ul>
-<li>1`</li>
 </ul></li>
 </ul>
 </div>

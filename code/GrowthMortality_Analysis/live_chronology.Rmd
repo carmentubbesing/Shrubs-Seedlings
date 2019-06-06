@@ -1,5 +1,5 @@
 ---
-title: "live chrnology"
+title: "live chronology"
 author: "Carmen"
 date: "May 16, 2019"
 output: 
@@ -17,60 +17,342 @@ require(readxl)
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../data/GrowthMortality/live_pipo_rwl.Rdata")
-rwl <- rwl_live_pipo
+rwlp <- rwl_live_pipo
+load(file = "../../data/GrowthMortality/live_abco_rwl.Rdata")
+rwla <- rwl_live_abco
+load(file = "../../data/GrowthMortality/dead_pipo_rwl.Rdata")
+load(file = "../../data/GrowthMortality/dead_abco_rwl.Rdata")
+```
+
+## Add dead ABCO with green foliage to the live chronology, since we know they died in 2017
+```{r}
+rwla_dead_green <- rwl_dead_abco[,colnames(rwl_dead_abco) %in% c(201, 100, 30, 127, 16, 211, 32, 52, 55, 169, 215)]
+rwla_dead_green
+```
+
+```{r}
+#rwla <- cbind(rwla, rwla_dead_green)
 ```
 
 # Plot data before detrending
 
-## Gather
+## Gather/restructure
+
+### PIPO
 ```{r}
-rwl2 <- rwl %>% 
-  mutate(year = row.names(rwl))
-rwl2 <- gather(rwl2, key = "tree", value = "growth", 1:ncol(rwl)) %>% 
+rwlp2 <- rwlp %>% 
+  mutate(year = row.names(rwlp))
+rwlp2 <- gather(rwlp2, key = "tree", value = "growth", 1:ncol(rwlp)) %>% 
   filter(!is.na(growth))
-head(rwl2)
+head(rwlp2)
 ```
 
-## Plot average growth rates
 ```{r}
-rwl3 <- rwl2 %>% 
-  group_by(year) %>% 
-  mutate(means = mean(na.omit(growth))) %>% 
-  mutate(n = n()) %>% 
-  ungroup()
-ggplot(rwl3)+
-  geom_point(aes(x = year, y = means, size = n))
+rwlp2_summary <- rwlp2 %>% 
+  group_by(tree) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+rwlp2_summary
 ```
 
-## Count observations per year
+### ABCO
 ```{r}
-rwl2 %>%
-  group_by(year) %>% 
-  summarize(count = n()) %>% 
-  arrange(year)
+rwla2 <- rwla %>% 
+  mutate(year = row.names(rwla))
+rwla2 <- gather(rwla2, key = "tree", value = "growth", 1:ncol(rwla)) %>% 
+  filter(!is.na(growth))
+head(rwla2)
 ```
 
+```{r}
+rwla2_summary <- rwla2 %>% 
+  group_by(tree) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+rwla2_summary
+```
+
+## Plot by # of rings in the series
+
+### PIPO
+
+#### Pines with 8 years:
+```{r}
+ggplot(rwlp2 %>% filter(tree %in%  rwlp2_summary$tree[1:6])) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+2 pos, 4 neg
+
+#### Pines with 7 years:
+```{r}
+ggplot(rwlp2 %>% filter(tree %in%  unlist(rwlp2_summary[rwlp2_summary$n == 7,"tree"]))) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+5 pos, 3 neg
+
+#### Pines with 6 years:
+```{r}
+ggplot(rwlp2 %>% filter(tree %in%  unlist(rwlp2_summary[rwlp2_summary$n == 6,"tree"]))) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+5 pos, 8 neg, 2 zero
+
+**Of the pines with 6, 7, or 8 rings, 12 have positive slopes, 15 have negative slopes, and 2 have slopes very near zero. In other words, nearly half have positive or zero slopes, so applying a negative exponential curve doesn't make much sense. I'm going to apply a horizontal line curve instead.**
+
+
+###  ABCO
+
+#### Firs with 10+ years:
+```{r}
+ggplot(rwla2 %>% filter(tree %in%  rwla2_summary$tree[1:7])) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+4 pos, 3 neg
+
+#### Firs with 9 years:
+```{r}
+ggplot(rwla2 %>% filter(tree %in%  unlist(rwla2_summary[rwla2_summary$n == 9,"tree"]))) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+4 pos, 5 neg
+
+#### Firs with 8 years:
+```{r}
+ggplot(rwla2 %>% filter(tree %in%  unlist(rwla2_summary[rwla2_summary$n == 8,"tree"]))) + 
+  stat_smooth(aes(x = year, y = growth, group = tree, col = tree), method = "lm", fill = "white",se = F)+
+  geom_line(aes(x = year, y = growth, group = tree, col = tree), size = 1, linetype = "dashed")
+```
+
+5 pos, 3 neg
+
+**Of the firs with 8-13 rings, 13 have positive slopes and 11 have negative slopes. In other words, over half have positive slopes, so applying a negative exponential curve doesn't make much sense. I'm going to apply a horizontal line curve instead.**
 
 # Detrend
+
+## PIPO
 ```{r}
-rwl_dt <- rwl[4:nrow(rwl),]
-rwl_dt <- detrend(rwl = rwl_dt, method = "ModNegExp")
+rwlp_dt <- detrend(rwl = rwlp, method = "Mean")
+```
+
+## ABCO
+```{r}
+rwla_dt <- detrend(rwl = rwla, method = "Mean")
 ```
 
 # Build mean chronology
+
+## PIPO
 ```{r}
-rwl_chron <- chron(rwl, prefix = "CAM")
-rwl_chron
-plot(rwl_chron, add.spline = T)
- ```
+rwlp_chron <- chron(rwlp_dt, prefix = "CAM")
+rwlp_chron
+plot(rwlp_chron, main ="PIPO")
+```
+
 
 ```{r}
-ggplot(rwl_chron %>% 
-           mutate(year = row.names(rwl_chron)) %>% 
-         ungroup() %>% 
-          filter(samp.depth>20) 
+ggplot(rwlp_chron %>% 
+           mutate(year = row.names(rwlp_chron)) %>% 
+         ungroup() 
        )+
   geom_point(aes(x = year, y = CAMstd))+
-  geom_line(aes(x = year, y = CAMstd, group = 1))
+  geom_line(aes(x = year, y = CAMstd, group = 1))+
+  ggtitle("PIPO")
+```
+
+
+## ABCO
+```{r}
+rwla_chron <- chron(rwla_dt, prefix = "CAM")
+rwla_chron
+plot(rwla_chron, main = "ABCO")
+```
+
+```{r}
+ggplot(rwla_chron %>% 
+           mutate(year = row.names(rwla_chron)) %>% 
+         ungroup() 
+       )+
+  geom_point(aes(x = year, y = CAMstd))+
+  geom_line(aes(x = year, y = CAMstd, group = 1))+
+  ggtitle("ABCO")
+```
+
+# Plot detrended seedlings
+
+## Reshape detrended means with error bars
+
+### PIPO
+```{r}
+dfp <- as.data.frame(t(rwlp_dt))
+dfp$tree <- row.names(dfp)
+dfp <- gather(dfp, key = "Year", value = "growth_detrended", c(1:13))
+dfp <- dfp %>% 
+  filter(!is.na(growth_detrended))
+```
+
+#### Take out trees with very few rings
+
+##### Find tallies of lengths of each tree's series
+```{r}
+dfp %>% 
+  group_by(tree) %>% 
+  summarize(n_rings = n()) %>% 
+  group_by(n_rings) %>% 
+  summarize(n_n = n()) %>% 
+  arrange(n_rings)
+```
+
+So, 21 trees have only 4 rings
+
+<!-- ##### Take out trees with 3 or fewer rings -->
+<!-- ```{r} -->
+<!-- nrow(dfp) -->
+<!-- dfp <- dfp %>%  -->
+<!--   group_by(tree) %>%  -->
+<!--   filter(n()>3) -->
+<!-- nrow(dfp) -->
+<!-- ``` -->
+
+
+### ABCO
+```{r}
+dfa <- as.data.frame(t(rwla_dt))
+dfa$tree <- row.names(dfa)
+dfa <- gather(dfa, key = "Year", value = "growth_detrended", c(1:13))
+dfa <- dfa %>% 
+  filter(!is.na(growth_detrended))
+```
+
+#### Take out trees with very few rings
+
+##### Find tallies of lengths of each tree's series
+```{r}
+dfa %>% 
+  group_by(tree) %>% 
+  summarize(n_rings = n()) %>% 
+  group_by(n_rings) %>% 
+  summarize(n_n = n()) %>% 
+  arrange(n_rings)
+```
+
+So, 7 trees have only 4 rings
+
+##### Take out trees with 4 or fewer rings
+# ```{r}
+# nrow(dfa)
+# dfa <- dfa %>% 
+#   group_by(tree) %>% 
+#   filter(n()>4)
+# nrow(dfa)
+# ```
+
+## Plot
+
+### PIPO
+
+#### Calculate standard errors
+```{r}
+dfpstd <- dfp %>% 
+  group_by(Year) %>% 
+  mutate(mean_gr_year = mean(growth_detrended)) %>% 
+  mutate(n_year = n()) %>% 
+  mutate(stderror = sd(growth_detrended)/sqrt(n_year)) %>% 
+  mutate(min = mean_gr_year-2*stderror) %>% 
+  mutate(max = mean_gr_year+2*stderror)
+dfpstd
+```
+
+#### Plot
+```{r}
+dfpstd <- dfpstd %>% 
+  ungroup() %>% 
+  mutate(Year = as.numeric(Year))
+ggplot(dfpstd  %>% filter(Year >2010)) + 
+  geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("Live PIPO detrended means +/- 2 SE")+
+   ylab("Mean detrended ring widths") +
+  scale_x_continuous(breaks = seq(min(dfpstd$Year), max(dfpstd$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+ggsave("../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg", width = 5, height = 5)
+```
+
+### ABCO
+
+#### Calculate standard errors
+```{r}
+dfastd <- dfa %>% 
+  group_by(Year) %>% 
+  mutate(mean_gr_year = mean(growth_detrended)) %>% 
+  mutate(n_year = n()) %>% 
+  mutate(stderror = sd(growth_detrended)/sqrt(n_year)) %>% 
+  mutate(min = mean_gr_year-2*stderror) %>% 
+  mutate(max = mean_gr_year+2*stderror)
+```
+
+#### Plot
+```{r, warning = F}
+dfastd <- dfastd %>% 
+  ungroup() %>% 
+  mutate(Year = as.numeric(Year))
+ggplot(dfastd %>% filter(Year >2008)) + 
+  geom_point(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_line(aes(x = Year, y = mean_gr_year), col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("Live ABCO detrended means +/- 2 SE")+
+  ylab("Mean detrended ring widths") +
+  scale_x_continuous(breaks = seq(min(dfastd$Year), max(dfastd$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+ggsave("../../results/figures/GrowthMortality/live_chron_abco_nogreendead.jpg", width = 5, height = 5)
+```
+
+# Summarize detrended live growth to compare to detrended dead growth
+```{r}
+dfa %>% 
+  ungroup() %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y = growth_detrended))
+dfa %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ungroup() %>% 
+  summarize(mean(growth_detrended))
+
+```
+
+```{r}
+dfp %>% 
+  ungroup() %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ggplot()+
+  geom_boxplot(aes(y = growth_detrended))
+dfp %>% 
+  filter(Year %in% (c(2013, 2014, 2015))) %>% 
+  ungroup() %>% 
+  summarize(mean(growth_detrended))
+
+```
+
+# Save detrended data
+```{r}
+save(dfa, file = "../../compiled_data/live_chron_abco.Rdata")
+save(dfp, file = "../../compiled_data/live_chron_pipo.Rdata")
 ```
 

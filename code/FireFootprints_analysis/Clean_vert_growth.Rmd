@@ -86,7 +86,7 @@ df <- df %>%
 ```{r}
 names(df)
 df <- df %>% 
-  select (-Light_File, -DIFN.all, -ImmedAboveSpp, -ImmedAboveHt.cm, -IAG, -DIFN.53)
+  select (-ImmedAboveSpp, -ImmedAboveHt.cm, -IAG)
 ```
 
 ## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017

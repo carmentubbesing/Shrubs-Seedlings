@@ -1,5 +1,5 @@
 ---
-title: "Read Dendro Data"
+title: "Compile and Clean Dendro Data"
 author: "Carmen"
 date: "December 11, 2018"
 output: 
@@ -13,53 +13,16 @@ require(dplR)
 require(readxl)
 ```
 
-# Read in and compile dendro files
+# Load clean detailed data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
-if(Sys.info()[1]=="Darwin"){
-  files <- list.files("../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/",full.names = T, pattern = ".raw")
-} else{
-  files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
-}
-
+load("../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
+df_full <- df
+load("../../compiled_data/dendro_joined.Rdata")
+load("../../compiled_data/rwl_joined.Rdata")
 ```
 
-## Make a dendro rwl and a separate data frame, so that you can manipulate the data frame without it losing rwl status
-```{r, message = F, warning = F}
-df <- data.frame()
-for(i in 1:length(files)){
-  file <- files[i]
-  rwli <- read.rwl(file)
-  if(i >1){
-    rwl <- combine.rwl(rwl, rwli)
-  } else {
-    rwl <- rwli
-  }
-  dfi <- as.data.frame(t(as.data.frame(rwli)))
-  dfi$series <- paste(row.names(dfi))
-  delim <- read.delim(file, header = F)
-  delim$V1 <- as.character(delim$V1)
-  board <- sapply(delim, substr, 74,79)
-  board <- unique(board)
-  print(board)
-  dfi <- dfi %>% 
-    mutate(board = board[1])
-  if(i == 1){
-    df <- dfi
-    } else{
-     df <- full_join(df, dfi) 
-    }
-}
-```
-
-## Rearrange
-```{r}
-df <- df %>% 
-  dplyr::select(series, board, everything())
-df_bu <- df
-```
-
-# Look for repeat trees
+# Dendro data basic clean
 
 ## Make series all caps
 ```{r}
@@ -67,25 +30,25 @@ df <- df %>%
   mutate(series = toupper(series))
 ```
 
-# Separate out tree number and radius number
+## Separate out tree number and radius number
 
-## Radius number
+### Radius number
 ```{r}
 df$radius <- substr(df$series, nchar(df$series), nchar(df$series)) 
 ```
 
-## Tree
+### Tree
 ```{r}
 df$tree <- substr(df$series, 1, nchar(df$series)-2) 
 ```
 
-## Find trees where this technique didn't work and fix them
+### Find trees where this technique didn't work and fix them
 ```{r}
 df %>% 
   filter(!radius %in% c(1, 2, 3))
 ```
 
-### Radius
+#### Radius
 ```{r}
 df <- df %>% 
   mutate(radius = ifelse(
@@ -97,7 +60,7 @@ df %>%
   filter(!radius %in% c(1, 2, 3))
 ```
 
-### Series
+#### Series
 ```{r}
 df <- df %>% 
   mutate(tree = ifelse(
@@ -110,20 +73,33 @@ df %>%
 head(df)
 ```
 
-## Tidy up names
+### Fix tree names for 184A they sync up with detailed data later on
+```{r}
+df %>%
+  filter(tree %in% c("184A", "184BA"))
+df_full %>% filter(SEEDLING %in% c("184-A", "184B-A"))
+```
+
+```{r}
+df <- df %>% 
+  mutate(tree = ifelse(tree == "184A", "184-A", tree)) %>% 
+  mutate(tree = ifelse(tree == "184BA", "184B-A", tree))
+```
+
+## Rearrange names
 ```{r}
 df <- df %>% 
   dplyr::select(board, tree, series, radius, everything())
 head(df)
 ```
 
-# Throw out trees from sample board
+## Throw out trees from sample board
 ```{r}
 df <- df %>% 
   filter(board != "P1BdS ")
 ```
 
-# Find duplicate trees
+## Find trees that don't have the right number of radii
 ```{r}
 df %>% 
   group_by(tree) %>% 
@@ -132,16 +108,22 @@ df %>%
   dplyr::select(board, tree, series, radius)
 ```
 
-## Fix duplicates
+## Make seedling color column all lower case 
+```{r}
+df_full %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR))
+```
 
-### Tree 19
+### Fix duplicates
 
-#### Take a look
+#### Tree 19
+
+##### Take a look
 ```{r}
 df %>% filter(tree %in% c(19, "19BU"))
 ```
 
-#### Clearly only the 19BU belongs, so delete the other one and fix the mislabeled radius on the BU board
+##### Clearly only the 19BU belongs, so delete the other one and fix the mislabeled radius on the BU board
 ```{r}
 df <- df %>% 
   filter(!(tree == 19 & board == "P1Bd62")) %>% 
@@ -149,15 +131,15 @@ df <- df %>%
 df %>% filter(tree %in% c(19, "19BU"))
 ```
 
-# Take out trees that have both BU and non-BU records
+## Take out duplicates for trees that have both BU and non-BU records
 
-## List the trees that are on backup boards
+### List the trees that are on backup boards
 ```{r}
 dfBU <- df[grep("BU", df$series),] %>% 
   arrange(tree)
 ```
 
-## Move BU data to a separate column
+### Move BU data to a separate column
 ```{r}
 df_bu <- df
 df <- df %>% 
@@ -169,7 +151,7 @@ df <- df %>%
   arrange(desc(BU))
 ```
 
-## View BU duplicates and delete non-BU ones
+### View BU duplicates and delete non-BU ones
 ```{r}
 dups <- df %>% 
   group_by(tree) %>% 
@@ -179,168 +161,47 @@ dups <- df %>%
 dups
 ```
 
+### Delete the ones that got replaced by backups 
 ```{r}
 df <- df %>% 
   filter(!(tree %in% dups$tree & BU == 0))
 ```
 
-# Check these changes against the excel Mort_details_compiled... sheet
-
-## Read in excel data
+## Correct the name of seedling 185B
 ```{r}
-if(Sys.info()[1]=="Darwin"){
-  meta <- read_excel("../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = "data")
-} else{
-  meta <- read_excel("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/Mort_details_compiled_June25_2018.xlsx", sheet = "data")
-}
-
-
+df %>% filter(tree == "185B")
 ```
 
-## Make all caps
-```{r}
-meta <- meta %>% 
-  mutate(SEEDLING = toupper(SEEDLING))
-```
+Based on notes in the master details excel spreadsheet, 185B-P is on board 45, so I just need to relabel this tree. I can always check the board too, if need be. 
 
-
-## Make a list of trees that were thrown out in excel data
-```{r}
-meta_thrown <- meta %>% 
-  filter(thrown_out == 1) %>% 
-  dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %>% 
-  arrange(desc(SEEDLING)) 
-meta_thrown
-```
-
-## Find seedlings in df that are also in meta_thrown
-```{r}
-meta_thrown %>% 
-  filter(SEEDLING %in% df$tree)
-```
-
-## Add reasons for exclusion in the notes section of meta 
-```{r}
-meta <- meta %>% 
-  mutate(exclude_reason = NA)
-```
-
-### Create function for Add Exclusion Reason
-```{r}
-aer <- function(seedling, reason){
-  meta <<- meta %>% 
-    mutate(exclude_reason = ifelse(SEEDLING == seedling, reason, exclude_reason))
-}
-```
-
-### Apply to seedlings one by one by looking at data
-```{r}
-aer("65B", "mate excluded")
-aer("65", "beetles")
-aer("94", "PATH_DAMAGE")
-aer("92", "PATH_DAMAGE")
-aer("92B", "mate excluded")
-aer(76, "beetles")
-aer(7, "PATH_DAMAGE")
-aer(6, "PATH_DAMAGE")
-aer("6B", "mate excluded")
-aer("59", "beetles")
-aer("59B", "mate excluded")
-aer("58", "beetles")
-aer(53, "PATH_DAMAGE")
-aer(5, "PATH_DAMAGE")
-aer(28, "PATH_DAMAGE")
-aer("22", "MUNCHED")
-aer("194", "TOO YOUNG")
-aer("194B", "TOO YOUNG")
-aer("189", "PATH_DAMAGE")
-aer("188", "PATH_DAMAGE")
-aer("187", "TOO YOUNG")
-aer("187B", "TOO YOUNG")
-aer("185-A", "beetles")
-aer("17", "MUNCHED")
-aer("162", "MUNCHED")
-aer("155", "unkn")
-aer("147", "MUNCHED")
-aer("149", "beetles")
-aer(146, "PATH_DAMAGE")
-aer("146B", "mate excluded")
-aer(145, "beetles")
-aer(136, "beetles")
-aer(116, "beetles")
-aer("116B", "mate excluded")
-aer(114, "pitching")
-aer(104, "PATH_DAMAGE")
-aer(104, "PATH_DAMAGE")
-aer(103, "PATH_DAMAGE")
-aer("103B", "PATH_DAMAGE")
-```
-
-The following are marked as being thrown out, but DO have data, so could potentially be used as a back-up mate if needed,
-
-So make them thrown_out = ?
-```{r}
-meta <- meta %>% 
-  mutate(thrown_out = ifelse(SEEDLING %in% c("58B", "53B", "7B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), "?", thrown_out))
-```
-
-### Add column to df for mateless seedlings
 ```{r}
 df <- df %>% 
-  mutate(mateless = ifelse(tree %in% c("7B","76B", "58B", "53B", "5B", "28B", "22B", "189B", "188B", "185BA", "17B", "162B", "155B", "147B", "149B", "145B", "136B", "114B", "104B", "94B"), 1, 0)) %>% 
-  arrange(desc(mateless))
-```
-
-## See what thrown out seedlings remain without a exclude_reason
-```{r}
-meta %>% 
-  filter(thrown_out == 1 & is.na(exclude_reason)) %>% 
-  dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %>% 
-  arrange(desc(SEEDLING)) 
-```
-
-
-## Correct 184A/184-A/185
-```{r}
-df <- df %>% 
-  mutate(tree = ifelse(tree == "184A", "184-A", tree)) %>% 
-  mutate(tree = ifelse(tree == "184BA", "184B-A", tree)) %>% 
-  mutate(tree = ifelse(tree == "185BA", "185B-A", tree)) %>% 
   mutate(tree = ifelse(tree == "185B", "185B-P", tree))
 ```
 
+# Check these changes against the compiled detailed data
 
-# Check for mismatches between df and meta not created by thrown out seedlings
+## Join dendro data with detailed field data
 ```{r}
-join <- full_join(df, meta, by = c("tree" = "SEEDLING")) %>% filter(thrown_out != 1)
+join <- full_join(df, df_full, by = c("tree" = "SEEDLING"))
 ```
 
-## clean up joined table
+## Take out thrown out seedlings
 ```{r}
 join <- join %>% 
-  mutate(DEAD_ALIVE = toupper(DEAD_ALIVE)) %>% 
-  mutate(SPECIES = toupper(SPECIES)) 
+  filter(thrown_out != 1)
 ```
 
-## Look at seedlings without meta data - make notes below about which to look for the physical seedlings for
+## Look at seedlings without dendro data
 ```{r}
 join %>%
   filter(is.na(board) | tree %in% (join %>% filter(is.na(board)))$tree) %>% 
-  dplyr::select(board, tree, NOTES, Notes, `Tops cut?`) 
+  dplyr::select(board, tree, BAS_DIA_2_mm, NOTES, Notes, `Tops cut?`) 
 ```
-
-The 185B-P correction is based on the "dendro" sheet of hte Mort_details... .xls file
-
-## Correct seedlings with dendro data but not meta data
-```{r}
-join %>% 
-  filter(is.na(DEAD_ALIVE))
-```
-
 
 # Check for mateless seedlings not marked as such
 
-## Create a column for PAIR, or dead #
+## Create a column for PAIR, aka dead #
 ```{r}
 join$PAIR <- NA
 bs <- grep("B", join$tree, value = T)
@@ -349,7 +210,10 @@ join[grep("B", join$tree), "PAIR"] <- bs
 head(bs)
 join <- join %>% 
   mutate(PAIR = ifelse(is.na(PAIR), tree, PAIR))
+```
 
+### Check
+```{r}
 head(join %>% 
   dplyr::select(tree, PAIR))
 ```
@@ -366,7 +230,7 @@ join %>%
   filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
 ```
 
-## Fix the funky 183/184/185 ones - INCOMPLETE
+## Fix the funky 183/184/185 ones 
 ```{r}
 join <- join %>% 
   mutate(PAIR = ifelse(tree == "184B-P", "184-P",PAIR))
@@ -385,10 +249,11 @@ join <- join %>%
   mutate(PAIR = ifelse(tree == "184B-A", "184-A",PAIR)) %>% 
   mutate(PAIR = ifelse(tree == "183B-A", "183-A",PAIR)) %>% 
   mutate(PAIR = ifelse(tree == "183B-P", "183-P",PAIR)) 
-  
 ```
 
-# Check again
+The 185B-P correction is based on the "dendro" sheet of the Mort_details... .xls file
+
+# Check again for mateless trees
 ```{r}
 join %>% 
   group_by(PAIR) %>% 
@@ -411,7 +276,6 @@ join %>%
   distinct() %>% 
   arrange(tree) %>% 
   filter(!is.na(board))
-
 ```
 
 What species are these missing seedlings?
@@ -477,7 +341,6 @@ join <- join %>%
   mutate(mateless = ifelse(tree %in% c("222","207", "91"), "?", mateless))
 ```
 
-
 # Take out thrown out seedlings from rwl
 
 ## Make colnames of rwl all caps
@@ -485,7 +348,6 @@ join <- join %>%
 rwl_bu <- rwl
 colnames(rwl) <- toupper(colnames(rwl))
 ```
-
 
 ```{r}
 thrown_out <- join %>% 
@@ -501,8 +363,17 @@ ncol_old - ncol(rwl) == nrow(thrown_out)
 ncol(rwl)
 ```
 
+## CHeck that seedlings with backups were accounted for correctly
+```{r}
+sort(names(rwl))
+```
+
+
+THey were NOT. So do NOT use rwl for ring width analysis. Use dffull instead. 
+
 # Calculate means across radii for each tree
 ```{r}
+rwl_bu <- rwl
 ncol(rwl)
 list <- join %>% filter(series %in% names(rwl)) %>% dplyr::select(tree) %>% distinct()
 
@@ -512,10 +383,6 @@ list <- sort(list)
 for(i in 1:length(list)){
   treei <- list[i]
   series <- join %>% filter(tree == treei) %>% dplyr::select(series) %>% distinct()
-  if(length(grep("BU", series))>0){
-    seriesnew <- series %>% mutate(series = gsub("BU", "",series))
-    series <- bind_rows(series, seriesnew)
-  }
   series
   rwl_subset <- rwl[,names(rwl)%in% unlist(series)]
   rwl_subset
@@ -531,10 +398,10 @@ ncol(rwl)*3
 
 ## Check on the ones that didn't get means calculated
 ```{r}
-names(rwl[,!(names(rwl) %in% join$tree)])
+sort(names(rwl[,!(names(rwl) %in% join$tree)]))
 ```
 
-## Delete those ones
+## Delete those ones - they got removed while filtering join/df_full, eg ones with backups
 ```{r}
 rwl <- rwl[,(names(rwl) %in% join$tree)]
 ncol(rwl)
@@ -542,7 +409,7 @@ ncol(rwl)
 
 # Save df with all columns
 ```{r}
-save(join, file = "../../data/GrowthMortality/dendro_all_vars.Rdata")
+save(join, file = "../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
 ```
 
 
@@ -573,6 +440,14 @@ rwl_live_abco <- rwl_live[,names(rwl_live) %in% join$tree[join$SPECIES=="ABCO"]]
 ncol(rwl_live_abco)
 ```
 
+```{r}
+ncol(rwl_dead)
+rwl_dead_pipo <- rwl_dead[,names(rwl_dead) %in% join$tree[join$SPECIES=="PIPO"]]
+ncol(rwl_dead_pipo)
+rwl_dead_abco <- rwl_dead[,names(rwl_dead) %in% join$tree[join$SPECIES=="ABCO"]]
+ncol(rwl_dead_abco) + ncol(rwl_dead_pipo) == ncol(rwl_dead)
+```
+
 
 # Save 
 ```{r}
@@ -583,7 +458,18 @@ write.rwl(rwl_live_pipo, fname = "../../data/GrowthMortality/live_pipo.rwl")
 write.rwl(rwl_live_abco, fname = "../../data/GrowthMortality/live_abco.rwl")
 ```
 
-## Take out trees with only a few years
+```{r}
+save(rwl, file = "../../data/GrowthMortality/rwl.Rdata")
+save(rwl_dead_pipo, file = "../../data/GrowthMortality/dead_pipo_rwl.Rdata")
+save(rwl_dead_abco, file = "../../data/GrowthMortality/dead_abco_rwl.Rdata")
+write.rwl(rwl_dead_pipo, fname = "../../data/GrowthMortality/dead_pipo.rwl")
+write.rwl(rwl_dead_abco, fname = "../../data/GrowthMortality/dead_abco.rwl")
+```
+
+
+# Filter by # years
+
+## PIPO Take out trees with only a few years
 ```{r}
 rwl_live_pipo_t <- rwl_live_pipo
 rwl_live_pipo_t[!is.na(rwl_live_pipo_t)] <- 1
@@ -593,16 +479,163 @@ sums <- t(rwl_live_pipo_t) %>% rowSums()
 hist(sums)
 head(sums)
 summary(as.factor(sums))
-sums <- sums[sums>4]
+sums <- sums[sums>6]
 
-rwl_live_pipo_gr4 <- rwl_live_pipo[,names(rwl_live_pipo) %in% names(sums)]
-ncol(rwl_live_pipo_gr4)
+rwl_live_pipo_gr6 <- rwl_live_pipo[,names(rwl_live_pipo) %in% names(sums)]
+ncol(rwl_live_pipo_gr6)
+rwl_live_pipo_gr6 <- rwl_live_pipo[,names(rwl_live_pipo) %in% names(sums)]
+rwl_live_pipo_gr6_nochron <- rwl_live_pipo[,!(names(rwl_live_pipo) %in% names(sums))]
+ncol(rwl_live_pipo_gr6_nochron)
+ncol(rwl_live_pipo_gr6_nochron) + ncol(rwl_live_pipo_gr6) == ncol(rwl_live_pipo)
 ```
 
 
-##  Save filtered set
+###  Save filtered set
 ```{r}
-write.rwl(rwl_live_pipo_gr4, fname = "../../data/GrowthMortality/live_pipo_gr4.rwl")
+write.rwl(rwl_live_pipo_gr6, fname = "../../data/GrowthMortality/live_pipo_gr6.rwl")
+write.rwl(rwl_live_pipo_gr6_nochron, fname = "../../data/GrowthMortality/live_pipo_gr6_nochron.rwl")
+```
+
+
+## ABCO Take out trees with only a few years
+```{r}
+rwl_live_abco_t <- rwl_live_abco
+rwl_live_abco_t[!is.na(rwl_live_abco_t)] <- 1
+rwl_live_abco_t[is.na(rwl_live_abco_t)] <- 0
+
+sums <- t(rwl_live_abco_t) %>% rowSums()
+hist(sums)
+head(sums)
+summary(as.factor(sums))
+sums <- sums[sums>6]
+
+rwl_live_abco_gr6 <- rwl_live_abco[,names(rwl_live_abco) %in% names(sums)]
+ncol(rwl_live_abco_gr6)
+rwl_live_abco_gr6_nochron <- rwl_live_abco[,!(names(rwl_live_abco) %in% names(sums))]
+ncol(rwl_live_abco_gr6_nochron) + ncol(rwl_live_abco_gr6) == ncol(rwl_live_abco)
+```
+
+
+###  Save filtered set
+```{r}
+write.rwl(rwl_live_abco_gr6, fname = "../../data/GrowthMortality/live_abco_gr6.rwl")
+write.rwl(rwl_live_abco_gr6_nochron, fname = "../../data/GrowthMortality/live_abco_gr6_nochron.rwl")
+```
+
+
+## Save filtered set of ABCO and PIPO together
+```{r}
+rwl_live_both_gr6 <- cbind(rwl_live_abco_gr6, rwl_live_pipo_gr6)
+```
+
+### Check
+```{r}
+rwl_live_both_gr6[1:2]
+rwl_live_abco_gr6[1:2]
+
+ncol(rwl_live_both_gr6)
+rwl_live_both_gr6[47:48]
+ncol(rwl_live_pipo_gr6)
+rwl_live_pipo_gr6[13:14]
+```
+
+```{r}
+write.rwl(rwl_live_both_gr6, fname = "../../data/GrowthMortality/live_both_gr6.rwl")
+```
+
+```{r}
+rwl_live_both_gr6_nochron <- cbind(rwl_live_abco_gr6_nochron, rwl_live_pipo_gr6_nochron)
+```
+
+```{r}
+write.rwl(rwl_live_both_gr6_nochron, fname = "../../data/GrowthMortality/live_both_gr6_nochron.rwl")
+```
+
+# Filter by size
+
+## Calculate average and median diameter
+```{r}
+join <- join %>% 
+  rowwise() %>% 
+  mutate(dia_ave = mean(c(BAS_DIA_1_mm, BAS_DIA_2_mm))) %>% 
+  ungroup()
+head(join %>% dplyr::select(tree, series, BAS_DIA_1_mm, BAS_DIA_2_mm, dia_ave) )
+quarters <- join %>% 
+  group_by(SPECIES) %>% 
+  summarize(quantile(na.omit(dia_ave), probs = .75))
+quarters
+```
+
+## PIPO
+
+```{r}
+quarter_pipo <- quarters %>% filter(SPECIES == "PIPO")
+quarter_pipo
+big_pipo <- join %>% filter(SPECIES == "PIPO") %>% filter(dia_ave > unlist(quarter_pipo[2]))
+nrow(big_pipo)/nrow(join %>% filter(SPECIES == "PIPO"))
+```
+
+### PIPO Take out smallest half of trees
+```{r}
+rwl_live_pipo_big <- rwl_live_pipo[,names(rwl_live_pipo) %in% big_pipo$tree]
+ncol(rwl_live_pipo_big)
+rwl_live_pipo_big_nochron <- rwl_live_pipo[,!(names(rwl_live_pipo) %in% big_pipo$tree)]
+ncol(rwl_live_pipo_big_nochron)
+ncol(rwl_live_pipo_big_nochron) + ncol(rwl_live_pipo_big) == ncol(rwl_live_pipo)
+```
+
+### PIPO Save filtered set
+```{r}
+write.rwl(rwl_live_pipo_big, fname = "../../data/GrowthMortality/live_pipo_big.rwl")
+write.rwl(rwl_live_pipo_big_nochron, fname = "../../data/GrowthMortality/live_pipo_big_nochron.rwl")
+```
+
+## ABCO
+
+```{r}
+quarter_abco <- quarters %>% filter(SPECIES == "ABCO")
+quarter_abco
+big_abco <- join %>% filter(SPECIES == "ABCO") %>% filter(dia_ave > unlist(quarter_abco[2]))
+nrow(big_abco)/nrow(join %>% filter(SPECIES == "ABCO"))
+```
+
+### abco Take out smallest half of trees
+```{r}
+rwl_live_abco_big <- rwl_live_abco[,names(rwl_live_abco) %in% big_abco$tree]
+ncol(rwl_live_abco_big)
+rwl_live_abco_big_nochron <- rwl_live_abco[,!(names(rwl_live_abco) %in% big_abco$tree)]
+ncol(rwl_live_abco_big_nochron)
+ncol(rwl_live_abco_big_nochron) + ncol(rwl_live_abco_big) == ncol(rwl_live_abco)
+```
+
+### abco Save filtered set
+```{r}
+write.rwl(rwl_live_abco_big, fname = "../../data/GrowthMortality/live_abco_big.rwl")
+write.rwl(rwl_live_abco_big_nochron, fname = "../../data/GrowthMortality/live_abco_big_nochron.rwl")
+```
+
+
+## Save filtered set of ABCO and PIPO together
+```{r}
+rwl_live_both_big <- cbind(rwl_live_abco_big, rwl_live_pipo_big)
+```
+
+```{r}
+write.rwl(rwl_live_both_big, fname = "../../data/GrowthMortality/live_both_big.rwl")
+```
+
+```{r}
+rwl_live_both_big_nochron <- cbind(rwl_live_abco_big_nochron, rwl_live_pipo_big_nochron)
+```
+
+### Check
+```{r}
+rwl_live_both_big_nochron[1:2]
+rwl_live_abco_big_nochron[1:2]
+```
+
+```{r}
+write.rwl(rwl_live_both_big_nochron, fname = "../../data/GrowthMortality/live_both_big_nochron.rwl")
 ```
 
 

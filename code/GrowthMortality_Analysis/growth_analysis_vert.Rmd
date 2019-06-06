@@ -27,19 +27,6 @@ df <- df %>%
   mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
 ```
 
-# Plot seedling growth rate against whether it's dead
-```{r}
-ggplot(df %>% filter(SPECIES == "ABCO"))+
-  geom_boxplot(aes(x = DEAD, y = gr_rel_ave))
-```
-
-```{r}
-ggplot(df %>% filter(SPECIES == "PIPO"))+
-  geom_violin(aes(x = DEAD, y = gr_rel_ave))
-ggplot(df %>% filter(SPECIES == "PIPO"))+
-  geom_boxplot(aes(x = DEAD, y = gr_rel_ave))
-```
-
 # Plot growth by year
 ```{r}
 df2 <- gather(df, key = "year", value = "gr_rel", c(gr1, gr2, gr3)) %>% 
@@ -56,20 +43,54 @@ ggplot(df2)+
   facet_wrap(~SPECIES)
 ```
 
+# Nice graphs for publication
 
 
-## Nice pipo graph for publication
+# Plot seedling growth rate against whether it's dead
 ```{r}
-ggplot(df %>% filter(SPECIES == "PIPO", gr_rel_ave<.8))+
-  geom_boxplot(aes(x = DEAD, y = gr_rel_ave, fill = DEAD))+
-  scale_fill_manual(values = c("#91cf60", "#fc8d59"))+
+dfa <- df %>% 
+  filter(SPECIES == "ABCO") %>% 
+  group_by(DEAD_ALIVE) %>% 
+  mutate(mean_log_gr = mean(log_gr_rel_ave))
+ggplot(dfa)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave, fill = DEAD), alpha = .5)+
+  geom_point(aes(x = DEAD_ALIVE, y = mean_log_gr, col = DEAD), size = 2)+
+  scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
+  scale_color_manual(values = c("#31a354", "#e6550d"))+
   xlab("")+
+  ylim(-5, 0)+
   scale_x_discrete(labels = c("Alive", "Dead"))+
-  ylab("Relative growth rate")+
-  theme(legend.position = "none")+
-  ggtitle("one data point in DEAD excluded for better visualization")
-ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot.png", width = 4, height = 4, dpi = 400)
+  ylab("Relative growth rate, log transformed")+
+  theme_bw()+
+  theme(legend.position = "none", axis.text=element_text(size=12))+
+  ggtitle("ABCO average relative vertical growth,\nlog transformed")
+  
+ggsave(file = "../../results/figures/GrowthMortality/Fir_vert_boxplot.png", width = 4, height = 6, dpi = 400)
 ```
+
+
+# Nice graphs for publication
+```{r}
+dfp <- df %>% 
+  filter(SPECIES == "PIPO") %>% 
+  group_by(DEAD_ALIVE) %>% 
+  mutate(mean_log_gr = mean(log_gr_rel_ave))
+ggplot(dfp)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave, fill = DEAD), alpha = .5)+
+  geom_point(aes(x = DEAD_ALIVE, y = mean_log_gr, col = DEAD), size = 2)+
+  scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
+  scale_color_manual(values = c("#31a354", "#e6550d"))+
+  xlab("")+
+  ylim(-5, 0)+
+  scale_x_discrete(labels = c("Alive", "Dead"))+
+  ylab("Relative growth rate, log transformed")+
+  theme_bw()+
+  theme(legend.position = "none", axis.text=element_text(size=12))+
+  ggtitle("PIPO average relative vertical growth,\nlog transformed")
+  
+ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot.png", width = 4, height = 6, dpi = 400)
+```
+
 
 # Make separate df for each species
 ```{r}
@@ -137,9 +158,3 @@ summary(GLM_pipo)
 anova(GLM_pipo, test = "Chi")
 ```
 
-## plot growth effect and height effect
-```{r}
-plot(predictorEffect("log_gr_rel_ave", GLM_pipo))
-```
-
-MAIN RESULT: Significant for pines but not firs
