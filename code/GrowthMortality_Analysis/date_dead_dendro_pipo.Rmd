@@ -1,0 +1,501 @@
+---
+title: "Dating dead PIPO from dendro"
+author: "Carmen Tubbesing"
+date: "6/6/2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = F}
+require(tidyverse)
+require(dplR)
+require(readxl)
+```
+
+# Read in data
+
+### compiled dendro files
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load(file = "../../data/GrowthMortality/dead_pipo_rwl.Rdata")
+rwlp <- rwl_dead_pipo
+```
+
+### live detrended data
+```{r}
+load("../../compiled_data/live_chron_pipo.Rdata")
+dfp_live <- dfp
+remove(dfp)
+```
+
+### detailed dead seedling characteristic data to use for creating a year of death rubric
+```{r}
+load("../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
+```
+
+#### separate detailed data into abco and pipo
+```{r}
+dfpfull <- join %>% 
+  filter(SPECIES == "PIPO")
+```
+
+# Clean up Growing column
+```{r}
+dfpfull_bu <- dfpfull
+```
+
+## Standardize the response types
+```{r}
+dfpfull <- dfpfull_bu
+dfpfull <- dfpfull %>% 
+  rename(Growing = `Growing?`) %>% 
+  mutate(Growing = toupper(Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "GROWING", "YES", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "NOT GROWING", "NO", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "EARLY 2017 GROWTH", "YES", Growing)) %>% 
+  mutate(Growing = ifelse(Growing == "BEFORE 2017 GROWTH", "NO", Growing)) 
+
+unique(dfpfull$Growing)
+```
+
+# Create functions
+
+### Make a function to plot the trend for each tree
+```{r}
+ringplot <- function(i){
+  ggplot(data = dfp %>% filter(tree == i) %>% filter(Year >2008))+
+  geom_line(aes(x = Year, y = growth_detrended))+
+  geom_point(aes(x = Year, y = growth_detrended))+
+  ggtitle(paste(i))+
+  scale_x_continuous(breaks = seq(min(dfp$Year), max(dfp$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+}
+```
+
+### Make vectors to add to 
+
+"died2017" means that the dead tree's "2016" year matches live trees' "2016" - AKA the tree put on a partial ring in 2017 and then died
+```{r}
+died2017 <- c()
+died2016 <- c()
+died2015 <- c()
+unkn <- c()
+```
+
+### Make functions to add and subtract trees from the vectors
+```{r}
+add2017 <- function(new){
+  died2017 <<- c(died2017, new)
+}
+```
+
+```{r}
+add2016 <- function(new){
+  died2016 <<- c(died2016, new)
+}
+```
+
+```{r}
+add2015 <- function(new){
+  died2015 <<- c(died2015, new)
+}
+```
+
+```{r}
+addunkn <- function(new){
+  unkn <<- c(unkn, new)
+  if(new %in% died2017){
+    died2017<<- died2017[died2017 != new]
+  }
+}
+```
+
+```{r}
+subtract2016 <- function(new){
+  if(new %in% died2016){
+    died2016<<- died2016[died2016 != new]
+  }
+}
+```
+
+### Make a function to add to a vector of trees whose age assignment I feel confident about BASED SOLELY ON RING WIDTHS
+```{r}
+sure <- c()
+addsure <- function(new){
+  sure <<- c(sure, new)
+}
+```
+
+### Make a function to look at all the physical traits of a seedling
+```{r}
+look <- function(treenum){
+  print(dfpfull %>% 
+    dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing, `BLACK DOTS`)  %>% 
+    filter(tree == treenum) %>% 
+    distinct())
+}
+```
+
+# Assign green trees as 2017 death
+
+## Find which trees have any mention of green
+```{r}
+summary(as.factor(dfpfull$NEEDLE_COLOR))
+sort(unique(dfpfull[grep("green", dfpfull$NEEDLE_COLOR),]$tree))
+```
+
+## Check for green in the photos
+
+### Modify needle color column if I see green in the photo that wasn't recorded
+```{r}
+```
+
+#### And remove it from the 2016 list
+```{r}
+```
+
+### Make a vector of trees whose photos had green
+```{r}
+definitely_green <- c(15, 181, 20, 49, 50)
+```
+
+
+## If there's actually green in the photos, add that seedling to the list of trees that died in 2017 if you haven't already
+```{r}
+add2017(15)
+add2017(181)
+add2017(20)
+add2017(49)
+add2017(50)
+```
+
+# Detrend using horizontal line method
+```{r}
+rwlp_dt <- detrend(rwl = rwlp, method = "Mean")
+```
+
+# Reshape data frame to identify trees with the most rings
+```{r}
+rwlp2 <- rwlp %>% 
+  mutate(year = row.names(rwlp))
+rwlp2 <- gather(rwlp2, key = "tree", value = "growth", 1:ncol(rwlp)) %>% 
+  filter(!is.na(growth))
+rwlp2_summary <- rwlp2 %>% 
+  group_by(tree) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+rwlp2_summary
+```
+
+# Reshape detrended means in order to look at each tree's trend
+```{r}
+dfp <- as.data.frame(t(rwlp_dt))
+dfp$tree <- row.names(dfp)
+dfp <- gather(dfp, key = "Year", value = "growth_detrended", c(1:13))
+dfp <- dfp %>% 
+  filter(!is.na(growth_detrended))
+```
+
+```{r}
+dfp <- dfp %>% 
+  mutate(Year =as.numeric(Year))
+```
+
+# Categorize trees based on photos in ppt
+
+## Make a list of all the trees that have no needles in the photos
+```{r}
+died2015 <- c(213, 74, 65, 150, 204, 48, 190, 196, 70, 177, "185-P")
+died2015
+```
+
+## Look at their characteristics
+```{r}
+dfpfull %>% 
+    dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing, `BLACK DOTS`)  %>% 
+    filter(tree %in% died2015) %>% 
+    distinct()
+```
+
+## Look at the data of trees that look really intact in photos but don't have green
+```{r}
+look(1)
+look(71)
+look(59)
+look(26)
+look(209)
+
+add2016(26) # based on mostly but not fully intact needles and reddish color, and that it's not growing
+add2016(167) # based on high needle retention, reddish color, and not growing
+
+look(172) # likely died early 2017 growth because it's reddish and has 95% needles but not growing
+add2017(172)
+
+look(11) 
+add2016(11) # not growing and not intact enough to have died after 2017 growth
+
+look(75)
+look(160)
+
+look(191)
+
+look(166)
+add2016(166) # growing but kinda crappy looking
+
+look(158) 
+add2016(158) # growing but kinda crappy looking
+
+look(157) 
+
+look(9)
+add2016(9) # kinda crappy but growing
+
+look(8) # mostly intact needles, not gray or tan, but not growing and not just dead
+
+look(19)
+add2016(19) # mid growth but not 2017
+
+look(21)
+add2016(21) # kinda crappy but growing
+```
+
+
+# Categorize trees based on physical characteristics and photos
+```{r}
+sort(unique(as.numeric(dfp$tree[!dfp$tree %in% definitely_green])))
+
+look(1)
+add2017(1) # super intact 
+
+look(8)
+add2016(8)
+
+look(9)
+addunkn(9)
+
+look(10)
+add2016(10) # growing + droopy and discolored -> didn't die 2017 growing season
+
+look(14)
+add2016(14)
+
+look(25)
+add2016(25)
+
+look(39)
+add2016(39)
+
+look(42)
+add2015(42)
+
+look(57)
+```
+
+# Add year assignments from powerpoint file
+
+## 2015
+```{r}
+sort(as.numeric(died2015))
+sort(died2015)
+
+died2015 <- c(died2015, 12, "184-P", 186, 164, 99, 67, 107, 124, 125, 154, 156, 57, 106, 110, 121, 182, 123)
+sort((died2015))
+length(died2015)
+```
+
+## 2016
+```{r}
+sort(as.numeric(died2016))
+
+died2016 <- c(died2016, 60, 61, 63, 64, 72, 109, 115, 118, 159, 122, 142, 144, 165, "183-P", 202, 153, 157, 173, 191, 151, 168, 200, 73, 160, 75, 13, 205, 71)
+sort((died2016))
+length(died2016)
+died2016[duplicated(died2016)]
+```
+
+## 2017
+```{r}
+sort(as.numeric(died2017))
+
+died2017 <- c(died2017, 85, 209, 152)
+sort((died2017))
+length(died2017)
+died2017[duplicated(died2017)]
+```
+
+## Check for double counted trees
+```{r}
+c(died2015, died2016, died2017)[duplicated(c(died2015, died2016, died2017))]
+length(c(died2015, died2016, died2017))
+```
+
+# Summarize physical characteristics of trees that I think died in each year
+```{r}
+dfpfull <- tbl_df(dfpfull)
+```
+
+## 2017
+```{r}
+dfpfull %>% 
+  dplyr::select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
+  filter(tree %in% died2017) %>% 
+  distinct
+```
+
+## 2016
+```{r}
+dfpfull %>% 
+  dplyr::select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  filter(tree %in% died2016) %>% 
+  distinct() %>% 
+  arrange(PERC_NEEDLES) %>% 
+  arrange(Growing)
+```
+
+## 2015
+```{r}
+dfpfull %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  filter(tree %in% died2015) %>% 
+  distinct() %>% 
+  arrange(PERC_NEEDLES) %>% 
+  arrange(Growing)
+```
+
+# Check that everything is accounted for
+```{r}
+dfp %>%
+  filter(!tree  %in% died2017 & !tree %in% died2016 & !tree %in% died2015) %>% 
+  dplyr::select(tree) %>% 
+  distinct() %>% 
+  arrange(tree)
+```
+
+# Count trees in each death year
+```{r}
+length(died2017)
+length(died2016)
+length(died2015)
+```
+
+# Save lists of trees that died in each year
+```{r}
+save(died2017, file = "../../results/data/GrowthMortality/died2017_pipo.Rdata")
+save(died2016, file = "../../results/data/GrowthMortality/died2016_pipo.Rdata")
+save(died2015, file = "../../results/data/GrowthMortality/died2015_pipo.Rdata")
+```
+
+# Summarize variables for each year of death
+
+## Percent needles
+```{r}
+dfpfull %>% 
+  filter(tree %in% died2017) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+dfpfull %>% 
+  filter(tree %in% died2016) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+dfpfull %>% 
+  filter(tree %in% died2015) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
+```
+
+## Color
+```{r}
+dfpfull %>% 
+  filter(tree %in% died2017) %>%
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+dfpfull %>% 
+  filter(tree %in% died2016) %>%
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+dfpfull %>% 
+  filter(tree %in% died2015) %>%
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
+  distinct() %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
+  group_by(NEEDLE_COLOR) %>% 
+  summarize(n())
+```
+
+## Bark
+```{r}
+dfpfull %>% 
+  filter(tree %in% died2017) %>%
+  dplyr::select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+dfpfull %>% 
+  filter(tree %in% died2016) %>%
+  dplyr::select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+dfpfull %>% 
+  filter(tree %in% died2015) %>%
+  dplyr::select(tree, BARK) %>% 
+  distinct() %>% 
+  mutate(BARK = tolower(BARK)) %>% 
+  group_by(BARK) %>% 
+  summarize(n())
+```
+
+# Re-assign death year 
+```{r}
+dfptest <- dfp %>% 
+  filter(tree %in% c(died2017, died2016, died2015)) %>% 
+  mutate(Year = ifelse(tree %in% died2016, Year-1, Year)) %>% 
+  mutate(Year = ifelse(tree %in% died2015, Year-2, Year))
+head(dfptest)
+```
+
+# Plot with standard errors*2
+```{r}
+dfptest <- dfptest %>% 
+  filter(Year > 2008) %>% 
+  group_by(Year) %>% 
+  mutate(mean_gr_year = mean(growth_detrended)) %>% 
+  mutate(n_year = n()) %>% 
+  mutate(stderror = sd(growth_detrended)/sqrt(n_year)) %>% 
+  mutate(min = mean_gr_year-2*stderror) %>% 
+  mutate(max = mean_gr_year+2*stderror)
+```
+
+```{r}
+ggplot(data = dfptest, aes(x = Year, y = mean_gr_year))+
+  geom_point(col = "red")+
+  geom_line(col = "red")+
+  geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
+  geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
+  geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
+  ggtitle("Dead PIPO detrended means +/- 2 SE")+
+  ylab("Mean detrended ring widths") +
+  scale_x_continuous(breaks = seq(min(dfp$Year), max(dfp$Year), by = 1))+
+  theme_bw()+
+  theme(panel.grid.minor = element_blank())
+ggsave("../../results/figures/GrowthMortality/dead_chron_pipo.jpg", width = 5, height = 5)
+```
+
+# Save df version of the detrended dendro data
+```{r}
+save(dfp, file = "../../compiled_data/pine_rings_detrended_dead.Rdata")
+```
+
+
+# To Do
+1. Look at tree 172 to see if it has a micro ring - I think it died early 2017 growing season

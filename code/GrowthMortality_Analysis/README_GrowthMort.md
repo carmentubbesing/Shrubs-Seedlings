@@ -8,18 +8,9 @@ Files are dependent in the following order:
 #### **Clean_all.Rmd**
 * uses:
     * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx`
-    * `../../results/data/GrowthMortality/died2017.Rdata`
-    * `../../results/data/GrowthMortality/died2016.Rdata`
-    * `../../results/data/GrowthMortality/died2015.Rdata`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
-
-#### **Clean_vert.Rmd**
-* uses:
-    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
-* creates:
-    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata`
-
+    
 #### **dendro_join.Rmd**
 * uses:
     * all files in `Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/`
@@ -41,9 +32,6 @@ Files are dependent in the following order:
     * `../../data/GrowthMortality/dead_abco.rwl`
     * `../../data/GrowthMortality/dead_pipo.rwl`
 
-
-## Intermediary cleaning/analysis
-
 #### **live_chronology.Rmd**
 * uses:
     * `../../data/GrowthMortality/live_pipo_rwl.Rdata`
@@ -57,13 +45,31 @@ Files are dependent in the following order:
     * `../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg`
     * `../../results/figures/GrowthMortality/live_chron_pipo_nogreendead.jpg`
     
-#### **date_dead_dendro.Rmd**
+#### **date_dead_dendro_abco.Rmd** and **date_dead_dendro_pipo.Rmd**
 * uses:
     * `../../data/GrowthMortality/dead_pipo_rwl.Rdata`
     * `../../data/GrowthMortality/dead_abco_rwl.Rdata`
 * creates:
     * `../../compiled_data/fir_rings_detrended.Rdata`
-    
+    * `../../results/data/GrowthMortality/died2017_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2016_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2015_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2017_pipo.Rdata`
+    * `../../results/data/GrowthMortality/died2016_pipo.Rdata`
+    * `../../results/data/GrowthMortality/died2015_pipo.Rdata`
+
+#### **Clean_vert.Rmd**
+* uses:
+    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_detailed_clean.Rdata`
+    * `../../results/data/GrowthMortality/died2017_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2016_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2015_abco.Rdata`
+    * `../../results/data/GrowthMortality/died2017_pipo.Rdata`
+    * `../../results/data/GrowthMortality/died2016_pipo.Rdata`
+    * `../../results/data/GrowthMortality/died2015_pipo.Rdata`
+* creates:
+    * `~/Shrubs-Seedlings/compiled_data/growth_mortality/df_vert.Rdata`
+
 #### **mortality_counts.Rmd**
 * uses:
     * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx`

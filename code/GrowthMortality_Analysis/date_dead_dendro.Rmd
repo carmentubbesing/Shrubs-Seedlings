@@ -144,7 +144,7 @@ subtract2016 <- function(new){
 }
 ```
 
-### Make a function to add to a vector of trees whose age assignment I feel confident about
+### Make a function to add to a vector of trees whose age assignment I feel confident about BASED SOLELY ON RING WIDTHS
 ```{r}
 sure <- c()
 addsure <- function(new){
@@ -156,12 +156,11 @@ addsure <- function(new){
 ```{r}
 look <- function(treenum){
   print(dfafull %>% 
-    select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+    dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
     filter(tree == treenum) %>% 
     distinct())
 }
 ```
-
 
 # Assign green trees as 2017 death
 
@@ -275,8 +274,8 @@ ringplot(129)
 addunkn(129)
 
 ringplot(161)
-look(161)
-add2017(161) # Growing, so likely died earlier in the 2017 season 
+add2017(161) 
+addsure(161)
 
 ringplot(51)
 add2017(51) # based largely on color and the fact that it looks like it actually is growing
@@ -287,6 +286,7 @@ add2016(68) # based largely on rings, the fact that it's red/brown
 
 ringplot(78)
 add2016(78)
+addsure(78)
 
 ringplot(102)
 look(102) 
@@ -298,6 +298,7 @@ add2017(112) # based largely on the fact that it's growing and looks so red in p
 
 ringplot(131)
 add2016(131)
+addsure(131)
 
 ringplot(139)
 add2017(139) # Growing and looks like it may have hints of green
@@ -313,7 +314,7 @@ addunkn("184-A")
 
 ringplot(195)
 look(195)
-add2016(195)
+add2016(195) # based on physical characteristics
 
 ringplot(203)
 add2016(203)
@@ -324,18 +325,21 @@ addunkn(206)
 
 ringplot(234)
 add2016(234)
+addsure(234)
 
 ringplot(62)
-add2017(62)
+add2017(62) # based on characteristics
 
 ringplot(77)
-add2015(77)
+look(77)
+add2016(77) # based on a combination of rings and characteristics
 
 ringplot(96)
 add2016(96) # based largely on needle retention in PHOTO
 
 ringplot(128)
-add2015(128)
+look(128)
+add2015(128) # based on a combination of rings and characteristics
 ```
 
 ```{r}
@@ -351,7 +355,8 @@ ringplot(18)
 add2017(18) # based largely on needle retention
 
 ringplot("183-A")
-add2017("183-A")
+look("183-A")
+add2017("183-A") # based on a combination of rings and characteristics
 
 ringplot(197)
 add2015(197) # based on physical characteristics
@@ -382,16 +387,20 @@ rwla2_summary_unkn[31:40,]
 
 ```{r}
 ringplot(80)
-add2015(80)
+look(80)
+add2015(80) # based on characteristics
 
 ringplot(117)
 add2016(117)
+addsure(117)
 
 ringplot(119)
 add2016(119)
+addsure(119)
 
 ringplot(120)
-add2015(120)
+look(120)
+add2015(120) # based largely on characteristics
 
 ringplot(130)
 addunkn(130)
@@ -433,6 +442,7 @@ add2016(33) # kind of a guess. Based largely on photo and needle retention and t
 
 ringplot(66)
 add2015(66)
+addsure(66)
 
 ringplot(93)
 look(93)
@@ -445,6 +455,15 @@ died2017
 died2016
 died2015
 unkn
+sure
+length(sure)
+```
+
+### See what years the "sure" seedlings died in
+```{r}
+died2016[died2016 %in% sure]
+died2017[died2017 %in% sure]
+died2015[died2015 %in% sure]
 ```
 
 # Summarize physical characteristics of trees that I think died in each year
@@ -455,7 +474,7 @@ dfafull <- tbl_df(dfafull)
 ## 2017
 ```{r}
 dfafull %>% 
-  select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
+  dplyr::select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
   filter(tree %in% died2017) %>% 
   distinct
 ```
@@ -463,7 +482,7 @@ dfafull %>%
 ## 2016
 ```{r}
 dfafull %>% 
-  select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  dplyr::select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
   filter(tree %in% died2016) %>% 
   distinct() %>% 
   arrange(PERC_NEEDLES) %>% 
@@ -474,7 +493,7 @@ dfafull %>%
 ```{r}
 red90notgrowing <- dfafull %>% 
   filter(as.numeric(PERC_NEEDLES)>=90 & Growing == "NO" & !tree %in% c(died2017, died2016, died2015) & NEEDLE_COLOR == "red") %>%
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
   distinct() %>% 
   arrange(tree) %>% 
   arrange(PERC_NEEDLES)
@@ -493,7 +512,7 @@ add2017(47)
 ## 2015
 ```{r}
 dfafull %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing)  %>% 
   filter(tree %in% died2015) %>% 
   distinct() %>% 
   arrange(PERC_NEEDLES) %>% 
@@ -504,7 +523,7 @@ dfafull %>%
 ```{r}
 needles50 <- dfafull %>%  
   filter(PERC_NEEDLES <=50 & !tree %in% died2017 & !tree %in% died2016  & !tree %in% died2015 ) %>% 
-  select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
+  dplyr::select(tree, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS)  %>% 
   arrange(PERC_NEEDLES) %>% 
   distinct() 
 needles50
@@ -520,7 +539,7 @@ died2015
 dfa <- tbl_df(dfa)
 dfa %>%
   filter(!tree  %in% died2017 & !tree %in% died2016 & !tree %in% died2015) %>% 
-  select(tree) %>% 
+  dplyr::select(tree) %>% 
   distinct() %>% 
   arrange()
 length(unique(dfa$tree))
@@ -657,7 +676,7 @@ add2017(97)
 ```{r}
 dfa %>%
   filter(!tree  %in% died2017 & !tree %in% died2016 & !tree %in% died2015) %>% 
-  select(tree) %>% 
+  dplyr::select(tree) %>% 
   distinct() %>% 
   arrange(tree)
 ```
@@ -690,15 +709,15 @@ length(unique(dfa$tree))
 ```{r}
 dfafull %>% 
   filter(tree %in% died2017) %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
   summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
 dfafull %>% 
   filter(tree %in% died2016) %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
   summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
 dfafull %>% 
   filter(tree %in% died2015) %>% 
-  select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
+  dplyr::select(tree, HEIGHT, PERC_NEEDLES, NEEDLE_COLOR, BARK, BUDS, Growing) %>% 
   summarize(median_perc_needles = median(na.omit(as.numeric(PERC_NEEDLES))), mean_perc_needles = mean(na.omit(as.numeric(PERC_NEEDLES))))
 ```
 
@@ -706,21 +725,21 @@ dfafull %>%
 ```{r}
 dfafull %>% 
   filter(tree %in% died2017) %>%
-  select(tree, NEEDLE_COLOR) %>% 
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
   distinct() %>% 
   mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
   group_by(NEEDLE_COLOR) %>% 
   summarize(n())
 dfafull %>% 
   filter(tree %in% died2016) %>%
-  select(tree, NEEDLE_COLOR) %>% 
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
   distinct() %>% 
   mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
   group_by(NEEDLE_COLOR) %>% 
   summarize(n())
 dfafull %>% 
   filter(tree %in% died2015) %>%
-  select(tree, NEEDLE_COLOR) %>% 
+  dplyr::select(tree, NEEDLE_COLOR) %>% 
   distinct() %>% 
   mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR)) %>% 
   group_by(NEEDLE_COLOR) %>% 
@@ -731,28 +750,26 @@ dfafull %>%
 ```{r}
 dfafull %>% 
   filter(tree %in% died2017) %>%
-  select(tree, BARK) %>% 
+  dplyr::select(tree, BARK) %>% 
   distinct() %>% 
   mutate(BARK = tolower(BARK)) %>% 
   group_by(BARK) %>% 
   summarize(n())
 dfafull %>% 
   filter(tree %in% died2016) %>%
-  select(tree, BARK) %>% 
+  dplyr::select(tree, BARK) %>% 
   distinct() %>% 
   mutate(BARK = tolower(BARK)) %>% 
   group_by(BARK) %>% 
   summarize(n())
 dfafull %>% 
   filter(tree %in% died2015) %>%
-  select(tree, BARK) %>% 
+  dplyr::select(tree, BARK) %>% 
   distinct() %>% 
   mutate(BARK = tolower(BARK)) %>% 
   group_by(BARK) %>% 
   summarize(n())
-
 ```
-
 
 # Assign time of death in column of dfafull
 ```{r}
@@ -764,7 +781,6 @@ dfafull <- dfafull %>%
 dfafull <- dfafull %>% 
   mutate(time_of_death = ifelse(tree %in% c(203), "between 2016 and 2017 growth", time_of_death))
 ```
-
 
 ## Assign outer ring column 
 **Note: this was not measured for ring width.** 

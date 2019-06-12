@@ -174,10 +174,15 @@ dfa %>%
 ## Add column for log growth
 ```{r}
 dfa <- dfa %>% 
-  mutate(log_gr_rel_ave = log(gr_rel_ave))
+  mutate(log_gr_rel_ave = log(gr_rel_ave)) %>% 
+  group_by(DEAD_ALIVE) %>% 
+  mutate(mean_log_gr_rel_ave = mean(log_gr_rel_ave)) %>% 
+  ungroup()
 summary(dfa$log_gr_rel_ave)
 hist(dfa$gr_rel_ave)
 hist(dfa$log_gr_rel_ave)
+dfa %>% dplyr::select(log_gr_rel_ave, DEAD_ALIVE, mean_log_gr_rel_ave)
+summary(dfa$mean_log_gr_rel_ave)
 ```
 
 # Plot growth by year
@@ -199,16 +204,11 @@ ggplot(df2)+
 ```
 
 # Plot relative growth comparison between live and dead
-```{r}
-ggplot(dfa)+
-  geom_boxplot(aes(x = DEAD_ALIVE, y = gr_rel_ave))+
-  geom_point(aes(x = DEAD_ALIVE, y = mean(gr_rel_ave)), col = "red")
-```
 
 ```{r}
-ggplot(dfa)+
+ggplot(dfa %>% filter(log_gr_rel_ave>-4))+
   geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave))+
-  geom_point(aes(x = DEAD_ALIVE, y = mean(log_gr_rel_ave)), col = "red")
+  geom_point(aes(x = DEAD_ALIVE, y = mean_log_gr_rel_ave), col = "red")
 ```
 
 # Test with glm

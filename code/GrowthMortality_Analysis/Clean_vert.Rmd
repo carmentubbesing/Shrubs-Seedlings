@@ -19,9 +19,6 @@ library(effects)
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
-load(file = "../../results/data/GrowthMortality/died2017.Rdata")
-load(file = "../../results/data/GrowthMortality/died2016.Rdata")
-load(file = "../../results/data/GrowthMortality/died2015.Rdata")
 ```
 
 ## Create a list of trees to remove that are missing any year of vertical growth

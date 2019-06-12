@@ -19,7 +19,7 @@ require(MASS)
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
-load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+load(file = "../../compiled_data/growth_mortality/df_vert_2.Rdata")
 ```
 
 #  Make dead a factor
@@ -27,8 +27,6 @@ load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
 df <- df %>% 
   mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
 ```
-
-# CALCULATE GROWTH USING DIFFERENT YEARS FOR DEAD AND ALIVE
 
 # Make separate df for each species
 ```{r}
