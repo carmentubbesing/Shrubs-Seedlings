@@ -19,6 +19,18 @@ library(effects)
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
+load("../../results/data/GrowthMortality/died2017_abco.Rdata")
+load("../../results/data/GrowthMortality/died2016_abco.Rdata")
+load("../../results/data/GrowthMortality/died2015_abco.Rdata")
+died2015_abco <- died2015
+died2016_abco <- died2016
+died2017_abco <- died2017
+load("../../results/data/GrowthMortality/died2017_pipo.Rdata")
+load("../../results/data/GrowthMortality/died2016_pipo.Rdata")
+load("../../results/data/GrowthMortality/died2015_pipo.Rdata")
+died2015_pipo <- died2015
+died2016_pipo <- died2016
+died2017_pipo <- died2017
 ```
 
 ## Create a list of trees to remove that are missing any year of vertical growth
@@ -87,7 +99,7 @@ df <- df %>%
 ### Check that all ABCO are in one of the lists
 ```{r}
 df %>% 
-  filter(SPECIES == "ABCO" & !SEEDLING %in% c(died2017, died2016, died2015)) %>% 
+  filter(SPECIES == "ABCO" & !SEEDLING %in% c(died2017_abco, died2016_abco, died2015_abco)) %>% 
   filter(DEAD_ALIVE == "DEAD") %>% 
   dplyr::select(SEEDLING) %>% 
   distinct() %>% 
@@ -102,13 +114,13 @@ df %>%
 
 ### Add seedling 98 to 2017 list based on photo and physical characteristics
 ```{r}
-died2017 <- c(died2017, "98")
+died2017_abco <- c(died2017_abco, "98")
 ```
 
 ## Check that all ABCO are in a pair with a year assigned
 ```{r}
 df %>% 
-  filter(SPECIES == "ABCO" & !PAIR %in% c(died2017, died2016, died2015)) %>% 
+  filter(SPECIES == "ABCO" & !PAIR %in% c(died2017_abco, died2016_abco, died2015_abco)) %>% 
   dplyr::select(SEEDLING)
 ```
  
@@ -121,20 +133,27 @@ df <- df %>%
 ## Average growth based on pair's year of death
 ```{r}
 df <- df %>% 
-  mutate(death_year = ifelse(PAIR %in% died2017, 2017, 
-                             ifelse(PAIR %in% died2016, 2016, 
-                             ifelse(PAIR %in% died2015, 2015, NA)))) %>% 
-  mutate(gr_rel_ave = ifelse(PAIR %in% died2017, (gr1+gr2+gr3)/3, 999)) %>% 
-  mutate(gr_rel_ave = ifelse(PAIR %in% died2016 & DEAD_ALIVE == "DEAD", (gr1+gr2)/2, gr_rel_ave)) %>% 
-  mutate(gr_rel_ave = ifelse(PAIR %in% died2016 & DEAD_ALIVE == "ALIVE", (gr2+gr3)/2, gr_rel_ave)) %>% 
-  mutate(gr_rel_ave = ifelse(PAIR %in% died2015 & DEAD_ALIVE == "DEAD", gr1, gr_rel_ave)) %>% 
-  mutate(gr_rel_ave = ifelse(PAIR %in% died2015 & DEAD_ALIVE == "ALIVE", gr3, gr_rel_ave))
+  mutate(death_year = ifelse(PAIR %in% died2017_abco, 2017, 
+                             ifelse(PAIR %in% died2016_abco, 2016, 
+                             ifelse(PAIR %in% died2015_abco, 2015, NA)))) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2017_abco, (gr1+gr2+gr3)/3, 999)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016_abco & DEAD_ALIVE == "DEAD", (gr1+gr2)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016_abco & DEAD_ALIVE == "ALIVE", (gr2+gr3)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015_abco & DEAD_ALIVE == "DEAD", gr1, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015_abco & DEAD_ALIVE == "ALIVE", gr3, gr_rel_ave))
 ```
 
-## For PIPO, for now assign all trees as having died in 2017
+## Repeat for PIPO
 ```{r}
 df <- df %>% 
-  mutate(gr_rel_ave = ifelse(SPECIES == "PIPO", (gr1+gr2+gr3)/3, gr_rel_ave))
+  mutate(death_year = ifelse(PAIR %in% died2017_pipo, 2017, 
+                             ifelse(PAIR %in% died2016_pipo, 2016, 
+                             ifelse(PAIR %in% died2015_pipo, 2015, death_year)))) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2017_pipo, (gr1+gr2+gr3)/3, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016_pipo & DEAD_ALIVE == "DEAD", (gr1+gr2)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2016_pipo & DEAD_ALIVE == "ALIVE", (gr2+gr3)/2, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015_pipo & DEAD_ALIVE == "DEAD", gr1, gr_rel_ave)) %>% 
+  mutate(gr_rel_ave = ifelse(PAIR %in% died2015_pipo & DEAD_ALIVE == "ALIVE", gr3, gr_rel_ave))
 ```
 
 
@@ -149,6 +168,7 @@ df %>%
   dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING, PAIR, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
   arrange(PAIR)
 summary(df$gr_rel_ave)
+df %>% filter(gr_rel_ave == 999)
 ```
 
 #### Look at seedling with 0 average growth

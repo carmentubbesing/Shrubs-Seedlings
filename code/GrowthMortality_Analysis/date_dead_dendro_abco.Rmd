@@ -290,7 +290,7 @@ addsure(78)
 
 ringplot(102)
 look(102) 
-add2017(102) # based largely on photo
+add2016(102) # based largely on photo and ppt
 
 ringplot(112)
 look(112)
@@ -669,7 +669,7 @@ add2016(91)
 ```{r}
 look(97)
 ringplot(97)
-add2017(97)
+add2016(97) # based on ppt
 ```
 
 # Check that everything is accounted for
@@ -881,5 +881,12 @@ dfp %>%
   summarize(mean(growth_detrended))
 ```
 
+# List trees in each year of death
+```{r}
+sort(died2017)
+sort(died2016)
+sort(died2015)
+sort(definitely_green)
+```
 
 

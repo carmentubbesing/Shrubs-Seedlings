@@ -21,8 +21,8 @@ set.seed(12345)
 
 # Load data
 ```{r}
-df180 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx")
-df380 <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_380_counts_compiled_Oct1_2017.xlsx")
+df180 <- read_excel("~/Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_180_counts_compiled_Aug16_2017.xlsx")
+df380 <- read_excel("~/Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/counts/compiled/Mort_380_counts_compiled_Oct1_2017.xlsx")
 ```
 
 # Join

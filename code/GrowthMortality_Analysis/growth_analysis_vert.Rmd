@@ -45,8 +45,7 @@ ggplot(df2)+
 
 # Nice graphs for publication
 
-
-# Plot seedling growth rate against whether it's dead
+## ABCO
 ```{r}
 dfa <- df %>% 
   filter(SPECIES == "ABCO") %>% 
@@ -58,7 +57,7 @@ ggplot(dfa)+
   scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
   scale_color_manual(values = c("#31a354", "#e6550d"))+
   xlab("")+
-  ylim(-5, 0)+
+  ylim(-4.9, 0)+
   scale_x_discrete(labels = c("Alive", "Dead"))+
   ylab("Relative growth rate, log transformed")+
   theme_bw()+
@@ -69,7 +68,7 @@ ggsave(file = "../../results/figures/GrowthMortality/Fir_vert_boxplot.png", widt
 ```
 
 
-# Nice graphs for publication
+## PIPO
 ```{r}
 dfp <- df %>% 
   filter(SPECIES == "PIPO") %>% 
@@ -81,7 +80,7 @@ ggplot(dfp)+
   scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
   scale_color_manual(values = c("#31a354", "#e6550d"))+
   xlab("")+
-  ylim(-5, 0)+
+  ylim(-4.9, 0)+
   scale_x_discrete(labels = c("Alive", "Dead"))+
   ylab("Relative growth rate, log transformed")+
   theme_bw()+

@@ -28,8 +28,9 @@ print(Sys.time() - strt)
 # Main Analysis
 ```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
-rmarkdown::render("simulations.Rmd", "html_document", quiet = T)
-rmarkdown::render("dendro_analysis.Rmd", "html_document", quiet = T)
 rmarkdown::render("growth_analysis_vert.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_hybrid.Rmd", "html_document", quiet = T)
+rmarkdown::render("dendro_analysis.Rmd", "html_document", quiet = T)
 print(Sys.time()- strt)
 ```

@@ -148,17 +148,10 @@ sort(unique(dfpfull[grep("green", dfpfull$NEEDLE_COLOR),]$tree))
 
 ## Check for green in the photos
 
-### Modify needle color column if I see green in the photo that wasn't recorded
-```{r}
-```
-
-#### And remove it from the 2016 list
-```{r}
-```
-
-### Make a vector of trees whose photos had green
+### Make a vector of trees whose photos had green and save it 
 ```{r}
 definitely_green <- c(15, 181, 20, 49, 50)
+save(definitely_green, file = "../../results/data/GrowthMortality/def_green_pipo.Rdata")
 ```
 
 
@@ -309,7 +302,7 @@ length(died2015)
 ```{r}
 sort(as.numeric(died2016))
 
-died2016 <- c(died2016, 60, 61, 63, 64, 72, 109, 115, 118, 159, 122, 142, 144, 165, "183-P", 202, 153, 157, 173, 191, 151, 168, 200, 73, 160, 75, 13, 205, 71)
+died2016 <- c(died2016, 60, 61, 63, 64, 72, 109, 115, 118, 159, 122, 142, 144, 165, "183-P", 202, 153, 157, 173, 191, 151, 168, 200, 73, 160, 75, 13, 205, 71, 163)
 sort((died2016))
 length(died2016)
 died2016[duplicated(died2016)]

@@ -5,6 +5,7 @@ Data wrangling, cleaning, and analysis for the growth ~ mortality study.
 Files are dependent in the following order:
 
 ## 1.  Compiling and cleaning code
+
 #### **Clean_all.Rmd**
 * uses:
     * `~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx`
@@ -57,6 +58,7 @@ Files are dependent in the following order:
     * `../../results/data/GrowthMortality/died2017_pipo.Rdata`
     * `../../results/data/GrowthMortality/died2016_pipo.Rdata`
     * `../../results/data/GrowthMortality/died2015_pipo.Rdata`
+    * `../../results/data/GrowthMortality/def_green_pipo.Rdata`
 
 #### **Clean_vert.Rmd**
 * uses:
