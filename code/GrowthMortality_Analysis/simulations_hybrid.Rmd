@@ -256,3 +256,220 @@ prob_median - prob_quart1
 
 
 # Next steps: go back and look at how decayed the dead seedlings I found in the surveys were to compare mortality rate by year to the dead seedlings I measured?
+
+
+# _
+# ABCO SIMULATIONS
+
+## Visually compare distributions
+```{r}
+means <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(sd = sd(log_gr_rel_ave))
+means
+sd
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+ggplot()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+```
+
+# Actual simulations for PIPO
+
+## Count pipo n for live and dead
+```{r}
+n_dead_pop <- unlist(dfa %>% 
+                   filter(DEAD_ALIVE=="DEAD") %>% 
+                   summarize(n()))
+```
+
+```{r}
+n_alive_pop <- n_dead_pop*(1103/25)
+```
+
+# Hybrid approach = randomly assign year of death to each seedling to within 1 year of estimated year of death - AKA 2015 can be either 2015 or 2016, 2016 can be any year, and 2017 can be 2016 or 2017
+- EXCEPT trees that have green on them, which I know died in 2017
+
+## Loop it 
+```{r}
+coefficient_gr <- c()
+coefficient_int <- c()
+for(i in 1:1000){
+  ## Randomly assign year of death for the trees I'm unsure about - everything in 2017 or 2016 that's not dead
+  dfa_new <- dfa %>% 
+    group_by(PAIR) %>% 
+    mutate(death_year_temp = ifelse(PAIR %in% definitely_green, 2017, 0)) %>% 
+    mutate(death_year_temp = ifelse(death_year == 2017 & (!PAIR %in% definitely_green), 
+                                    sample(c(2016, 2017), 1, replace = T), death_year_temp)) %>% 
+    mutate(death_year_temp = ifelse(death_year == 2016, 
+                                    sample(c(2016, 2017), 1, replace = T), death_year_temp)) %>% 
+    mutate(death_year_temp = ifelse(death_year == 2015, 2015, death_year_temp)) %>% 
+    ungroup()
+  
+  dfa_new2 <- dfa_new %>%
+    rowwise() %>% 
+    mutate(gr_rel_ave = ifelse(death_year_temp == "2017",
+                                 mean(c(gr1, gr2, gr3), na.rm=T), 999)) %>%
+    mutate(gr_rel_ave = ifelse(death_year_temp == "2016" & DEAD_ALIVE == "ALIVE",
+                                 mean(c(gr2, gr3), na.rm=T), gr_rel_ave)) %>% 
+    mutate(gr_rel_ave = ifelse(death_year_temp == "2016" & DEAD_ALIVE == "DEAD",
+                                 mean(c(gr1, gr2), na.rm=T), gr_rel_ave)) %>% 
+    mutate(gr_rel_ave = ifelse(death_year_temp == "2015" & DEAD_ALIVE == "ALIVE",
+                                 gr3, gr_rel_ave)) %>% 
+    mutate(gr_rel_ave = ifelse(death_year_temp == "2015" & DEAD_ALIVE == "DEAD",
+                                 gr1, gr_rel_ave)) %>% 
+    mutate(log_gr_rel_ave = log(gr_rel_ave)) 
+  
+  gr_set_dead <- dfa_new2 %>% 
+      filter(DEAD_ALIVE=="DEAD") %>% 
+      dplyr::select(log_gr_rel_ave)
+  gr_set_dead <- gr_set_dead[[1]]
+  
+  gr_set_alive <- dfa_new2 %>% 
+    filter(DEAD_ALIVE=="ALIVE") %>%
+    dplyr::select(log_gr_rel_ave)
+  gr_set_alive <- gr_set_alive[[1]]
+  
+  dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
+  alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
+  
+  live_df <- data.frame(gr = c(alive_sample))
+  live_df$dead <- 0
+  
+  dead_df <- data.frame(gr = c(dead_sample))
+  dead_df$dead <- 1
+  
+  df <- bind_rows(dead_df, live_df)
+  
+  glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+  
+  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
+  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+}
+mean_coef_gr <- mean(coefficient_gr)
+mean_coef_int <- mean(coefficient_int)
+mean_coef_gr
+mean_coef_int
+
+  
+  # Check
+  dfa_new2 %>% arrange(PAIR) %>% dplyr::select(SEEDLING, DEAD_ALIVE, gr1, gr2, gr3, death_year, death_year_temp, gr_rel_ave, log_gr_rel_ave)
+  ###########
+  
+
+```
+
+## Plot the mean coefficient and CI
+
+### Calculate probabilities
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+dfgraph <- as.data.frame(log_gr_rel)
+dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
+summary(dfgraph$prob)
+```
+
+### CI
+```{r}
+CI_low_int <- sort(coefficient_int)[25]
+CI_high_int <- sort(coefficient_int)[975]
+CI_low_gr <- sort(coefficient_gr)[25]
+CI_high_gr <- sort(coefficient_gr)[975]
+```
+
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_lower <- as.data.frame(log_gr_rel)
+dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
+summary(dfgraph_lower$prob)
+```
+
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_upper <- as.data.frame(log_gr_rel)
+dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
+summary(dfgraph_upper$prob)
+```
+
+### Adjust probabilities to be yearly, since I found dead trees from 3 years 
+```{r}
+head(dfgraph)
+dfgraph <- dfgraph %>% 
+  mutate(prob = prob/3)
+head(dfgraph_lower)
+dfgraph_lower <- dfgraph_lower %>% 
+  mutate(prob = prob/3)
+dfgraph_upper <- dfgraph_upper %>% 
+  mutate(prob = prob/3)
+```
+
+# Plot it
+```{r}
+ggplot()+
+  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
+  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  theme_bw()+
+  xlim(0.03, .25)+
+  ylim(0, ymax)+
+  ylab("Annual % mortality probability")+
+  xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
+  geom_vline(aes(xintercept = exp(-1.70428)), col = "red")+
+  geom_text(aes(x= exp(-1.70428), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-2.5877)), col = "red")+
+  geom_text(aes(x= exp(-2.5877), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-1.955775)), col = "red")+
+  geom_text(aes(x= exp(-1.955775), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 5, width = 6)
+```
+
+# Calculate the range of mortality probabilities captured by the fire footprint growth data
+```{r}
+prob_min <- exp(mean_coef_int + mean_coef_gr*(-1.70428)/(1+exp(mean_coef_int + mean_coef_gr*(-1.70428))))
+prob_max <- exp(mean_coef_int + mean_coef_gr*(-2.5877)/(1+exp(mean_coef_int + mean_coef_gr*(-2.5877))))
+prob_min
+prob_max
+prob_min-prob_max
+(prob_max-prob_min)/prob_min
+```
+
+```{r}
+prob_median <- exp(mean_coef_int + mean_coef_gr*(-1.955775)/(1+exp(mean_coef_int + mean_coef_gr*(-1.955775))))
+prob_quart1 <- exp(mean_coef_int + mean_coef_gr*(-1.8115886)/(1+exp(mean_coef_int + mean_coef_gr*(-1.8115886))))
+prob_quart3 <- exp(mean_coef_int + mean_coef_gr*(-2.10016998)/(1+exp(mean_coef_int + mean_coef_gr*(-2.10016998))))
+prob_median
+prob_quart1
+prob_quart3
+prob_median - prob_quart1
+(prob_quart3 - prob_median)/prob_median
+```
+
+
+# Next steps: go back and look at how decayed the dead seedlings I found in the surveys were to compare mortality rate by year to the dead seedlings I measured?

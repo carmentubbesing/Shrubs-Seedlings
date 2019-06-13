@@ -309,8 +309,10 @@ rwla2_summary_unkn[11:20,]
 ```
 
 ```{r}
+add2016(4) # based on ppt
+
 ringplot("184-A")
-addunkn("184-A")
+add2016("184-A") # based on ppt
 
 ringplot(195)
 look(195)
@@ -352,20 +354,20 @@ add2017(132)
 addsure(132)
 
 ringplot(18)
-add2017(18) # based largely on needle retention
+add2016(18) # based on ppt
 
 ringplot("183-A")
 look("183-A")
-add2017("183-A") # based on a combination of rings and characteristics
+add2016("183-A") # based on ppt
 
 ringplot(197)
 add2015(197) # based on physical characteristics
 
 ringplot(198)
-add2017(198) # based largely on photos
+add2017(198) # based largely on photos + ppt
 
 ringplot(207)
-add2017(207) # based in part on color and abundance of foliage
+add2016(207) # based on ppt
 
 ringplot(214)
 add2015(214) # based in part on color and abundance of foliage
@@ -414,10 +416,12 @@ addunkn(141)
 
 ringplot(192)
 look(192)
-add2017(192) 
+add2016(192) # based on ppt
 
 ringplot(223)
 add2017(223) # based on photo and the fact that it was growing
+
+add2016(193) # based on ppt
 ```
 
 ```{r}
@@ -425,6 +429,8 @@ rwla2_summary_unkn[41:50,]
 ```
 
 ```{r}
+add2016(47) # based on ppt
+
 ringplot(229)
 addunkn(229) # maybe 2014
 
@@ -502,11 +508,7 @@ red90notgrowing
 
 #### Add to 2017 young trees that match the characteristics of other dead 2017 trees based on data and photos
 ```{r}
-add2017(4)
-add2017(232)
-add2017(193)
-add2017("184-A")
-add2017(47)
+add2017(232) # looks like it actually is growing
 ```
 
 ## 2015
@@ -551,7 +553,7 @@ length(unique(dfa$tree))
 ```{r}
 ringplot(222)
 look(222)
-add2017(222)
+add2017(222) # based on ppt
 ```
 
 ### 101
@@ -634,7 +636,7 @@ add2016(219)
 ```{r}
 look(220)
 ringplot(220)
-add2017(220)
+add2016(220) # based on ppt
 ```
 
 ### 226
@@ -648,7 +650,7 @@ add2016(226)
 ```{r}
 look(227)
 ringplot(227)
-add2017(227) # looks like it has some green
+add2016(227) # ppt
 ```
 
 ### 36
@@ -698,8 +700,7 @@ save(died2015, file = "../../results/data/GrowthMortality/died2015_abco.Rdata")
 
 ## Find duplicates
 ```{r}
-length(unique(c(died2017, died2016, died2015)))
-length(unique(dfa$tree))
+length(unique(c(died2017, died2016, died2015))) == length(unique(dfa$tree))
 ```
 
 
@@ -748,13 +749,15 @@ dfafull %>%
 
 ## Bark
 ```{r}
-dfafull %>% 
+bark2017 <- dfafull %>% 
   filter(tree %in% died2017) %>%
   dplyr::select(tree, BARK) %>% 
   distinct() %>% 
   mutate(BARK = tolower(BARK)) %>% 
   group_by(BARK) %>% 
-  summarize(n())
+  summarize(n = n())
+bark2017[bark2017$BARK=="intact","n"]/sum(bark2017$n)
+
 dfafull %>% 
   filter(tree %in% died2016) %>%
   dplyr::select(tree, BARK) %>% 
@@ -770,6 +773,37 @@ dfafull %>%
   group_by(BARK) %>% 
   summarize(n())
 ```
+
+
+## Buds
+```{r}
+BUDS2017 <- dfafull %>% 
+  filter(tree %in% died2017) %>%
+  dplyr::select(tree, BUDS) %>% 
+  distinct() %>% 
+  mutate(BUDS = tolower(BUDS)) %>% 
+  group_by(BUDS) %>% 
+  summarize(n = n())
+BUDS2017
+BUDS2017[BUDS2017$BUDS=="intact","n"]/sum(BUDS2017$n)
+
+dfafull %>% 
+  filter(tree %in% died2016) %>%
+  dplyr::select(tree, BUDS) %>% 
+  distinct() %>% 
+  mutate(BUDS = tolower(BUDS)) %>% 
+  group_by(BUDS) %>% 
+  summarize(n())
+
+dfafull %>% 
+  filter(tree %in% died2015) %>%
+  dplyr::select(tree, BUDS) %>% 
+  distinct() %>% 
+  mutate(BUDS = tolower(BUDS)) %>% 
+  group_by(BUDS) %>% 
+  summarize(n())
+```
+
 
 # Assign time of death in column of dfafull
 ```{r}

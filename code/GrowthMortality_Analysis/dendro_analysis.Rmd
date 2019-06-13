@@ -17,8 +17,9 @@ require(MASS)
 ```
 
 ```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load("../../data/GrowthMortality/rwl.Rdata")
-load("../../data/GrowthMortality/dendro_all_vars.Rdata")
+load("../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
 load(file = "../../results/data/GrowthMortality/died2017.Rdata")
 load(file = "../../results/data/GrowthMortality/died2016.Rdata")
 load(file = "../../results/data/GrowthMortality/died2015.Rdata")
