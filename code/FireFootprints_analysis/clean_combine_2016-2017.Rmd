@@ -26,8 +26,10 @@ df17 <- read_excel("Shrubs_Summer17_Compiled_Sep14.xlsx")
 
 # Read in 2016 data
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/")
-df16 <- read.csv("master_data_2016.csv")
+setwd("~/Shrubs-Seedlings/compiled_data/fire_footprints/")
+load("master_data_2016.Rdata")
+df16 <- df
+remove(df)
 ```
 
 # Combine

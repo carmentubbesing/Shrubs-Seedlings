@@ -1,0 +1,221 @@
+---
+title: Pine volume growth analysis exploration - fire footprints
+author: Carmen
+date: November 19, 2017
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(ggplot2)
+library(dplyr)
+require(nlme)
+library(kableExtra)
+library(knitr)
+library(lme4)
+library(tidyr)
+library(randomForest)
+library(VSURF)
+library(effects)
+```
+
+# Load data
+```{r}
+load(file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vol.Rdata")
+```
+
+# Reduce # of levels in shrub variables
+```{r}
+df <- droplevels(df)
+sort(summary(df$ShrubSpp01))
+sort(summary(df$ShrubSpp02))
+sort(summary(df$ShrubSpp03))
+df <- df %>% 
+  mutate(ShrubSpp02 = ifelse(!ShrubSpp02 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp02)))%>% 
+  mutate(ShrubSpp02 = as.factor(ShrubSpp02)) %>% 
+    mutate(ShrubSpp01 = ifelse(!ShrubSpp01 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp01)))%>% 
+  mutate(ShrubSpp01 = as.factor(ShrubSpp01)) %>% 
+    mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHFO", "CEIN"), "Other", paste(ShrubSpp03)))%>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+```
+
+# Visualize pre and post volumes on a log scale
+```{r}
+ggplot(df)+
+  geom_point(aes(x = log(vol_pre_cm2), y = log(vol_post_cm2)), col = "red")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))+
+  geom_abline(slope = 1,intercept = 0)
+```
+
+```{r}
+ggplot(df)+
+  geom_point(aes(x = log(vol_pre_cm2), y = (log(vol_post_cm2)-log(vol_pre_cm2)) ), col = "green")+
+  scale_x_continuous(limits = c(-5,7.5))+
+  scale_y_continuous(limits = c(-5,7.5))
+```
+
+## How many are there?
+```{r}
+nrow(df)
+```
+
+
+## Plot relative growth rate vs. volume to check for a possible relationship
+
+### least squares
+```{r}
+ggplot(df, aes(x = log(vol_pre_cm2), y = RGR))+
+  geom_point()+
+  geom_smooth(method = 'lm')
+```
+
+### loess
+```{r}
+ggplot(df, aes(x = log(vol_pre_cm2), y = RGR))+
+  geom_point()+
+  geom_smooth()
+```
+
+This looks like I should maybe include volume in the model of growth rate or adjust how I analyze growth rates
+
+# Variable selection to describe RGR using VSURF
+Following the methods of Battles, J.J., Bell, D.M., Kennedy, R.E., Saah, D.S., Collins, B.M., York, R.A., Sanders, J.E., Lopez-Ornelas, F., 2018. Innovations in Measuring and Managing Forest Carbon Stocks in California. California's Fourth Climate Change Assessment. University of California, Berkeley.
+
+## Make df of just the predictor variables I want to include
+```{r}
+xdf <- df %>% 
+  select(Fire, 
+         Elevation,
+         Slope.Deg,
+         Aspect.rad.fold.NESW,
+         Years,
+         tree_Ht_cm,
+         Lat.rad,
+         shrubarea1,
+         shrubarea2, 
+         shrubarea3,
+         Cov1, 
+         Cov1.2, 
+         Cov1.3, 
+         Ht1, 
+         Ht1.2, 
+         Ht1.3,
+         ShrubSpp01, 
+         ShrubSpp02, 
+         ShrubSpp03, 
+         BasDia2016.cm, 
+         vol_pre_cm2, 
+         heatload,
+         incidrad) 
+```
+
+**NOTE: transforming vol_pre_cm2 before running VSURF does NOT change the VSURF outcome, so I chose to save transformations for the linear model. 
+
+## Normalize the numeric variables
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+xdf <- xdf %>% mutate_if(is.numeric, normalize)
+```
+
+## Apply VSURF to RGR
+```{r}
+vsurf <- VSURF(x = xdf, y = df$RGR, na.action = na.omit)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## See how that compares to a simple random forest using the same variables
+```{r}
+forest <- randomForest(x = xdf, y = df$RGR, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+# RGR linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
+
+## Structure data for LM
+
+```{r}
+LMdf <- df %>% 
+  mutate(log_vol_pre_cm2 = log(vol_pre_cm2)) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  select(Fire, RGR, BasDia2016.cm, log_vol_pre_cm2, Elevation, Ht1.3) %>% 
+  mutate_if(is.numeric, normalize)
+LMdf <- droplevels(LMdf)
+```
+
+
+## See whether model with interaction or no interaction is better
+```{r}
+AIC(lme(RGR ~ BasDia2016.cm + Ht1.3 + Elevation + log_vol_pre_cm2 + Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML"))
+AIC(lme(RGR ~ BasDia2016.cm + Ht1.3 + Elevation + log_vol_pre_cm2*Ht1.3,data = LMdf, random = ~ 1| Fire, method = "ML")
+)
+```
+
+No interaction was better. 
+
+## Linear model
+```{r}
+LM <-  lme(RGR ~ log_vol_pre_cm2 + BasDia2016.cm + Ht1.3 + Elevation + Ht1.3+ log_vol_pre_cm2,data = LMdf, random = ~ 1| Fire, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+### Look at individual effects
+```{r}
+eff_shrubht<- effect("Ht1.3", LM)
+plot(eff_shrubht)
+
+eff_shrubspp <- effect("Elevation", LM)
+plot(eff_shrubspp)
+```
+
+### Residuals
+```{r}
+E <- resid(LM, type = "normalized")
+pred <- predict(LM)
+plot(LM)
+plot(df$shrubarea3, E)
+plot(df$tree_Ht_cm, E)
+plot(log(df$vol_pre_cm2), E)
+plot(df$Elevation, E)
+```
+
+# Variable selection for the vert:dia growth ratio using VSURF
+
+## Create growth ratio variable
+```{r}
+df <- df %>% 
+  mutate(grthratio = VertGr_2017/DiaGrowth.mm) %>% 
+  mutate(grthratio = ifelse(DiaGrowth.mm == 0, 10, grthratio))
+```
+
+**** Bold move: I adjusted the relative growth ratio to 10 for the seedling with 0 diameter growth
+
+## Apply VSURF to grthratio
+```{r}
+vsurf2 <- VSURF(x = xdf, y = df$grthratio, na.action = na.omit)
+summary(vsurf2)
+vsurf2$varselect.pred
+xdf[vsurf2$varselect.pred]
+```
+
+## See how that compares to a simple random forest using the same variables
+```{r}
+forest <- randomForest(x = xdf, y = df$grthratio, importance = TRUE, scale = TRUE)
+varImpPlot(forest)
+```
+
+#### STILL NEED TO CREATE LMdf AS ABOVE FOR GRTHRATIO ANALYSIS - MAYBE DO IT IN SEPARATE SCRIPT?
+
+# Linear model of dia:vert growth ratio using variables identified above
+```{r}
+LM2 <- lme(log(grthratio) ~ Lat.rad + Cov1.3 + shrubarea1,data = LMdf, random = ~ 1| Fire, method = "ML"))
+```
+
+
+# **NEXT STEPS: FIX THE SHRUB VARIABLES FOR GROWTH RATIO, REPEAT THAT STEP FOR FIRS, AND DECIDE ON FINAL VARIABLES TO INCLUDE**

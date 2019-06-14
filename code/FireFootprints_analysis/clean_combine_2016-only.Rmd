@@ -16,7 +16,7 @@ require(tidyr)
 
 # Load data
 ```{r}
-load(file="~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata")
+load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
 ```
 
 ## Add years since fire

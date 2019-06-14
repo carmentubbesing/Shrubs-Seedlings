@@ -1,0 +1,179 @@
+---
+title: "Pine volume growth clean"
+author: "Carmen"
+date: "March 29, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+library(knitr)
+library(tidyr)
+```
+
+# Data wrangling
+
+## Load final data frame
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_dia.Rdata")
+load("~/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata")
+df_vert <- df
+remove(df)
+```
+
+## Delete rows for vert growth before 2016
+```{r}
+df_vert <- df_vert %>% 
+  filter(Year != 2015)
+```
+
+## Restructure vert data so there's one row per seedling
+```{r}
+df_vert <- df_vert %>% select(-VertGrowth_Rel)
+df_vert <- spread(df_vert, key = Year, value = VertGrowth) %>% 
+  rename(VertGr_2016 = `2016`) %>% 
+  rename(VertGr_2017 = `2017`)
+```
+
+### Remove duplicate seedling
+```{r}
+sort(df_vert$Sdlg)
+nrow(df_vert)
+length(unique(df_vert$Sdlg))
+sort(df_dia$Sdlg)
+nrow(df_dia)
+length(unique(df_dia$Sdlg))
+df_dia[df_dia %>% select(Sdlg) %>% duplicated(),]
+df_dia %>% filter(Sdlg == "26")
+df_dia <- df_dia %>% filter(!(Sdlg == 26 & file_lat == "Freds_JB_A.csv"))
+```
+
+
+## Filter to only seedlings with workable data for both diameter and vertical growth
+```{r}
+df_vert <- df_vert %>% select(Sdlg, VertGr_2016, VertGr_2017)
+df <- inner_join(df_dia, df_vert)
+```
+
+## Rename columns to distinguish between seedling ht and shrub ht
+```{r}
+df <- df %>% 
+  rename(tree_Ht_cm = Ht_cm, tree_Ht_norm = Ht_norm)
+```
+
+## Take out species besides PIPO
+```{r}
+df <- df %>% 
+  filter(Species == "PIPO")
+```
+
+## Clean up extreme and negative values
+```{r}
+nrow(df)
+hist(df$DiaGrowth.mm_rel, breaks = 10)
+hist(df$DiaGrowth.mm_rel)
+nrow(df)
+```
+
+
+## Take out outliers on both ends, defined as greater than two SD from the mean
+```{r}
+nrow(df)
+hist(df$DiaGrowth.mm, breaks = 20)
+mean_minSD <- mean(df$DiaGrowth.mm) - 2*sd(df$DiaGrowth.mm)
+mean_minSD
+mean_plusSD <- mean(df$DiaGrowth.mm) + 2*sd(df$DiaGrowth.mm)
+mean_plusSD
+df <- df %>% 
+  filter(!(DiaGrowth.mm < mean_minSD |
+             DiaGrowth.mm > mean_plusSD))
+hist(df$DiaGrowth.mm)
+nrow(df)
+```
+
+
+## Adjust diameter growth so that all values are > 0
+```{r}
+hist(df$DiaGrowth.mm)
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(BasDia2017.mm.ave = (BasDia2017.mm.ave - min(df$DiaGrowth.mm)))
+min(df$BasDia2017.mm.ave)
+hist(df$BasDia2017.mm.ave)
+df <- df %>% 
+  mutate(DiaGrowth.mm = (DiaGrowth.mm - min(DiaGrowth.mm)))
+```
+
+## Check for seedlings with more than one row
+```{r}
+nrow(df)
+length(unique(df$Sdlg))
+df %>% filter(duplicated(Sdlg))
+df <- df %>% 
+  distinct()
+```
+
+# Calculate relative growth rate
+
+## Replace NA vertical growth with 0 
+```{r}
+df <- df %>%
+  mutate(VertGr_2017 = ifelse(is.na(VertGr_2017), 0, VertGr_2017)) %>% 
+   mutate(VertGr_2016 = ifelse(is.na(VertGr_2016), 0, VertGr_2016))
+```
+
+
+## Calculate pre volume assuming parabolic cone shape (https://www.grc.nasa.gov/www/k-12/airplane/volume.html)
+```{r}
+df <- df %>% 
+  mutate(vol_pre_cm2 = (2*pi*((BasDia2016.mm/10)^2)*(tree_Ht_cm - VertGr_2017  - VertGr_2016))/15)
+hist(df$vol_pre_cm2)
+```
+
+## Calculate post volume
+```{r}
+df <- df %>% 
+  mutate(vol_post_cm2 = (2*pi*((BasDia2017.mm.ave/10)^2)*tree_Ht_cm)/15)
+
+hist(df$vol_post_cm2)
+```
+
+### Compare to pre
+```{r}
+plot(log(df$vol_post_cm2), log(df$vol_pre_cm2))
+```
+
+## Calculate volume growth 
+```{r}
+df <- df %>% 
+  mutate(vol_growth_cm2 = vol_post_cm2 - vol_pre_cm2)
+```
+
+
+## Calculate RGR, using a demonimator of 2 since there were 2 growing seasons between initial and final measurements
+```{r}
+df <- df %>% 
+  mutate(RGR = (log(vol_post_cm2)- log(vol_pre_cm2))/2)
+hist(df$RGR)
+```
+
+# Take a look
+```{r}
+ggplot(df, aes(x = tree_Ht_cm, y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+ggplot(df, aes(x = log(tree_Ht_cm), y = RGR))+
+  geom_point()+
+  stat_smooth(method = "gam", formula = y~s(x))
+```
+
+# Save
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vol.Rdata")
+```
+

@@ -257,227 +257,31 @@ $(document).ready(function () {
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg)</code></pre>
-<pre><code>##    Sdlg Species Fire FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
-## 1   159    PIPO STAR   STAR-NW       118       124        NA        19
-## 2   161    PIPO STAR   STAR-NW        81        76        NA        15
-## 3   162    ABCO STAR   STAR-NW        44        49        NA        12
-## 4   163    ABCO STAR   STAR-NW        61        59        NA        12
-## 5   164    ABCO STAR   STAR-NW        60        68        NA        12
-## 6   166    ABCO STAR   STAR-NW        46        48        NA        19
-## 7   167    PIPO STAR   STAR-NW       134       235        NA        19
-## 8   168    PIPO STAR   STAR-NW       186       200        NA        11
-## 9   169    PIPO STAR   STAR-NW        66       190        NA        14
-## 10  170    ABCO STAR   STAR-NW        64        48        NA        17
-## 11  171    PIPO STAR   STAR-NW       119       205        NA        17
-## 12  172    ABCO STAR   STAR-NW        44        39        NA        17
-## 13  176    PIPO STAR  STAR-mid        98        NA        NA        NA
-## 14  179    ABCO STAR    STAR-S        56        54        NA         7
-## 15  180    PIPO STAR    STAR-S       192       199        NA         7
-## 16  220    PIPO AMCR    AMCR-2       115       122        NA        24
-## 17  221    ABCO AMCR    AMCR-2        80        90        NA        22
-## 18  222    PIPO AMCR    AMCR-2        96       106        NA        20
-## 19  223    ABCO AMCR    AMCR-2        37        39        NA        21
-##    Aspect.deg BasDia2016.cm LastYearGrth.cm Light_File DIFN.all
-## 1         112          2.45           10.37        130    0.164
-## 2         108          1.45           11.75        132    0.090
-## 3         132          1.60            2.70        134    0.560
-## 4         132          2.32            6.70        135    0.242
-## 5         132          2.40            5.09                  NA
-## 6         130          0.75            3.95                  NA
-## 7         130          6.40           26.36                  NA
-## 8         111          3.30           15.65                  NA
-## 9         120          2.46            6.00                  NA
-## 10        182          1.46            2.31        137    0.127
-## 11        182          6.75           15.66        136    0.236
-## 12        182          1.20            3.74        138    0.096
-## 13        176          3.02            5.61                  NA
-## 14         31          0.85            5.70        141    0.259
-## 15         31          4.90           11.62        142    0.121
-## 16        262          3.04           17.12        187    0.515
-## 17        257          1.80           14.44        188    0.625
-## 18        282          2.71           16.75        189    0.203
-## 19        275          1.44            3.30        190    0.321
-##    ImmedAboveSpp ImmedAboveHt.cm ShrubSpp01 ShrubSpp02 ShrubSpp03 Cov1
-## 1           CECO             118       CECO       CECO       CECO  400
-## 2           CECO             110       CECO       CECO       CECO  410
-## 3           PREM              92       PREM       CECO       CECO  180
-## 4           CECO             129       CECO       CECO       CECO  430
-## 5           PREM             129       CECO       CECO       CECO  430
-## 6           PREM             124       PREM       PREM       PREM  490
-## 7           PREM             160       PREM       PREM       PREM  380
-## 8           none               0       CECO       CECO       CECO  400
-## 9           CECO             102       CECO       CECO       CECO  390
-## 10          CEIN             210       CEIN       CEIN       CEIN  390
-## 11          none               0       CEIN       CEIN       CEIN  280
-## 12       conifer             170       CEIN       CEIN       CEIN  280
-## 13          CEIN             190       CECO       CECO       CECO  460
-## 14          ARPA             167       ARPA       CECO       CECO  460
-## 15          PREM             230       CECO       CECO       CECO  430
-## 16          none               0       CECO       CECO       CECO  450
-## 17          none               0       CECO       CECO       CECO  260
-## 18          none               0       CECO       CECO       CECO  330
-## 19          CECO              60       CECO       CECO       CECO  330
-##    Cov2 Cov3       Ht1       Ht2       Ht3 Cov1.2 Cov1.3     Ht1.2
-## 1   380  260  97.50000  95.00000  90.00000    780   1040  96.25000
-## 2   340  300 114.00000  98.00000 110.00000    750   1050 106.00000
-## 3   170  380  72.00000  56.66667  90.00000    350    730  64.33333
-## 4   320  360  65.71429  65.55556  85.71429    750   1110  65.63492
-## 5   320  360  65.71429  65.55556  85.71429    750   1110  65.63492
-## 6   420  400 142.00000 134.00000 120.00000    910   1310 138.00000
-## 7   330  360 116.66667 117.50000 130.00000    710   1070 117.08333
-## 8   400  400 155.00000 130.00000 135.00000    800   1200 142.50000
-## 9   430  370 120.00000 123.33333 144.00000    820   1190 121.66667
-## 10  330  350 170.00000 157.50000 138.00000    720   1070 163.75000
-## 11  340  270 145.00000 124.00000 140.00000    620    890 134.50000
-## 12  340  270 145.00000 124.00000 140.00000    620    890 134.50000
-## 13  400  400 158.75000 145.00000 157.50000    860   1260 151.87500
-## 14  450  400 131.42857 116.66667 145.71429    910   1310 124.04762
-## 15  410  380 137.50000 132.22222 140.00000    840   1220 134.86111
-## 16  420  400  93.33333  88.33333  93.33333    870   1270  90.83333
-## 17  390  360  67.50000  82.00000  84.00000    650   1010  74.75000
-## 18  320  340  62.00000  73.33333  65.00000    650    990  67.66667
-## 19  340  390  58.00000  73.33333  76.00000    670   1060  65.66667
-##        Ht1.3 Genus     ShrG1       IAG Years              Date  LAI
-## 1   94.16667 Pinus Ceanothus Ceanothus    38 20160706 05:32:12 2.68
-## 2  107.33333 Pinus Ceanothus Ceanothus    38 20160706 05:59:03 3.51
-## 3   72.88889 Abies     Other     Other    38 20160706 06:08:38 0.70
-## 4   72.32804 Abies Ceanothus Ceanothus    38 20160706 06:11:47 2.08
-## 5   72.32804 Abies Ceanothus     Other    38              &lt;NA&gt;   NA
-## 6  132.00000 Abies     Other     Other    38              &lt;NA&gt;   NA
-## 7  121.38889 Pinus     Other     Other    38              &lt;NA&gt;   NA
-## 8  140.00000 Pinus Ceanothus     Other    38              &lt;NA&gt;   NA
-## 9  129.11111 Pinus Ceanothus Ceanothus    38              &lt;NA&gt;   NA
-## 10 155.16667 Abies Ceanothus Ceanothus    38 20160706 07:04:32 3.01
-## 11 136.33333 Pinus Ceanothus     Other    38 20160706 07:01:05 2.01
-## 12 136.33333 Abies Ceanothus     Other    38 20160706 07:08:30 3.34
-## 13 153.75000 Pinus Ceanothus Ceanothus    38              &lt;NA&gt;   NA
-## 14 131.26984 Abies     Arcto     Arcto    38 20160707 05:20:19 1.90
-## 15 136.57407 Pinus Ceanothus     Other    38 20160707 05:26:27 3.15
-## 16  91.66667 Pinus Ceanothus     Other     8 20160719 06:39:16 1.04
-## 17  77.83333 Abies Ceanothus     Other     8 20160719 06:45:56 0.58
-## 18  66.77778 Pinus Ceanothus     Other     8 20160719 06:51:57 2.29
-## 19  69.11111 Abies Ceanothus Ceanothus     8 20160719 06:56:01 1.59
-##    DIFN.53                              DataSheet2017  Map    Status
-## 1    0.175                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 2    0.100                                       &lt;NA&gt; &lt;NA&gt;      DEAD
-## 3    0.655                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 4    0.285                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 5       NA                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 6       NA                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 7       NA                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 8       NA                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 9       NA                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 10   0.148                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 11   0.265                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 12   0.116                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 13      NA                                       &lt;NA&gt; &lt;NA&gt; not found
-## 14   0.280                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 15   0.124                                       &lt;NA&gt; &lt;NA&gt;      DONE
-## 16   0.502 Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt;      DONE
-## 17   0.688 Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt;      DONE
-## 18   0.221 Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt;      DONE
-## 19   0.357               Shrubs_Summer17_AMRC_2_Sep12 &lt;NA&gt;      done
-##       BasDia2017.mm.1    BasDia2017.mm.2          Growth_17
-## 1                  22               21.4                5.8
-## 2                13.6                 14               &lt;NA&gt;
-## 3  16.399999999999999               16.2                4.5
-## 4                25.4               25.2 5.0999999999999996
-## 5                23.7               24.6               20.5
-## 6                 9.5                8.6 5.0999999999999996
-## 7  72.599999999999994               66.5                 31
-## 8                43.1                 40                 15
-## 9                46.9                 46                 16
-## 10                7.9                8.5 2.2000000000000002
-## 11                 85                 85               12.5
-## 12               11.4               12.4                  0
-## 13               &lt;NA&gt;               &lt;NA&gt;               &lt;NA&gt;
-## 14 8.3000000000000007 8.3000000000000007                3.6
-## 15               52.6               50.2               13.5
-## 16               30.1               27.7                5.5
-## 17               20.6 18.100000000000001                  9
-## 18               27.9                 31                 11
-## 19               11.2               12.3 2.2999999999999998
-##             Growth_16          Growth_15
-## 1                 9.4                9.9
-## 2                15.5               12.8
-## 3                 3.5                  1
-## 4                 2.8                1.9
-## 5  8.6999999999999993                2.8
-## 6                 5.9 5.0999999999999996
-## 7                37.5                 28
-## 8                  31                 20
-## 9                12.2               12.6
-## 10                2.8                1.5
-## 11               20.3                 18
-## 12                2.1                4.2
-## 13               &lt;NA&gt;               &lt;NA&gt;
-## 14 5.0999999999999996                5.3
-## 15 19.899999999999999               11.6
-## 16               20.6               18.3
-## 17                9.4               15.5
-## 18               28.5               29.2
-## 19                1.8                1.3
-##                                                                    notes
-## 1                                                                   &lt;NA&gt;
-## 2                                                   deets in CT notebook
-## 3                                                                   &lt;NA&gt;
-## 4  two stems, we measured the one with non wacky leader, DIA below split
-## 5                                                                   &lt;NA&gt;
-## 6                                                                   &lt;NA&gt;
-## 7                                    double checked ht; DIA with tape 72
-## 8                                                                   &lt;NA&gt;
-## 9           height measured incorrectly last year (stem bends under log)
-## 10                                                                  &lt;NA&gt;
-## 11                                                                  &lt;NA&gt;
-## 12                                                                  &lt;NA&gt;
-## 13                            really hard to get to, and thunder started
-## 14                                                                  &lt;NA&gt;
-## 15                                                                  &lt;NA&gt;
-## 16                                                                  &lt;NA&gt;
-## 17                                                                  &lt;NA&gt;
-## 18                                                                  &lt;NA&gt;
-## 19                                                                  &lt;NA&gt;
-##    shrubarea1 shrubarea2 shrubarea3 soil_type_dom soil_series soil_order
-## 1    39000.00   75075.00   97933.33      McCarthy         MCG    Andisol
-## 2    46740.00   79500.00  112700.00      McCarthy         MCG    Andisol
-## 3    12960.00   22516.67   53208.89      McCarthy         MCG    Andisol
-## 4    28257.14   49226.19   80284.13      McCarthy         MCG    Andisol
-## 5    28257.14   49226.19   80284.13      McCarthy         MCG    Andisol
-## 6    69580.00  125580.00  172920.00      McCarthy         MCG    Andisol
-## 7    44333.33   83129.17  129886.11      McCarthy         MCG    Andisol
-## 8    62000.00  114000.00  168000.00      McCarthy         MCG    Andisol
-## 9    46800.00   99766.67  153642.22      McCarthy         MCG    Andisol
-## 10   66300.00  117900.00  166028.33      McCarthy         MCG    Andisol
-## 11   40600.00   83390.00  121336.67      McCarthy         MCG    Andisol
-## 12   40600.00   83390.00  121336.67      McCarthy         MCG    Andisol
-## 13   73025.00  130612.50  193725.00             0         PTE Inceptisol
-## 14   60457.14  112883.33  171963.49         Ahart         ACF    Andisol
-## 15   59125.00  113283.33  166620.37         Ahart         ACF    Andisol
-## 16   42000.00   79025.00  116416.67             0         HUG Inceptisol
-## 17   17550.00   48587.50   78611.67             0         HUG Inceptisol
-## 18   20460.00   43983.33   66110.00             0         HUG Inceptisol
-## 19   19140.00   43996.67   73257.78             0         HUG Inceptisol
-##    soil_suborder
-## 1         Xerand
-## 2         Xerand
-## 3         Xerand
-## 4         Xerand
-## 5         Xerand
-## 6         Xerand
-## 7         Xerand
-## 8         Xerand
-## 9         Xerand
-## 10        Xerand
-## 11        Xerand
-## 12        Xerand
-## 13        Xerept
-## 14        Xerand
-## 15        Xerand
-## 16        Xerept
-## 17        Xerept
-## 18        Xerept
-## 19        Xerept
-##  [ reached getOption(&quot;max.print&quot;) -- omitted 20 rows ]</code></pre>
+<pre><code>## # A tibble: 44 x 51
+##    Sdlg  Species Fire  FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
+##    &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;int&gt;     &lt;int&gt;
+##  1 159   PIPO    STAR  STAR-NW         118       124        NA        19
+##  2 161   PIPO    STAR  STAR-NW          81        76        NA        15
+##  3 162   ABCO    STAR  STAR-NW          44        49        NA        12
+##  4 163   ABCO    STAR  STAR-NW          61        59        NA        12
+##  5 164   ABCO    STAR  STAR-NW          60        68        NA        12
+##  6 165   PILA    STAR  STAR-NW         133       145        NA        13
+##  7 166   ABCO    STAR  STAR-NW          46        48        NA        19
+##  8 167   PIPO    STAR  STAR-NW         134       235        NA        19
+##  9 168   PIPO    STAR  STAR-NW         186       200        NA        11
+## 10 169   PIPO    STAR  STAR-NW          66       190        NA        14
+## # ... with 34 more rows, and 43 more variables: Aspect.deg &lt;int&gt;,
+## #   BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;chr&gt;,
+## #   DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;,
+## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
+## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
+## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
+## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
+## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;,
+## #   BasDia2017.mm.2 &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
+## #   Growth_15 &lt;chr&gt;, notes &lt;chr&gt;, shrubarea1 &lt;dbl&gt;, shrubarea2 &lt;dbl&gt;,
+## #   shrubarea3 &lt;dbl&gt;, soil_type_dom &lt;chr&gt;, soil_series &lt;chr&gt;,
+## #   soil_order &lt;chr&gt;, soil_suborder &lt;chr&gt;</code></pre>
 <div id="create-function-for-adding-elevation-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding elevation data to an individual seedling</h2>
 <pre class="r"><code>elv &lt;- function(sdlg, elev){
@@ -561,10 +365,12 @@ elv_est</code></pre>
 <div id="test" class="section level3">
 <h3>Test</h3>
 <pre class="r"><code>df %&gt;% filter(Sdlg %in% c(222, 225, 255)) %&gt;% select(Sdlg, FirePatch, Elevation) %&gt;% distinct()</code></pre>
-<pre><code>##   Sdlg FirePatch Elevation
-## 1  222    AMCR-2    1659.4
-## 2  225    AMCR-2    1659.4
-## 3  255    AMCR-3    1680.5</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   Sdlg  FirePatch Elevation
+##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;
+## 1 222   AMCR-2        1659.
+## 2 225   AMCR-2        1659.
+## 3 255   AMCR-3        1680.</code></pre>
 </div>
 </div>
 <div id="test-for-completion" class="section level2">
@@ -574,8 +380,9 @@ elv_est</code></pre>
   arrange(Sdlg) %&gt;% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
-<pre><code>## [1] Sdlg       FirePatch  Elevation  Slope.Deg  Aspect.deg
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>## # A tibble: 0 x 5
+## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;fct&gt;, Elevation &lt;dbl&gt;,
+## #   Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;</code></pre>
 </div>
 </div>
 <div id="repeat-for-aspect" class="section level1">
@@ -585,15 +392,19 @@ elv_est</code></pre>
   arrange(Sdlg) %&gt;% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
-<pre><code>##   Sdlg FirePatch Elevation Slope.Deg Aspect.deg
-## 1   10    CLVD-N      1632        NA         NA
-## 2   11    CLVD-N      1632        NA         NA
-## 3   12    CLVD-N      1632        NA         NA
-## 4   13    CLVD-N      1632        NA         NA
-## 5   15    CLVD-N      1632        NA         NA
-## 6  204    AMCR-2      1672        24         NA
-## 7    8    CLVD-N      1632        NA         NA
-## 8    9    CLVD-N      1632        NA         NA</code></pre>
+<pre><code>## # A tibble: 10 x 5
+##    Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##    &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;int&gt;      &lt;int&gt;
+##  1 10    CLVD-N         1632        NA         NA
+##  2 11    CLVD-N         1632        NA         NA
+##  3 12    CLVD-N         1632        NA         NA
+##  4 13    CLVD-N         1632        NA         NA
+##  5 14    CLVD-N         1632        NA         NA
+##  6 15    CLVD-N         1632        NA         NA
+##  7 16    CLVD-N         1632        NA         NA
+##  8 204   AMCR-2         1672        24         NA
+##  9 8     CLVD-N         1632        NA         NA
+## 10 9     CLVD-N         1632        NA         NA</code></pre>
 <div id="create-function-for-adding-aspect-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding aspect data to an individual seedling</h2>
 <pre class="r"><code>asp &lt;- function(sdlg, aspect){
@@ -619,8 +430,11 @@ asp(9, 34)</code></pre>
   arrange(Sdlg) %&gt;% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
-<pre><code>## [1] Sdlg       FirePatch  Elevation  Slope.Deg  Aspect.deg
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;int&gt;      &lt;dbl&gt;
+## 1 14    CLVD-N         1632        NA         NA
+## 2 16    CLVD-N         1632        NA         NA</code></pre>
 </div>
 </div>
 <div id="repeat-for-slope" class="section level1">
@@ -630,15 +444,19 @@ asp(9, 34)</code></pre>
   arrange(Sdlg) %&gt;% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
-<pre><code>##   Sdlg FirePatch Elevation Slope.Deg Aspect.deg
-## 1   10    CLVD-N      1632        NA         47
-## 2   11    CLVD-N      1632        NA         38
-## 3   12    CLVD-N      1632        NA         17
-## 4   13    CLVD-N      1632        NA         17
-## 5   15    CLVD-N      1632        NA         26
-## 6  176  STAR-mid      1689        NA        176
-## 7    8    CLVD-N      1632        NA         41
-## 8    9    CLVD-N      1632        NA         34</code></pre>
+<pre><code>## # A tibble: 10 x 5
+##    Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##    &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;int&gt;      &lt;dbl&gt;
+##  1 10    CLVD-N         1632        NA         47
+##  2 11    CLVD-N         1632        NA         38
+##  3 12    CLVD-N         1632        NA         17
+##  4 13    CLVD-N         1632        NA         17
+##  5 14    CLVD-N         1632        NA         NA
+##  6 15    CLVD-N         1632        NA         26
+##  7 16    CLVD-N         1632        NA         NA
+##  8 176   STAR-mid       1689        NA        176
+##  9 8     CLVD-N         1632        NA         41
+## 10 9     CLVD-N         1632        NA         34</code></pre>
 <div id="create-function-for-adding-slope-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding slope data to an individual seedling</h2>
 <pre class="r"><code>slp &lt;- function(sdlg, slope){
@@ -664,8 +482,11 @@ slp(9, 15)</code></pre>
   arrange(Sdlg) %&gt;% 
   select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
-<pre><code>## [1] Sdlg       FirePatch  Elevation  Slope.Deg  Aspect.deg
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>## # A tibble: 2 x 5
+##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 14    CLVD-N         1632        NA         NA
+## 2 16    CLVD-N         1632        NA         NA</code></pre>
 </div>
 </div>
 <div id="add-latitude" class="section level1">
@@ -1446,8 +1267,10 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 <div id="check-2" class="section level3">
 <h3>Check</h3>
 <pre class="r"><code>df %&gt;% filter(Sdlg == 227) %&gt;% select(Sdlg, X, Y, file_lat)</code></pre>
-<pre><code>##   Sdlg        X        Y    file_lat
-## 1  227 -120.594 39.23838 AMCRNE1.csv</code></pre>
+<pre><code>## # A tibble: 1 x 4
+##   Sdlg      X     Y file_lat   
+##   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      
+## 1 227   -121.  39.2 AMCRNE1.csv</code></pre>
 <pre class="r"><code>table_n[1:4,]</code></pre>
 <pre><code>##           Name        Y         X             file_lat
 ## 1 Another Pipo 38.77679 -120.2919       FredsMidSE.csv
@@ -1464,45 +1287,20 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   filter(is.na(X)) %&gt;% 
   select(Sdlg, FirePatch, X, Species) %&gt;% 
   distinct()</code></pre>
-<pre><code>##    Sdlg FirePatch  X Species
-## 1    27    FRDS-A NA    PIPO
-## 2    42   AMCR-NW NA    PIPO
-## 3    46   AMCR-NW NA    ABCO
-## 4    48   AMCR-NW NA    ABCO
-## 5    52   AMCR-NE NA    ABCO
-## 6    55   AMCR-NE NA    ABCO
-## 7    82    AMCR-2 NA    ABCO
-## 8    84    AMCR-2 NA    PIPO
-## 9   104    AMCR-2 NA    ABCO
-## 10  106    AMCR-2 NA    ABCO
-## 11  107    AMCR-2 NA    ABCO
-## 12  135    WRTS-1 NA    ABCO
-## 13  211    AMCR-2 NA    PIPO
-## 14  216    AMCR-2 NA    ABCO
-## 15  217    AMCR-2 NA    ABCO
-## 16  218    AMCR-2 NA    ABCO
-## 17  219    AMCR-2 NA    PIPO
-## 18  222    AMCR-2 NA    PIPO
-## 19  225    AMCR-2 NA    ABCO
-## 20  229   AMCR-NE NA    ABCO
-## 21  230   AMCR-NE NA    ABCO
-## 22  231   AMCR-NE NA    ABCO
-## 23  232   AMCR-NE NA    ABCO
-## 24  233   AMCR-NE NA    ABCO
-## 25  234   AMCR-NE NA    PIPO
-## 26  235   AMCR-NE NA    ABCO
-## 27  236   AMCR-NE NA    ABCO
-## 28  246   AMCR-NE NA    ABCO
-## 29  247   AMCR-NE NA    ABCO
-## 30  248   AMCR-NE NA    ABCO
-## 31  249   AMCR-NE NA    ABCO
-## 32  250    AMCR-3 NA    ABCO
-## 33  253    AMCR-3 NA    ABCO
-## 34  254    AMCR-3 NA    ABCO
-## 35  255    AMCR-3 NA    ABCO
-## 36  262    AMCR-3 NA    PIPO
-## 37  282    CLVD-N NA    ABCO
-## 38 125w    WRTS-1 NA    ABCO</code></pre>
+<pre><code>## # A tibble: 44 x 4
+##    Sdlg  FirePatch     X Species
+##    &lt;chr&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;chr&gt;  
+##  1 27    FRDS-A       NA PIPO   
+##  2 42    AMCR-NW      NA PIPO   
+##  3 45    AMCR-NW      NA PILA   
+##  4 46    AMCR-NW      NA ABCO   
+##  5 47    AMCR-NW      NA PSME   
+##  6 48    AMCR-NW      NA ABCO   
+##  7 49    AMCR-NW      NA PSME   
+##  8 50    AMCR-NE      NA PILA   
+##  9 52    AMCR-NE      NA ABCO   
+## 10 55    AMCR-NE      NA ABCO   
+## # ... with 34 more rows</code></pre>
 </div>
 <div id="check-which-patches-theyre-concentrated-in" class="section level3">
 <h3>Check which patches they’re concentrated in</h3>
@@ -1511,16 +1309,17 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   select(FirePatch, X, Species) %&gt;% 
   group_by(FirePatch) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## # A tibble: 7 x 2
+<pre><code>## # A tibble: 8 x 2
 ##   FirePatch `n()`
 ##   &lt;fct&gt;     &lt;int&gt;
 ## 1 AMCR-2       12
 ## 2 AMCR-3        5
-## 3 AMCR-NE      14
-## 4 AMCR-NW       3
+## 3 AMCR-NE      15
+## 4 AMCR-NW       6
 ## 5 CLVD-N        1
 ## 6 FRDS-A        1
-## 7 WRTS-1        2</code></pre>
+## 7 FRDS-N        2
+## 8 WRTS-1        2</code></pre>
 </div>
 <div id="function-for-assigning-longitude" class="section level3">
 <h3>Function for assigning longitude</h3>
@@ -1604,8 +1403,15 @@ latave(27, c(26))</code></pre>
   filter(is.na(Y)) %&gt;% 
   select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
   distinct()</code></pre>
-<pre><code>## [1] Sdlg      FirePatch X         Y         Species  
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   Sdlg  FirePatch     X     Y Species
+##   &lt;chr&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
+## 1 45    AMCR-NW      NA    NA PILA   
+## 2 47    AMCR-NW      NA    NA PSME   
+## 3 49    AMCR-NW      NA    NA PSME   
+## 4 50    AMCR-NE      NA    NA PILA   
+## 5 126   FRDS-N       NA    NA PILA   
+## 6 125f  FRDS-N       NA    NA PILA</code></pre>
 </div>
 </div>
 </div>
@@ -1652,10 +1458,12 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <pre class="r"><code>df %&gt;% 
   filter(Sdlg %in% c(&quot;test4030N&quot;, &quot;test4030S&quot;, &quot;test40flat&quot;)) %&gt;% 
   select(Sdlg, incidrad, heatload)</code></pre>
-<pre><code>##         Sdlg  incidrad  heatload
-## 1  test4030N 0.5710453 0.6416326
-## 2  test4030S 1.0530453 0.9824580
-## 3 test40flat 0.9579639 0.9579639</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   Sdlg       incidrad heatload
+##   &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;
+## 1 test4030N     0.571    0.642
+## 2 test4030S     1.05     0.982
+## 3 test40flat    0.958    0.958</code></pre>
 <p>They look good!</p>
 </div>
 <div id="delete-test-values" class="section level2">
@@ -1668,11 +1476,19 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <pre class="r"><code>df %&gt;% 
   filter(is.na(heatload)) %&gt;% 
   select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)</code></pre>
-<pre><code>##  [1] Aspect.deg           Aspect.rad           Aspect.rad.fold.NS  
-##  [4] Aspect.rad.fold.NESW Slope.Deg            Slope.rad           
-##  [7] Y                    Lat.rad              heatload            
-## [10] incidrad            
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre><code>## # A tibble: 8 x 10
+##   Aspect.deg Aspect.rad Aspect.rad.fold~ Aspect.rad.fold~ Slope.Deg
+##        &lt;dbl&gt;      &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;     &lt;dbl&gt;
+## 1         NA     NA               NA               NA            NA
+## 2         NA     NA               NA               NA            NA
+## 3         22      0.384            0.384            0.401        22
+## 4         22      0.384            0.384            0.401        19
+## 5         22      0.384            0.384            0.401        19
+## 6        188      3.28             3.00             2.50         17
+## 7        340      5.93             0.349            1.13         20
+## 8        310      5.41             0.873            1.66         18
+## # ... with 5 more variables: Slope.rad &lt;dbl&gt;, Y &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
+## #   heatload &lt;dbl&gt;, incidrad &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">

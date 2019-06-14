@@ -1,5 +1,5 @@
 ---
-title: "CLean_shrubs"
+title: "Clean_shrubs"
 author: "Carmen"
 date: "May 20, 2019"
 output: 
@@ -362,7 +362,7 @@ summary(as.factor(df$ref))
 
 # Save
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/")
+setwd("~/Shrubs-Seedlings/compiled_data/fire_footprints/")
 save(df, file="shrub_master_data_2016.Rdata")
 ```
 

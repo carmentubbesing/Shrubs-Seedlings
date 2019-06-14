@@ -47,7 +47,7 @@ df <- df %>%
 ```{r}
 df <- df %>% 
   mutate(Species = as.factor(Species)) %>% 
-  mutate(soil_order = as.factor(soil_order)) %>% 
+  #mutate(soil_order = as.factor(soil_order)) %>% 
   mutate(Sdlg = as.factor(Sdlg))
   
 ```
@@ -83,7 +83,7 @@ xdf <- df %>%
          heatload,
          incidrad,
          Aspect.rad.fold.NESW,
-         soil_order,
+         #soil_order,
          Year,
          Years,
          BasDia2016.cm, 

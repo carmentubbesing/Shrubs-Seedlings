@@ -17,37 +17,15 @@ strt <- Sys.time()
 rmarkdown::render("clean_shrubs.Rmd", "html_document")
 rmarkdown::render("clean_combine_2016-only.Rmd", "html_document")
 rmarkdown::render("clean_combine_2016-2017.Rmd", "html_document")
-print(Sys.time()-strt)
-```
-
-# Intermediary Analysis
-```{r intermediary_analysis, message = F, warning = F}
-strt <- Sys.time()
 rmarkdown::render("Heat_load.Rmd", "html_document")
-
-rmarkdown::render("clean_dia_both_species.Rmd", "html_document")
 rmarkdown::render("Clean_vert_growth.Rmd", "html_document")
-
-
-rmarkdown::render("fir_dia_growth_all_years.Rmd", "html_document")
-rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
-
-rmarkdown::render("Pine_dia_growth.Rmd", "html_document")
-rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document")
-print(strt-Sys.time())
-```
-
-# Intermediary Cleaning
-```{r, message = F, warning = F}
-strt <- Sys.time()
-rmarkdown::render("fir_vol_growth_clean.Rmd", "html_document")
-rmarkdown::render("Pine_vol_growth_clean.Rmd", "html_document")
 print(strt-Sys.time())
 ```
 
 # Main Analysis
 ```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
-rmarkdown::render("Fir_vol_growth_explore.Rmd", "html_document")
+rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document")
+rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
 print(strt-Sys.time())
 ```
