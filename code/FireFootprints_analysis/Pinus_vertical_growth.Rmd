@@ -61,7 +61,7 @@ xdf <- df %>%
          heatload,
          incidrad,
          Aspect.rad.fold.NESW,
-         soil_order,
+         #soil_order,
          Year,
          Years,
          BasDia2016.cm, 
@@ -117,25 +117,25 @@ vars <- names(xdf[vsurf$varselect.pred])
 vars
 ```
 
-## See how soil order tracks with shrub species & Fire
-```{r}
-df_count <- df %>% 
-  group_by(soil_order, ShrubSpp03) %>% 
-  summarize(n = n())
-ggplot(df_count)+
-  geom_col(aes(x = soil_order, y = n, fill = ShrubSpp03))
-ggsave(file = "../../results/figures/FireFootprints/PineOrderShrubSpp.png", width = 6, height = 6, dpi = 400)
-```
+<!-- ## See how soil order tracks with shrub species & Fire -->
+<!-- ```{r} -->
+<!-- df_count <- df %>%  -->
+<!--   group_by(soil_order, ShrubSpp03) %>%  -->
+<!--   summarize(n = n()) -->
+<!-- ggplot(df_count)+ -->
+<!--   geom_col(aes(x = soil_order, y = n, fill = ShrubSpp03)) -->
+<!-- ggsave(file = "../../results/figures/FireFootprints/PineOrderShrubSpp.png", width = 6, height = 6, dpi = 400) -->
+<!-- ``` -->
 
-```{r}
-df_count <- df %>% 
-  group_by(soil_order, Fire) %>% 
-  summarize(n = n())
-ggplot(df_count)+
-  geom_col(aes(x = Fire, y = n, fill = soil_order))
-ggsave(file = "../../results/figures/FireFootprints/PineOrderFire.png", width = 6, height = 6, dpi = 400)
+<!-- ```{r} -->
+<!-- df_count <- df %>%  -->
+<!--   group_by(soil_order, Fire) %>%  -->
+<!--   summarize(n = n()) -->
+<!-- ggplot(df_count)+ -->
+<!--   geom_col(aes(x = Fire, y = n, fill = soil_order)) -->
+<!-- ggsave(file = "../../results/figures/FireFootprints/PineOrderFire.png", width = 6, height = 6, dpi = 400) -->
 
-```
+<!-- ``` -->
 
 # RESUME HERE
 
@@ -157,7 +157,7 @@ varImpPlot(forest)
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
   mutate(log_shrubarea3 = log(shrubarea3+1)) %>%
-  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea3, sqrt_shrubarea3, log_shrubarea3, BasDia2016.cm, incidrad, Year, Elevation, heatload, ShrubSpp03, soil_order) %>% 
+  select(Fire, Sdlg, VertGrowth_Rel, Years, Ht_cm1, shrubarea3, sqrt_shrubarea3, log_shrubarea3, BasDia2016.cm, incidrad, Year, Elevation, heatload, ShrubSpp03) %>% 
  mutate_if(is.numeric, normalize) %>% 
   mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
@@ -165,7 +165,7 @@ LMdf <- droplevels(LMdf)
 
 ```{r}
 vars
-LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + shrubarea3 + heatload + incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 ```
@@ -173,15 +173,15 @@ summary(LM)
 ## See whether model with shrubarea2 or sqrt_shrubarea2 is better
 ```{r}
 AIC(lme(VertGrowth_Rel ~ 
-         Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year, 
+         Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 AIC(lme(VertGrowth_Rel ~  
-          Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + soil_order + incidrad + Year, 
+          Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 AIC(lme(VertGrowth_Rel ~  
-           Years +  Ht_cm1 + log_shrubarea3 + heatload + soil_order + incidrad + Year, 
+           Years +  Ht_cm1 + log_shrubarea3 + heatload +  incidrad + Year, 
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
 
 ```
@@ -191,11 +191,11 @@ Untransformed wins
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
-           Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+           Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 with <- lme(VertGrowth_Rel ~  
-           Years +  Ht_cm1*shrubarea3 + heatload + soil_order + incidrad + Year,
+           Years +  Ht_cm1*shrubarea3 + heatload +  incidrad + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 anova(with, without)
 ```
@@ -205,7 +205,7 @@ No difference, so I should not include an interaction.
 ## Look at drop1 results
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+            Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -216,14 +216,14 @@ No need to include interaction after all
 # See whether residuals are better for log transformed or not
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+            Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
 
 ```{r}
 LM <-  lme(exp(VertGrowth_Rel) ~ 
-            Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+            Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
@@ -233,7 +233,7 @@ Log transformed looks better to me.
 # Re-establish the best LM so far:
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-           Years +  Ht_cm1 + shrubarea3 + heatload + soil_order + incidrad + Year,
+           Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -275,9 +275,6 @@ plot(eff_shrubarea)
 
 eff_ht <- predictorEffect("Ht_cm1", LM)
 plot(eff_ht)
-
-eff_shrspp <- predictorEffect("soil_order", LM)
-plot(eff_shrspp)
 
 plot(predictorEffect("Year", LM))
 ```
@@ -345,6 +342,7 @@ fit_quart1 <- effects_df[which.min(abs(effects_df$shrubarea3 - quart1)),]$fit
 fit_quart3 <- effects_df[which.min(abs(effects_df$shrubarea3 - quart3)),]$fit
 fit_median <- effects_df[which.min(abs(effects_df$shrubarea3 - median)),]$fit
 fit_min <- effects_df[which.min(abs(effects_df$shrubarea3 - min)),]$fit
+fit_max <- effects_df[which.min(abs(effects_df$shrubarea3 - max)),]$fit
 fit_mean <- effects_df[which.min(abs(effects_df$shrubarea3 - mean)),]$fit
 mean <- mean(df$shrubarea3/10000)
 print(paste("fit_quart1 = ", exp(fit_quart1)))
