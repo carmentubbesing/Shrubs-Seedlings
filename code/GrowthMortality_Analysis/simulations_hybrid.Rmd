@@ -254,10 +254,6 @@ prob_median - prob_quart1
 (prob_quart3 - prob_median)/prob_median
 ```
 
-
-# Next steps: go back and look at how decayed the dead seedlings I found in the surveys were to compare mortality rate by year to the dead seedlings I measured?
-
-
 # _
 # ABCO SIMULATIONS
 
@@ -440,14 +436,8 @@ ggplot()+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
   xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
-  geom_vline(aes(xintercept = exp(-1.70428)), col = "red")+
-  geom_text(aes(x= exp(-1.70428), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-2.5877)), col = "red")+
-  geom_text(aes(x= exp(-2.5877), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-1.955775)), col = "red")+
-  geom_text(aes(x= exp(-1.955775), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
-ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 5, width = 6)
+  ggtitle("HYBRID SIMULATIONS Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+ggsave("../../results/figures/GrowthMortality/predict_mortality_abco_hybrid.png", height = 5, width = 6)
 ```
 
 # Calculate the range of mortality probabilities captured by the fire footprint growth data
@@ -471,5 +461,3 @@ prob_median - prob_quart1
 (prob_quart3 - prob_median)/prob_median
 ```
 
-
-# Next steps: go back and look at how decayed the dead seedlings I found in the surveys were to compare mortality rate by year to the dead seedlings I measured?

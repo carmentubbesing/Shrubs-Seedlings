@@ -20,6 +20,11 @@ require(effects)
 set.seed(12346)
 ```
 
+# Goal
+
+The point of this script is to see if DIFN decreases with time since fire independent of cover and height 
+
+
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
@@ -31,7 +36,6 @@ names(df)
 summary(df$Fire)
 summary(as.factor(df$ref))
 summary(as.factor(df$ShrubSpp03))
-as.character(df$ShrubSpp03)
 class(df$ShrubSpp03)
 ```
 
@@ -67,6 +71,13 @@ dfl <- df %>%
 tail(as.factor(df$Sdlg))
 dfl %>% filter(ref == 1)
 ```
+
+# Add shrubarea3 column
+```{r}
+dfl <- dfl %>% 
+  mutate(shrubarea3 = Cov1.3*Ht1.3)
+```
+
 
 # NEED TO: FIND DIFN MEASUREMENTS FOR THE NO-SEEDLING LOCATIONS
 
@@ -143,6 +154,8 @@ ggplot(dfl)+
   geom_boxplot(aes(x = ShrubSpp03, y = DIFN.53))
 ggplot(dfl)+
   geom_point(aes(x = Years, y = DIFN.53))
+ggplot(dfl)+
+  geom_boxplot(aes(x = as.factor(Years), y = DIFN.53))
 
 hist(dfl$DIFN.53)
 hist(log(dfl$DIFN.53))
@@ -160,17 +173,13 @@ nrow(dfl)
 # Model DIFN in relation to shrubarea3, shrub species, years since fire
 
 ```{r}
-dfl$ShrubSpp03 <- as.factor(dfl$ShrubSpp03)
-
-LM <- lm(DIFN.all ~ Years + ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
+LM <- lm(DIFN.53 ~ Years +  shrubarea3, data = dfl)
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
 
 ```{r}
-plot(predictorEffect("ShrubSpp03", LM))
-plot(predictorEffect("Ht1.3", LM))
-plot(predictorEffect("Cov1.3", LM))
+plot(predictorEffect("shrubarea3", LM))
 plot(predictorEffect("Years", LM))
 ```
 
@@ -184,6 +193,24 @@ ggplot(dfl)+
 # To test for the effect of Years since fire when shrubarea and species have been accounted for, model the residuals of that model against Years
 ```{r}
 LM_noyears <- lm(DIFN.all ~ ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
+dfl$E_noyears <- resid(LM_noyears)
+ggplot(dfl, aes(x = as.factor(Years), y = E_noyears))+
+  geom_boxplot()
+```
+
+```{r}
+dfl$Years <- as.numeric(paste(dfl$Years))
+summary(dfl$Years)
+LM_resid <- lm(E_noyears ~ Years, data = dfl)
+summary(LM_resid)
+drop1(LM_resid, test= "F")
+plot(predictorEffect("Years",LM_resid))
+```
+
+
+# To test for the effect of Years since fire when only shrubarea has been accounted for, model the residuals of that model against Years
+```{r}
+LM_noyears <- lm(DIFN.all ~ shrubarea3, data = dfl)
 dfl$E_noyears <- resid(LM_noyears)
 ggplot(dfl, aes(x = as.factor(Years), y = E_noyears))+
   geom_boxplot()
