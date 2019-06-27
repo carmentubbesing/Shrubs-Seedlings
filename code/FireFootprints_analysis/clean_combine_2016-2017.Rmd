@@ -239,7 +239,7 @@ df %>%
 
 # Save
 ```{r}
-save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
-write.csv(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.csv", row.names = F)
+save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+write.csv(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv", row.names = F)
 ```
 

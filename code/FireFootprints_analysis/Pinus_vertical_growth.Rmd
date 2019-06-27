@@ -61,7 +61,7 @@ xdf <- df %>%
          heatload,
          incidrad,
          Aspect.rad.fold.NESW,
-         #soil_order,
+         siteclass,
          Year,
          Years,
          BasDia2016.cm, 
@@ -116,26 +116,6 @@ xdf[vsurf$varselect.pred]
 vars <- names(xdf[vsurf$varselect.pred])
 vars
 ```
-
-<!-- ## See how soil order tracks with shrub species & Fire -->
-<!-- ```{r} -->
-<!-- df_count <- df %>%  -->
-<!--   group_by(soil_order, ShrubSpp03) %>%  -->
-<!--   summarize(n = n()) -->
-<!-- ggplot(df_count)+ -->
-<!--   geom_col(aes(x = soil_order, y = n, fill = ShrubSpp03)) -->
-<!-- ggsave(file = "../../results/figures/FireFootprints/PineOrderShrubSpp.png", width = 6, height = 6, dpi = 400) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- df_count <- df %>%  -->
-<!--   group_by(soil_order, Fire) %>%  -->
-<!--   summarize(n = n()) -->
-<!-- ggplot(df_count)+ -->
-<!--   geom_col(aes(x = Fire, y = n, fill = soil_order)) -->
-<!-- ggsave(file = "../../results/figures/FireFootprints/PineOrderFire.png", width = 6, height = 6, dpi = 400) -->
-
-<!-- ``` -->
 
 # RESUME HERE
 

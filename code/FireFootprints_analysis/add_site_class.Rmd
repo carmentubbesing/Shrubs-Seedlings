@@ -1,0 +1,99 @@
+---
+title: "add_site_class"
+author: "Carmen"
+date: "June 27, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=F}
+require(readxl)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+```
+
+# Read in raster
+```{r}
+setwd("~/../Documents/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load("../../compiled_data/fire_footprints/master_seedlings.Rdata")
+```
+
+# Create functions
+
+## Create site class variable
+```{r}
+df$siteclass <- 0
+```
+
+## by seedling
+```{r}
+scs <- function(seedling, site_class){
+  df <<- df %>% 
+    mutate(siteclass = ifelse(Sdlg == seedling, site_class, siteclass))
+}
+```
+
+## by set of seedlings
+```{r}
+scss <- function(seedlings, site_class){
+  df <<- df %>% 
+    mutate(siteclass = ifelse(Sdlg %in% seedlings, site_class, siteclass))
+}
+```
+
+
+## by patch
+```{r}
+scp <- function(patch, site_class){
+  df <<- df %>% 
+    mutate(siteclass = ifelse(FirePatch == patch, site_class, siteclass))
+}
+```
+
+# Apply function
+```{r}
+scp("AMCR-NW", 4)
+scp("AMCR-NE", 4)
+scp("AMCR-3", 3)
+scp("AMCR-2", 4)
+scss(c(85, 86, 87, 81, 83), 3)
+scp("STAR-NW", 6)
+scss(c(170:174), 4)
+scp("STAR-mid", 4)
+scp("STAR-S", 4)
+scp("CLVD-N", 3)
+scp("CLVD-SE", 4)
+scp("FRDS-N", 4)
+scp("FRDS-JB", 4)
+scp("FRDS-mid", 4)
+scp("FRDS-SE", 2)
+scss(c(26, 27), 4)
+scp("WRTS-1", 3)
+scs(122, 6)
+```
+
+```{r}
+df %>% 
+  filter(siteclass == 0) %>% 
+  select(FirePatch) %>% 
+  distinct()
+```
+
+
+```{r}
+df %>% 
+  select(Sdlg, FirePatch, siteclass) %>% 
+  filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))
+```
+
+# Save
+```{r}
+save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
+```
+
