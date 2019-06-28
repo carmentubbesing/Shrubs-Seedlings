@@ -222,14 +222,14 @@ ggplot()+
   xlim(0.03, .25)+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
-  xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
-  geom_vline(aes(xintercept = exp(-1.70428)), col = "red")+
-  geom_text(aes(x= exp(-1.70428), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-2.5877)), col = "red")+
-  geom_text(aes(x= exp(-2.5877), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-1.955775)), col = "red")+
-  geom_text(aes(x= exp(-1.955775), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+  geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
+  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
+  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-2.0161789)), col = "red")+
+  #ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
+  geom_text(aes(x= exp(-2.0161789), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 5, width = 6)
 ```
 
@@ -435,8 +435,8 @@ ggplot()+
   xlim(0.03, .25)+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
-  xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
-  ggtitle("HYBRID SIMULATIONS Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+  #ggtitle("HYBRID SIMULATIONS Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
 ggsave("../../results/figures/GrowthMortality/predict_mortality_abco_hybrid.png", height = 5, width = 6)
 ```
 

@@ -12,7 +12,7 @@ This code contains all of the steps necessary to clean and analyze Growth Mortal
 # Cleaning, etc.
 ```{r cleaning, message = F, warning = F}
 library(knitr)
-setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis//")
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 strt <- Sys.time()
 rmarkdown::render("Clean_all.Rmd", "html_document", quiet = T)
 rmarkdown::render("dendro_join.Rmd", "html_document", quiet = T)

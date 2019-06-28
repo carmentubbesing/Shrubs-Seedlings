@@ -198,43 +198,37 @@ $(document).ready(function () {
 
 <div id="TOC">
 <ul>
-<li><a href="#cleaning">Cleaning</a></li>
-<li><a href="#intermediary-analysis">Intermediary Analysis</a></li>
+<li><a href="#cleaning-etc.">Cleaning, etc.</a></li>
 <li><a href="#main-analysis">Main Analysis</a></li>
 </ul>
 </div>
 
 <p>This code contains all of the steps necessary to clean and analyze Growth Mortality data</p>
-<div id="cleaning" class="section level1">
-<h1>Cleaning</h1>
+<div id="cleaning-etc." class="section level1">
+<h1>Cleaning, etc.</h1>
 <pre class="r"><code>library(knitr)
-setwd(&quot;~/Shrubs-Seedlings/code/GrowthMortality_Analysis//&quot;)
+setwd(&quot;~/Shrubs-Seedlings/code/GrowthMortality_Analysis/&quot;)
 strt &lt;- Sys.time()
 rmarkdown::render(&quot;Clean_all.Rmd&quot;, &quot;html_document&quot;, quiet = T)
-rmarkdown::render(&quot;Clean_vert.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;dendro_join.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Clean_dendro.Rmd&quot;, &quot;html_document&quot;, quiet = T)
-
-print(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 22.3085 secs</code></pre>
-</div>
-<div id="intermediary-analysis" class="section level1">
-<h1>Intermediary Analysis</h1>
-<pre class="r"><code>strt &lt;- Sys.time()
 rmarkdown::render(&quot;live_chronology.Rmd&quot;, &quot;html_document&quot;, quiet = T)
-rmarkdown::render(&quot;date_dead_dendro.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;date_dead_dendro_abco.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;date_dead_dendro_pipo.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;Clean_vert.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;mortality_counts.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time() - strt)</code></pre>
-<pre><code>## Time difference of 47.17755 secs</code></pre>
+<pre><code>## Time difference of 1.178454 mins</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
 <pre class="r"><code>strt &lt;- Sys.time()
-rmarkdown::render(&quot;simulations.Rmd&quot;, &quot;html_document&quot;, quiet = T)
-rmarkdown::render(&quot;dendro_analysis.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;growth_analysis_vert.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;simulations.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;simulations_hybrid.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;dendro_analysis.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()- strt)</code></pre>
-<pre><code>## Time difference of 1.818905 mins</code></pre>
+<pre><code>## Time difference of 5.402452 mins</code></pre>
 </div>
 
 

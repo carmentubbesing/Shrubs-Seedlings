@@ -61,8 +61,9 @@ ggplot(dfa)+
   scale_x_discrete(labels = c("Alive", "Dead"))+
   ylab("Relative growth rate, log transformed")+
   theme_bw()+
-  theme(legend.position = "none", axis.text=element_text(size=12))+
-  ggtitle("ABCO average relative vertical growth,\nlog transformed")
+  #ggtitle("ABCO average relative vertical growth,\nlog transformed")+
+  theme(legend.position = "none", axis.text=element_text(size=12))
+  
   
 ggsave(file = "../../results/figures/GrowthMortality/Fir_vert_boxplot.png", width = 4, height = 6, dpi = 400)
 ```
@@ -84,8 +85,8 @@ ggplot(dfp)+
   scale_x_discrete(labels = c("Alive", "Dead"))+
   ylab("Relative growth rate, log transformed")+
   theme_bw()+
-  theme(legend.position = "none", axis.text=element_text(size=12))+
-  ggtitle("PIPO average relative vertical growth,\nlog transformed")
+  #ggtitle("PIPO average relative vertical growth,\nlog transformed")+
+  theme(legend.position = "none", axis.text=element_text(size=12))
   
 ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot.png", width = 4, height = 6, dpi = 400)
 ```

@@ -267,8 +267,18 @@ ggplot(df_shrubs, aes(x = Years, y = Ht1.3))+
   stat_smooth(method = "loess", span = 1)
 ```
 
+# Drop extra levels
+```{r}
+df <- droplevels(df)
+```
+
 # Save
 ```{r}
 save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+# Print all shrub patches
+```{r}
+sort(unique(as.factor(df$FirePatch)))
 ```
 

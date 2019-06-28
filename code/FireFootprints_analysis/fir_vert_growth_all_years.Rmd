@@ -19,7 +19,6 @@ require(VSURF)
 require(effects)
 ```
 
-
 ```{r set.seed(333)}
 knitr::opts_chunk$set(cache = T)
 set.seed(333)
@@ -43,13 +42,11 @@ df <- df %>%
   filter(Species == "ABCO" & !df$Fire %in% c("PLKN","FRDS"))
 ```
 
-## Change species and Sdlg and soil order to factor
+## Change species and Sdlg to factor
 ```{r}
 df <- df %>% 
   mutate(Species = as.factor(Species)) %>% 
-  #mutate(soil_order = as.factor(soil_order)) %>% 
   mutate(Sdlg = as.factor(Sdlg))
-  
 ```
 
 # Count
@@ -74,6 +71,10 @@ df <- df %>%
 ```
 
 # Apply VSURF
+```{r}
+summary(df$siteclass)
+```
+
 
 ## Make df of just the predictor variables I want to include
 ```{r}
@@ -83,13 +84,13 @@ xdf <- df %>%
          heatload,
          incidrad,
          Aspect.rad.fold.NESW,
-         #soil_order,
          Year,
          Years,
          BasDia2016.cm, 
          Ht_cm1,
          shrubarea3,
-         ShrubSpp03) 
+         ShrubSpp03,
+         siteclass) 
 ```
 
 ## Normalize the numeric ones
@@ -155,16 +156,16 @@ AIC(lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + B
 )
 ```
 
-Untransformed wins.
+Use sqrt since that's what I used with pipo.
 
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
-           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + shrubarea3 + Year,
+           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 with <- lme(VertGrowth_Rel ~  
-           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm * shrubarea3 + Year,
+           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm * sqrt_shrubarea3 + Year,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 anova(with, without)
 ```
@@ -174,7 +175,7 @@ No difference, so I'll leave out the interaction
 
 ## Linear model without ELevation
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + shrubarea3 + Year,
+LM <-  lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -188,7 +189,7 @@ Note: the plots look exactly the same but with different axes if you don't norma
 eff_years <- predictorEffect("Years", LM)
 plot(eff_years)
 
-eff_shrubarea <- predictorEffect("shrubarea3", LM)
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
 plot(eff_shrubarea)
 
 plot(predictorEffect("heatload", LM))
@@ -198,7 +199,7 @@ plot(predictorEffect("heatload", LM))
 
 ## Create df for effects 
 ```{r}
-eff_shrubarea <- predictorEffect("shrubarea3", LM)
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
@@ -206,32 +207,26 @@ head(effects_df)
 ## Transform variables back to original units
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(shrubarea3 = shrubarea3*sd(df$shrubarea3)+mean(df$shrubarea3)) 
+  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) )
 ```
 
 ### test
 ```{r}
-hist(effects_df$shrubarea3)
-hist(df$shrubarea3)
-```
-
-## Make shrubarea in m instead of cm
-```{r}
-effects_df <- effects_df %>% 
-  mutate(shrubarea3 = shrubarea3/10000)
+hist(effects_df$sqrt_shrubarea3)
+hist(sqrt(df$shrubarea3))
 ```
 
 ## Plot effects of shrubarea
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = shrubarea3, y = exp(fit)))+
-  geom_ribbon(aes(x = shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
-  xlab(bquote('Shrub competition ' (m^2)))+
+  xlab(bquote('Shrub competition ' (sqrt(`cover (cm)`%*%`height (cm)`))))+
   ylab("Relative growth rate")+
-  ggtitle("Fir growth in relation to shrub environment within 2 m")+
-  geom_rug(data = df, aes(x = shrubarea3/10000, y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.04,0.215))
+ # ggtitle("Fir growth in relation to shrub environment within 2 m")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(0.04,0.3))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 6, height = 6, dpi = 400)
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel_int.png", width = 6, height = 6, dpi = 400)
 ```

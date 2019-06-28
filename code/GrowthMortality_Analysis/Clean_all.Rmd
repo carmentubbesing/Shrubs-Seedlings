@@ -18,7 +18,7 @@ library(effects)
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
-df <- read_excel("~/Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
+df <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/details/compiled/archives/Mort_details_compiled_June25_2018.xlsx", sheet = 2)
 ```
 
 # Delete rows with no data

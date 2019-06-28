@@ -14,19 +14,20 @@ This code contains all of the steps necessary to clean and analyze Fire Footprin
 library(knitr)
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 strt <- Sys.time()
-rmarkdown::render("clean_shrubs.Rmd", "html_document")
-rmarkdown::render("clean_combine_2016-only.Rmd", "html_document")
-rmarkdown::render("clean_combine_2016-2017.Rmd", "html_document")
-rmarkdown::render("add_site_class.Rmd", "html_document")
-rmarkdown::render("Heat_load.Rmd", "html_document")
-rmarkdown::render("Clean_vert_growth.Rmd", "html_document")
+rmarkdown::render("clean_shrubs.Rmd", "html_document", quiet = T)
+rmarkdown::render("clean_combine_2016-only.Rmd", "html_document", quiet = T)
+
+rmarkdown::render("clean_combine_2016-2017.Rmd", "html_document", quiet = T)
+rmarkdown::render("add_site_class.Rmd", "html_document", quiet = T)
+rmarkdown::render("Heat_load.Rmd", "html_document", quiet = T)
+rmarkdown::render("Clean_vert_growth.Rmd", "html_document", quiet = T)
 print(strt-Sys.time())
 ```
 
 # Main Analysis
 ```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
-rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document")
-rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document")
+rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document", quiet = T)
+rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document", quiet = T)
 print(strt-Sys.time())
 ```

@@ -191,9 +191,9 @@ ggplot()+
   theme_bw()+
   xlim(0.03, .25)+
   ylim(0, ymax)+
-  ylab("Annual % mortality probability")+
-  xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
-  ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+  #ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+    ylab("Annual % mortality probability")+
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
+   ylab("Annual % mortality probability")
 ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 5, width = 6)
 ```
 
@@ -346,14 +346,15 @@ ggplot()+
   xlim(0.03, .25)+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
-  xlab("Annual relative growth defined as\n(height_2 - height_1)/\nheight_1")+
-  geom_vline(aes(xintercept = exp(-1.70428)), col = "red")+
-  geom_text(aes(x= exp(-1.70428), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-2.5877)), col = "red")+
-  geom_text(aes(x= exp(-2.5877), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  geom_vline(aes(xintercept = exp(-1.955775)), col = "red")+
-  geom_text(aes(x= exp(-1.955775), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
-  ggtitle("Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
+  geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
+  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
+  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_vline(aes(xintercept = exp(-2.01617893)), col = "red")+
+   #ggtitle("Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
+  geom_text(aes(x= exp(-2.01617893), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) 
+ 
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 5, width = 6)
 ```
 

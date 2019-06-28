@@ -277,6 +277,7 @@ $(document).ready(function () {
 <li><a href="#percent-needles">Percent needles</a></li>
 <li><a href="#color">Color</a></li>
 <li><a href="#bark">Bark</a></li>
+<li><a href="#buds">Buds</a></li>
 </ul></li>
 <li><a href="#assign-time-of-death-in-column-of-dfafull">Assign time of death in column of dfafull</a><ul>
 <li><a href="#assign-outer-ring-column">Assign outer ring column</a></li>
@@ -1264,10 +1265,8 @@ save(died2016, file = &quot;../../results/data/GrowthMortality/died2016_abco.Rda
 save(died2015, file = &quot;../../results/data/GrowthMortality/died2015_abco.Rdata&quot;)</code></pre>
 <div id="find-duplicates" class="section level2">
 <h2>Find duplicates</h2>
-<pre class="r"><code>length(unique(c(died2017, died2016, died2015)))</code></pre>
-<pre><code>## [1] 86</code></pre>
-<pre class="r"><code>length(unique(dfa$tree))</code></pre>
-<pre><code>## [1] 86</code></pre>
+<pre class="r"><code>length(unique(c(died2017, died2016, died2015))) == length(unique(dfa$tree))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
 </div>
 <div id="summarize-variables-for-each-year-of-death" class="section level1">
@@ -1361,23 +1360,16 @@ save(died2015, file = &quot;../../results/data/GrowthMortality/died2015_abco.Rda
 </div>
 <div id="bark" class="section level2">
 <h2>Bark</h2>
-<pre class="r"><code>dfafull %&gt;% 
+<pre class="r"><code>bark2017 &lt;- dfafull %&gt;% 
   filter(tree %in% died2017) %&gt;%
   dplyr::select(tree, BARK) %&gt;% 
   distinct() %&gt;% 
   mutate(BARK = tolower(BARK)) %&gt;% 
   group_by(BARK) %&gt;% 
-  summarize(n())</code></pre>
-<pre><code>## # A tibble: 7 x 2
-##   BARK                           `n()`
-##   &lt;chr&gt;                          &lt;int&gt;
-## 1 bark                               1
-## 2 breaking bottom ten cm             1
-## 3 cracking in one spot near base     1
-## 4 intact                            22
-## 5 missing 0.5 cm at base             1
-## 6 peeling over 1cm                   1
-## 7 small crack                        1</code></pre>
+  summarize(n = n())
+bark2017[bark2017$BARK==&quot;intact&quot;,&quot;n&quot;]/sum(bark2017$n)</code></pre>
+<pre><code>##           n
+## 1 0.7857143</code></pre>
 <pre class="r"><code>dfafull %&gt;% 
   filter(tree %in% died2016) %&gt;%
   dplyr::select(tree, BARK) %&gt;% 
@@ -1417,6 +1409,57 @@ save(died2015, file = &quot;../../results/data/GrowthMortality/died2015_abco.Rda
 ## 12 peeling on 1%                             1
 ## 13 peeling on 15%                            1
 ## 14 starting to crack                         1</code></pre>
+</div>
+<div id="buds" class="section level2">
+<h2>Buds</h2>
+<pre class="r"><code>BUDS2017 &lt;- dfafull %&gt;% 
+  filter(tree %in% died2017) %&gt;%
+  dplyr::select(tree, BUDS) %&gt;% 
+  distinct() %&gt;% 
+  mutate(BUDS = tolower(BUDS)) %&gt;% 
+  group_by(BUDS) %&gt;% 
+  summarize(n = n())
+BUDS2017</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   BUDS                              n
+##   &lt;chr&gt;                         &lt;int&gt;
+## 1 intact                           19
+## 2 none                              1
+## 3 not formed                        1
+## 4 not formed yet                    1
+## 5 not formed; new growth intact     5
+## 6 partial                           1</code></pre>
+<pre class="r"><code>BUDS2017[BUDS2017$BUDS==&quot;intact&quot;,&quot;n&quot;]/sum(BUDS2017$n)</code></pre>
+<pre><code>##           n
+## 1 0.6785714</code></pre>
+<pre class="r"><code>dfafull %&gt;% 
+  filter(tree %in% died2016) %&gt;%
+  dplyr::select(tree, BUDS) %&gt;% 
+  distinct() %&gt;% 
+  mutate(BUDS = tolower(BUDS)) %&gt;% 
+  group_by(BUDS) %&gt;% 
+  summarize(n())</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   BUDS                          `n()`
+##   &lt;chr&gt;                         &lt;int&gt;
+## 1 intact                           35
+## 2 not formed; new growth intact     1
+## 3 not intact                        1
+## 4 partial                           2</code></pre>
+<pre class="r"><code>dfafull %&gt;% 
+  filter(tree %in% died2015) %&gt;%
+  dplyr::select(tree, BUDS) %&gt;% 
+  distinct() %&gt;% 
+  mutate(BUDS = tolower(BUDS)) %&gt;% 
+  group_by(BUDS) %&gt;% 
+  summarize(n())</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   BUDS    `n()`
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 inact       1
+## 2 intact     10
+## 3 missing     1
+## 4 partial     7</code></pre>
 </div>
 </div>
 <div id="assign-time-of-death-in-column-of-dfafull" class="section level1">
