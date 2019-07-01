@@ -100,56 +100,16 @@ dfp <- df %>% filter(SPECIES == "PIPO")
 
 # GLM for abco
 
-## Test whether to include height, diameter, or the interaction with height or diameter
-
-### Height
-```{r}
-AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = "logit"), data = dfa))
-AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = "logit"), data = dfa))
-AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa))
-```
-
-Best is no height
-
-### Diameter
-```{r}
-AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = "logit"), data = dfa))
-AIC(glm(DEAD ~ log_gr_rel_ave+BAS_DIA_AVE, family = binomial(link = "logit"), data = dfa))
-AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa))
-```
-
-Best model has no height and no diameter
-
 ## Run the model
 ```{r}
 GLM_abco <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa)
 anova(GLM_abco, test = "Chi")
 ```
 
-No significant difference.
+Strong significant difference.
 
 # GLM for pipo
 
-## Test whether to include height or the interaction with height and diameter
-
-### Height
-```{r}
-AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = "logit"), data = dfp))
-AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = "logit"), data = dfp))
-AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp))
-
-```
-
-No height
-
-### Diameter
-```{r}
-AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
-AIC(glm(DEAD ~ log_gr_rel_ave + BAS_DIA_AVE, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
-AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp %>% filter(!is.na(BAS_DIA_AVE))))
-```
-
-No diameter.
 
 ## Look at drop1
 ```{r}
@@ -158,3 +118,4 @@ summary(GLM_pipo)
 anova(GLM_pipo, test = "Chi")
 ```
 
+Strong significant difference

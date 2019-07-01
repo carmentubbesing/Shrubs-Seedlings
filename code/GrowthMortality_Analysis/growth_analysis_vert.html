@@ -207,17 +207,9 @@ $(document).ready(function () {
 </ul></li>
 <li><a href="#make-separate-df-for-each-species">Make separate df for each species</a></li>
 <li><a href="#glm-for-abco">GLM for abco</a><ul>
-<li><a href="#test-whether-to-include-height-diameter-or-the-interaction-with-height-or-diameter">Test whether to include height, diameter, or the interaction with height or diameter</a><ul>
-<li><a href="#height">Height</a></li>
-<li><a href="#diameter">Diameter</a></li>
-</ul></li>
 <li><a href="#run-the-model">Run the model</a></li>
 </ul></li>
 <li><a href="#glm-for-pipo">GLM for pipo</a><ul>
-<li><a href="#test-whether-to-include-height-or-the-interaction-with-height-and-diameter">Test whether to include height or the interaction with height and diameter</a><ul>
-<li><a href="#height-1">Height</a></li>
-<li><a href="#diameter-1">Diameter</a></li>
-</ul></li>
 <li><a href="#look-at-drop1">Look at drop1</a></li>
 </ul></li>
 </ul>
@@ -316,29 +308,6 @@ dfp &lt;- df %&gt;% filter(SPECIES == &quot;PIPO&quot;)</code></pre>
 </div>
 <div id="glm-for-abco" class="section level1">
 <h1>GLM for abco</h1>
-<div id="test-whether-to-include-height-diameter-or-the-interaction-with-height-or-diameter" class="section level2">
-<h2>Test whether to include height, diameter, or the interaction with height or diameter</h2>
-<div id="height" class="section level3">
-<h3>Height</h3>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 229.4621</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 227.4631</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 226.4354</code></pre>
-<p>Best is no height</p>
-</div>
-<div id="diameter" class="section level3">
-<h3>Diameter</h3>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 227.5022</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave+BAS_DIA_AVE, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 225.6363</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfa))</code></pre>
-<pre><code>## [1] 226.4354</code></pre>
-<p>Best model has no height and no diameter</p>
-</div>
-</div>
 <div id="run-the-model" class="section level2">
 <h2>Run the model</h2>
 <pre class="r"><code>GLM_abco &lt;- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfa)
@@ -357,34 +326,11 @@ anova(GLM_abco, test = &quot;Chi&quot;)</code></pre>
 ## log_gr_rel_ave  1   13.235       168     222.44 0.0002748 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<p>No significant difference.</p>
+<p>Strong significant difference.</p>
 </div>
 </div>
 <div id="glm-for-pipo" class="section level1">
 <h1>GLM for pipo</h1>
-<div id="test-whether-to-include-height-or-the-interaction-with-height-and-diameter" class="section level2">
-<h2>Test whether to include height or the interaction with height and diameter</h2>
-<div id="height-1" class="section level3">
-<h3>Height</h3>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave*HEIGHT, family = binomial(link = &quot;logit&quot;), data = dfp))</code></pre>
-<pre><code>## [1] 162.7966</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave+HEIGHT, family = binomial(link = &quot;logit&quot;), data = dfp))</code></pre>
-<pre><code>## [1] 161.2909</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfp))</code></pre>
-<pre><code>## [1] 163.2951</code></pre>
-<p>No height</p>
-</div>
-<div id="diameter-1" class="section level3">
-<h3>Diameter</h3>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave*BAS_DIA_AVE, family = binomial(link = &quot;logit&quot;), data = dfp %&gt;% filter(!is.na(BAS_DIA_AVE))))</code></pre>
-<pre><code>## [1] 162.5726</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave + BAS_DIA_AVE, family = binomial(link = &quot;logit&quot;), data = dfp %&gt;% filter(!is.na(BAS_DIA_AVE))))</code></pre>
-<pre><code>## [1] 160.7047</code></pre>
-<pre class="r"><code>AIC(glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfp %&gt;% filter(!is.na(BAS_DIA_AVE))))</code></pre>
-<pre><code>## [1] 160.868</code></pre>
-<p>No diameter.</p>
-</div>
-</div>
 <div id="look-at-drop1" class="section level2">
 <h2>Look at drop1</h2>
 <pre class="r"><code>GLM_pipo &lt;- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = &quot;logit&quot;), data = dfp)
@@ -427,6 +373,7 @@ summary(GLM_pipo)</code></pre>
 ## log_gr_rel_ave  1   58.347       155     159.29 2.198e-14 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+<p>Strong significant difference</p>
 </div>
 </div>
 
