@@ -217,7 +217,7 @@ $(document).ready(function () {
 <li><a href="#structure-data-for-lm">Structure data for LM</a></li>
 <li><a href="#see-whether-model-with-shrubarea3-or-sqrt_shrubarea3-is-better">See whether model with shrubarea3 or sqrt_shrubarea3 is better</a></li>
 <li><a href="#see-whether-model-with-or-without-interaction-is-better">See whether model with or without interaction is better</a></li>
-<li><a href="#linear-model-without-elevation">Linear model without ELevation</a></li>
+<li><a href="#look-at-drop1-results">Look at drop1 results</a></li>
 </ul></li>
 <li><a href="#re-create-effects-plots-using-predictoreffects-and-ggplot">Re-create effects plots using predictorEffects() and ggplot</a><ul>
 <li><a href="#create-df-for-effects">Create df for effects</a></li>
@@ -421,9 +421,10 @@ anova(with, without)</code></pre>
 ## without     2 12 590.4835 635.9996 -283.2417 1 vs 2 0.7651454  0.3817</code></pre>
 <p>No difference, so I’ll leave out the interaction</p>
 </div>
-<div id="linear-model-without-elevation" class="section level2">
-<h2>Linear model without ELevation</h2>
-<pre class="r"><code>LM &lt;-  lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+<div id="look-at-drop1-results" class="section level2">
+<h2>Look at drop1 results</h2>
+<pre class="r"><code>LM &lt;-  lme(VertGrowth_Rel ~ 
+            heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = &quot;ML&quot;)
 summary(LM)</code></pre>
 <pre><code>## Linear mixed-effects model fit by maximum likelihood
@@ -479,23 +480,23 @@ summary(LM)</code></pre>
 ## Number of Groups: 
 ##           Fire Sdlg %in% Fire 
 ##              4            121</code></pre>
-<pre class="r"><code>drop1(LM, test = &quot;Chisq&quot;)</code></pre>
-<pre><code>## Single term deletions
-## 
-## Model:
-## VertGrowth_Rel ~ heatload + Years + Aspect.rad.fold.NESW + incidrad + 
-##     BasDia2016.cm + sqrt_shrubarea3 + Year
-##                      Df    AIC    LRT  Pr(&gt;Chi)    
-## &lt;none&gt;                  590.48                     
-## heatload              1 589.30  0.813    0.3671    
-## Years                 1 589.94  1.461    0.2268    
-## Aspect.rad.fold.NESW  1 589.53  1.043    0.3071    
-## incidrad              1 590.52  2.032    0.1540    
-## BasDia2016.cm         1 588.83  0.351    0.5535    
-## sqrt_shrubarea3       1 588.50  0.012    0.9113    
-## Year                  2 624.93 38.449 4.476e-09 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+<pre class="r"><code>drop &lt;- drop1(LM, test = &quot;Chisq&quot;)
+drop$var &lt;- row.names(drop)
+drop &lt;- tbl_df(drop)
+drop %&gt;% 
+  arrange( `Pr(&gt;Chi)`) %&gt;% 
+  mutate( `Pr(&gt;Chi)` = paste( `Pr(&gt;Chi)`))</code></pre>
+<pre><code>## # A tibble: 8 x 5
+##      Df   AIC     LRT `Pr(&gt;Chi)`           var                 
+##   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                &lt;chr&gt;               
+## 1     2  625. 38.4    4.47621372487587e-09 Year                
+## 2     1  591.  2.03   0.15403414823858     incidrad            
+## 3     1  590.  1.46   0.226750194963167    Years               
+## 4     1  590.  1.04   0.307120353746566    Aspect.rad.fold.NESW
+## 5     1  589.  0.813  0.367127065859275    heatload            
+## 6     1  589.  0.351  0.55352227168559     BasDia2016.cm       
+## 7     1  588.  0.0124 0.911268949683329    sqrt_shrubarea3     
+## 8    NA  590. NA      NA                   &lt;none&gt;</code></pre>
 <div id="look-at-individual-effects" class="section level3">
 <h3>Look at individual effects</h3>
 <p>Note: the plots look exactly the same but with different axes if you don’t normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data</p>

@@ -172,13 +172,18 @@ anova(with, without)
 
 No difference, so I'll leave out the interaction
 
-
-## Linear model without ELevation
+## Look at drop1 results
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+LM <-  lme(VertGrowth_Rel ~ 
+            heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
-drop1(LM, test = "Chisq")
+drop <- drop1(LM, test = "Chisq")
+drop$var <- row.names(drop)
+drop <- tbl_df(drop)
+drop %>% 
+  arrange( `Pr(>Chi)`) %>% 
+  mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
 ```
 
 ### Look at individual effects

@@ -43,6 +43,7 @@ df <- df %>%
   mutate(Species = as.factor(Species)) %>% 
   mutate(Sdlg = as.factor(Sdlg)) %>% 
   mutate(soil_order = as.factor(soil_order))
+df <- droplevels(df)
 ```
 
 # Count the seedlings
@@ -56,7 +57,7 @@ nrow(df)
 ## Make df of just the predictor variables I want to include
 ```{r}
 xdf <- df %>% 
-  select(Elevation,
+  dplyr::select(Elevation,
          Slope.Deg,
          heatload,
          incidrad,
@@ -165,13 +166,15 @@ summary(LM)
 
 ## See whether model with shrubarea2 or sqrt_shrubarea2 is better
 ```{r}
-AIC(lme(VertGrowth_Rel ~ 
+none <- lme(VertGrowth_Rel ~ 
          Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+AIC(none)
 
-AIC(lme(VertGrowth_Rel ~  
+sqrt <- lme(VertGrowth_Rel ~  
           Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+AIC(sqrt)
 
 AIC(lme(VertGrowth_Rel ~  
            Years +  Ht_cm1 + log_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
@@ -201,7 +204,12 @@ LM <-  lme(VertGrowth_Rel ~
             Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
-drop1(LM, test = "Chisq")
+drop <- drop1(LM, test = "Chisq")
+drop$var <- row.names(drop)
+drop <- tbl_df(drop)
+drop %>% 
+  arrange( `Pr(>Chi)`) %>% 
+  mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
 ```
 
 No need to include interaction after all
@@ -252,7 +260,6 @@ plot(df$Year, E)
 ggplot(df, aes(x = log(df$shrubarea3), y = E))+
   geom_point()+
   geom_smooth()
-plot(df$soil_order, E)
 ```
 
 # Look at individual effects
@@ -270,6 +277,8 @@ eff_ht <- predictorEffect("Ht_cm1", LM)
 plot(eff_ht)
 
 plot(predictorEffect("Year", LM))
+
+plot(predictorEffect("ShrubSpp03", LM))
 ```
 
 # Re-create effects plots using predictorEffects() and ggplot
