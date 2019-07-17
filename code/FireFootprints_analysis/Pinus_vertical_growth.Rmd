@@ -17,6 +17,8 @@ require(tidyverse)
 require(ggplot2)
 require(VSURF)
 require(effects)
+require(MuMIn)
+require(car)
 set.seed(12346)
 ```
 
@@ -101,35 +103,35 @@ varImpPlot(forest)
 
 # STOP HERE TO SAVE TIME
 
-# Apply VSURF to vertical growth
-```{r}
-vsurf <- VSURF(x = xdf, 
-               y = df$VertGrowth_Rel, 
-               na.action = na.omit,
-               parallel = T)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
+<!-- # Apply VSURF to vertical growth -->
+<!-- ```{r} -->
+<!-- vsurf <- VSURF(x = xdf,  -->
+<!--                y = df$VertGrowth_Rel,  -->
+<!--                na.action = na.omit, -->
+<!--                parallel = T) -->
+<!-- summary(vsurf) -->
+<!-- vsurf$varselect.pred -->
+<!-- xdf[vsurf$varselect.pred] -->
+<!-- ``` -->
 
-## Save the results
-```{r}
-vars <- names(xdf[vsurf$varselect.pred])
-vars
-```
+<!-- ## Save the results -->
+<!-- ```{r} -->
+<!-- vars <- names(xdf[vsurf$varselect.pred]) -->
+<!-- vars -->
+<!-- ``` -->
 
-# RESUME HERE
+<!-- # RESUME HERE -->
 
-## Look at final random forest
-```{r}
-forest <- randomForest(
-  x = xdf %>% 
-    select(vars), 
-  y = df$VertGrowth_Rel, 
-  importance = TRUE, 
-  scale = TRUE)
-varImpPlot(forest)
-```
+<!-- ## Look at final random forest -->
+<!-- ```{r} -->
+<!-- forest <- randomForest( -->
+<!--   x = xdf %>%  -->
+<!--     select(vars),  -->
+<!--   y = df$VertGrowth_Rel,  -->
+<!--   importance = TRUE,  -->
+<!--   scale = TRUE) -->
+<!-- varImpPlot(forest) -->
+<!-- ``` -->
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
@@ -163,6 +165,17 @@ LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + shrubarea3 + heatload + incidrad +
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 ```
+
+## Check collinearity
+
+### Compare Zuur model with vif function from car package
+```{r}
+source("~/../Documents/HighstatLibV10.R.txt") # from Zuur https://highstat.com/index.php/mixed-effects-models-and-extensions-in-ecology-with-r
+corvif(LMdf[c("Years", "Ht_cm1", "shrubarea3", "heatload", "incidrad", "Year", "ShrubSpp03")])
+vif(LM)
+```
+
+A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok.
 
 ## See whether model with shrubarea2 or sqrt_shrubarea2 is better
 ```{r}
@@ -279,6 +292,11 @@ plot(eff_ht)
 plot(predictorEffect("Year", LM))
 
 plot(predictorEffect("ShrubSpp03", LM))
+```
+
+# Calculate Nakagawa's pseudo R2
+```{r}
+r.squaredGLMM(LM)
 ```
 
 # Re-create effects plots using predictorEffects() and ggplot

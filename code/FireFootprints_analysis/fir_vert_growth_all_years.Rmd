@@ -9,6 +9,12 @@ output:
 ---
 
 ```{r, include = F}
+list.of.packages <- c("nlme", "randomForest", "tree", "knitr", "tidyverse", "ggplot2", "VSURF", "effects", "sjstats", "car")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+```
+
+```{r, include = F}
 require(nlme)
 require(randomForest)
 require(tree)
@@ -17,6 +23,9 @@ require(tidyverse)
 require(ggplot2)
 require(VSURF)
 require(effects)
+require(sjstats)
+require(MuMIn)
+require(car)
 ```
 
 ```{r set.seed(333)}
@@ -104,8 +113,8 @@ xdf <- xdf %>% mutate_if(is.numeric, normalize)
 
 ## Apply VSURF to vertical growth
 ```{r}
-vsurf <- VSURF(x = xdf, 
-               y = df$VertGrowth_Rel, 
+vsurf <- VSURF(x = xdf,
+               y = df$VertGrowth_Rel,
                na.action = na.omit,
                parallel = T)
 summary(vsurf)
@@ -122,10 +131,10 @@ vars
 ## Look at final random forest
 ```{r}
 forest <- randomForest(
-  x = xdf %>% 
-    dplyr::select(vars), 
-  y = df$VertGrowth_Rel, 
-  importance = TRUE, 
+  x = xdf %>%
+    dplyr::select(vars),
+  y = df$VertGrowth_Rel,
+  importance = TRUE,
   scale = TRUE)
 varImpPlot(forest)
 ```
@@ -172,19 +181,40 @@ anova(with, without)
 
 No difference, so I'll leave out the interaction
 
-## Look at drop1 results
+## Re-establish best model
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
             heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
+## Check collinearity - use vif from car pkg because in pines it was the same as the Zuur code
+```{r}
+vif(LM)
+```
+
+A VIF cutoff value of 5 is often used, and heatload has a GVIF off 11.8, so I took it out and ran the model again. 
+
+```{r}
+LM <-  lme(VertGrowth_Rel ~ 
+            Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+vif(LM)
 summary(LM)
+```
+
+
+## Look at drop1 results
+```{r}
 drop <- drop1(LM, test = "Chisq")
+drop
 drop$var <- row.names(drop)
 drop <- tbl_df(drop)
 drop %>% 
   arrange( `Pr(>Chi)`) %>% 
   mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
 ```
+
 
 ### Look at individual effects
 
@@ -196,9 +226,13 @@ plot(eff_years)
 
 eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
 plot(eff_shrubarea)
-
-plot(predictorEffect("heatload", LM))
 ```
+
+## Calculate Nakagawa's pseudo R2
+```{r}
+r.squaredGLMM(LM)
+```
+
 
 # Re-create effects plots using predictorEffects() and ggplot
 
