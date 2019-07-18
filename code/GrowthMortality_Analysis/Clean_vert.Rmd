@@ -195,6 +195,14 @@ hist(df$gr_rel_ave)
 hist(df$log_gr_rel_ave)
 ```
 
+## Count dead in each species
+```{r}
+df %>% 
+  group_by(SPECIES, DEAD_ALIVE) %>% 
+  summarise(n())
+```
+
+
 # Save vertical growth df
 ```{r}
 save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
