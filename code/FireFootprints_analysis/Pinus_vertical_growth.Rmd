@@ -103,35 +103,35 @@ varImpPlot(forest)
 
 # STOP HERE TO SAVE TIME
 
-<!-- # Apply VSURF to vertical growth -->
-<!-- ```{r} -->
-<!-- vsurf <- VSURF(x = xdf,  -->
-<!--                y = df$VertGrowth_Rel,  -->
-<!--                na.action = na.omit, -->
-<!--                parallel = T) -->
-<!-- summary(vsurf) -->
-<!-- vsurf$varselect.pred -->
-<!-- xdf[vsurf$varselect.pred] -->
-<!-- ``` -->
+# Apply VSURF to vertical growth
+```{r}
+vsurf <- VSURF(x = xdf,
+               y = df$VertGrowth_Rel,
+               na.action = na.omit,
+               parallel = T)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
 
-<!-- ## Save the results -->
-<!-- ```{r} -->
-<!-- vars <- names(xdf[vsurf$varselect.pred]) -->
-<!-- vars -->
-<!-- ``` -->
+## Save the results
+```{r}
+vars <- names(xdf[vsurf$varselect.pred])
+vars
+```
 
-<!-- # RESUME HERE -->
+# RESUME HERE
 
-<!-- ## Look at final random forest -->
-<!-- ```{r} -->
-<!-- forest <- randomForest( -->
-<!--   x = xdf %>%  -->
-<!--     select(vars),  -->
-<!--   y = df$VertGrowth_Rel,  -->
-<!--   importance = TRUE,  -->
-<!--   scale = TRUE) -->
-<!-- varImpPlot(forest) -->
-<!-- ``` -->
+## Look at final random forest
+```{r}
+forest <- randomForest(
+  x = xdf %>%
+    select(vars),
+  y = df$VertGrowth_Rel,
+  importance = TRUE,
+  scale = TRUE)
+varImpPlot(forest)
+```
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
@@ -376,12 +376,45 @@ print(paste("fit_median_log = ", fit_median))
 print(paste("fit_min_log = ", fit_min))
 print(paste("fit_max_log = ", fit_max))
 print(paste("fit_mean_log = ", fit_mean))
-
 ```
 
 ```{r}
 
 sd <- sd(df$shrubarea3/10000)
+```
+
+# Pretty plot of shrub species effects
+```{r}
+eff_shrubspp <- predictorEffect("ShrubSpp03", LM)
+effects_df <- as.data.frame(eff_shrubspp)
+head(effects_df)
+```
+
+```{r}
+ggplot(effects_df)+
+  geom_point(aes(x = ShrubSpp03, y = exp(fit)))+
+  ylab("Juvenile pine relative growth rate")+
+  theme_bw()+
+  geom_errorbar(aes(x = ShrubSpp03, ymin=exp(lower), ymax=exp(upper)), width=.1) +
+  scale_x_discrete(labels=c("ARPA" = "Arctostaphylos",
+                            "CECO" = "Ceanothus\ncordulatus",
+                            "CEIN" = "Ceanothus\nintegerrimus",
+                            "CHFO" = "Chamaebatia\nfoliolosa",
+                            "LIDE" = "Notholithocarpus\ndensiflorus"
+                            ))+
+  theme(  panel.grid.major.x = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_text(face = "bold.italic",
+                                   angle=45, 
+                                   vjust=1, 
+                                   hjust=1))+
+  xlab("Dominant shrub species")
+  
+
+
+ ggsave(file = "../../results/figures/FireFootprints/PineVertShrubSpp.png", width = 6, height = 6, dpi = 400)
+```
+
 ```
 
 
