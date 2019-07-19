@@ -106,11 +106,14 @@ for(i in 1:1000){
     group_by(PAIR) %>% 
     mutate(death_year_temp = ifelse(PAIR %in% definitely_green, 2017, 0)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2017 & (!PAIR %in% definitely_green), 
-                                    sample(c(2016, 2017), 1, replace = T), death_year_temp)) %>% 
+                                    sample(c(2016, 2017), 1, replace = T), 
+                                    death_year_temp)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2016, 
-                                    sample(c(2015, 2016, 2017), 1, replace = T), death_year_temp)) %>% 
+                                    sample(c(2015, 2016, 2017), 1, replace = T), 
+                                    death_year_temp)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2015, 
-                                    sample(c(2015, 2016), 1, replace = T), death_year_temp)) %>% 
+                                    sample(c(2015, 2016), 1, replace = T), 
+                                    death_year_temp)) %>% 
     ungroup()
   
   dfp_new2 <- dfp_new %>%
@@ -318,11 +321,16 @@ for(i in 1:1000){
   ## Randomly assign year of death for the trees I'm unsure about - everything in 2017 or 2016 that's not dead
   dfa_new <- dfa %>% 
     group_by(PAIR) %>% 
-    mutate(death_year_temp = ifelse(PAIR %in% definitely_green, 2017, 0)) %>% 
+        mutate(death_year_temp = ifelse(PAIR %in% definitely_green, 2017, 0)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2017 & (!PAIR %in% definitely_green), 
-                                    sample(c(2016, 2017), 1, replace = T), death_year_temp)) %>% 
+                                    sample(c(2016, 2017), 1, replace = T), 
+                                    death_year_temp)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2016, 
-                                    sample(c(2016, 2017), 1, replace = T), death_year_temp)) %>% 
+                                    sample(c(2015, 2016, 2017), 1, replace = T), 
+                                    death_year_temp)) %>% 
+    mutate(death_year_temp = ifelse(death_year == 2015, 
+                                    sample(c(2015, 2016), 1, replace = T), 
+                                    death_year_temp)) %>% 
     mutate(death_year_temp = ifelse(death_year == 2015, 2015, death_year_temp)) %>% 
     ungroup()
   

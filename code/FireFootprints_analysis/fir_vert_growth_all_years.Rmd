@@ -58,6 +58,13 @@ df <- df %>%
   mutate(Sdlg = as.factor(Sdlg))
 ```
 
+
+# Convert shrub area to square root
+```{r}
+df <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
+```
+
 # Count
 ```{r}
 length(unique(df$Sdlg))
@@ -97,7 +104,7 @@ xdf <- df %>%
          Years,
          BasDia2016.cm, 
          Ht_cm1,
-         shrubarea3,
+         sqrt_shrubarea3,
          ShrubSpp03,
          siteclass) 
 ```

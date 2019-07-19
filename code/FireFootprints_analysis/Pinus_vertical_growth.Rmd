@@ -48,6 +48,13 @@ df <- df %>%
 df <- droplevels(df)
 ```
 
+# Convert shrub area to log scale
+```{r}
+df <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
+```
+
+
 # Count the seedlings
 ```{r}
 length(unique(df$Sdlg))
@@ -69,7 +76,7 @@ xdf <- df %>%
          Years,
          BasDia2016.cm, 
          Ht_cm1,
-         shrubarea3,
+         sqrt_shrubarea3,
          ShrubSpp03) 
 ```
 
