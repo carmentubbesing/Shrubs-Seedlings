@@ -103,20 +103,40 @@ dfp <- df %>% filter(SPECIES == "PIPO")
 
 ## Run the model
 ```{r}
-GLM_abco <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa)
+GLM_abco <- glm(DEAD ~ log_gr_rel_ave + ht4, family = binomial(link = "logit"), data = dfa)
+drop1(GLM_abco, test = "Chi")
 anova(GLM_abco, test = "Chi")
+r.squaredGLMM(GLM_abco)
+plot(dfa$DEAD, predict(GLM_abco))
 ```
 
 Strong significant difference.
 
-# GLM for pipo
+## Look at effects
+```{r}
+plot(predictorEffect("log_gr_rel_ave", GLM_abco))
+plot(predictorEffect("ht4", GLM_abco))
+```
 
+Smaller trees are more likely to die.
+
+# GLM for pipo
 
 ## Look at drop1
 ```{r}
-GLM_pipo <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp)
+GLM_pipo <- glm(DEAD ~ log_gr_rel_ave + ht4, family = binomial(link = "logit"), data = dfp)
 summary(GLM_pipo)
+drop1(GLM_abco, test = "Chi")
 anova(GLM_pipo, test = "Chi")
+r.squaredGLMM(GLM_pipo)
 ```
 
 Strong significant difference
+
+## Look at effects
+```{r}
+plot(predictorEffect("log_gr_rel_ave", GLM_pipo))
+plot(predictorEffect("ht4", GLM_pipo))
+```
+
+Smaller trees are more likely to die.

@@ -202,6 +202,14 @@ df %>%
   summarise(n())
 ```
 
+## Summarize height by species
+```{r}
+df %>% 
+  ggplot()+
+  geom_boxplot(aes(y=ht4, x = SPECIES))
+anova(lm(ht4 ~ SPECIES, data = df))
+```
+
 
 # Save vertical growth df
 ```{r}

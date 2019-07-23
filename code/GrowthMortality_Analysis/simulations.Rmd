@@ -116,6 +116,8 @@ gr_set_alive <- gr_set_alive[[1]]
 ```{r}
 coefficient_gr <- c()
 coefficient_int <- c()
+r2.theor <- c()
+r2.delta <- c()
 for(i in 1:1000){
   dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
   alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
@@ -124,12 +126,26 @@ for(i in 1:1000){
   dead_df <- data.frame(gr = c(dead_sample))
   dead_df$dead <- 1
   df <- bind_rows(dead_df, live_df)
+  df$dead <- as.factor(df$dead)
   glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
   coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
   coefficient_int <- c(coefficient_int, glm$coefficient[1])
+  r2.theor <- c(r2.theor, r.squaredGLMM(glm)[1,1])
+  r2.delta <- c(r2.delta, r.squaredGLMM(glm)[2,1])
 }
 mean_coef_gr <- mean(coefficient_gr)
 mean_coef_int <- mean(coefficient_int)
+mean_r2.theor <- mean(r2.theor)
+mean_r2.delta <- mean(r2.delta)
+mean_r2.theor
+mean_r2.delta
+```
+
+## Plot one iteration of the simulation
+```{r}
+df$pred <- predict(glm, type = "response")
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(dead), y = pred))
 ```
 
 ## Plot the mean coefficient and CI
