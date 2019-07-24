@@ -105,7 +105,6 @@ gr_set_dead <- dfa %>%
     filter(DEAD_ALIVE=="DEAD") %>% 
     dplyr::select(log_gr_rel_ave)
 gr_set_dead <- gr_set_dead[[1]]
-
 gr_set_alive <- dfa %>% 
   filter(DEAD_ALIVE=="ALIVE") %>%
   dplyr::select(log_gr_rel_ave)
@@ -263,7 +262,6 @@ gr_set_dead <- dfp %>%
     filter(DEAD_ALIVE=="DEAD") %>% 
     dplyr::select(log_gr_rel_ave)
 gr_set_dead <- gr_set_dead[[1]]
-
 gr_set_alive <- dfp %>% 
   filter(DEAD_ALIVE=="ALIVE") %>%
   dplyr::select(log_gr_rel_ave)
