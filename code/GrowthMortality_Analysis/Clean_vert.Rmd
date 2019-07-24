@@ -186,11 +186,13 @@ df <- df %>%
 ```
 
 
-## Add column for log growth
+## Add columns for log10 and natural log growth
 ```{r}
 df <- df %>% 
-  mutate(log_gr_rel_ave = log10(gr_rel_ave))
+  mutate(log10_gr_rel_ave = log10(gr_rel_ave)) %>% 
+  mutate(log_gr_rel_ave = log(gr_rel_ave))
 summary(df$log_gr_rel_ave)
+summary(df$log10_gr_rel_ave)
 hist(df$gr_rel_ave)
 hist(df$log_gr_rel_ave)
 ```

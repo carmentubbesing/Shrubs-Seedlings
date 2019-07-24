@@ -50,9 +50,9 @@ ggplot(df2)+
 dfa <- df %>% 
   filter(SPECIES == "ABCO") %>% 
   group_by(DEAD_ALIVE) %>% 
-  mutate(mean_log_gr = mean(log_gr_rel_ave))
+  mutate(mean_log_gr = mean(log10_gr_rel_ave))
 ggplot(dfa)+
-  geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave, fill = DEAD), alpha = .5)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = log10_gr_rel_ave, fill = DEAD), alpha = .5)+
   geom_point(aes(x = DEAD_ALIVE, y = mean_log_gr, col = DEAD), size = 2)+
   scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
   scale_color_manual(values = c("#31a354", "#e6550d"))+
@@ -75,9 +75,9 @@ ggsave(file = "../../results/figures/GrowthMortality/Fir_vert_boxplot.png", widt
 dfp <- df %>% 
   filter(SPECIES == "PIPO") %>% 
   group_by(DEAD_ALIVE) %>% 
-  mutate(mean_log_gr = mean(log_gr_rel_ave))
+  mutate(mean_log_gr = mean(log10_gr_rel_ave))
 ggplot(dfp)+
-  geom_boxplot(aes(x = DEAD_ALIVE, y = log_gr_rel_ave, fill = DEAD), alpha = .5)+
+  geom_boxplot(aes(x = DEAD_ALIVE, y = log10_gr_rel_ave, fill = DEAD), alpha = .5)+
   geom_point(aes(x = DEAD_ALIVE, y = mean_log_gr, col = DEAD), size = 2)+
   scale_fill_manual(values = c("#c7e9c0", "#fdd0a2"))+
   scale_color_manual(values = c("#31a354", "#e6550d"))+
@@ -103,40 +103,20 @@ dfp <- df %>% filter(SPECIES == "PIPO")
 
 ## Run the model
 ```{r}
-GLM_abco <- glm(DEAD ~ log_gr_rel_ave + ht4, family = binomial(link = "logit"), data = dfa)
-drop1(GLM_abco, test = "Chi")
+GLM_abco <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfa)
 anova(GLM_abco, test = "Chi")
-r.squaredGLMM(GLM_abco)
-plot(dfa$DEAD, predict(GLM_abco))
 ```
 
 Strong significant difference.
 
-## Look at effects
-```{r}
-plot(predictorEffect("log_gr_rel_ave", GLM_abco))
-plot(predictorEffect("ht4", GLM_abco))
-```
-
-Smaller trees are more likely to die.
-
 # GLM for pipo
+
 
 ## Look at drop1
 ```{r}
-GLM_pipo <- glm(DEAD ~ log_gr_rel_ave + ht4, family = binomial(link = "logit"), data = dfp)
+GLM_pipo <- glm(DEAD ~ log_gr_rel_ave, family = binomial(link = "logit"), data = dfp)
 summary(GLM_pipo)
-drop1(GLM_abco, test = "Chi")
 anova(GLM_pipo, test = "Chi")
-r.squaredGLMM(GLM_pipo)
 ```
 
 Strong significant difference
-
-## Look at effects
-```{r}
-plot(predictorEffect("log_gr_rel_ave", GLM_pipo))
-plot(predictorEffect("ht4", GLM_pipo))
-```
-
-Smaller trees are more likely to die.
