@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Carmen" />
@@ -159,18 +160,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -218,7 +207,7 @@ rmarkdown::render(&quot;date_dead_dendro_pipo.Rmd&quot;, &quot;html_document&quo
 rmarkdown::render(&quot;Clean_vert.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;mortality_counts.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time() - strt)</code></pre>
-<pre><code>## Time difference of 1.178454 mins</code></pre>
+<pre><code>## Time difference of 1.209578 mins</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
@@ -228,7 +217,7 @@ rmarkdown::render(&quot;simulations.Rmd&quot;, &quot;html_document&quot;, quiet 
 rmarkdown::render(&quot;simulations_hybrid.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;dendro_analysis.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()- strt)</code></pre>
-<pre><code>## Time difference of 5.402452 mins</code></pre>
+<pre><code>## Time difference of 4.947384 mins</code></pre>
 </div>
 
 
@@ -248,6 +237,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
