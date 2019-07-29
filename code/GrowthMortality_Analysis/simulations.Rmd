@@ -191,10 +191,13 @@ ggplot()+
   theme_bw()+
   xlim(0.03, .25)+
   ylim(0, ymax)+
+   theme(text = element_text(size = 11),
+        #panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())+
   #ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+    ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
    ylab("Annual % mortality probability")
-ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 5, width = 6)
+ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 4, width = 5)
 ```
 
 
@@ -347,15 +350,17 @@ ggplot()+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
+  theme(text = element_text(size = 11),
+        panel.grid.major = element_blank())+
   geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
-  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
   geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
-  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
   geom_vline(aes(xintercept = exp(-2.01617893)), col = "red")+
    #ggtitle("Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
-  geom_text(aes(x= exp(-2.01617893), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) 
+  geom_text(aes(x= exp(-2.01617893), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) 
  
-ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 5, width = 6)
+ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
 
 # Calculate the range of mortality probabilities captured by the fire footprint growth data

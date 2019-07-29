@@ -118,22 +118,22 @@ xdf <- xdf %>% mutate_if(is.numeric, normalize)
 ```
 
 
-## Apply VSURF to vertical growth
-```{r}
-vsurf <- VSURF(x = xdf,
-               y = df$VertGrowth_Rel,
-               na.action = na.omit,
-               parallel = T)
-summary(vsurf)
-vsurf$varselect.pred
-xdf[vsurf$varselect.pred]
-```
+<!-- ## Apply VSURF to vertical growth -->
+<!-- ```{r} -->
+<!-- vsurf <- VSURF(x = xdf, -->
+<!--                y = df$VertGrowth_Rel, -->
+<!--                na.action = na.omit, -->
+<!--                parallel = T) -->
+<!-- summary(vsurf) -->
+<!-- vsurf$varselect.pred -->
+<!-- xdf[vsurf$varselect.pred] -->
+<!-- ``` -->
 
-## Save the results
-```{r}
-vars <- names(xdf[vsurf$varselect.pred])
-vars
-```
+<!-- ## Save the results -->
+<!-- ```{r} -->
+<!-- vars <- names(xdf[vsurf$varselect.pred]) -->
+<!-- vars -->
+<!-- ``` -->
 
 ## Look at final random forest
 ```{r}
@@ -268,13 +268,18 @@ ggplot(effects_df)+
   geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
   geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
   theme_bw()+
-  xlab(bquote('Shrub competition ' (sqrt(`cover (cm)`%*%`height (cm)`))))+
+  xlab(bquote(
+    (sqrt(`cover (cm)`%*%`height (cm)`))            
+    ))+
+#  xlab(bquote((sqrt(`cover (cm)`%*%`height (cm)`)))+
   ylab("Relative growth rate")+
  # ggtitle("Fir growth in relation to shrub environment within 2 m")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.04,0.3))
-ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 6, height = 6, dpi = 400)
-ggsave(file = "../../results/figures/FireFootprints/FirVertRel_int.png", width = 6, height = 6, dpi = 400)
+  ylim(c(0.04,0.3))+
+  theme(text = element_text(size = 11),
+      #panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank())
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
 
 # Look at relationship between years and shrubarea

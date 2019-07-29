@@ -222,18 +222,20 @@ ggplot()+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
+  theme(text = element_text(size = 11),
+      panel.grid.major = element_blank())+
   xlim(0.03, .25)+
   ylim(0, ymax)+
   ylab("Annual % mortality probability")+
   geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
-  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
   geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
-  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
   geom_vline(aes(xintercept = exp(-2.0161789)), col = "red")+
   #ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
-  geom_text(aes(x= exp(-2.0161789), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90) +
+  geom_text(aes(x= exp(-2.0161789), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
-ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 5, width = 6)
+ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 4, width = 5)
 ```
 
 # Calculate the range of mortality probabilities captured by the fire footprint growth data
@@ -440,12 +442,16 @@ ggplot()+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
+  theme(text = element_text(size = 11),
+    panel.grid.major = element_blank())+
   xlim(0.03, .25)+
   ylim(0, ymax)+
+  theme(text = element_text(size = 11),
+      panel.grid.major = element_blank())+
   ylab("Annual % mortality probability")+
   #ggtitle("HYBRID SIMULATIONS Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
-ggsave("../../results/figures/GrowthMortality/predict_mortality_abco_hybrid.png", height = 5, width = 6)
+ggsave("../../results/figures/GrowthMortality/predict_mortality_abco_hybrid.png", height = 4, width = 5)
 ```
 
 # Calculate the range of mortality probabilities captured by the fire footprint growth data
