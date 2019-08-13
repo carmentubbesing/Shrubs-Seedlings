@@ -29,15 +29,8 @@ The point of this script is to see if DIFN decreases with time since fire indepe
 ```{r}
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_data_2016.Rdata")
-names(df)
 ```
 
-```{r}
-summary(df$Fire)
-summary(as.factor(df$ref))
-summary(as.factor(df$ShrubSpp03))
-class(df$ShrubSpp03)
-```
 
 # Add ShrubSpp03 where it's missing for reference measurements
 ```{r}
@@ -50,13 +43,13 @@ df <- df %>%
   mutate(ShrubSpp03 = ifelse(Sdlg %in% c("chfo-1"), "CHFO", ShrubSpp03)) %>% 
   mutate(ShrubSpp03 = ifelse(Sdlg %in% c("LIDE-1", "LIDE-2", "LIDE-3", "LIDE-4"), "LIDE", ShrubSpp03)) %>% 
   mutate(ShrubSpp03 = ifelse(ShrubSpp03 == "ARVI", "ARPA", ShrubSpp03)) 
-sort(summary(as.factor(df$ShrubSpp03)))
-tail(as.factor(df$Sdlg))
+
 ```
 
+# Rename LAI LAI.53
 ```{r}
-tail(as.factor(df$Sdlg))
-df %>% filter(ref == 1)
+df <- df %>% 
+  rename(LAI.53 = LAI)
 ```
 
 
@@ -64,12 +57,7 @@ df %>% filter(ref == 1)
 ```{r}
 dfl <- df %>% 
   filter(!is.na(DIFN.53)) %>% 
-  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File, DIFN.all, ShrubSpp03, Cov1.3, Ht1.3, ShrG1, Years, LAI, DIFN.53, Ht1, Cov1, ShrubSpp01, Ht1.2, Cov1.2, ref)
-```
-
-```{r}
-tail(as.factor(df$Sdlg))
-dfl %>% filter(ref == 1)
+  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File, DIFN.all, ShrubSpp03, Cov1.3, Ht1.3, ShrG1, Years, LAI.53, DIFN.53, Ht1, Cov1, ShrubSpp01, Ht1.2, Cov1.2, ref)
 ```
 
 # Add shrubarea3 column
@@ -78,33 +66,36 @@ dfl <- dfl %>%
   mutate(shrubarea3 = Cov1.3*Ht1.3)
 ```
 
-
-# NEED TO: FIND DIFN MEASUREMENTS FOR THE NO-SEEDLING LOCATIONS
-
 # Clean heights
+
+## Load 2017 data with up-to-date heights
+```{r}
+load("../../compiled_data/fire_footprints/master_seedlings2.Rdata")
+df17 <- df
+remove(df)
+```
+
+### filter it to only 2016 height data
+```{r}
+df17 <- df17 %>% 
+  filter(Year=="2015") %>% 
+  select(Sdlg, Ht_cm2)
+```
+
+### Join with DIFN data
+```{r}
+dfl <- left_join(dfl, df17, by = "Sdlg")
+```
+
 
 ## Add height of 0 for seedling-less measurements
 ```{r}
 dfl <- dfl %>% 
   mutate(Ht.cm = ifelse(ref ==1, Ht.cm ==0, Ht.cm))
-summary(dfl$ref)
-tail(dfl$Sdlg)
-dfl %>% 
-  group_by(ref) %>% 
-  summarize(n())
 ```
 
 ## Average height for DIFN with multiple seedlings
 ```{r}
-nrow(dfl)
-dfl %>% 
-  arrange(FirePatch) %>% 
-  arrange(Fire) %>% 
-  arrange(Cov1.3) %>% 
-  arrange(DIFN.all) %>% 
-  group_by(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3) %>% 
-  mutate(Ht.cm = mean(Ht.cm)) %>% 
-  select(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3, Sdlg, Ht.cm)
 dfl <- dfl %>% 
   arrange(FirePatch) %>% 
   arrange(Fire) %>% 
@@ -115,16 +106,12 @@ dfl <- dfl %>%
   ungroup() %>% 
   select(-Sdlg) %>% 
   distinct()
-nrow(dfl)
-dfl %>% 
-    filter(DIFN.all == 0.047) %>% 
-   select(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3, Ht.cm)
 ```
 
-## Take out spots with >50 cm tree height
+## Take out spots with >30 cm tree height
 ```{r}
 dfl <- dfl %>% 
-  filter(Ht.cm<50)
+  filter(Ht.cm<30)
 ```
 
 

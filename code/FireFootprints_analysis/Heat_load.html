@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Carmen" />
@@ -159,18 +160,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -257,31 +246,31 @@ $(document).ready(function () {
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg)</code></pre>
-<pre><code>## # A tibble: 44 x 52
-##    Sdlg  Species Fire  FirePatch Ht2016.cm Ht2017.cm Elevation Slope.Deg
-##    &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt; &lt;fct&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;int&gt;     &lt;int&gt;
-##  1 159   PIPO    STAR  STAR-NW         118       124        NA        19
-##  2 161   PIPO    STAR  STAR-NW          81        76        NA        15
-##  3 162   ABCO    STAR  STAR-NW          44        49        NA        12
-##  4 163   ABCO    STAR  STAR-NW          61        59        NA        12
-##  5 164   ABCO    STAR  STAR-NW          60        68        NA        12
-##  6 165   PILA    STAR  STAR-NW         133       145        NA        13
-##  7 166   ABCO    STAR  STAR-NW          46        48        NA        19
-##  8 167   PIPO    STAR  STAR-NW         134       235        NA        19
-##  9 168   PIPO    STAR  STAR-NW         186       200        NA        11
-## 10 169   PIPO    STAR  STAR-NW          66       190        NA        14
-## # ... with 34 more rows, and 44 more variables: Aspect.deg &lt;int&gt;,
-## #   BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;chr&gt;,
-## #   DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;,
-## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
-## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
+<pre><code>## # A tibble: 44 x 49
+##    Sdlg  Species Fire  FirePatch Ht16_meas2016.cm Ht2017.cm Elevation
+##    &lt;chr&gt; &lt;chr&gt;   &lt;fct&gt; &lt;fct&gt;                &lt;dbl&gt;     &lt;dbl&gt;     &lt;int&gt;
+##  1 159   PIPO    STAR  STAR-NW                118       124        NA
+##  2 161   PIPO    STAR  STAR-NW                 81        76        NA
+##  3 162   ABCO    STAR  STAR-NW                 44        49        NA
+##  4 163   ABCO    STAR  STAR-NW                 61        59        NA
+##  5 164   ABCO    STAR  STAR-NW                 60        68        NA
+##  6 165   PILA    STAR  STAR-NW                133       145        NA
+##  7 166   ABCO    STAR  STAR-NW                 46        48        NA
+##  8 167   PIPO    STAR  STAR-NW                134       235        NA
+##  9 168   PIPO    STAR  STAR-NW                186       200        NA
+## 10 169   PIPO    STAR  STAR-NW                 66       190        NA
+## # ... with 34 more rows, and 42 more variables: Slope.Deg &lt;int&gt;,
+## #   Aspect.deg &lt;int&gt;, BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
+## #   ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;,
+## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;,
+## #   Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
 ## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
 ## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
 ## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;,
 ## #   BasDia2017.mm.2 &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
 ## #   Growth_15 &lt;chr&gt;, notes &lt;chr&gt;, shrubarea1 &lt;dbl&gt;, shrubarea2 &lt;dbl&gt;,
-## #   shrubarea3 &lt;dbl&gt;, soil_type_dom &lt;chr&gt;, soil_series &lt;chr&gt;,
-## #   soil_order &lt;chr&gt;, soil_suborder &lt;chr&gt;, siteclass &lt;dbl&gt;</code></pre>
+## #   shrubarea3 &lt;dbl&gt;, siteclass &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-elevation-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding elevation data to an individual seedling</h2>
 <pre class="r"><code>elv &lt;- function(sdlg, elev){
@@ -1403,7 +1392,7 @@ latave(27, c(26))</code></pre>
   filter(is.na(Y)) %&gt;% 
   select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 6 x 5
+<pre><code>## # A tibble: 7 x 5
 ##   Sdlg  FirePatch     X     Y Species
 ##   &lt;chr&gt; &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
 ## 1 45    AMCR-NW      NA    NA PILA   
@@ -1411,7 +1400,8 @@ latave(27, c(26))</code></pre>
 ## 3 49    AMCR-NW      NA    NA PSME   
 ## 4 50    AMCR-NE      NA    NA PILA   
 ## 5 126   FRDS-N       NA    NA PILA   
-## 6 125f  FRDS-N       NA    NA PILA</code></pre>
+## 6 125F  FRDS-N       NA    NA 3      
+## 7 125W  WRTS-1       NA    NA 1</code></pre>
 </div>
 </div>
 </div>
@@ -1476,7 +1466,7 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <pre class="r"><code>df %&gt;% 
   filter(is.na(heatload)) %&gt;% 
   select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)</code></pre>
-<pre><code>## # A tibble: 8 x 10
+<pre><code>## # A tibble: 9 x 10
 ##   Aspect.deg Aspect.rad Aspect.rad.fold~ Aspect.rad.fold~ Slope.Deg
 ##        &lt;dbl&gt;      &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;     &lt;dbl&gt;
 ## 1         NA     NA               NA               NA            NA
@@ -1487,6 +1477,7 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 ## 6        188      3.28             3.00             2.50         17
 ## 7        340      5.93             0.349            1.13         20
 ## 8        310      5.41             0.873            1.66         18
+## 9         60      1.05             1.05             0.262        18
 ## # ... with 5 more variables: Slope.rad &lt;dbl&gt;, Y &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
 ## #   heatload &lt;dbl&gt;, incidrad &lt;dbl&gt;</code></pre>
 </div>
@@ -1514,6 +1505,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

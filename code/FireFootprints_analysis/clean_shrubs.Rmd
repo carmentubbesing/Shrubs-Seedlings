@@ -45,9 +45,16 @@ sdlt <- sdlt %>%
 sdlt <- sdlt[sdlt$Return==0,]
 ```
 
+## Rename 2015 height column
+```{r}
+sdlt <- sdlt %>% 
+  rename(Ht2015.meas2016 = Ht2015)
+```
+
+
 ## Reduce to variables of interest
 ```{r}
-df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","Light_File","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm")]
+df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","Light_File","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm", "Ht2015.meas2016")]
 df <- tbl_df(df)
 df <- rename(df,Sdlg = Seedling.)
 ```
@@ -73,7 +80,6 @@ head(shr)
 shr %>% filter(ShrubSpp == "pea")
 shr <- shr %>% filter(ShrubSpp != "pea")
 ```
-
 
 # Aggregate shrub data by seedling
 ```{r}

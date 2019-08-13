@@ -39,12 +39,11 @@ df <- df %>%
   filter(Species == "PIPO")
 ```
 
-## Change species and Sdlg and soil order to factor
+## Change species to factor
 ```{r}
 df <- df %>% 
   mutate(Species = as.factor(Species)) %>% 
-  mutate(Sdlg = as.factor(Sdlg)) %>% 
-  mutate(soil_order = as.factor(soil_order))
+  mutate(Sdlg = as.factor(Sdlg)) 
 df <- droplevels(df)
 ```
 
@@ -108,7 +107,7 @@ forest <- randomForest(
 varImpPlot(forest)
 ```
 
-<!-- # STOP HERE TO SAVE TIME -->
+# STOP HERE TO SAVE TIME
 
 <!-- # Apply VSURF to vertical growth -->
 <!-- ```{r} -->
@@ -127,18 +126,18 @@ varImpPlot(forest)
 <!-- vars -->
 <!-- ``` -->
 
-# RESUME HERE
+<!-- ## Look at final random forest -->
+<!-- ```{r} -->
+<!-- forest <- randomForest( -->
+<!--   x = xdf %>% -->
+<!--     select(vars), -->
+<!--   y = df$VertGrowth_Rel, -->
+<!--   importance = TRUE, -->
+<!--   scale = TRUE) -->
+<!-- varImpPlot(forest) -->
+<!-- ``` -->
 
-## Look at final random forest
-```{r}
-forest <- randomForest(
-  x = xdf %>%
-    select(vars),
-  y = df$VertGrowth_Rel,
-  importance = TRUE,
-  scale = TRUE)
-varImpPlot(forest)
-```
+# RESUME HERE
 
 # Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
 
@@ -168,7 +167,7 @@ LMdf <- droplevels(LMdf)
 
 ```{r}
 vars
-LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + shrubarea3 + heatload + incidrad + Year + ShrubSpp03,
+LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 ```
@@ -184,36 +183,18 @@ vif(LM)
 
 A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok.
 
-## See whether model with shrubarea2 or sqrt_shrubarea2 is better
-```{r}
-none <- lme(VertGrowth_Rel ~ 
-         Years +  Ht_cm1 + shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-AIC(none)
-
-sqrt <- lme(VertGrowth_Rel ~  
-          Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-AIC(sqrt)
-
-AIC(lme(VertGrowth_Rel ~  
-           Years +  Ht_cm1 + log_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03, 
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
-```
-
-Square root transformed wins
-
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
-           Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year+ ShrubSpp03,
+            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 AIC(without)
-with <- lme(VertGrowth_Rel ~  
-           Years +  Ht_cm1*sqrt_shrubarea3 + heatload +  incidrad + Year+ ShrubSpp03,
+with_ht <- lme(VertGrowth_Rel ~  
+            Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-AIC(with)
-anova(with, without)
+AIC(with_ht)
+
+anova(with_ht, without)
 ```
 
 Without wins.
@@ -221,7 +202,7 @@ Without wins.
 ## Look at drop1 results
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03,
+             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop <- drop1(LM, test = "Chisq")
@@ -230,6 +211,7 @@ drop <- tbl_df(drop)
 drop %>% 
   arrange( `Pr(>Chi)`) %>% 
   mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
+
 ```
 
 No need to include interaction after all
@@ -237,14 +219,14 @@ No need to include interaction after all
 # See whether residuals are better for log transformed or not
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year + ShrubSpp03,
+             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
 
 ```{r}
 LM <-  lme(exp(VertGrowth_Rel) ~ 
-            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year+ ShrubSpp03,
+             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
@@ -254,7 +236,7 @@ Log transformed looks better
 # Re-establish the best LM so far:
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-           Years +  Ht_cm1 + sqrt_shrubarea3 + heatload +  incidrad + Year+ ShrubSpp03,
+            Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
@@ -314,38 +296,111 @@ effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
 
+## Create df for effects and confidence intervals using mean +/- 1 SD
+```{r}
+quartiles <- summary(df$Ht_cm1)[c(2,5)]
+quartiles <- (quartiles-mean(df$Ht_cm1))/sd(df$Ht_cm1)
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM, xlevels = list(Ht_cm1 = quartiles))
+effects_df <- as.data.frame(eff_shrubarea)
+head(effects_df)
+summary(as.factor(effects_df$Ht_cm1))
+```
+
 ## Transform variables back to original units
 ```{r}
 effects_df <- effects_df %>% 
-  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) )
-effects_df
+  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) %>% 
+  mutate(Ht_cm1 = Ht_cm1*sd(df$Ht_cm1)+mean(df$Ht_cm1) ) %>% 
+  mutate(Ht_cm1 = as.factor(round(Ht_cm1)) )
+head(effects_df)
 ```
 
 ### test
 ```{r}
 hist(effects_df$sqrt_shrubarea3)
 hist(sqrt(df$shrubarea3))
+summary(as.factor(effects_df$Ht_cm1))
+summary(df$Ht_cm1)
+```
+
+## Check for whether certain pine tree sizes only occur at certain shrub competition levels
+```{r}
+summary(df$sqrt_shrubarea3[df$Ht_cm1< mean(df$Ht_cm1)])
+summary(df$sqrt_shrubarea3[df$Ht_cm1> mean(df$Ht_cm1)])
 ```
 
 
-## Plot effects of shrubarea
+
+## Plot effects of shrubarea WITH interaction
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
-  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit), group = Ht_cm1, col = Ht_cm1))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper), group = Ht_cm1, fill = Ht_cm1), alpha = .5)+
   theme_bw()+
   #xlab("                                  Shrub competition")+
   xlab(bquote('                           Shrub competition ' ))+
   ylab("Relative growth rate")+
   #ggtitle("Pine growth in relation to shrub environment within 2 m")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.04,0.3))+
+  #ylim(c(0.04,0.3))+
   labs(fill = "Juvenile tree height (cm)")+
+  labs(col = "Juvenile tree height (cm)")+
+  theme(legend.position = c(0.62, 0.8))+
   theme(text = element_text(size = 11),
         #panel.grid.minor = element_blank(),
         panel.grid.major = element_blank())
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 3, height = 3, dpi = 400)
 ```
+
+
+## Plot effects of shrubarea WITHOUT interaction
+
+
+### Re-establish the best LM so far:
+```{r}
+LM <-  lme(VertGrowth_Rel ~ 
+            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
+           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+
+### Re-create effects plots using predictorEffects() and ggplot
+
+```{r}
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
+effects_df <- as.data.frame(eff_shrubarea)
+head(effects_df)
+```
+
+### Transform variables back to original units
+```{r}
+effects_df <- effects_df %>% 
+  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) 
+```
+
+
+```{r}
+ggplot(effects_df)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .2)+
+  theme_bw()+
+  xlab(bquote('                           Shrub competition ' ))+
+  ylab("Relative growth rate")+
+  #ggtitle("Pine growth in relation to shrub environment within 2 m")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  ylim(c(0.04,0.35))+
+  labs(fill = "Juvenile tree height (cm)")+
+  labs(col = "Juvenile tree height (cm)")+
+  theme(legend.position = c(0.62, 0.8))+
+  theme(
+        #panel.grid.minor = element_blank(),
+        #panel.grid.major = element_blank(),
+        text = element_text(size = 11))
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 3, height = 3, dpi = 400)
+```
+
 
 # Look at relationship between years and shrubarea
 ```{r}
@@ -355,9 +410,23 @@ ggplot(df)+
   geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
 ```
 
+# Summarize range of shrub cover and height
+```{r}
+summary(df$Cov1.3)
+summary(df$Ht1.3)
+summary(df$shrubarea3)
+```
+
+# Convert cover to Percent
+```{r}
+summary(df$Cov1.3/(300*4))
+```
+
+
 # Find the shrubarea values associated with each quartile, and the mean growth for each of those
 ```{r}
 summary <- summary(sqrt(df$shrubarea3))
+summary
 quart1 <- summary[2]
 quart3 <- summary[5]
 median <- summary[3]
@@ -387,6 +456,13 @@ print(paste("fit_min_log = ", fit_min))
 print(paste("fit_max_log = ", fit_max))
 print(paste("fit_mean_log = ", fit_mean))
 ```
+
+## Repeat for 60% shrub cover and 86 cm ht similar to what's in COllins and ROller
+```{r}
+collins_shrubarea <- sqrt((.6*1200)*86)
+effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart1)),]$fit
+```
+
 
 ```{r}
 

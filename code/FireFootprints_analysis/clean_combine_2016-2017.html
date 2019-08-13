@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Carmen" />
@@ -159,18 +160,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -208,7 +197,7 @@ $(document).ready(function () {
 <li><a href="#correct-species-names">Correct species names</a></li>
 <li><a href="#sync-fire-and-fire-patch">Sync fire and fire patch</a></li>
 <li><a href="#rename-date-and-datasheet-columns">Rename date and datasheet columns</a></li>
-<li><a href="#rename-basal-diameter-and-height-columns">Rename basal diameter and height columns</a></li>
+<li><a href="#rename-basal-diametercolumns">Rename basal diametercolumns</a></li>
 <li><a href="#reorder-columns">Reorder columns</a></li>
 </ul></li>
 <li><a href="#find-missing-seedlings-from-2017-data">Find missing seedlings from 2017 data</a><ul>
@@ -218,9 +207,6 @@ $(document).ready(function () {
 <li><a href="#create-shrubarea-variables-for-each-distance-from-the-seedling">Create shrubarea variables for each distance from the seedling</a><ul>
 <li><a href="#fix-na-shrubarea">Fix NA shrubarea</a></li>
 </ul></li>
-<li><a href="#add-soil-data">Add soil data</a><ul>
-<li><a href="#add-soil-orders-and-soborders">Add soil orders and soborders</a></li>
-</ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
@@ -228,13 +214,15 @@ $(document).ready(function () {
 <div id="read-in-2017-data" class="section level1">
 <h1>Read in 2017 data</h1>
 <pre class="r"><code>setwd(&quot;~/../Dropbox (Stephens Lab)/SORTIE/FireFootprints_2017/data/compiled/&quot;)
-df17 &lt;- read_excel(&quot;Shrubs_Summer17_Compiled_Sep14.xlsx&quot;)</code></pre>
+df17 &lt;- read_excel(&quot;Shrubs_Summer17_Compiled_Sep14.xlsx&quot;) %&gt;% 
+  rename(Ht2017.cm = Ht_cm)</code></pre>
 </div>
 <div id="read-in-2016-data" class="section level1">
 <h1>Read in 2016 data</h1>
 <pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/compiled_data/fire_footprints/&quot;)
 load(&quot;master_data_2016.Rdata&quot;)
-df16 &lt;- df
+df16 &lt;- df %&gt;% 
+  rename(Ht16_meas2016.cm = Ht.cm)
 remove(df)</code></pre>
 </div>
 <div id="combine" class="section level1">
@@ -252,20 +240,21 @@ remove(df)</code></pre>
 <h2>Check for different species</h2>
 <pre class="r"><code>df %&gt;% 
   filter(Species.x != Species.y)</code></pre>
-<pre><code>## # A tibble: 1 x 48
-##   Sdlg  Fire.x FirePatch.x Elevation Species.x Slope.Deg Aspect.deg Ht.cm
-##   &lt;chr&gt; &lt;fct&gt;  &lt;fct&gt;           &lt;int&gt; &lt;fct&gt;         &lt;int&gt;      &lt;int&gt; &lt;dbl&gt;
-## 1 132   FRDS   FRDS-N           1805 PIPO             16        345   220
-## # ... with 40 more variables: BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
-## #   Light_File &lt;chr&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
-## #   ImmedAboveHt.cm &lt;int&gt;, ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;,
-## #   ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;,
-## #   Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;, Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;,
-## #   Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;, ref &lt;dbl&gt;, Years &lt;dbl&gt;,
-## #   Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;, Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;,
-## #   Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;, Species.y &lt;chr&gt;, Map &lt;chr&gt;,
-## #   Status &lt;chr&gt;, Ht_cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;,
-## #   Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, notes &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 1 x 49
+##   Sdlg  Fire.x FirePatch.x Elevation Species.x Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;fct&gt;  &lt;fct&gt;           &lt;int&gt; &lt;fct&gt;         &lt;int&gt;      &lt;int&gt;
+## 1 132   FRDS   FRDS-N           1805 PIPO             16        345
+## # ... with 42 more variables: Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;,
+## #   LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;,
+## #   ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;,
+## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
+## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
+## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
+## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
+## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
+## #   Species.y &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;,
+## #   Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
+## #   Growth_15 &lt;chr&gt;, notes &lt;chr&gt;</code></pre>
 </div>
 <div id="go-with-2017-species-when-its-listed-since-one-trees-species-was-corrected" class="section level2">
 <h2>Go with 2017 species when it’s listed since one tree’s species was corrected</h2>
@@ -276,23 +265,24 @@ remove(df)</code></pre>
 <div id="correct-species-names" class="section level2">
 <h2>Correct species names</h2>
 <pre class="r"><code>summary(as.factor(df$Species))</code></pre>
-<pre><code>##    1    4 ABCO PILA PIPO PSME 
-##    1    6  126   19   88   10</code></pre>
+<pre><code>##    1    3    4 ABCO PILA PIPO PSME 
+##    2    1    6  124   18   89   10</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(Species == 2)</code></pre>
-<pre><code>## # A tibble: 0 x 47
-## # ... with 47 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
-## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;, Ht.cm &lt;dbl&gt;,
-## #   BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;chr&gt;,
-## #   DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;,
-## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
-## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
+<pre><code>## # A tibble: 0 x 48
+## # ... with 48 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
+## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;,
+## #   Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
+## #   ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;,
+## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;,
+## #   Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
 ## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
 ## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
 ## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
-## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht_cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;,
-## #   Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, notes &lt;chr&gt;,
-## #   Species &lt;chr&gt;</code></pre>
+## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;,
+## #   Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;,
+## #   notes &lt;chr&gt;, Species &lt;chr&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Species = ifelse(Sdlg %in% c(20:23), &quot;PIPO&quot;, Species))</code></pre>
 </div>
@@ -300,19 +290,20 @@ remove(df)</code></pre>
 <h2>Sync fire and fire patch</h2>
 <pre class="r"><code>df %&gt;% 
   filter(FirePatch.x != FirePatch.y)</code></pre>
-<pre><code>## # A tibble: 0 x 47
-## # ... with 47 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
-## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;, Ht.cm &lt;dbl&gt;,
-## #   BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;chr&gt;,
-## #   DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;,
-## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
-## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
+<pre><code>## # A tibble: 0 x 48
+## # ... with 48 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
+## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;,
+## #   Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
+## #   ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;,
+## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;,
+## #   Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
 ## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
 ## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
 ## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
-## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht_cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;,
-## #   Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, notes &lt;chr&gt;,
-## #   Species &lt;chr&gt;</code></pre>
+## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;,
+## #   Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;,
+## #   notes &lt;chr&gt;, Species &lt;chr&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   rename(FirePatch = FirePatch.x) %&gt;% 
   select(-FirePatch.y)
@@ -327,19 +318,17 @@ df &lt;- df %&gt;%
   select(-Date.y) %&gt;% 
   rename(DataSheet2017 = DataSheet)</code></pre>
 </div>
-<div id="rename-basal-diameter-and-height-columns" class="section level2">
-<h2>Rename basal diameter and height columns</h2>
+<div id="rename-basal-diametercolumns" class="section level2">
+<h2>Rename basal diametercolumns</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  rename( BasDia2016.cm = BasDia.cm) %&gt;% 
+  rename(BasDia2016.cm = BasDia.cm) %&gt;% 
   rename(BasDia2017.mm.1 = Dia_1_mm) %&gt;% 
-  rename(BasDia2017.mm.2 = Dia_2_mm ) %&gt;% 
-  rename(Ht2016.cm = Ht.cm) %&gt;% 
-  rename(Ht2017.cm = Ht_cm)</code></pre>
+  rename(BasDia2017.mm.2 = Dia_2_mm ) </code></pre>
 </div>
 <div id="reorder-columns" class="section level2">
 <h2>Reorder columns</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  select(Sdlg, Species, Fire, FirePatch, Ht2016.cm, Ht2017.cm, everything())</code></pre>
+  select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())</code></pre>
 </div>
 </div>
 <div id="find-missing-seedlings-from-2017-data" class="section level1">
@@ -347,7 +336,7 @@ df &lt;- df %&gt;%
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Ht2017.cm) &amp; is.na(Status)) %&gt;% 
   select(Sdlg, Status, FirePatch, DataSheet2017, notes)</code></pre>
-<pre><code>## # A tibble: 17 x 5
+<pre><code>## # A tibble: 19 x 5
 ##    Sdlg  Status FirePatch  DataSheet2017                              notes
 ##    &lt;chr&gt; &lt;chr&gt;  &lt;fct&gt;      &lt;chr&gt;                                      &lt;chr&gt;
 ##  1 19    &lt;NA&gt;   CLVD-SW    &lt;NA&gt;                                       &lt;NA&gt; 
@@ -366,7 +355,9 @@ df &lt;- df %&gt;%
 ## 14 107   &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
 ## 15 137   &lt;NA&gt;   PLKN-MID W &lt;NA&gt;                                       &lt;NA&gt; 
 ## 16 139   &lt;NA&gt;   PLKN-W     &lt;NA&gt;                                       &lt;NA&gt; 
-## 17 229   &lt;NA&gt;   AMCR-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt;</code></pre>
+## 17 229   &lt;NA&gt;   AMCR-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+## 18 125F  &lt;NA&gt;   FRDS-N     &lt;NA&gt;                                       &lt;NA&gt; 
+## 19 125W  &lt;NA&gt;   WRTS-1     &lt;NA&gt;                                       &lt;NA&gt;</code></pre>
 <div id="record-why-things-were-left-out" class="section level2">
 <h2>Record why things were left out</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
@@ -380,9 +371,11 @@ df &lt;- df %&gt;%
   filter(!Status %in% c(&quot;exclude, under oak&quot;, &quot;exclude, lone in patch&quot;))
 summary(as.factor(df$Status))</code></pre>
 <pre><code>##          alive could not find           dead           done           DONE 
-##             23              2              9             27            156 
+##             24              2              9             27            153 
 ##          eaten      herbicide     herbicided      not found         unsure 
-##              1              3              6             17              1</code></pre>
+##              1              3              6             17              1 
+##           NA's 
+##              2</code></pre>
 </div>
 </div>
 <div id="create-shrubarea-variables-for-each-distance-from-the-seedling" class="section level1">
@@ -394,133 +387,6 @@ summary(as.factor(df$Status))</code></pre>
 <div id="fix-na-shrubarea" class="section level3">
 <h3>Fix NA shrubarea</h3>
 <pre class="r"><code>df &lt;- df %&gt;% filter(!(is.na(shrubarea2) &amp; Sdlg == &quot;17&quot;))</code></pre>
-</div>
-</div>
-<div id="add-soil-data" class="section level1">
-<h1>Add soil data</h1>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-NW&quot;, &quot;McCarthy&quot;, 0)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-3&quot;, &quot;Hurlbut&quot;, soil_type_dom)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;AMCR-NE&quot;, &quot;Smokey&quot;, soil_type_dom)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;STAR-NW&quot;, &quot;McCarthy&quot;, soil_type_dom)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;STAR-S&quot;, &quot;Ahart&quot;, soil_type_dom)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;CLVD-N&quot;, &quot;Jocal&quot;, soil_type_dom)) %&gt;% 
-  mutate(soil_type_dom = ifelse(FirePatch == &quot;CLVD-SE&quot;, &quot;Holland&quot;, soil_type_dom)) 
-  
-df &lt;- df %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-NW&quot;, &quot;SMG&quot;, 0)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-3&quot;, &quot;HUG&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;AMCR-NE&quot;, &quot;SMG&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;STAR-NW&quot;, &quot;MCG&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;STAR-S&quot;, &quot;ACF&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;CLVD-N&quot;, &quot;153&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;CLVD-SE&quot;, &quot;149&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(123, 124, 122), &quot;128&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(!(Sdlg %in% c(123, 124, 122)) &amp; FirePatch == &quot;WRTS-1&quot;, &quot;222&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(177, 178), &quot;PVG&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(175, 176), &quot;PTE&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 215, 216:219, 214, 221, 220, 222:225), &quot;HUG&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(103, 100, 101, 102, 98, 99, 97, 226), &quot;MCE&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(82:84, 104:107, 88, 85:97, 81, 90, 91:93, 94, 78, 79, 105, 80, 76, 95, 96, 73:75, 77, 76), &quot;MCE&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(20:25), &quot;149&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(131:132, 130, 129, 125), &quot;149&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(Sdlg %in% c(128, 127, 133:134), &quot;193&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;FRDS-mid&quot; | Sdlg %in% c(26, 27), &quot;108&quot;, soil_series)) %&gt;% 
-  mutate(soil_series = ifelse(FirePatch == &quot;FRDS-SE&quot;, &quot;108&quot;, soil_series))
-  
-
-  
-summary(as.factor(df$soil_type_dom))</code></pre>
-<pre><code>##        0    Ahart  Holland  Hurlbut    Jocal McCarthy   Smokey 
-##      117       13        3       15       26       39       32</code></pre>
-<pre class="r"><code>df %&gt;% 
-  group_by(FirePatch, soil_series) %&gt;% 
-  summarize(n())</code></pre>
-<pre><code>## # A tibble: 20 x 3
-## # Groups:   FirePatch [15]
-##    FirePatch soil_series `n()`
-##    &lt;fct&gt;     &lt;chr&gt;       &lt;int&gt;
-##  1 AMCR-2    HUG            24
-##  2 AMCR-2    MCE            34
-##  3 AMCR-3    HUG            15
-##  4 AMCR-NE   SMG            32
-##  5 AMCR-NW   SMG            25
-##  6 CLVD-N    153            26
-##  7 CLVD-SE   149             3
-##  8 FRDS-A    108             2
-##  9 FRDS-JB   149             4
-## 10 FRDS-mid  108             9
-## 11 FRDS-N    0               2
-## 12 FRDS-N    149             4
-## 13 FRDS-N    193             3
-## 14 FRDS-SE   108            17
-## 15 STAR-mid  PTE             1
-## 16 STAR-mid  PVG             2
-## 17 STAR-NW   MCG            14
-## 18 STAR-S    ACF            13
-## 19 WRTS-1    128             3
-## 20 WRTS-1    222            12</code></pre>
-<pre class="r"><code>df %&gt;% 
-  filter(Fire == &quot;FRDS&quot; &amp; soil_series == 0) %&gt;% 
-  select(Sdlg)</code></pre>
-<pre><code>## # A tibble: 2 x 1
-##   Sdlg 
-##   &lt;chr&gt;
-## 1 126  
-## 2 125f</code></pre>
-<div id="add-soil-orders-and-soborders" class="section level2">
-<h2>Add soil orders and soborders</h2>
-<p>sources: - NRCS. 2019. Web Soil Survey, USDA Natural Resources Conservation Service. <a href="http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx" class="uri">http://websoilsurvey.sc.egov.usda.gov/App/WebSoilSurvey.aspx</a>. - <a href="https://soilseries.sc.egov.usda.gov/osdname.aspx" class="uri">https://soilseries.sc.egov.usda.gov/osdname.aspx</a> - <a href="https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf" class="uri">https://www.nrcs.usda.gov/Internet/FSE_DOCUMENTS/nrcs142p2_051232.pdf</a></p>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(soil_order = ifelse(soil_series == &quot;HUG&quot;, &quot;Inceptisol&quot;, 0)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;HUG&quot;, &quot;Xerept&quot;, 0)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series %in% c(&quot;MCE&quot;, &quot;MCG&quot;), &quot;Andisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series %in% c(&quot;MCE&quot;, &quot;MCG&quot;), &quot;Xerand&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;HUG&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;HUG&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;153&quot;, &quot;Ultisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;153&quot;, &quot;Xerult&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;149&quot;, &quot;Alfisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;149&quot;, &quot;Xeralf&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;108&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;108&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;SMG&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;SMG&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;222&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;222&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;128&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;128&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;193&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;193&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;PTE&quot;, &quot;Inceptisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;PTE&quot;, &quot;Xerept&quot;, soil_suborder)) %&gt;% 
-  
-  mutate(soil_order = ifelse(soil_series == &quot;ACF&quot;, &quot;Andisol&quot;, soil_order)) %&gt;% 
-  mutate(soil_suborder = ifelse(soil_series == &quot;ACF&quot;, &quot;Xerand&quot;, soil_suborder))
-  
-df %&gt;% 
-  group_by(soil_order, soil_suborder) %&gt;% 
-  arrange(soil_order) %&gt;% 
-  summarize(n())</code></pre>
-<pre><code>## # A tibble: 5 x 3
-## # Groups:   soil_order [5]
-##   soil_order soil_suborder `n()`
-##   &lt;chr&gt;      &lt;chr&gt;         &lt;int&gt;
-## 1 0          0                 4
-## 2 Alfisol    Xeralf           11
-## 3 Andisol    Xerand           61
-## 4 Inceptisol Xerept          143
-## 5 Ultisol    Xerult           26</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">
@@ -546,6 +412,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

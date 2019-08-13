@@ -39,6 +39,8 @@ dfp <- df %>% filter(SPECIES == "PIPO")
 ymax <- 15
 ```
 
+
+
 #  _
 # ABCO SIMULATIONS
 
@@ -189,6 +191,15 @@ ggplot()+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
+  geom_vline(aes(xintercept = exp(-2.268595)), col = "dark orange")+
+  geom_text(aes(x= exp(-2.268595), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="dark orange", angle=90, size = 3) +
+  
+  geom_vline(aes(xintercept = exp(-1.68245)), col = "dark red")+
+  geom_text(aes(x= exp(-1.68245), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="dark red", angle=90, size = 3) +
+  
+  geom_vline(aes(xintercept = exp(-1.97947)), col = "red")+
+  geom_text(aes(x= exp(-1.97947), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
+  
   xlim(0.03, .25)+
   ylim(0, ymax)+
    theme(text = element_text(size = 11),
@@ -196,8 +207,48 @@ ggplot()+
         panel.grid.major = element_blank())+
   #ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+    ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
-   ylab("Annual % mortality probability")
+  ylab("Annual % mortality probability")
 ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 4, width = 5)
+```
+
+
+# Calculate the min and max and median mortality probability captured by the fire footprint growth data
+
+
+## Create a function for calculating mort probability
+```{r}
+calc_prob_mort <- function(log_growth){
+  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
+  return(prob_3_yrs/3)
+}
+```
+
+### CHeck it
+```{r}
+test_log_growth <- head(dfgraph)[1,1]
+test_log_growth
+calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
+calc_prob_mort(log(.05))
+```
+
+
+```{r}
+prob_median <-calc_prob_mort(-1.97947)
+prob_mean <-calc_prob_mort( -1.97947)
+
+prob_median
+prob_mean
+```
+
+## Repeat for min and max
+```{r}
+prob_min <- calc_prob_mort(-2.268595)
+prob_max <- calc_prob_mort(-1.68245)
+
+prob_min
+prob_max
+
+(prob_max-prob_min)/prob_min
 ```
 
 
@@ -329,12 +380,12 @@ summary(dfgraph_upper$prob)
 ### Adjust probabilities to be yearly, since I found dead trees from 3 years 
 ```{r}
 head(dfgraph)
-dfgraph <- dfgraph %>% 
+dfgraph <- dfgraph %>%
   mutate(prob = prob/3)
 head(dfgraph_lower)
-dfgraph_lower <- dfgraph_lower %>% 
+dfgraph_lower <- dfgraph_lower %>%
   mutate(prob = prob/3)
-dfgraph_upper <- dfgraph_upper %>% 
+dfgraph_upper <- dfgraph_upper %>%
   mutate(prob = prob/3)
 ```
 
@@ -346,40 +397,71 @@ ggplot()+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
-  xlim(0.03, .25)+
-  ylim(0, ymax)+
+  xlim(0.03, .3)+
+  ylim(0, 5)+
   ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
-  theme(text = element_text(size = 11),
-        panel.grid.major = element_blank())+
-  geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
-  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
-  geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
-  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
-  geom_vline(aes(xintercept = exp(-2.01617893)), col = "red")+
-   #ggtitle("Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
-  geom_text(aes(x= exp(-2.01617893), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) 
+  theme(#panel.grid.major = element_blank(),
+        text = element_text(size = 11))+
+  
+  geom_vline(aes(xintercept = exp(-1.307347)), col = "dark orange")+
+  geom_text(aes(x= exp(-1.307347), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="dark orange", angle=90, size = 3) +
+  
+  geom_vline(aes(xintercept = exp(-2.325)), col = "dark red")+
+  geom_text(aes(x= exp(-2.325), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="dark red", angle=90, size = 3) +
+  
+  geom_vline(aes(xintercept = exp( -1.8263763)), col = "red")+
+  geom_text(aes(x= exp( -1.8263763), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) 
  
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
 
 # Calculate the range of mortality probabilities captured by the fire footprint growth data
+
+## Create a function for calculating mort probability
 ```{r}
-prob_min <- exp(mean_coef_int + mean_coef_gr*(-1.70428)/(1+exp(mean_coef_int + mean_coef_gr*(-1.70428))))
-prob_max <- exp(mean_coef_int + mean_coef_gr*(-2.5877)/(1+exp(mean_coef_int + mean_coef_gr*(-2.5877))))
+calc_prob_mort <- function(log_growth){
+  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
+  return(prob_3_yrs/3)
+}
+```
+
+### Check it
+```{r}
+test_log_growth <- head(dfgraph)[1,1]
+test_log_growth
+calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
+```
+
+
+```{r}
+prob_min <- calc_prob_mort(-1.307347)
+prob_max <- calc_prob_mort(-2.302585)  
+
+prob_mean <- calc_prob_mort(-1.99224995391199)
+
 prob_min
 prob_max
+prob_mean
 prob_min-prob_max
 (prob_max-prob_min)/prob_min
 ```
 
 ```{r}
-prob_median <- exp(mean_coef_int + mean_coef_gr*(-1.955775)/(1+exp(mean_coef_int + mean_coef_gr*(-1.955775))))
-prob_quart1 <- exp(mean_coef_int + mean_coef_gr*(-1.8115886)/(1+exp(mean_coef_int + mean_coef_gr*(-1.8115886))))
-prob_quart3 <- exp(mean_coef_int + mean_coef_gr*(-2.10016998)/(1+exp(mean_coef_int + mean_coef_gr*(-2.10016998))))
+prob_median <-calc_prob_mort(-1.955775)
+prob_quart1 <- calc_prob_mort(-1.8115886)
+prob_quart3 <- calc_prob_mort(-2.10016998)
 prob_median
 prob_quart1
 prob_quart3
 prob_median - prob_quart1
 (prob_quart3 - prob_median)/prob_median
 ```
+
+test
+```{r}
+log(.05)
+prob_test <- calc_prob_mort(log(.05))
+prob_test
+```
+

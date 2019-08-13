@@ -117,23 +117,22 @@ normalize <- function(x) {
 xdf <- xdf %>% mutate_if(is.numeric, normalize)
 ```
 
+## Apply VSURF to vertical growth
+```{r}
+vsurf <- VSURF(x = xdf,
+               y = df$VertGrowth_Rel,
+               na.action = na.omit,
+               parallel = T)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
 
-<!-- ## Apply VSURF to vertical growth -->
-<!-- ```{r} -->
-<!-- vsurf <- VSURF(x = xdf, -->
-<!--                y = df$VertGrowth_Rel, -->
-<!--                na.action = na.omit, -->
-<!--                parallel = T) -->
-<!-- summary(vsurf) -->
-<!-- vsurf$varselect.pred -->
-<!-- xdf[vsurf$varselect.pred] -->
-<!-- ``` -->
-
-<!-- ## Save the results -->
-<!-- ```{r} -->
-<!-- vars <- names(xdf[vsurf$varselect.pred]) -->
-<!-- vars -->
-<!-- ``` -->
+## Save the results
+```{r}
+vars <- names(xdf[vsurf$varselect.pred])
+vars
+```
 
 ## Look at final random forest
 ```{r}
@@ -159,30 +158,18 @@ LMdf <- df %>%
 LMdf <- droplevels(LMdf)
 ```
 
-## See whether model with shrubarea3 or sqrt_shrubarea3 is better
-```{r}
-AIC(lme(VertGrowth_Rel ~  heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + shrubarea3 + Year,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
-
-AIC(lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML"))
-
-AIC(lme(VertGrowth_Rel ~ heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + log_shrubarea3 + Year,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-)
-```
-
-Use sqrt since that's what I used with pipo.
-
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
-           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+           Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 with <- lme(VertGrowth_Rel ~  
-           heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm * sqrt_shrubarea3 + Year,
+           sqrt_shrubarea3*Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+
+AIC(with)
+AIC(without)
 anova(with, without)
 ```
 
@@ -191,7 +178,7 @@ No difference, so I'll leave out the interaction
 ## Re-establish best model
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+            Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
 
@@ -200,11 +187,11 @@ LM <-  lme(VertGrowth_Rel ~
 vif(LM)
 ```
 
-A VIF cutoff value of 5 is often used, and heatload has a GVIF off 11.8, so I took it out and ran the model again. 
+### A VIF cutoff value of 5 is often used, and heatload has a GVIF off 11.8, so take it out and run the model again:
 
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
-            Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3 + Year,
+          Ht_cm1 + Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 vif(LM)
 summary(LM)
@@ -262,6 +249,57 @@ hist(effects_df$sqrt_shrubarea3)
 hist(sqrt(df$shrubarea3))
 ```
 
+
+# Summarize range of shrub cover and height
+```{r}
+summary(df$Cov1.3)
+summary(df$Ht1.3)
+summary(df$shrubarea3)
+```
+
+# Convert cover to Percent
+```{r}
+summary(df$Cov1.3/(300*4))
+```
+
+
+# Find the shrubarea values associated with each quartile, and the mean growth for each of those
+```{r}
+summary <- summary(sqrt(df$shrubarea3))
+summary
+quart1 <- summary[2]
+quart3 <- summary[5]
+median <- summary[3]
+min <- summary[1]
+max <- summary[6]
+mean <- mean(sqrt(df$shrubarea3))
+
+fit_quart1 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart1)),]$fit
+fit_quart1
+fit_quart3 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart3)),]$fit
+fit_median <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - median)),]$fit
+
+fit_min <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - min)),]$fit
+fit_max <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - max)),]$fit
+fit_mean <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - mean)),]$fit
+
+print(paste("fit_quart1 = ", exp(fit_quart1)))
+print(paste("fit_quart3 = ", exp(fit_quart3)))
+print(paste("fit_median = ", exp(fit_median)))
+print(paste("fit_mean = ", exp(fit_mean)))
+
+print(paste("fit_min = ", exp(fit_min)))
+print(paste("fit_max = ", exp(fit_max)))
+
+
+print(paste("fit_quart1_log = ", fit_quart1))
+print(paste("fit_quart3_log = ", fit_quart3))
+print(paste("fit_median_log = ", fit_median))
+print(paste("fit_min_log = ", fit_min))
+print(paste("fit_max_log = ", fit_max))
+print(paste("fit_mean_log = ", fit_mean))
+```
+
 ## Plot effects of shrubarea
 ```{r}
 ggplot(effects_df)+
@@ -276,9 +314,10 @@ ggplot(effects_df)+
  # ggtitle("Fir growth in relation to shrub environment within 2 m")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
   ylim(c(0.04,0.3))+
-  theme(text = element_text(size = 11),
-      #panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank())
+  theme(
+    #panel.grid.minor = element_blank(),
+    #panel.grid.major = element_blank(),
+    text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
 

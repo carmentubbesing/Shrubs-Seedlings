@@ -852,12 +852,13 @@ ggplot(data = dfatest, aes(x = Year, y = mean_gr_year))+
   geom_errorbar(aes(x = Year,ymin = min, ymax = max), width = .2, col = "gray")+
   geom_line(aes(x = Year, y = min), col = "red", linetype = "dashed")+
   geom_line(aes(x = Year, y = max), col = "red", linetype = "dashed")+
-  ggtitle("Dead ABCO detrended means +/- 2 SE")+
+  #ggtitle("Dead ABCO detrended means +/- 2 SE")+
   ylab("Mean detrended ring widths") +
   scale_x_continuous(breaks = seq(min(dfa$Year), max(dfa$Year), by = 1))+
   theme_bw()+
-  theme(panel.grid.minor = element_blank())
-ggsave("../../results/figures/GrowthMortality/dead_chron_abco.jpg", width = 5, height = 5)
+  theme(panel.grid.minor = element_blank(),
+        text = element_text(size = 11))
+ggsave("../../results/figures/GrowthMortality/dead_chron_abco.jpg", width = 3.5, height = 3.5)
 ```
 
 # Check the shape of 2015 trees since I didn't have many to base the physical critera on
