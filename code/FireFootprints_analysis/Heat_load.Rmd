@@ -85,7 +85,7 @@ elv(265, 1684)
 ```{r}
 elv_est <- df %>% 
   filter(Sdlg %in% c(220, 221, 223, 224, 226)) %>% 
-  select(Sdlg, FirePatch, Elevation) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation) %>% 
   distinct() %>% 
   summarize(mean(Elevation))
 elv_est <- unlist(elv_est)
@@ -98,7 +98,7 @@ elv(225, elv_est)
 ```{r}
 elv_est <- df %>% 
   filter(Sdlg %in% c(254, 256)) %>% 
-  select(Sdlg, FirePatch, Elevation) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation) %>% 
   distinct() %>% 
   summarize(mean(Elevation))
 elv_est <- unlist(elv_est)
@@ -108,7 +108,7 @@ elv(255, elv_est)
 
 ### Test
 ```{r}
-df %>% filter(Sdlg %in% c(222, 225, 255)) %>% select(Sdlg, FirePatch, Elevation) %>% distinct()
+df %>% filter(Sdlg %in% c(222, 225, 255)) %>% dplyr::select(Sdlg, FirePatch, Elevation) %>% distinct()
 ```
 
 ## Test for completion
@@ -116,7 +116,7 @@ df %>% filter(Sdlg %in% c(222, 225, 255)) %>% select(Sdlg, FirePatch, Elevation)
 df %>% 
   filter(is.na(Elevation)) %>% 
   arrange(Sdlg) %>% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct()
 ```
 
@@ -125,7 +125,7 @@ df %>%
 df %>% 
   filter(is.na(Aspect.deg)) %>% 
   arrange(Sdlg) %>% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct() 
 ```
 
@@ -154,7 +154,7 @@ asp(9, 34)
 df %>% 
   filter(is.na(Aspect.deg)) %>% 
   arrange(Sdlg) %>% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct() 
 ```
 
@@ -163,7 +163,7 @@ df %>%
 df %>% 
   filter(is.na(Slope.Deg)) %>% 
   arrange(Sdlg) %>% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct()
 ```
 
@@ -192,7 +192,7 @@ slp(9, 15)
 df %>% 
   filter(is.na(Slope.Deg)) %>% 
   arrange(Sdlg) %>% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %>% 
   distinct()
 ```
 
@@ -206,9 +206,9 @@ table_all <- data.frame()
 for(i in 1:length(files)){
   table <- read.csv(files[i])
   if("X" %in% names(table)){
-    table <- table %>% select(X, Y, Name)  
+    table <- table %>% dplyr::select(X, Y, Name)  
   } else{
-    table <- table %>% select(Title, Latitude, Longitude) %>% 
+    table <- table %>% dplyr::select(Title, Latitude, Longitude) %>% 
       rename(Name = Title, Y = Latitude, X = Longitude)
   }
   table
@@ -333,7 +333,7 @@ long(c("78", 79), "78, 79")
 
 ### Check
 ```{r}
-df %>% filter(Sdlg == 227) %>% select(Sdlg, X, Y, file_lat)
+df %>% filter(Sdlg == 227) %>% dplyr::select(Sdlg, X, Y, file_lat)
 table_n[1:4,]
 ```
 
@@ -343,7 +343,7 @@ table_n[1:4,]
 ```{r}
 df %>% 
   filter(is.na(X)) %>% 
-  select(Sdlg, FirePatch, X, Species) %>% 
+  dplyr::select(Sdlg, FirePatch, X, Species) %>% 
   distinct()
 ```
 
@@ -351,7 +351,7 @@ df %>%
 ```{r}
 df %>% 
   filter(is.na(X)) %>% 
-  select(FirePatch, X, Species) %>% 
+  dplyr::select(FirePatch, X, Species) %>% 
   group_by(FirePatch) %>% 
   summarize(n())
 ```
@@ -393,7 +393,7 @@ latave <- function(sdlg, nearbys){
 ```{r}
 latave(106, c(105, 108))
 latave(107, c(105, 108))
-df %>% filter(Sdlg %in% c(105:109)) %>% select(Sdlg, X, Y) %>% distinct() %>% arrange(Sdlg) %>% print.data.frame 
+df %>% filter(Sdlg %in% c(105:109)) %>% dplyr::select(Sdlg, X, Y) %>% distinct() %>% arrange(Sdlg) %>% print.data.frame 
 ```
 
 #### Apply
@@ -438,7 +438,7 @@ latave(27, c(26))
 ```{r}
 df %>% 
   filter(is.na(Y)) %>% 
-  select(Sdlg, FirePatch, X, Y, Species) %>% 
+  dplyr::select(Sdlg, FirePatch, X, Y, Species) %>% 
   distinct()
 ```
 
@@ -491,7 +491,7 @@ df$heatload <-  0.339 + 0.808*cos(df$Lat.rad)*cos(df$Slope.rad) - 0.196*sin(df$L
 ```{r}
 df %>% 
   filter(Sdlg %in% c("test4030N", "test4030S", "test40flat")) %>% 
-  select(Sdlg, incidrad, heatload)
+  dplyr::select(Sdlg, incidrad, heatload)
 ```
 
 They look good!
@@ -506,7 +506,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(heatload)) %>% 
-  select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)
+  dplyr::select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)
 ```
 
 

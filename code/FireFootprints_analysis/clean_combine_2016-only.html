@@ -250,7 +250,7 @@ names(df)</code></pre>
 df &lt;- left_join(df, DIFNl53, by=c(&quot;Light_File&quot;=&quot;LAI_File&quot;)) %&gt;%
   rename(DIFN.all = DIFN.x) %&gt;%
   rename(DIFN.53 =DIFN.y) %&gt;%
-  select(-SMP, -TransComp, -Model, -Records, -ScattCorr)</code></pre>
+  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)</code></pre>
 <div id="find-which-seedlings-have-difn.all-but-lack-difn.53" class="section level2">
 <h2>Find which seedlings have DIFN.all but lack DIFN.53</h2>
 <pre class="r"><code>fix &lt;- subset(df, !is.na(df$DIFN.all) &amp; is.na(df$DIFN.53))

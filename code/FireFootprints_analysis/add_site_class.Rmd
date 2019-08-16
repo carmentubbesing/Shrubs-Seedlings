@@ -81,14 +81,14 @@ scs(122, 6)
 ```{r}
 df %>% 
   filter(siteclass == 0) %>% 
-  select(FirePatch) %>% 
+  dplyr::select(FirePatch) %>% 
   distinct()
 ```
 
 
 ```{r}
 df %>% 
-  select(Sdlg, FirePatch, siteclass) %>% 
+  dplyr::select(Sdlg, FirePatch, siteclass) %>% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))
 ```
 

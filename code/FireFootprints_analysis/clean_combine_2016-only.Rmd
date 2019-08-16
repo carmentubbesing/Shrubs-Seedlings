@@ -65,7 +65,7 @@ DIFNl53 <- distinct(DIFNl53)
 df <- left_join(df, DIFNl53, by=c("Light_File"="LAI_File")) %>%
   rename(DIFN.all = DIFN.x) %>%
   rename(DIFN.53 =DIFN.y) %>%
-  select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
+  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
 ```
 
 ## Find which seedlings have DIFN.all but lack DIFN.53

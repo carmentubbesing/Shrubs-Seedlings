@@ -254,12 +254,12 @@ scp(&quot;WRTS-1&quot;, 3)
 scs(122, 6)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(siteclass == 0) %&gt;% 
-  select(FirePatch) %&gt;% 
+  dplyr::select(FirePatch) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 0 x 1
 ## # ... with 1 variable: FirePatch &lt;fct&gt;</code></pre>
 <pre class="r"><code>df %&gt;% 
-  select(Sdlg, FirePatch, siteclass) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, siteclass) %&gt;% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))</code></pre>
 <pre><code>## # A tibble: 11 x 3
 ##    Sdlg  FirePatch siteclass

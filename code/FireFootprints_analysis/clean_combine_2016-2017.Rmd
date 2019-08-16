@@ -57,7 +57,7 @@ df %>%
 ```{r}
 df <- df %>% 
   mutate(Species = ifelse(!is.na(Species.y), Species.y, Species.x)) %>% 
-  select(-Species.x, -Species.y)
+  dplyr::select(-Species.x, -Species.y)
 ```
 
 
@@ -76,17 +76,17 @@ df %>%
   filter(FirePatch.x != FirePatch.y)
 df <- df %>% 
   rename(FirePatch = FirePatch.x) %>% 
-  select(-FirePatch.y)
+  dplyr::select(-FirePatch.y)
 df <- df %>% 
   rename(Fire = Fire.x) %>% 
-  select(-Fire.y)
+  dplyr::select(-Fire.y)
 ```
 
 ## Rename date and datasheet columns
 ```{r}
 df <- df %>% 
   rename(Date = Date.x) %>% 
-  select(-Date.y) %>% 
+  dplyr::select(-Date.y) %>% 
   rename(DataSheet2017 = DataSheet)
 ```
 
@@ -101,14 +101,14 @@ df <- df %>%
 ## Reorder columns
 ```{r}
 df <- df %>% 
-  select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())
+  dplyr::select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())
 ```
 
 # Find missing seedlings from 2017 data
 ```{r}
 df %>% 
   filter(is.na(Ht2017.cm) & is.na(Status)) %>% 
-  select(Sdlg, Status, FirePatch, DataSheet2017, notes)
+  dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, notes)
 ```
 
 ## Record why things were left out 

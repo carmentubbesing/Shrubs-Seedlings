@@ -374,7 +374,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   ungroup %&gt;%
   group_by(Seedling., Seg)%&gt;%
   filter(cov == max(cov)) %&gt;%
-  select(Seedling.,Seg,ShrubSpp,cov) %&gt;%
+  dplyr::select(Seedling.,Seg,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE)%&gt;% 
   rename(ShrubSpp01 = ShrubSpp)</code></pre>
 <div id="check-for-correct-of-seedlings-and-correct-errors" class="section level4">
@@ -422,7 +422,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   ungroup %&gt;%
   group_by(Seedling.)%&gt;%
   filter(cov == max(cov)) %&gt;%
-  select(Seedling.,ShrubSpp,cov) %&gt;%
+  dplyr::select(Seedling.,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE)%&gt;% 
   rename(ShrubSpp02 = ShrubSpp)</code></pre>
 <div id="check-for-correct-of-seedlings-and-correct-errors-1" class="section level4">
@@ -437,13 +437,13 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
   ungroup %&gt;%
   group_by(Seedling.)%&gt;%
   filter(cov == max(cov)) %&gt;%
-  select(Seedling.,ShrubSpp,cov) %&gt;%
+  dplyr::select(Seedling.,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE) %&gt;% 
   rename(ShrubSpp03 = ShrubSpp)</code></pre>
 <p>Choose the ones with greater heights: ##### 20</p>
 <pre class="r"><code>shr %&gt;% 
   filter(Seedling. == 20 &amp; ShrubSpp %in% c(&quot;PREM&quot;, &quot;CECO&quot;)) %&gt;% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
   arrange(ShrubSpp)</code></pre>
 <pre><code>## # A tibble: 4 x 4
 ##   Seedling. ShrubSpp Cover.cm Ht.cm
@@ -458,7 +458,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
 <h5>21</h5>
 <pre class="r"><code>shr %&gt;% 
   filter(Seedling. == 21 &amp; ShrubSpp %in% c(&quot;PREM&quot;, &quot;CECO&quot;)) %&gt;% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
   arrange(ShrubSpp)</code></pre>
 <pre><code>## # A tibble: 4 x 4
 ##   Seedling. ShrubSpp Cover.cm Ht.cm
@@ -474,7 +474,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
 <h5>188</h5>
 <pre class="r"><code>shr %&gt;% 
   filter(Seedling. == 188 &amp; ShrubSpp %in% c(&quot;CONU&quot;, &quot;CECO&quot;)) %&gt;% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
   arrange(ShrubSpp) %&gt;% 
   mutate(math = Cover.cm*Ht.cm) %&gt;% 
   group_by(ShrubSpp) %&gt;% 
@@ -491,7 +491,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
 <h5>190</h5>
 <pre class="r"><code>shr %&gt;% 
   filter(Seedling. == 190 &amp; ShrubSpp %in% c(&quot;willow&quot;, &quot;CECO&quot;)) %&gt;% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %&gt;% 
   arrange(ShrubSpp) %&gt;% 
   mutate(math = Cover.cm*Ht.cm) %&gt;% 
   group_by(ShrubSpp) %&gt;% 
@@ -510,19 +510,19 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
 <h2>Combine with df</h2>
 <pre class="r"><code>spp1 &lt;- spp1 %&gt;% 
   ungroup() %&gt;% 
-  select(Seedling., ShrubSpp01)
+  dplyr::select(Seedling., ShrubSpp01)
 df &lt;- left_join(df, spp1, by = c(&quot;Sdlg&quot; =&quot;Seedling.&quot;))</code></pre>
 <pre><code>## Warning: Column `Sdlg`/`Seedling.` joining factors with different levels,
 ## coercing to character vector</code></pre>
 <pre class="r"><code>spp2 &lt;- spp2 %&gt;% 
   ungroup() %&gt;% 
-  select(Seedling., ShrubSpp02)
+  dplyr::select(Seedling., ShrubSpp02)
 df &lt;- left_join(df, spp2, by = c(&quot;Sdlg&quot; =&quot;Seedling.&quot;))</code></pre>
 <pre><code>## Warning: Column `Sdlg`/`Seedling.` joining character vector and factor,
 ## coercing into character vector</code></pre>
 <pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
   ungroup() %&gt;% 
-  select(Seedling., ShrubSpp03)
+  dplyr::select(Seedling., ShrubSpp03)
 df &lt;- left_join(df, spp3, by = c(&quot;Sdlg&quot; =&quot;Seedling.&quot;))</code></pre>
 <pre><code>## Warning: Column `Sdlg`/`Seedling.` joining character vector and factor,
 ## coercing into character vector</code></pre>

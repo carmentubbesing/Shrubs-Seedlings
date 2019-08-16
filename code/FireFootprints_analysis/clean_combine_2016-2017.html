@@ -260,7 +260,7 @@ remove(df)</code></pre>
 <h2>Go with 2017 species when it’s listed since one tree’s species was corrected</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Species = ifelse(!is.na(Species.y), Species.y, Species.x)) %&gt;% 
-  select(-Species.x, -Species.y)</code></pre>
+  dplyr::select(-Species.x, -Species.y)</code></pre>
 </div>
 <div id="correct-species-names" class="section level2">
 <h2>Correct species names</h2>
@@ -306,16 +306,16 @@ remove(df)</code></pre>
 ## #   notes &lt;chr&gt;, Species &lt;chr&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   rename(FirePatch = FirePatch.x) %&gt;% 
-  select(-FirePatch.y)
+  dplyr::select(-FirePatch.y)
 df &lt;- df %&gt;% 
   rename(Fire = Fire.x) %&gt;% 
-  select(-Fire.y)</code></pre>
+  dplyr::select(-Fire.y)</code></pre>
 </div>
 <div id="rename-date-and-datasheet-columns" class="section level2">
 <h2>Rename date and datasheet columns</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
   rename(Date = Date.x) %&gt;% 
-  select(-Date.y) %&gt;% 
+  dplyr::select(-Date.y) %&gt;% 
   rename(DataSheet2017 = DataSheet)</code></pre>
 </div>
 <div id="rename-basal-diametercolumns" class="section level2">
@@ -328,14 +328,14 @@ df &lt;- df %&gt;%
 <div id="reorder-columns" class="section level2">
 <h2>Reorder columns</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())</code></pre>
+  dplyr::select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())</code></pre>
 </div>
 </div>
 <div id="find-missing-seedlings-from-2017-data" class="section level1">
 <h1>Find missing seedlings from 2017 data</h1>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Ht2017.cm) &amp; is.na(Status)) %&gt;% 
-  select(Sdlg, Status, FirePatch, DataSheet2017, notes)</code></pre>
+  dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, notes)</code></pre>
 <pre><code>## # A tibble: 19 x 5
 ##    Sdlg  Status FirePatch  DataSheet2017                              notes
 ##    &lt;chr&gt; &lt;chr&gt;  &lt;fct&gt;      &lt;chr&gt;                                      &lt;chr&gt;

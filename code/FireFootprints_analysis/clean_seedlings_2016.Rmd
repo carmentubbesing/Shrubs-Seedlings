@@ -1,0 +1,352 @@
+---
+title: "Clean 2016 seedling data"
+author: "Carmen"
+date: "May 20, 2019"
+output: 
+    html_document:
+        toc: TRUE
+        toc_depth: 1
+---
+
+```{r, include = F}
+require(readxl)
+require(dplyr)
+require(tidyverse)
+require(lubridate)
+```
+
+# Load data
+```{r}
+sdlt <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv")
+```
+
+# Basic df cleaning
+
+## Rename 2015 height column
+```{r}
+sdlt <- sdlt %>% 
+  dplyr::rename(Ht2015.meas2016 = Ht2015)
+```
+
+## Take out blank columns after making sure they're blank
+```{r}
+names(sdlt)
+summary(sdlt[33:45])
+sdlt <- sdlt[,c(1:32)]
+names(sdlt)
+```
+
+## Take out columns related to CADE or "immediately above" data
+```{r}
+sdlt <- sdlt %>% select(-CADE_Gr_inner, -CADE_Gr_outer, -CADE_dia_at_Gr_cm, -ImmedAboveSpp, -ImmedAboveHt.cm)
+```
+
+
+## Correct typos and create variable for FirePatch
+```{r}
+sdlt <- sdlt %>% 
+  mutate(Fire = as.character(Fire)) %>% 
+  mutate(Species = as.character(Species)) %>% 
+  mutate(Patch = as.character(Patch)) %>% 
+  mutate(Fire = ifelse(Fire == "FRDS", "FRED", Fire)) %>% 
+  mutate(Fire = ifelse(Fire == "AMRC", "AMCR", Fire)) %>% 
+  mutate(Species = ifelse(Species == "pipo", "PIPO", Species)) %>% 
+  mutate(Species = ifelse(Species == "PILA ", "PILA", Species)) %>% 
+  mutate(Patch = ifelse(Patch == "s", "S", Patch)) %>% 
+  mutate(FirePatch = paste(Fire, Patch, sep = "-"))
+```
+
+### Check
+```{r}
+head(sdlt %>% dplyr::select(Seedling., Fire, Species, Patch, FirePatch))
+```
+
+## Take out Seedling 17 because it doesn't have shrub data
+```{r}
+sdlt <- sdlt %>% 
+  filter(Seedling. != "17")
+```
+
+## Take out trees that aren't ABCO or PIPO
+```{r}
+summary(as.factor(sdlt$Species)) 
+sdlt <- sdlt %>% 
+  filter(Species %in% c("ABCO", "PIPO"))
+```
+
+## Make a tbl, rename object, and rename Seedling column
+```{r}
+df <- sdlt
+df <- tbl_df(sdlt)
+df <- rename(df,Sdlg = Seedling.)
+```
+
+# Reshape to include data from both 2016 visits
+
+### Look for trees with 2 different height values
+```{r}
+df %>% 
+  filter(Return==1) %>% 
+  filter(Ht.cm>0)
+```
+
+
+## Create separate columns for dates of visit
+```{r}
+df <- df %>% 
+  mutate(return = as.character(Return))
+df <- spread(df, key=Return, value = Date)
+df <- df %>% 
+  rename(Date1 = `0`, Date2 = `1`) 
+```
+
+## Check
+```{r}
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2) %>% head()
+```
+
+
+## Move over time and personel columns
+
+```{r}
+df <- df %>% 
+  mutate(Time1 = ifelse(is.na(Date2), paste(Closest_Time), "1:00")) %>% 
+  mutate(Time2 = ifelse(is.na(Date1), paste(Closest_Time), "1:00")) %>% 
+  mutate(personel2 = ifelse(is.na(Date1), paste(Personel), 0)) %>% 
+  mutate(personel1 = ifelse(is.na(Date2), paste(Personel), 0))
+           
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Closest_Time, Time1, Time2, Personel, personel1, personel2) %>% head()
+```
+
+
+## Replace NAs in numeric variables with 0s
+
+### Make factors numeric where possible
+```{r}
+df <- df %>% 
+  mutate(Light_File = as.numeric(paste(Light_File)))
+```
+
+
+### Use replace_na function
+```{r}
+df <- df %>% 
+  replace_na(list(Ht.cm=0, 
+                  Nearby_Easting = 0, 
+                  Nearby_Northing = 0, 
+                  Slope.Deg = 0, 
+                  Aspect.deg = 0, 
+                  BasDia.cm =0, 
+                  LastYearGrth.cm=0, 
+                  HTLCB=0, 
+                  Dia2016=0, 
+                  Dia2015=0, 
+                  Ht2015=0, 
+                  Light_File=0,
+                  DIFN = 0))
+```
+
+## Replace NA dates with a dummy date
+```{r}
+df <- df %>% 
+  mutate(Date1 = ifelse(is.na(Date1), "9/9/9999", paste(Date1))) %>% 
+  mutate(Date2 = ifelse(is.na(Date2), "9/9/9999", paste(Date2))) 
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+```
+
+## Clean up time columns
+```{r}
+df <- df %>% 
+  mutate(Time1 = ifelse(Time1 == "", "1:00", Time1)) %>% 
+  mutate(Time1 = ifelse(Time1 == "1/7/1900 7:00", "1:00", Time1)) %>% 
+  mutate(Time1 = ifelse(Time1 == "0.291666667", "1:00", Time1))
+df$Time1  
+```
+
+
+## Make date columns into date format and time column into time format
+```{r}
+df <- df %>% 
+  mutate(Date1 = mdy(Date1), Date2 = mdy(Date2)) %>% 
+  mutate(Time1 = hm(Time1), Time2 = hm(Time2)) 
+df <- df %>%   mutate(Time1 = hms::hms(Time1), Time2 = hms::hms(Time2)) 
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+```
+
+
+## Use the real date and time for seedlings with dummy date and time
+
+### Date
+```{r}
+nrow(df)
+df <- df %>% 
+  group_by(Sdlg) %>% 
+  mutate(Date1 = min(Date1)) %>% 
+  mutate(Date2 = min(Date2)) 
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+
+```
+
+### Time1
+```{r}
+max1 <- df %>% 
+  filter(Time1 == max(as.numeric(Time1))) %>% 
+  dplyr::select(Sdlg, Time1) %>% 
+  rename(Time1_final = Time1)
+
+
+df <- left_join(df, max1) %>% 
+  select(-Time1) %>% 
+  rename(Time1 = Time1_final)
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+
+nrow(df)
+```
+
+### Time2
+```{r}
+max2 <- df %>% 
+  filter(Time2 == max(as.numeric(Time2))) %>% 
+  dplyr::select(Sdlg, Time2) %>% 
+  rename(Time2_final = Time2)
+
+df <- left_join(df, max2) %>% 
+  select(-Time2) %>% 
+  rename(Time2 = Time2_final)
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+
+df %>% 
+  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% tail()
+
+nrow(df)
+```
+
+### Delete original time column
+```{r}
+df <- df %>% 
+  select(-Closest_Time)
+```
+
+
+## Merge elevation, lat/long data, photo y/n, slope, etc. by taking the average or max
+
+```{r}
+df <- df %>% 
+  group_by(Sdlg, FirePatch) %>% 
+  mutate(Elevation = mean(Elevation))
+
+df <- df %>% 
+  group_by(Sdlg) %>% 
+  mutate(Nearby_Easting = max(Nearby_Easting)) %>% 
+  mutate(Nearby_Northing = max(Nearby_Northing)) 
+```
+
+
+```{r}
+df <- df %>% 
+  group_by(Sdlg) %>% 
+  mutate(Slope.Deg = max(Slope.Deg)) %>% 
+  mutate(Aspect.deg = max(Aspect.deg)) %>% 
+  mutate(BasDia.cm = max(BasDia.cm)) %>% 
+  mutate(LastYearGrth.cm = max(LastYearGrth.cm)) %>% 
+  mutate(HTLCB = max(HTLCB)) %>% 
+  mutate(Dia2016 = max(Dia2016)) %>% 
+  mutate(Dia2015 = max(Dia2015)) %>% 
+  mutate(Ht2015.meas2016 = max(Ht2015.meas2016)) %>% 
+  mutate(Light_File = max(Light_File)) %>% 
+  mutate(Ht.cm = max(Ht.cm)) %>% 
+  mutate(DIFN = max(DIFN))
+```
+
+## Move personel info to individual columns
+```{r}
+df %>% 
+  ungroup() %>% 
+  filter(Sdlg %in% unlist(df[df$return==1,"Sdlg"]) ) %>% 
+  dplyr::select(Personel, personel1, personel2) %>% 
+  select(personel1) %>% distinct()
+
+df %>% 
+  ungroup() %>% 
+  filter(Sdlg %in% unlist(df[df$return==1,"Sdlg"]) ) %>% 
+  dplyr::select(Personel, personel1, personel2) %>% 
+  select(personel2) %>% distinct()
+
+
+df <- df %>% 
+  mutate(personel2 = ifelse(Sdlg %in% unlist(df[df$return==1,"Sdlg"]), "VF HH", personel2)) %>% 
+  select(-Personel)
+```
+
+
+```{r}
+df %>% 
+  summarize(any(Photo.=="y"))
+
+df <- df %>% 
+  mutate(Photo. = as.character(Photo.)) %>% 
+  mutate(Photo = ifelse(any(Photo. %in% c("y", "yes")), "1", "0")) %>% 
+  dplyr::select(-Photo.)
+```
+
+## Check for remaining columns that don't have data synced between the two visits
+```{r}
+df_reps <- df %>% 
+  filter(Sdlg %in% unlist(df[df$return==1,"Sdlg"]) ) 
+```
+
+### Check which columns aren't the same for each seedling
+```{r}
+boo <- (function(x) x[sapply(x, nrow)>0])(lapply(lapply(df_reps, function(x) tapply(x, df_reps$Sdlg, function(x) x[1]!=x[2])), function(x) subset(df_reps, Sdlg %in% names(which(x)))))
+print(boo)
+```
+
+## Sync notes columns
+```{r}
+df %>% 
+  select(Sdlg, personel1, personel2, return, Note1, Note2) %>% 
+  filter(!(Note1=="" & Note2=="")) %>% 
+  filter(Sdlg %in% unlist(df[df$return==1,"Sdlg"]))
+```
+
+```{r}
+df <- df %>% 
+  mutate(Note2 = as.character(paste(Note2))) %>% 
+  mutate(Note1 = as.character(paste(Note1))) %>% 
+  mutate(Note2 = ifelse(Sdlg == 6, "right under log", Note2)) %>% 
+  mutate(Note2 = ifelse(Sdlg == 7, "oak greater than 3m tall right above it", Note2)) %>% 
+  mutate(Note1 = ifelse(Sdlg == 15, "broken top", Note1)) %>% 
+  mutate(Note2 = ifelse(Sdlg == 26, " combine with other seedling 26 row", Note2)) %>% 
+  mutate(Note2 = ifelse(Sdlg == 27, " combine with other seedling 27 row", Note2)) 
+```
+
+## NOW I can finally delete rows that have return == 1
+```{r}
+nrow(df)
+df <- df %>% 
+  filter(return != 1)
+```
+
+### Check for duplicate seedling names - this should be TRUE
+```{r}
+nrow(df) == length(unique(df$Sdlg))
+```
+
+# Save data
+```{r}
+save(df, file = "../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
+```
+

@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Carmen" />
@@ -159,18 +160,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -216,15 +205,16 @@ rmarkdown::render(&quot;add_site_class.Rmd&quot;, &quot;html_document&quot;, qui
 rmarkdown::render(&quot;Heat_load.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Clean_vert_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -20.25406 secs</code></pre>
+<pre><code>## Time difference of -16.70588 secs</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
 <pre class="r"><code>strt &lt;- Sys.time()
+#rmarkdown::render(&quot;DIFN_analysis.Rmd&quot;, &quot;html_document&quot;, quiet= T)
 rmarkdown::render(&quot;fir_vert_growth_all_years.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Pinus_vertical_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -2.717397 mins</code></pre>
+<pre><code>## Time difference of -2.261557 mins</code></pre>
 </div>
 
 
@@ -244,6 +234,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

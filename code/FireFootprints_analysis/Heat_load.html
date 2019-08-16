@@ -328,7 +328,7 @@ elv(265, 1684)</code></pre>
 <h3>222&amp;225 elevation estimation</h3>
 <pre class="r"><code>elv_est &lt;- df %&gt;% 
   filter(Sdlg %in% c(220, 221, 223, 224, 226)) %&gt;% 
-  select(Sdlg, FirePatch, Elevation) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation) %&gt;% 
   distinct() %&gt;% 
   summarize(mean(Elevation))
 elv_est &lt;- unlist(elv_est)
@@ -342,7 +342,7 @@ elv(225, elv_est)</code></pre>
 <h3>255 elevation estimate</h3>
 <pre class="r"><code>elv_est &lt;- df %&gt;% 
   filter(Sdlg %in% c(254, 256)) %&gt;% 
-  select(Sdlg, FirePatch, Elevation) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation) %&gt;% 
   distinct() %&gt;% 
   summarize(mean(Elevation))
 elv_est &lt;- unlist(elv_est)
@@ -353,7 +353,7 @@ elv_est</code></pre>
 </div>
 <div id="test" class="section level3">
 <h3>Test</h3>
-<pre class="r"><code>df %&gt;% filter(Sdlg %in% c(222, 225, 255)) %&gt;% select(Sdlg, FirePatch, Elevation) %&gt;% distinct()</code></pre>
+<pre class="r"><code>df %&gt;% filter(Sdlg %in% c(222, 225, 255)) %&gt;% dplyr::select(Sdlg, FirePatch, Elevation) %&gt;% distinct()</code></pre>
 <pre><code>## # A tibble: 3 x 3
 ##   Sdlg  FirePatch Elevation
 ##   &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;
@@ -367,7 +367,7 @@ elv_est</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg) %&gt;% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 0 x 5
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;fct&gt;, Elevation &lt;dbl&gt;,
@@ -379,7 +379,7 @@ elv_est</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Aspect.deg)) %&gt;% 
   arrange(Sdlg) %&gt;% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
 <pre><code>## # A tibble: 10 x 5
 ##    Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
@@ -417,7 +417,7 @@ asp(9, 34)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Aspect.deg)) %&gt;% 
   arrange(Sdlg) %&gt;% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
 <pre><code>## # A tibble: 2 x 5
 ##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
@@ -431,7 +431,7 @@ asp(9, 34)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Slope.Deg)) %&gt;% 
   arrange(Sdlg) %&gt;% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 10 x 5
 ##    Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
@@ -469,7 +469,7 @@ slp(9, 15)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Slope.Deg)) %&gt;% 
   arrange(Sdlg) %&gt;% 
-  select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 2 x 5
 ##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
@@ -488,9 +488,9 @@ table_all &lt;- data.frame()
 for(i in 1:length(files)){
   table &lt;- read.csv(files[i])
   if(&quot;X&quot; %in% names(table)){
-    table &lt;- table %&gt;% select(X, Y, Name)  
+    table &lt;- table %&gt;% dplyr::select(X, Y, Name)  
   } else{
-    table &lt;- table %&gt;% select(Title, Latitude, Longitude) %&gt;% 
+    table &lt;- table %&gt;% dplyr::select(Title, Latitude, Longitude) %&gt;% 
       rename(Name = Title, Y = Latitude, X = Longitude)
   }
   table
@@ -1255,7 +1255,7 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 </div>
 <div id="check-2" class="section level3">
 <h3>Check</h3>
-<pre class="r"><code>df %&gt;% filter(Sdlg == 227) %&gt;% select(Sdlg, X, Y, file_lat)</code></pre>
+<pre class="r"><code>df %&gt;% filter(Sdlg == 227) %&gt;% dplyr::select(Sdlg, X, Y, file_lat)</code></pre>
 <pre><code>## # A tibble: 1 x 4
 ##   Sdlg      X     Y file_lat   
 ##   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      
@@ -1274,7 +1274,7 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 <h3>Find all seedlings still needing longitude</h3>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(X)) %&gt;% 
-  select(Sdlg, FirePatch, X, Species) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, X, Species) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 44 x 4
 ##    Sdlg  FirePatch     X Species
@@ -1295,7 +1295,7 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 <h3>Check which patches they’re concentrated in</h3>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(X)) %&gt;% 
-  select(FirePatch, X, Species) %&gt;% 
+  dplyr::select(FirePatch, X, Species) %&gt;% 
   group_by(FirePatch) %&gt;% 
   summarize(n())</code></pre>
 <pre><code>## # A tibble: 8 x 2
@@ -1341,7 +1341,7 @@ lati(263, -120.635996,39.219089)</code></pre>
 <h4>Check</h4>
 <pre class="r"><code>latave(106, c(105, 108))
 latave(107, c(105, 108))
-df %&gt;% filter(Sdlg %in% c(105:109)) %&gt;% select(Sdlg, X, Y) %&gt;% distinct() %&gt;% arrange(Sdlg) %&gt;% print.data.frame </code></pre>
+df %&gt;% filter(Sdlg %in% c(105:109)) %&gt;% dplyr::select(Sdlg, X, Y) %&gt;% distinct() %&gt;% arrange(Sdlg) %&gt;% print.data.frame </code></pre>
 <pre><code>##   Sdlg         X        Y
 ## 1  105 -120.6196 39.21973
 ## 2  106 -120.5056 39.00068
@@ -1390,7 +1390,7 @@ latave(27, c(26))</code></pre>
 <h4>Check</h4>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Y)) %&gt;% 
-  select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
+  dplyr::select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 7 x 5
 ##   Sdlg  FirePatch     X     Y Species
@@ -1447,7 +1447,7 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <h2>Compare test values to McCune and Keon</h2>
 <pre class="r"><code>df %&gt;% 
   filter(Sdlg %in% c(&quot;test4030N&quot;, &quot;test4030S&quot;, &quot;test40flat&quot;)) %&gt;% 
-  select(Sdlg, incidrad, heatload)</code></pre>
+  dplyr::select(Sdlg, incidrad, heatload)</code></pre>
 <pre><code>## # A tibble: 3 x 3
 ##   Sdlg       incidrad heatload
 ##   &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;
@@ -1465,7 +1465,7 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <h2>Check for NAs</h2>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(heatload)) %&gt;% 
-  select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)</code></pre>
+  dplyr::select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)</code></pre>
 <pre><code>## # A tibble: 9 x 10
 ##   Aspect.deg Aspect.rad Aspect.rad.fold~ Aspect.rad.fold~ Slope.Deg
 ##        &lt;dbl&gt;      &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;     &lt;dbl&gt;

@@ -11,52 +11,13 @@ output:
 ```{r, include = F}
 require(readxl)
 require(dplyr)
-require(tidyr)
+require(tidyverse)
 ```
 
 # Load data
 ```{r}
 shr <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv")
-
-sdlt <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv")
-```
-
-# Basic df cleaning
-
-## Correct typos and create variable for fire x patch
-```{r}
-sdlt$Fire[sdlt$Fire=="FRED"]<- "FRDS"
-sdlt$Fire[sdlt$Fire=="AMRC"]<- "AMCR"
-sdlt$Species[sdlt$Species=="pipo"]<- "PIPO"
-sdlt$Species[sdlt$Species=="PILA "]<- "PILA"
-sdlt$Patch[sdlt$Patch=="s"]<- "S"
-sdlt$FirePatch <- paste(sdlt$Fire, sdlt$Patch, sep = "-")
-sdlt$FirePatch <- as.factor(sdlt$FirePatch)
-```
-
-## Take out Seedling 17 because it doesn't have shrub data
-```{r}
-sdlt <- sdlt %>% 
-  filter(Seedling. != "17")
-```
-
-## Take out repeat rows
-```{r}
-sdlt <- sdlt[sdlt$Return==0,]
-```
-
-## Rename 2015 height column
-```{r}
-sdlt <- sdlt %>% 
-  rename(Ht2015.meas2016 = Ht2015)
-```
-
-
-## Reduce to variables of interest
-```{r}
-df <- sdlt[,c("Seedling.","Fire","FirePatch", "Elevation", "Species", "Slope.Deg","Aspect.deg","Ht.cm","BasDia.cm","LastYearGrth.cm","Light_File","DIFN", "ImmedAboveSpp", "ImmedAboveHt.cm", "Ht2015.meas2016")]
-df <- tbl_df(df)
-df <- rename(df,Sdlg = Seedling.)
+load("../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 ```
 
 # Basic shrub cleaning
@@ -161,7 +122,7 @@ spp1 <- shr %>%
   ungroup %>%
   group_by(Seedling., Seg)%>%
   filter(cov == max(cov)) %>%
-  select(Seedling.,Seg,ShrubSpp,cov) %>%
+  dplyr::select(Seedling.,Seg,ShrubSpp,cov) %>%
   distinct(.keep_all=TRUE)%>% 
   rename(ShrubSpp01 = ShrubSpp)
 ```
@@ -196,7 +157,7 @@ spp2 <- shr %>%
   ungroup %>%
   group_by(Seedling.)%>%
   filter(cov == max(cov)) %>%
-  select(Seedling.,ShrubSpp,cov) %>%
+  dplyr::select(Seedling.,ShrubSpp,cov) %>%
   distinct(.keep_all=TRUE)%>% 
   rename(ShrubSpp02 = ShrubSpp)
 ```
@@ -211,7 +172,7 @@ spp3 <- shr %>%
   ungroup %>%
   group_by(Seedling.)%>%
   filter(cov == max(cov)) %>%
-  select(Seedling.,ShrubSpp,cov) %>%
+  dplyr::select(Seedling.,ShrubSpp,cov) %>%
   distinct(.keep_all=TRUE) %>% 
   rename(ShrubSpp03 = ShrubSpp)
 ```
@@ -222,7 +183,7 @@ Choose the ones with greater heights:
 ```{r}
 shr %>% 
   filter(Seedling. == 20 & ShrubSpp %in% c("PREM", "CECO")) %>% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
   arrange(ShrubSpp)
 ```
 
@@ -235,7 +196,7 @@ spp3 <- spp3 %>%
 ```{r}
 shr %>% 
   filter(Seedling. == 21 & ShrubSpp %in% c("PREM", "CECO")) %>% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
   arrange(ShrubSpp)
 ```
 
@@ -248,7 +209,7 @@ spp3 <- spp3 %>%
 ```{r}
 shr %>% 
   filter(Seedling. == 188 & ShrubSpp %in% c("CONU", "CECO")) %>% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
   arrange(ShrubSpp) %>% 
   mutate(math = Cover.cm*Ht.cm) %>% 
   group_by(ShrubSpp) %>% 
@@ -265,7 +226,7 @@ spp3 <- spp3 %>%
 ```{r}
 shr %>% 
   filter(Seedling. == 190 & ShrubSpp %in% c("willow", "CECO")) %>% 
-  select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
+  dplyr::select(Seedling., ShrubSpp, Cover.cm, Ht.cm) %>% 
   arrange(ShrubSpp) %>% 
   mutate(math = Cover.cm*Ht.cm) %>% 
   group_by(ShrubSpp) %>% 
@@ -282,15 +243,15 @@ spp3 <- spp3 %>%
 ```{r}
 spp1 <- spp1 %>% 
   ungroup() %>% 
-  select(Seedling., ShrubSpp01)
+  dplyr::select(Seedling., ShrubSpp01)
 df <- left_join(df, spp1, by = c("Sdlg" ="Seedling."))
 spp2 <- spp2 %>% 
   ungroup() %>% 
-  select(Seedling., ShrubSpp02)
+  dplyr::select(Seedling., ShrubSpp02)
 df <- left_join(df, spp2, by = c("Sdlg" ="Seedling."))
 spp3 <- spp3 %>% 
   ungroup() %>% 
-  select(Seedling., ShrubSpp03)
+  dplyr::select(Seedling., ShrubSpp03)
 df <- left_join(df, spp3, by = c("Sdlg" ="Seedling."))
 ```
 

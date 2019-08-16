@@ -130,7 +130,7 @@ varImpPlot(forest)
 <!-- ```{r} -->
 <!-- forest <- randomForest( -->
 <!--   x = xdf %>% -->
-<!--     select(vars), -->
+<!--     dplyr::select(vars), -->
 <!--   y = df$VertGrowth_Rel, -->
 <!--   importance = TRUE, -->
 <!--   scale = TRUE) -->
@@ -146,7 +146,7 @@ varImpPlot(forest)
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
   mutate(log_shrubarea3 = log(shrubarea3+1)) %>%
-  select(Fire, 
+  dplyr::select(Fire, 
          Sdlg, 
          VertGrowth_Rel, 
          Years, 
@@ -192,29 +192,14 @@ AIC(without)
 with_ht <- lme(VertGrowth_Rel ~  
             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+
+summary(with_ht)
 AIC(with_ht)
 
 anova(with_ht, without)
 ```
 
-Without wins.
-
-## Look at drop1 results
-```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-summary(LM)
-drop <- drop1(LM, test = "Chisq")
-drop$var <- row.names(drop)
-drop <- tbl_df(drop)
-drop %>% 
-  arrange( `Pr(>Chi)`) %>% 
-  mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
-
-```
-
-No need to include interaction after all
+Without wins. No need to include interaction after all
 
 # See whether residuals are better for log transformed or not
 ```{r}
@@ -233,16 +218,48 @@ plot(LM)
 
 Log transformed looks better 
 
-# Re-establish the best LM so far:
+# Re-establish the best LM so far and look at summary and drop1 results
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
-drop1(LM, test = "Chisq")
 ```
 
 Note: Chisq here is performing likelihood ratio tests
+
+```{r}
+drop <- drop1(LM, test = "Chisq")
+drop$var <- row.names(drop)
+drop <- tbl_df(drop)
+drop %>% 
+  arrange( `Pr(>Chi)`) %>% 
+  mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
+
+```
+
+## Run anova by hand for the interacting variables since drop1 doesn't do that by default
+```{r}
+LM_noshrub <- lme(VertGrowth_Rel ~ 
+            Years +  Ht_cm1+ heatload + BasDia2016.cm + Year + ShrubSpp03,
+           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM, LM_noshrub)
+```
+
+```{r}
+LM_noheight <- lme(VertGrowth_Rel ~ 
+            Years + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
+           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM, LM_noheight)
+```
+
+# Look at collinearity between height and shrub competition
+```{r}
+cor(df$Ht_cm1, df$sqrt_shrubarea3)
+ggplot(df, aes(x = Ht_cm1, y = sqrt_shrubarea3))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```
 
 # Look at residuals
 
@@ -355,13 +372,11 @@ ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 3,
 
 ## Plot effects of shrubarea WITHOUT interaction
 
-
 ### Re-establish the best LM so far:
 ```{r}
 LM <-  lme(VertGrowth_Rel ~ 
             Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
            data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-summary(LM)
 drop1(LM, test = "Chisq")
 ```
 
@@ -502,9 +517,12 @@ ggplot(effects_df)+
  ggsave(file = "../../results/figures/FireFootprints/PineVertShrubSpp.png", width = 4, height = 4, dpi = 400)
 ```
 
+# List the final seedlings used
+```{r}
+sort(unique(df$Sdlg))
+```
 
-
-## Save final data
+# Save final data
 ```{r}
 save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vert.Rdata")
 ```

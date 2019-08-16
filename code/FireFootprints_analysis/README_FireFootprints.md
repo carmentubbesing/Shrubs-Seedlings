@@ -5,12 +5,21 @@ Data wrangling, cleaning, and analysis for the fire footprint shrubs + seedlings
 Files are dependent in the following order:
 
 ## 1.  Cleaning code
+
+#### **clean_seedlings_2016.Rmd**
+* uses:
+    * `~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv`
+* creates:
+    * `../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata`
+
 #### **clean_shrubs.Rmd**
 * uses:
-    * `Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv`
     * `~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv`
+    * `../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata`
+* does:
+    * merges data from both 2016 visits for trees that were revisited
 
 #### **clean_combine_2016-only.Rmd**
 * uses:
