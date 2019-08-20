@@ -47,6 +47,14 @@ shr$Ht.cm[is.na(shr$Ht.cm)] <- 0
 shr <- shr %>% filter(ShrubSpp != "pea")
 ```
 
+## Take out "conifer" since it's not a shrub
+```{r}
+summary(as.factor(shr$ShrubSpp))
+shr <- shr %>% 
+  filter(!(ShrubSpp == "conifer"))
+```
+
+
 # Aggregate shrub data by seedling
 
 ## Clean up segment names
