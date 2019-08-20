@@ -220,15 +220,15 @@ summary(as.factor(df$Fire))</code></pre>
 <pre><code>## AMRC CLVD FRDS PLKN STAR WRTS 
 ##  123   27   36    2   19   14</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(Years = ifelse(Fire == &quot;AMCR&quot;, 8, 0)) %&gt;% 
+  mutate(Years = ifelse(Fire == &quot;AMRC&quot;, 8, 0)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;CLVD&quot;, 24, Years)) %&gt;% 
-  mutate(Years = ifelse(Fire == &quot;FRED&quot;, 12, Years)) %&gt;% 
+  mutate(Years = ifelse(Fire == &quot;FRDS&quot;, 12, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;PLKN&quot;, 43, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;STAR&quot;, 14, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;WRTS&quot;, 35, Years))
 summary(as.factor(df$Years))</code></pre>
-<pre><code>##   0  14  24  35  43 
-## 159  19  27  14   2</code></pre>
+<pre><code>##   8  12  14  24  35  43 
+## 123  36  19  27  14   2</code></pre>
 </div>
 <div id="check-out-numbers-of-seedlings" class="section level2">
 <h2>Check out numbers of seedlings</h2>

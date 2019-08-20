@@ -40,9 +40,9 @@ nrow(df)
 df <- droplevels(df)
 summary(as.factor(df$Fire))
 df <- df %>% 
-  mutate(Years = ifelse(Fire == "AMCR", 8, 0)) %>% 
+  mutate(Years = ifelse(Fire == "AMRC", 8, 0)) %>% 
   mutate(Years = ifelse(Fire == "CLVD", 24, Years)) %>% 
-  mutate(Years = ifelse(Fire == "FRED", 12, Years)) %>% 
+  mutate(Years = ifelse(Fire == "FRDS", 12, Years)) %>% 
   mutate(Years = ifelse(Fire == "PLKN", 43, Years)) %>% 
   mutate(Years = ifelse(Fire == "STAR", 14, Years)) %>% 
   mutate(Years = ifelse(Fire == "WRTS", 35, Years))
