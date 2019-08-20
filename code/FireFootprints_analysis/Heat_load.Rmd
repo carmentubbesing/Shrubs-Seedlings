@@ -18,7 +18,6 @@ require(tidyverse)
 load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
 ```
 
-
 # Add elevation and slope where they're missing - look in original data sheets
 ```{r}
 df %>% 
@@ -85,8 +84,9 @@ elv(265, 1684)
 ```{r}
 elv_est <- df %>% 
   filter(Sdlg %in% c(220, 221, 223, 224, 226)) %>% 
-  dplyr::select(Sdlg, FirePatch, Elevation) %>% 
+  dplyr::select(FirePatch, Elevation) %>% 
   distinct() %>% 
+  ungroup() %>% 
   summarize(mean(Elevation))
 elv_est <- unlist(elv_est)
 elv_est
@@ -98,8 +98,9 @@ elv(225, elv_est)
 ```{r}
 elv_est <- df %>% 
   filter(Sdlg %in% c(254, 256)) %>% 
-  dplyr::select(Sdlg, FirePatch, Elevation) %>% 
+  dplyr::select(FirePatch, Elevation) %>% 
   distinct() %>% 
+  ungroup() %>% 
   summarize(mean(Elevation))
 elv_est <- unlist(elv_est)
 elv_est
@@ -233,6 +234,21 @@ nrow(table_all)
 table_n1 <- table_all %>% 
   filter(nchar(Name)<4)
 ```
+
+#### Take out repeats
+```{r}
+table_n1 %>% 
+  group_by(Name) %>% 
+  filter(n()>1) %>% 
+  arrange(Name)
+```
+
+```{r}
+table_n1 <- table_n1 %>% 
+  filter(!(Name==26 & file_lat == "Freds_JB_A.csv")) %>% 
+  filter(!(Name %in% c(76, 77, 80, 81, 83, 88, 89, 94, 97) & file_lat == "AMR - Aerial - 2.csv"))
+```
+
 
 #### Join
 ```{r}
@@ -377,6 +393,7 @@ lati(263, -120.635996,39.219089)
 
 ### For the ones without points, create a function to average the longitudes of the nearby points
 ```{r}
+df <- df %>% ungroup()
 latave <- function(sdlg, nearbys){
   meanX <- df %>% filter(Sdlg %in% nearbys) %>% summarise(mean(X))
   meanX <- unlist(meanX)
@@ -393,7 +410,7 @@ latave <- function(sdlg, nearbys){
 ```{r}
 latave(106, c(105, 108))
 latave(107, c(105, 108))
-df %>% filter(Sdlg %in% c(105:109)) %>% dplyr::select(Sdlg, X, Y) %>% distinct() %>% arrange(Sdlg) %>% print.data.frame 
+df %>% filter(Sdlg %in% c(105:108)) %>% dplyr::select(Sdlg, X, Y) %>% distinct() %>% arrange(Sdlg) %>% print.data.frame 
 ```
 
 #### Apply

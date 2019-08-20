@@ -48,8 +48,8 @@ sdlt <- sdlt %>%
   mutate(Fire = as.character(Fire)) %>% 
   mutate(Species = as.character(Species)) %>% 
   mutate(Patch = as.character(Patch)) %>% 
-  mutate(Fire = ifelse(Fire == "FRDS", "FRED", Fire)) %>% 
-  mutate(Fire = ifelse(Fire == "AMRC", "AMCR", Fire)) %>% 
+  mutate(Fire = ifelse(Fire == "FRED", "FRDS", Fire)) %>% 
+  mutate(Fire = ifelse(Fire == "AMCR", "AMRC", Fire)) %>% 
   mutate(Species = ifelse(Species == "pipo", "PIPO", Species)) %>% 
   mutate(Species = ifelse(Species == "PILA ", "PILA", Species)) %>% 
   mutate(Patch = ifelse(Patch == "s", "S", Patch)) %>% 
@@ -91,7 +91,7 @@ df %>%
 ```
 
 
-## Create separate columns for dates of visit
+## Create separate columns for dates of visit 
 ```{r}
 df <- df %>% 
   mutate(return = as.character(Return))
@@ -302,6 +302,7 @@ df <- df %>%
   dplyr::select(-Photo.)
 ```
 
+
 ## Check for remaining columns that don't have data synced between the two visits
 ```{r}
 df_reps <- df %>% 
@@ -332,6 +333,17 @@ df <- df %>%
   mutate(Note2 = ifelse(Sdlg == 26, " combine with other seedling 26 row", Note2)) %>% 
   mutate(Note2 = ifelse(Sdlg == 27, " combine with other seedling 27 row", Note2)) 
 ```
+
+
+## Make two datasheet columns
+```{r}
+df <- df %>% rename(DataSheet1 = DataSheet) %>% mutate(DataSheet2 = ifelse(return ==1, paste(DataSheet1), "NA"))
+df %>% filter(Sdlg %in% unlist(df[df$return==1,"Sdlg"])) %>% select(Fire, Sdlg, DataSheet1, DataSheet2) 
+df <- df %>% 
+  mutate(DataSheet2 = ifelse(return==1 & Fire =="CLVD", "Data_Sheet_CLVD_N_JUL_26_2016(1)", DataSheet2)) %>% 
+  mutate(DataSheet2 = ifelse(return==1 & Fire == "FRDS", "Data_Sheet_FRDS_MID_JUL_27_2016", DataSheet2))
+```
+
 
 ## NOW I can finally delete rows that have return == 1
 ```{r}

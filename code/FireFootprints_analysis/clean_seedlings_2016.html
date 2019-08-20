@@ -272,8 +272,8 @@ names(sdlt)</code></pre>
   mutate(Fire = as.character(Fire)) %&gt;% 
   mutate(Species = as.character(Species)) %&gt;% 
   mutate(Patch = as.character(Patch)) %&gt;% 
-  mutate(Fire = ifelse(Fire == &quot;FRDS&quot;, &quot;FRED&quot;, Fire)) %&gt;% 
-  mutate(Fire = ifelse(Fire == &quot;AMRC&quot;, &quot;AMCR&quot;, Fire)) %&gt;% 
+  mutate(Fire = ifelse(Fire == &quot;FRED&quot;, &quot;FRDS&quot;, Fire)) %&gt;% 
+  mutate(Fire = ifelse(Fire == &quot;AMCR&quot;, &quot;AMRC&quot;, Fire)) %&gt;% 
   mutate(Species = ifelse(Species == &quot;pipo&quot;, &quot;PIPO&quot;, Species)) %&gt;% 
   mutate(Species = ifelse(Species == &quot;PILA &quot;, &quot;PILA&quot;, Species)) %&gt;% 
   mutate(Patch = ifelse(Patch == &quot;s&quot;, &quot;S&quot;, Patch)) %&gt;% 
@@ -424,34 +424,34 @@ df %&gt;%
 df$Time1  </code></pre>
 <pre><code>##   [1] &quot;9:45&quot;  &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot; 
 ##   [9] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot; 
-##  [17] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot;
-##  [25] &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;12:00&quot; &quot;1:00&quot;  &quot;12:00&quot; &quot;1:00&quot; 
-##  [33] &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
-##  [41] &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot;
-##  [49] &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
-##  [57] &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;7:45&quot; 
-##  [65] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
+##  [17] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;8:01&quot; 
+##  [25] &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
+##  [33] &quot;8:01&quot;  &quot;8:01&quot;  &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
+##  [41] &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot;
+##  [49] &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
+##  [57] &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot;
+##  [65] &quot;13:31&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
 ##  [73] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
-##  [81] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
-##  [89] &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;10:32&quot;
-##  [97] &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
-## [105] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;1:00&quot; 
-## [113] &quot;9:28&quot;  &quot;15:00&quot; &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot; 
-## [121] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
-## [129] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
-## [137] &quot;9:44&quot;  &quot;9:44&quot;  &quot;8:30&quot;  &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot; 
-## [145] &quot;6:15&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;10:11&quot; &quot;10:11&quot;
-## [153] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
+##  [81] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;10:11&quot; &quot;10:11&quot;
+##  [89] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot;  &quot;9:52&quot; 
+##  [97] &quot;9:52&quot;  &quot;10:32&quot; &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
+## [105] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot; &quot;1:00&quot;  &quot;1:00&quot; 
+## [113] &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;9:28&quot; 
+## [121] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;8:09&quot; 
+## [129] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
+## [137] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;8:30&quot; 
+## [145] &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;8:09&quot;  &quot;8:09&quot; 
+## [153] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
 ## [161] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
-## [169] &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;10:40&quot;
-## [177] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
-## [185] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot; 
-## [193] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot;
-## [201] &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot; 
-## [209] &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
-## [217] &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
-## [225] &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
-## [233] &quot;1:00&quot;  &quot;1:00&quot;</code></pre>
+## [169] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:19&quot;  &quot;7:19&quot; 
+## [177] &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
+## [185] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
+## [193] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
+## [201] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot;
+## [209] &quot;10:35&quot; &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot; 
+## [217] &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot; 
+## [225] &quot;7:33&quot;  &quot;7:33&quot;  &quot;12:00&quot; &quot;12:00&quot; &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot; 
+## [233] &quot;15:00&quot; &quot;1:00&quot;</code></pre>
 </div>
 <div id="make-date-columns-into-date-format-and-time-column-into-time-format" class="section level2">
 <h2>Make date columns into date format and time column into time format</h2>
@@ -552,11 +552,11 @@ df &lt;- left_join(df, max2) %&gt;%
 ## # Groups:   Sdlg [6]
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 290   FRED-mid  2016-07-28 9999-09-09 07:00  01:00 
-## 2 291   FRED-mid  2016-07-28 9999-09-09 01:00  01:00 
-## 3 292   FRED-mid  2016-07-28 9999-09-09 01:00  01:00 
-## 4 293   FRED-mid  2016-07-28 9999-09-09 01:00  01:00 
-## 5 294   FRED-mid  2016-07-28 9999-09-09 01:00  01:00 
+## 1 20    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 2 21    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 3 22    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 4 23    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 5 139   PLKN-W    2016-06-30 9999-09-09 15:00  01:00 
 ## 6 125w  WRTS-1    2016-06-29 9999-09-09 01:00  01:00</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
 <pre><code>## [1] 234</code></pre>
@@ -721,9 +721,6 @@ df &lt;- df %&gt;%
 ## `forcats::fct_explicit_na`
 
 ## Warning: Factor `Sdlg` contains implicit NA, consider using
-## `forcats::fct_explicit_na`
-
-## Warning: Factor `Sdlg` contains implicit NA, consider using
 ## `forcats::fct_explicit_na`</code></pre>
 <pre class="r"><code>print(boo)</code></pre>
 <pre><code>## $Note1
@@ -747,10 +744,10 @@ df &lt;- df %&gt;%
 ## 14 CLVD  N         1626.         724392         4303842 11    PIPO   
 ## 15 CLVD  N         1626.         724392         4303842 15    ABCO   
 ## 16 CLVD  N         1626.         724392         4303842 15    ABCO   
-## 17 FRED  A           NA          734550         4296666 26    PIPO   
-## 18 FRED  A           NA          734550         4296666 26    PIPO   
-## 19 FRED  A           NA          734550         4296666 27    PIPO   
-## 20 FRED  A           NA          734550         4296666 27    PIPO   
+## 17 FRDS  A           NA          734550         4296666 26    PIPO   
+## 18 FRDS  A           NA          734550         4296666 27    PIPO   
+## 19 FRDS  A           NA          734550         4296666 26    PIPO   
+## 20 FRDS  A           NA          734550         4296666 27    PIPO   
 ## # ... with 24 more variables: Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
 ## #   Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;,
 ## #   Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1 &lt;fct&gt;,
@@ -775,6 +772,29 @@ df &lt;- df %&gt;%
 ## #   DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;,
 ## #   personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;,
 ## #   Photo &lt;chr&gt;
+## 
+## $DataSheet
+## # A tibble: 24 x 31
+## # Groups:   Sdlg [12]
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
+##  1 CLVD  N         1626           72432         4303788 2     PIPO   
+##  2 CLVD  N         1626           72432         4303788 2     PIPO   
+##  3 CLVD  N         1626          724321         4303791 4     PIPO   
+##  4 CLVD  N         1626          724321         4303791 4     PIPO   
+##  5 CLVD  N         1626          724321         4303791 5     PIPO   
+##  6 CLVD  N         1626          724321         4303791 5     PIPO   
+##  7 CLVD  N         1626          724392         4303842 6     ABCO   
+##  8 CLVD  N         1626          724392         4303842 6     ABCO   
+##  9 CLVD  N         1626.         724392         4303842 7     ABCO   
+## 10 CLVD  N         1626.         724392         4303842 7     ABCO   
+## # ... with 14 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
+## #   Aspect.deg &lt;dbl&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
+## #   Note1 &lt;fct&gt;, Note2 &lt;fct&gt;, Note3_Light &lt;fct&gt;, DataSheet &lt;fct&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;,
+## #   Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $return
 ## # A tibble: 24 x 31
@@ -844,10 +864,10 @@ df &lt;- df %&gt;%
 ##  9 11    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
 ## 10 15    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ center stem missi~
 ## 11 15    0         VF HH     1      broken top           &quot;&quot;                
-## 12 26    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;                
-## 13 26    0         VF HH     1      &quot; combine with othe~ &quot;&quot;                
-## 14 27    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;                
-## 15 27    0         VF HH     1      combine with other ~ &quot;&quot;</code></pre>
+## 12 26    0         VF HH     1      &quot; combine with othe~ &quot;&quot;                
+## 13 27    0         VF HH     1      combine with other ~ &quot;&quot;                
+## 14 26    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;                
+## 15 27    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Note2 = as.character(paste(Note2))) %&gt;% 
   mutate(Note1 = as.character(paste(Note1))) %&gt;% 
@@ -856,6 +876,29 @@ df &lt;- df %&gt;%
   mutate(Note1 = ifelse(Sdlg == 15, &quot;broken top&quot;, Note1)) %&gt;% 
   mutate(Note2 = ifelse(Sdlg == 26, &quot; combine with other seedling 26 row&quot;, Note2)) %&gt;% 
   mutate(Note2 = ifelse(Sdlg == 27, &quot; combine with other seedling 27 row&quot;, Note2)) </code></pre>
+</div>
+<div id="make-two-datasheet-columns" class="section level2">
+<h2>Make two datasheet columns</h2>
+<pre class="r"><code>df &lt;- df %&gt;% rename(DataSheet1 = DataSheet) %&gt;% mutate(DataSheet2 = ifelse(return ==1, paste(DataSheet1), &quot;NA&quot;))
+df %&gt;% filter(Sdlg %in% unlist(df[df$return==1,&quot;Sdlg&quot;])) %&gt;% select(Fire, Sdlg, DataSheet1, DataSheet2) </code></pre>
+<pre><code>## # A tibble: 25 x 4
+## # Groups:   Sdlg [13]
+##    Fire  Sdlg  DataSheet1                     DataSheet2                   
+##    &lt;chr&gt; &lt;fct&gt; &lt;fct&gt;                          &lt;chr&gt;                        
+##  1 CLVD  2     Data_Sheet_CLVD_N_May_30       NA                           
+##  2 CLVD  2     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  3 CLVD  4     Data_Sheet_CLVD_N_May_30_2     NA                           
+##  4 CLVD  4     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  5 CLVD  5     Data_Sheet_CLVD_N_May_30_2     NA                           
+##  6 CLVD  5     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  7 CLVD  6     Data_Sheet_CLVD_N_May_30_2     NA                           
+##  8 CLVD  6     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  9 CLVD  7     Data_Sheet_CLVD_N_May_31       NA                           
+## 10 CLVD  7     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+## # ... with 15 more rows</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  mutate(DataSheet2 = ifelse(return==1 &amp; Fire ==&quot;CLVD&quot;, &quot;Data_Sheet_CLVD_N_JUL_26_2016(1)&quot;, DataSheet2)) %&gt;% 
+  mutate(DataSheet2 = ifelse(return==1 &amp; Fire == &quot;FRDS&quot;, &quot;Data_Sheet_FRDS_MID_JUL_27_2016&quot;, DataSheet2))</code></pre>
 </div>
 <div id="now-i-can-finally-delete-rows-that-have-return-1" class="section level2">
 <h2>NOW I can finally delete rows that have return == 1</h2>

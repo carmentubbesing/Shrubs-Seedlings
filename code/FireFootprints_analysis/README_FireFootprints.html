@@ -7,6 +7,7 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 
@@ -157,18 +158,6 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
 
@@ -198,17 +187,34 @@ $(document).ready(function () {
 <p>Files are dependent in the following order:</p>
 <div id="cleaning-code" class="section level2">
 <h2>1. Cleaning code</h2>
+<div id="clean_seedlings_2016.rmd" class="section level4">
+<h4><strong>clean_seedlings_2016.Rmd</strong></h4>
+<ul>
+<li>uses:
+<ul>
+<li><code>~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv</code></li>
+</ul></li>
+<li>creates:
+<ul>
+<li><code>../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata</code></li>
+</ul></li>
+</ul>
+</div>
 <div id="clean_shrubs.rmd" class="section level4">
 <h4><strong>clean_shrubs.Rmd</strong></h4>
 <ul>
 <li>uses:
 <ul>
-<li><code>Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv</code></li>
 <li><code>~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv</code></li>
+<li><code>../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata</code></li>
 </ul></li>
 <li>creates:
 <ul>
 <li><code>~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata</code></li>
+</ul></li>
+<li>does:
+<ul>
+<li>merges data from both 2016 visits for trees that were revisited</li>
 </ul></li>
 </ul>
 </div>
@@ -438,6 +444,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

@@ -1,0 +1,72 @@
+---
+title: "Explore_height_pole_error"
+author: "Carmen"
+date: "August 16, 2019"
+output: html_document
+---
+
+
+```{r, include = F}
+require(tidyverse)
+require(ggplot2)
+```
+
+```{r}
+load("../../compiled_data/fire_footprints/df_vert_wide.Rdata")
+```
+
+
+### Count seedlings without 2017 height or 2015 height measured in 2016
+```{r}
+df %>% 
+  filter(is.na(Ht2017.cm.fall) & is.na(Ht2015.meas2016)) %>% 
+  group_by(Species) %>% 
+  summarize(n())
+```
+
+### For those seedlings, find average 2016 growing season apical growth relative to 2015 growth 
+```{r}
+find_apical_growth <- df %>% 
+  filter(!is.na(Ht2015.meas2016)) %>% 
+  mutate(apical_growth_2016 = 
+           Ht16_meas2016.cm - LastYearGrth.cm - Ht2015.meas2016) %>% 
+  dplyr::select(Sdlg, Species, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, apical_growth_2016) %>% 
+  mutate(apical_ratio = apical_growth_2016/LastYearGrth.cm) %>% 
+  distinct()
+find_apical_growth
+```
+
+## For trees with measurements in both 2016 and 2017, see how apical growth compares to 2016 growth measured in 2017
+```{r}
+df_both_yrs <- df %>% 
+  filter(!is.na(Growth_16) & !is.na(Ht2015.meas2016)) %>% 
+  dplyr::select(Sdlg, Ht2016.cm_spring_from2017, Ht16_meas2016.cm, Ht2016.cm_spring_from2017, LastYearGrth.cm, Ht2015.meas2016, Ht2015.cm_spring_from2017, Growth_16, Date1_2016, Ht2017.cm.fall) %>% 
+  distinct()
+df_both_yrs <- left_join(df_both_yrs, find_apical_growth) %>% 
+  mutate(Ht16_minus_apical = Ht16_meas2016.cm-apical_growth_2016) %>% 
+  dplyr::select(Sdlg, Ht2016.cm_spring_from2017, Ht16_minus_apical, everything())
+df_both_yrs
+```
+
+```{r}
+ggplot(df_both_yrs, aes(x = Ht2015.meas2016, y = Ht2015.cm_spring_from2017, col = as.factor(Date1_2016)))+
+  geom_point()+
+  geom_abline(intercept = 0,slope =1)
+```
+
+```{r}
+nrow(df_both_yrs)
+maybe_bad <- df_both_yrs %>% 
+  filter(abs(Ht2015.meas2016 - Ht2015.cm_spring_from2017)>3) %>% 
+  mutate(diff_height15 = Ht2015.meas2016 - Ht2015.cm_spring_from2017)
+maybe_bad
+nrow(maybe_bad)
+hist(maybe_bad$diff_height15, breaks = 20)
+maybe_bad %>% 
+  mutate(neg = ifelse(diff_height15>0, "pos", "neg")) %>% 
+  group_by(neg) %>% 
+  summarize(n())
+```
+
+The fact that about equal numbers of seedlings are wrong in either direction suggests that there wasn't a systemic problem with height pole measurements
+

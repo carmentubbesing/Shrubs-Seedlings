@@ -188,96 +188,62 @@ summary {
 <div id="TOC">
 <ul>
 <li><a href="#load-data">Load data</a></li>
-<li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a></li>
-<li><a href="#add-light-files-for-non-seedling-shrub-locations">Add light files for non-seedling shrub locations</a></li>
-<li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a></li>
+<li><a href="#combine-seedling-data-with-shrub-data">Combine seedling data with shrub data</a></li>
 </ul>
 </div>
 
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
-<pre class="r"><code>load(file=&quot;~/Shrubs-Seedlings/compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
+load(file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)
+load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata&quot;)</code></pre>
+</div>
+<div id="combine-seedling-data-with-shrub-data" class="section level1">
+<h1>Combine seedling data with shrub data</h1>
+<div id="take-out-variables-in-both-besides-sdlg" class="section level2">
+<h2>Take out variables in both besides Sdlg</h2>
+<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
+  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3)</code></pre>
+<pre class="r"><code>nrow(df)</code></pre>
+<pre><code>## [1] 221</code></pre>
+<pre class="r"><code>df &lt;- left_join(df, shr_by_sdlg)</code></pre>
+<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
+<pre><code>## Warning: Column `Sdlg` joining factor and character vector, coercing into
+## character vector</code></pre>
+<pre class="r"><code>nrow(df)</code></pre>
+<pre><code>## [1] 221</code></pre>
+</div>
 <div id="add-years-since-fire" class="section level2">
 <h2>Add years since fire</h2>
 <pre class="r"><code>df &lt;- droplevels(df)
-df &lt;- df %&gt;% 
+summary(as.factor(df$Fire))</code></pre>
+<pre><code>## AMRC CLVD FRDS PLKN STAR WRTS 
+##  123   27   36    2   19   14</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Years = ifelse(Fire == &quot;AMCR&quot;, 8, 0)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;CLVD&quot;, 24, Years)) %&gt;% 
-  mutate(Years = ifelse(Fire == &quot;FRDS&quot;, 12, Years)) %&gt;% 
+  mutate(Years = ifelse(Fire == &quot;FRED&quot;, 12, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;PLKN&quot;, 43, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;STAR&quot;, 14, Years)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;WRTS&quot;, 35, Years))
 summary(as.factor(df$Years))</code></pre>
-<pre><code>##    8   12   14   24   35   43 NA's 
-##  135   51   38   32   14    4    9</code></pre>
+<pre><code>##   0  14  24  35  43 
+## 159  19  27  14   2</code></pre>
 </div>
-</div>
-<div id="make-sdlg-all-caps" class="section level1">
-<h1>Make Sdlg all caps</h1>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(Sdlg = toupper(Sdlg))</code></pre>
-</div>
-<div id="add-light-files-for-non-seedling-shrub-locations" class="section level1">
-<h1>Add light files for non-seedling shrub locations</h1>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-4&quot;, 48, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-3&quot;, 47, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-2&quot;, 46, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-1&quot;, 45, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-1&quot;, 125, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-2&quot;, 126, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CECO-1&quot;, 74, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;ARPA-1&quot;, 94, Light_File))</code></pre>
-</div>
-<div id="add-difn-degrees-from-fv2200-output-file" class="section level1">
-<h1>Add DIFN degrees from FV2200 output file</h1>
-<pre class="r"><code>setwd(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/&quot;)
-DIFNl53 &lt;- read.table(file=&quot;AllDIFNGaps1-4&quot;,header=T,sep=&quot;\t&quot;)
-names(df)</code></pre>
-<pre><code>##  [1] &quot;Sdlg&quot;            &quot;Fire&quot;            &quot;FirePatch&quot;      
-##  [4] &quot;Elevation&quot;       &quot;Species&quot;         &quot;Slope.Deg&quot;      
-##  [7] &quot;Aspect.deg&quot;      &quot;Ht.cm&quot;           &quot;BasDia.cm&quot;      
-## [10] &quot;LastYearGrth.cm&quot; &quot;Light_File&quot;      &quot;DIFN&quot;           
-## [13] &quot;ImmedAboveSpp&quot;   &quot;ImmedAboveHt.cm&quot; &quot;Ht2015.meas2016&quot;
-## [16] &quot;ShrubSpp01&quot;      &quot;ShrubSpp02&quot;      &quot;ShrubSpp03&quot;     
-## [19] &quot;Cov1&quot;            &quot;Cov2&quot;            &quot;Cov3&quot;           
-## [22] &quot;Ht1&quot;             &quot;Ht2&quot;             &quot;Ht3&quot;            
-## [25] &quot;Cov1.2&quot;          &quot;Cov1.3&quot;          &quot;Ht1.2&quot;          
-## [28] &quot;Ht1.3&quot;           &quot;ShrG1&quot;           &quot;IAG&quot;            
-## [31] &quot;ref&quot;             &quot;Years&quot;</code></pre>
-<pre class="r"><code>DIFNl53 &lt;- distinct(DIFNl53)
-
-df &lt;- left_join(df, DIFNl53, by=c(&quot;Light_File&quot;=&quot;LAI_File&quot;)) %&gt;%
-  rename(DIFN.all = DIFN.x) %&gt;%
-  rename(DIFN.53 =DIFN.y) %&gt;%
-  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)</code></pre>
-<div id="find-which-seedlings-have-difn.all-but-lack-difn.53" class="section level2">
-<h2>Find which seedlings have DIFN.all but lack DIFN.53</h2>
-<pre class="r"><code>fix &lt;- subset(df, !is.na(df$DIFN.all) &amp; is.na(df$DIFN.53))
-fix</code></pre>
-<pre><code>## # A tibble: 0 x 35
-## # ... with 35 variables: Sdlg &lt;chr&gt;, Fire &lt;fct&gt;, FirePatch &lt;fct&gt;,
-## #   Elevation &lt;int&gt;, Species &lt;fct&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;,
-## #   Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;dbl&gt;,
-## #   DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;,
-## #   Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;,
-## #   ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;,
-## #   Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;, Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;,
-## #   Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;, ref &lt;dbl&gt;, Years &lt;dbl&gt;,
-## #   Date &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
-</div>
-<div id="fill-in-a-couple-seedlings-with-funky-difn-situations" class="section level2">
-<h2>Fill in a couple seedlings with funky DIFN situations</h2>
-<p>Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky</p>
-<pre class="r"><code>df[df$Sdlg==9,&quot;DIFN.53&quot;] &lt;- DIFNl53[DIFNl53$LAI_File==15,&quot;DIFN&quot;]
-df[df$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),&quot;DIFN&quot;])
-
-fix &lt;- subset(df, !is.na(df$DIFN.all) &amp; is.na(df$DIFN.53))</code></pre>
+<div id="check-out-numbers-of-seedlings" class="section level2">
+<h2>Check out numbers of seedlings</h2>
+<pre class="r"><code>df %&gt;% 
+  group_by(Species) %&gt;% 
+  summarize(n())</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   Species `n()`
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 ABCO      126
+## 2 PIPO       95</code></pre>
 </div>
 <div id="save" class="section level2">
 <h2>Save</h2>
-<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/compiled_data/fire_footprints/&quot;)
-save(df, file=&quot;master_data_2016.Rdata&quot;)
+<pre class="r"><code>save(df, file=&quot;../../compiled_data/fire_footprints/master_data_2016.Rdata&quot;)
 write.csv(df, file = &quot;master_data_2016.csv&quot;, row.names = F)</code></pre>
 </div>
 </div>

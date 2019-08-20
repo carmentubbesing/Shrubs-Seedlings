@@ -39,20 +39,19 @@ df <- df %>%
   filter(Species == "PIPO")
 ```
 
-## Change species to factor
+## Change species and site class to factors
 ```{r}
 df <- df %>% 
   mutate(Species = as.factor(Species)) %>% 
-  mutate(Sdlg = as.factor(Sdlg)) 
+  mutate(Sdlg = as.factor(Sdlg), siteclass= as.factor(siteclass)) 
 df <- droplevels(df)
 ```
 
-# Convert shrub area to log scale
+# Convert shrub area to sqrt
 ```{r}
 df <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
 ```
-
 
 # Count the seedlings
 ```{r}
@@ -85,6 +84,7 @@ normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
   }
 xdf <- xdf %>% mutate_if(is.numeric, normalize)
+xdf
 ```
 
 # Find average growth rate
@@ -158,6 +158,7 @@ LMdf <- df %>%
          incidrad, 
          Year, 
          Elevation, 
+         siteclass,
          heatload, 
          ShrubSpp03) %>% 
  mutate_if(is.numeric, normalize) %>% 
@@ -183,6 +184,17 @@ vif(LM)
 
 A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok.
 
+```{r}
+LM <- lme(VertGrowth_Rel ~  Ht_cm1 + sqrt_shrubarea3 + heatload + Years + ShrubSpp03 + siteclass + Year,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+drop1(LM, test = "Chisq")
+AIC(LM)
+LM_int <- lme(VertGrowth_Rel ~  Ht_cm1*sqrt_shrubarea3 + heatload + Years + ShrubSpp03 + siteclass + Year,
+        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+AIC(LM_int)
+```
+
+
 ## See whether model with or without interaction is better
 ```{r}
 without <- lme(VertGrowth_Rel ~ 
@@ -193,13 +205,11 @@ with_ht <- lme(VertGrowth_Rel ~
             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
         data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
-summary(with_ht)
 AIC(with_ht)
 
 anova(with_ht, without)
 ```
 
-Without wins. No need to include interaction after all
 
 # See whether residuals are better for log transformed or not
 ```{r}
@@ -346,8 +356,6 @@ summary(df$sqrt_shrubarea3[df$Ht_cm1< mean(df$Ht_cm1)])
 summary(df$sqrt_shrubarea3[df$Ht_cm1> mean(df$Ht_cm1)])
 ```
 
-
-
 ## Plot effects of shrubarea WITH interaction
 ```{r}
 ggplot(effects_df)+
@@ -394,7 +402,6 @@ head(effects_df)
 effects_df <- effects_df %>% 
   mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) 
 ```
-
 
 ```{r}
 ggplot(effects_df)+
@@ -524,5 +531,5 @@ sort(unique(df$Sdlg))
 
 # Save final data
 ```{r}
-save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pine_vert.Rdata")
+save(df, file ="../../compiled_data/fire_footprints/pine_vert.Rdata)")
 ```

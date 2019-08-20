@@ -35,14 +35,40 @@ remove(df)
 ```
 
 # Combine
+
+## Rename dates columns
 ```{r}
-df <- full_join(df16, df17, by = "Sdlg")
+df16 <- df16 %>% 
+  rename(Date1_2016 = Date1) %>% 
+  rename(Date2_2016 = Date2) %>% 
+  rename(Datasheet1_2016 = DataSheet1) %>% 
+  rename(Datasheet2_2016 = DataSheet2)
 ```
 
-# Take out the incense cedar
 ```{r}
-df <- df %>% 
-  filter(Species.x != "CADE")
+df17 <- df17 %>% 
+  rename(Date2017 = Date) %>% 
+  rename(DataSheet2017 = DataSheet)
+```
+
+## Take out non-PIPO or ABCO in 2017 data
+```{r}
+df17 <- df17 %>% 
+  filter(Species %in% c("PIPO", "ABCO"))
+```
+
+## Take out Seedling 268 because it doesn't have shrub data
+```{r}
+df17 <- df17 %>% 
+  filter(Sdlg != 268)
+```
+
+# TO DO: TRY TO FIGURE OUT WHAT SEEDLING 268 WAS in 2016 DATA
+
+## Full join
+```{r}
+df <- full_join(df16, df17, by = "Sdlg")
+names(df)
 ```
 
 # Sync up repeat column names
@@ -60,34 +86,23 @@ df <- df %>%
   dplyr::select(-Species.x, -Species.y)
 ```
 
-
-## Correct species names
-```{r}
-summary(as.factor(df$Species))
-df %>% 
-  filter(Species == 2)
-df <- df %>% 
-  mutate(Species = ifelse(Sdlg %in% c(20:23), "PIPO", Species))
-```
-
 ## Sync fire and fire patch
 ```{r}
 df %>% 
-  filter(FirePatch.x != FirePatch.y)
+  filter(FirePatch.x != FirePatch.y) %>% 
+  dplyr::select(Sdlg, FirePatch.x, FirePatch.y)
 df <- df %>% 
   rename(FirePatch = FirePatch.x) %>% 
   dplyr::select(-FirePatch.y)
+```
+
+```{r}
+df %>% 
+  filter(Fire.x != Fire.y) %>% 
+  dplyr::select(Sdlg, Fire.x, Fire.y)
 df <- df %>% 
   rename(Fire = Fire.x) %>% 
   dplyr::select(-Fire.y)
-```
-
-## Rename date and datasheet columns
-```{r}
-df <- df %>% 
-  rename(Date = Date.x) %>% 
-  dplyr::select(-Date.y) %>% 
-  rename(DataSheet2017 = DataSheet)
 ```
 
 ## Rename basal diametercolumns
@@ -126,18 +141,10 @@ df <- df %>%
 summary(as.factor(df$Status))
 ```
 
-
-# Create shrubarea variables for each distance from the seedling
+# Create shrubarea variable
 ```{r}
 df <- df %>% 
-  mutate(shrubarea1 = Ht1 * Cov1) %>% 
-  mutate(shrubarea2 = Ht1.2 * Cov1.2) %>% 
   mutate(shrubarea3 = Ht1.3 * Cov1.3)
-```
-
-### Fix NA shrubarea
-```{r}
-df <- df %>% filter(!(is.na(shrubarea2) & Sdlg == "17"))
 ```
 
 # Save

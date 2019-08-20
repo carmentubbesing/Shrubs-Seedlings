@@ -16,78 +16,48 @@ require(tidyr)
 
 # Load data
 ```{r}
-load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file="../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
+load(file = "../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
+```
+
+# Combine seedling data with shrub data 
+
+## Take out variables in both besides Sdlg
+```{r}
+shr_by_sdlg <- shr_by_sdlg %>% 
+  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3)
+```
+
+```{r}
+nrow(df)
+df <- left_join(df, shr_by_sdlg)
+nrow(df)
 ```
 
 ## Add years since fire
 ```{r}
 df <- droplevels(df)
+summary(as.factor(df$Fire))
 df <- df %>% 
   mutate(Years = ifelse(Fire == "AMCR", 8, 0)) %>% 
   mutate(Years = ifelse(Fire == "CLVD", 24, Years)) %>% 
-  mutate(Years = ifelse(Fire == "FRDS", 12, Years)) %>% 
+  mutate(Years = ifelse(Fire == "FRED", 12, Years)) %>% 
   mutate(Years = ifelse(Fire == "PLKN", 43, Years)) %>% 
   mutate(Years = ifelse(Fire == "STAR", 14, Years)) %>% 
   mutate(Years = ifelse(Fire == "WRTS", 35, Years))
 summary(as.factor(df$Years))
 ```
 
-
-# Make Sdlg all caps
+## Check out numbers of seedlings
 ```{r}
-df <- df %>% 
-  mutate(Sdlg = toupper(Sdlg))
-```
-
-
-# Add light files for non-seedling shrub locations
-
-```{r}
-df <- df %>% 
-  mutate(Light_File = ifelse(Sdlg == "LIDE-4", 48, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "LIDE-3", 47, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "LIDE-2", 46, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "LIDE-1", 45, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "CEIN-1", 125, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "CEIN-2", 126, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "CECO-1", 74, Light_File)) %>% 
-  mutate(Light_File = ifelse(Sdlg == "ARPA-1", 94, Light_File))
-```
-
-
-# Add DIFN degrees from FV2200 output file
-```{r}
-setwd("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/")
-DIFNl53 <- read.table(file="AllDIFNGaps1-4",header=T,sep="\t")
-names(df)
-DIFNl53 <- distinct(DIFNl53)
-
-df <- left_join(df, DIFNl53, by=c("Light_File"="LAI_File")) %>%
-  rename(DIFN.all = DIFN.x) %>%
-  rename(DIFN.53 =DIFN.y) %>%
-  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
-```
-
-## Find which seedlings have DIFN.all but lack DIFN.53
-```{r}
-fix <- subset(df, !is.na(df$DIFN.all) & is.na(df$DIFN.53))
-fix
-```
-
-## Fill in a couple seedlings with funky DIFN situations
-
-Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky
-
-```{r}
-df[df$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"]
-df[df$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"])
-
-fix <- subset(df, !is.na(df$DIFN.all) & is.na(df$DIFN.53))
+df %>% 
+  group_by(Species) %>% 
+  summarize(n())
 ```
 
 ## Save
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/fire_footprints/")
-save(df, file="master_data_2016.Rdata")
+save(df, file="../../compiled_data/fire_footprints/master_data_2016.Rdata")
 write.csv(df, file = "master_data_2016.csv", row.names = F)
 ```

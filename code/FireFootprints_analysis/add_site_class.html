@@ -256,25 +256,38 @@ scs(122, 6)</code></pre>
   filter(siteclass == 0) %&gt;% 
   dplyr::select(FirePatch) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 0 x 1
-## # ... with 1 variable: FirePatch &lt;fct&gt;</code></pre>
+<pre><code>## Adding missing grouping variables: `Sdlg`</code></pre>
+<pre><code>## # A tibble: 117 x 2
+## # Groups:   Sdlg [117]
+##    Sdlg  FirePatch
+##    &lt;chr&gt; &lt;chr&gt;    
+##  1 36    AMRC-NW  
+##  2 38    AMRC-NW  
+##  3 39    AMRC-NW  
+##  4 40    AMRC-NW  
+##  5 41    AMRC-NW  
+##  6 42    AMRC-NW  
+##  7 43    AMRC-NW  
+##  8 44    AMRC-NW  
+##  9 46    AMRC-NW  
+## 10 48    AMRC-NW  
+## # ... with 107 more rows</code></pre>
 <pre class="r"><code>df %&gt;% 
   dplyr::select(Sdlg, FirePatch, siteclass) %&gt;% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))</code></pre>
-<pre><code>## # A tibble: 11 x 3
-##    Sdlg  FirePatch siteclass
-##    &lt;chr&gt; &lt;fct&gt;         &lt;dbl&gt;
-##  1 12    CLVD-N            3
-##  2 85    AMCR-2            3
-##  3 86    AMCR-2            3
-##  4 89    AMCR-2            4
-##  5 130   FRDS-N            4
-##  6 161   STAR-NW           6
-##  7 172   STAR-NW           4
-##  8 176   STAR-mid          4
-##  9 187   STAR-S            4
-## 10 227   AMCR-NE           4
-## 11 265   AMCR-3            3</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Sdlg [9]
+##   Sdlg  FirePatch siteclass
+##   &lt;chr&gt; &lt;chr&gt;         &lt;dbl&gt;
+## 1 12    CLVD-N            3
+## 2 85    AMRC-2            3
+## 3 86    AMRC-2            3
+## 4 89    AMRC-2            0
+## 5 161   STAR-NW           6
+## 6 172   STAR-NW           4
+## 7 176   STAR-mid          4
+## 8 227   AMRC-NE           0
+## 9 265   AMRC-3            0</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>

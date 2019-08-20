@@ -189,14 +189,18 @@ summary {
 <ul>
 <li><a href="#read-in-2017-data">Read in 2017 data</a></li>
 <li><a href="#read-in-2016-data">Read in 2016 data</a></li>
-<li><a href="#combine">Combine</a></li>
-<li><a href="#take-out-the-incense-cedar">Take out the incense cedar</a></li>
+<li><a href="#combine">Combine</a><ul>
+<li><a href="#rename-dates-columns">Rename dates columns</a></li>
+<li><a href="#take-out-non-pipo-or-abco-in-2017-data">Take out non-PIPO or ABCO in 2017 data</a></li>
+<li><a href="#take-out-seedling-268-because-it-doesnt-have-shrub-data">Take out Seedling 268 because it doesn’t have shrub data</a></li>
+</ul></li>
+<li><a href="#to-do-try-to-figure-out-what-seedling-268-was-in-2016-data">TO DO: TRY TO FIGURE OUT WHAT SEEDLING 268 WAS in 2016 DATA</a><ul>
+<li><a href="#full-join">Full join</a></li>
+</ul></li>
 <li><a href="#sync-up-repeat-column-names">Sync up repeat column names</a><ul>
 <li><a href="#check-for-different-species">Check for different species</a></li>
 <li><a href="#go-with-2017-species-when-its-listed-since-one-trees-species-was-corrected">Go with 2017 species when it’s listed since one tree’s species was corrected</a></li>
-<li><a href="#correct-species-names">Correct species names</a></li>
 <li><a href="#sync-fire-and-fire-patch">Sync fire and fire patch</a></li>
-<li><a href="#rename-date-and-datasheet-columns">Rename date and datasheet columns</a></li>
 <li><a href="#rename-basal-diametercolumns">Rename basal diametercolumns</a></li>
 <li><a href="#reorder-columns">Reorder columns</a></li>
 </ul></li>
@@ -204,9 +208,7 @@ summary {
 <li><a href="#record-why-things-were-left-out">Record why things were left out</a></li>
 <li><a href="#remove-seedlings-that-were-excluded-for-reasons-other-than-dead-or-couldnt-find-them">Remove seedlings that were excluded for reasons other than dead or couldn’t find them</a></li>
 </ul></li>
-<li><a href="#create-shrubarea-variables-for-each-distance-from-the-seedling">Create shrubarea variables for each distance from the seedling</a><ul>
-<li><a href="#fix-na-shrubarea">Fix NA shrubarea</a></li>
-</ul></li>
+<li><a href="#create-shrubarea-variable">Create shrubarea variable</a></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
@@ -227,12 +229,52 @@ remove(df)</code></pre>
 </div>
 <div id="combine" class="section level1">
 <h1>Combine</h1>
-<pre class="r"><code>df &lt;- full_join(df16, df17, by = &quot;Sdlg&quot;)</code></pre>
+<div id="rename-dates-columns" class="section level2">
+<h2>Rename dates columns</h2>
+<pre class="r"><code>df16 &lt;- df16 %&gt;% 
+  rename(Date1_2016 = Date1) %&gt;% 
+  rename(Date2_2016 = Date2) %&gt;% 
+  rename(Datasheet1_2016 = DataSheet1) %&gt;% 
+  rename(Datasheet2_2016 = DataSheet2)</code></pre>
+<pre class="r"><code>df17 &lt;- df17 %&gt;% 
+  rename(Date2017 = Date) %&gt;% 
+  rename(DataSheet2017 = DataSheet)</code></pre>
 </div>
-<div id="take-out-the-incense-cedar" class="section level1">
-<h1>Take out the incense cedar</h1>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  filter(Species.x != &quot;CADE&quot;)</code></pre>
+<div id="take-out-non-pipo-or-abco-in-2017-data" class="section level2">
+<h2>Take out non-PIPO or ABCO in 2017 data</h2>
+<pre class="r"><code>df17 &lt;- df17 %&gt;% 
+  filter(Species %in% c(&quot;PIPO&quot;, &quot;ABCO&quot;))</code></pre>
+</div>
+<div id="take-out-seedling-268-because-it-doesnt-have-shrub-data" class="section level2">
+<h2>Take out Seedling 268 because it doesn’t have shrub data</h2>
+<pre class="r"><code>df17 &lt;- df17 %&gt;% 
+  filter(Sdlg != 268)</code></pre>
+</div>
+</div>
+<div id="to-do-try-to-figure-out-what-seedling-268-was-in-2016-data" class="section level1">
+<h1>TO DO: TRY TO FIGURE OUT WHAT SEEDLING 268 WAS in 2016 DATA</h1>
+<div id="full-join" class="section level2">
+<h2>Full join</h2>
+<pre class="r"><code>df &lt;- full_join(df16, df17, by = &quot;Sdlg&quot;)
+names(df)</code></pre>
+<pre><code>##  [1] &quot;Fire.x&quot;           &quot;Patch&quot;            &quot;Elevation&quot;       
+##  [4] &quot;Nearby_Easting&quot;   &quot;Nearby_Northing&quot;  &quot;Sdlg&quot;            
+##  [7] &quot;Species.x&quot;        &quot;Slope.Deg&quot;        &quot;Aspect.deg&quot;      
+## [10] &quot;Ht16_meas2016.cm&quot; &quot;BasDia.cm&quot;        &quot;LastYearGrth.cm&quot; 
+## [13] &quot;HTLCB&quot;            &quot;Dia2016&quot;          &quot;Dia2015&quot;         
+## [16] &quot;Ht2015.meas2016&quot;  &quot;Note1&quot;            &quot;Note2&quot;           
+## [19] &quot;Note3_Light&quot;      &quot;Datasheet1_2016&quot;  &quot;Light_File&quot;      
+## [22] &quot;DIFN&quot;             &quot;FirePatch.x&quot;      &quot;return&quot;          
+## [25] &quot;Date1_2016&quot;       &quot;Date2_2016&quot;       &quot;personel2&quot;       
+## [28] &quot;personel1&quot;        &quot;Time1&quot;            &quot;Time2&quot;           
+## [31] &quot;Photo&quot;            &quot;Datasheet2_2016&quot;  &quot;ShrubSpp03&quot;      
+## [34] &quot;Cov1.3&quot;           &quot;Ht1.3&quot;            &quot;Years&quot;           
+## [37] &quot;Date2017&quot;         &quot;DataSheet2017&quot;    &quot;Fire.y&quot;          
+## [40] &quot;FirePatch.y&quot;      &quot;Species.y&quot;        &quot;Map&quot;             
+## [43] &quot;Status&quot;           &quot;Ht2017.cm&quot;        &quot;Dia_1_mm&quot;        
+## [46] &quot;Dia_2_mm&quot;         &quot;Growth_17&quot;        &quot;Growth_16&quot;       
+## [49] &quot;Growth_15&quot;        &quot;notes&quot;</code></pre>
+</div>
 </div>
 <div id="sync-up-repeat-column-names" class="section level1">
 <h1>Sync up repeat column names</h1>
@@ -240,21 +282,22 @@ remove(df)</code></pre>
 <h2>Check for different species</h2>
 <pre class="r"><code>df %&gt;% 
   filter(Species.x != Species.y)</code></pre>
-<pre><code>## # A tibble: 1 x 49
-##   Sdlg  Fire.x FirePatch.x Elevation Species.x Slope.Deg Aspect.deg
-##   &lt;chr&gt; &lt;fct&gt;  &lt;fct&gt;           &lt;int&gt; &lt;fct&gt;         &lt;int&gt;      &lt;int&gt;
-## 1 132   FRDS   FRDS-N           1805 PIPO             16        345
-## # ... with 42 more variables: Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;,
-## #   LastYearGrth.cm &lt;dbl&gt;, Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;,
-## #   ImmedAboveSpp &lt;fct&gt;, ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;,
-## #   ShrubSpp01 &lt;chr&gt;, ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;,
-## #   Cov2 &lt;dbl&gt;, Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
-## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
-## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
-## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
-## #   Species.y &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;,
-## #   Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
-## #   Growth_15 &lt;chr&gt;, notes &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 0 x 50
+## # Groups:   Sdlg [0]
+## # ... with 50 variables: Fire.x &lt;chr&gt;, Patch &lt;chr&gt;, Elevation &lt;dbl&gt;,
+## #   Nearby_Easting &lt;dbl&gt;, Nearby_Northing &lt;dbl&gt;, Sdlg &lt;chr&gt;,
+## #   Species.x &lt;chr&gt;, Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
+## #   Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
+## #   Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;fct&gt;, Datasheet1_2016 &lt;fct&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch.x &lt;chr&gt;, return &lt;chr&gt;,
+## #   Date1_2016 &lt;date&gt;, Date2_2016 &lt;date&gt;, personel2 &lt;chr&gt;,
+## #   personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;,
+## #   Datasheet2_2016 &lt;chr&gt;, ShrubSpp03 &lt;fct&gt;, Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;,
+## #   Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Fire.y &lt;chr&gt;,
+## #   FirePatch.y &lt;chr&gt;, Species.y &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;,
+## #   Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;,
+## #   Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, notes &lt;chr&gt;</code></pre>
 </div>
 <div id="go-with-2017-species-when-its-listed-since-one-trees-species-was-corrected" class="section level2">
 <h2>Go with 2017 species when it’s listed since one tree’s species was corrected</h2>
@@ -262,61 +305,38 @@ remove(df)</code></pre>
   mutate(Species = ifelse(!is.na(Species.y), Species.y, Species.x)) %&gt;% 
   dplyr::select(-Species.x, -Species.y)</code></pre>
 </div>
-<div id="correct-species-names" class="section level2">
-<h2>Correct species names</h2>
-<pre class="r"><code>summary(as.factor(df$Species))</code></pre>
-<pre><code>##    1    3    4 ABCO PILA PIPO PSME 
-##    2    1    6  124   18   89   10</code></pre>
-<pre class="r"><code>df %&gt;% 
-  filter(Species == 2)</code></pre>
-<pre><code>## # A tibble: 0 x 48
-## # ... with 48 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
-## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;,
-## #   Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
-## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
-## #   ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;,
-## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;,
-## #   Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
-## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
-## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
-## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
-## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;,
-## #   Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;,
-## #   notes &lt;chr&gt;, Species &lt;chr&gt;</code></pre>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(Species = ifelse(Sdlg %in% c(20:23), &quot;PIPO&quot;, Species))</code></pre>
-</div>
 <div id="sync-fire-and-fire-patch" class="section level2">
 <h2>Sync fire and fire patch</h2>
 <pre class="r"><code>df %&gt;% 
-  filter(FirePatch.x != FirePatch.y)</code></pre>
-<pre><code>## # A tibble: 0 x 48
-## # ... with 48 variables: Sdlg &lt;chr&gt;, Fire.x &lt;fct&gt;, FirePatch.x &lt;fct&gt;,
-## #   Elevation &lt;int&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;,
-## #   Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
-## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, ImmedAboveSpp &lt;fct&gt;,
-## #   ImmedAboveHt.cm &lt;int&gt;, Ht2015.meas2016 &lt;int&gt;, ShrubSpp01 &lt;chr&gt;,
-## #   ShrubSpp02 &lt;fct&gt;, ShrubSpp03 &lt;fct&gt;, Cov1 &lt;dbl&gt;, Cov2 &lt;dbl&gt;,
-## #   Cov3 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Ht2 &lt;dbl&gt;, Ht3 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;,
-## #   Cov1.3 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, ShrG1 &lt;fct&gt;, IAG &lt;dbl&gt;,
-## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date.x &lt;fct&gt;, LAI &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
-## #   Date.y &lt;dbl&gt;, DataSheet &lt;chr&gt;, Fire.y &lt;chr&gt;, FirePatch.y &lt;chr&gt;,
-## #   Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;,
-## #   Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;,
-## #   notes &lt;chr&gt;, Species &lt;chr&gt;</code></pre>
+  filter(FirePatch.x != FirePatch.y) %&gt;% 
+  dplyr::select(Sdlg, FirePatch.x, FirePatch.y)</code></pre>
+<pre><code>## # A tibble: 123 x 3
+## # Groups:   Sdlg [123]
+##    Sdlg  FirePatch.x FirePatch.y
+##    &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;      
+##  1 28    AMRC-A      AMCR-A     
+##  2 36    AMRC-NW     AMCR-NW    
+##  3 38    AMRC-NW     AMCR-NW    
+##  4 39    AMRC-NW     AMCR-NW    
+##  5 40    AMRC-NW     AMCR-NW    
+##  6 41    AMRC-NW     AMCR-NW    
+##  7 42    AMRC-NW     AMCR-NW    
+##  8 43    AMRC-NW     AMCR-NW    
+##  9 44    AMRC-NW     AMCR-NW    
+## 10 46    AMRC-NW     AMCR-NW    
+## # ... with 113 more rows</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   rename(FirePatch = FirePatch.x) %&gt;% 
-  dplyr::select(-FirePatch.y)
-df &lt;- df %&gt;% 
+  dplyr::select(-FirePatch.y)</code></pre>
+<pre class="r"><code>df %&gt;% 
+  filter(Fire.x != Fire.y) %&gt;% 
+  dplyr::select(Sdlg, Fire.x, Fire.y)</code></pre>
+<pre><code>## # A tibble: 0 x 3
+## # Groups:   Sdlg [0]
+## # ... with 3 variables: Sdlg &lt;chr&gt;, Fire.x &lt;chr&gt;, Fire.y &lt;chr&gt;</code></pre>
+<pre class="r"><code>df &lt;- df %&gt;% 
   rename(Fire = Fire.x) %&gt;% 
   dplyr::select(-Fire.y)</code></pre>
-</div>
-<div id="rename-date-and-datasheet-columns" class="section level2">
-<h2>Rename date and datasheet columns</h2>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  rename(Date = Date.x) %&gt;% 
-  dplyr::select(-Date.y) %&gt;% 
-  rename(DataSheet2017 = DataSheet)</code></pre>
 </div>
 <div id="rename-basal-diametercolumns" class="section level2">
 <h2>Rename basal diametercolumns</h2>
@@ -336,28 +356,28 @@ df &lt;- df %&gt;%
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Ht2017.cm) &amp; is.na(Status)) %&gt;% 
   dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, notes)</code></pre>
-<pre><code>## # A tibble: 19 x 5
+<pre><code>## # A tibble: 18 x 5
+## # Groups:   Sdlg [18]
 ##    Sdlg  Status FirePatch  DataSheet2017                              notes
-##    &lt;chr&gt; &lt;chr&gt;  &lt;fct&gt;      &lt;chr&gt;                                      &lt;chr&gt;
-##  1 19    &lt;NA&gt;   CLVD-SW    &lt;NA&gt;                                       &lt;NA&gt; 
-##  2 20    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
-##  3 21    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
-##  4 22    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
-##  5 23    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
-##  6 28    &lt;NA&gt;   AMCR-A     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
-##  7 58    &lt;NA&gt;   AMCR-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
-##  8 80    &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
-##  9 92    &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
-## 10 93    &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
-## 11 100   &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
-## 12 103   &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
-## 13 106   &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
-## 14 107   &lt;NA&gt;   AMCR-2     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
-## 15 137   &lt;NA&gt;   PLKN-MID W &lt;NA&gt;                                       &lt;NA&gt; 
-## 16 139   &lt;NA&gt;   PLKN-W     &lt;NA&gt;                                       &lt;NA&gt; 
-## 17 229   &lt;NA&gt;   AMCR-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
-## 18 125F  &lt;NA&gt;   FRDS-N     &lt;NA&gt;                                       &lt;NA&gt; 
-## 19 125W  &lt;NA&gt;   WRTS-1     &lt;NA&gt;                                       &lt;NA&gt;</code></pre>
+##    &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;                                      &lt;chr&gt;
+##  1 28    &lt;NA&gt;   AMRC-A     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+##  2 58    &lt;NA&gt;   AMRC-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+##  3 80    &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
+##  4 92    &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
+##  5 93    &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
+##  6 100   &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
+##  7 103   &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_KindleFire_Sep12_1234 &lt;NA&gt; 
+##  8 106   &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+##  9 107   &lt;NA&gt;   AMRC-2     Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+## 10 19    &lt;NA&gt;   CLVD-SW    &lt;NA&gt;                                       &lt;NA&gt; 
+## 11 137   &lt;NA&gt;   PLKN-MID W &lt;NA&gt;                                       &lt;NA&gt; 
+## 12 132   &lt;NA&gt;   FRDS-N     &lt;NA&gt;                                       &lt;NA&gt; 
+## 13 229   &lt;NA&gt;   AMRC-NE    Shrubs_Summer17_AMRC_2_Sep11               &lt;NA&gt; 
+## 14 20    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
+## 15 21    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
+## 16 22    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
+## 17 23    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                       &lt;NA&gt; 
+## 18 139   &lt;NA&gt;   PLKN-W     &lt;NA&gt;                                       &lt;NA&gt;</code></pre>
 <div id="record-why-things-were-left-out" class="section level2">
 <h2>Record why things were left out</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
@@ -371,23 +391,17 @@ df &lt;- df %&gt;%
   filter(!Status %in% c(&quot;exclude, under oak&quot;, &quot;exclude, lone in patch&quot;))
 summary(as.factor(df$Status))</code></pre>
 <pre><code>##          alive could not find           dead           done           DONE 
-##             24              2              9             27            153 
+##             21              2              7             27            130 
 ##          eaten      herbicide     herbicided      not found         unsure 
 ##              1              3              6             17              1 
 ##           NA's 
-##              2</code></pre>
+##              1</code></pre>
 </div>
 </div>
-<div id="create-shrubarea-variables-for-each-distance-from-the-seedling" class="section level1">
-<h1>Create shrubarea variables for each distance from the seedling</h1>
+<div id="create-shrubarea-variable" class="section level1">
+<h1>Create shrubarea variable</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(shrubarea1 = Ht1 * Cov1) %&gt;% 
-  mutate(shrubarea2 = Ht1.2 * Cov1.2) %&gt;% 
   mutate(shrubarea3 = Ht1.3 * Cov1.3)</code></pre>
-<div id="fix-na-shrubarea" class="section level3">
-<h3>Fix NA shrubarea</h3>
-<pre class="r"><code>df &lt;- df %&gt;% filter(!(is.na(shrubarea2) &amp; Sdlg == &quot;17&quot;))</code></pre>
-</div>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>
