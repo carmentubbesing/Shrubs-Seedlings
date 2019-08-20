@@ -254,7 +254,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(Ht2015.cm_spring)) %>% 
-  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, notes)
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, Note1_2016, Note2_2016, Notes2017)
 ```
 
 ## Add height for those special cases
@@ -277,7 +277,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(Sdlg %in% c(75, 161)) %>% 
-  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, notes, Ht2016.cm_spring, Ht2017.cm_spring, Ht2015.cm_spring)
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, Note1_2016, Note2_2016, Notes2017, Ht2016.cm_spring, Ht2017.cm_spring, Ht2015.cm_spring)
 ```
 
 ## Fix them
@@ -323,7 +323,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(VertGrowth_cm)) %>% 
-  dplyr::select(Sdlg, Year, VertGrowth_cm, Status, notes) %>% 
+  dplyr::select(Sdlg, Year, VertGrowth_cm, Status,  Note1_2016, Note2_2016, Notes2017) %>% 
   arrange(Sdlg)
 df <- df %>% 
   filter(!(Sdlg %in% c("6","185","131","226","6","74","98", "132") & Year %in% c("2017","2016"))) %>% 
@@ -364,12 +364,11 @@ df <- df %>%
                                ifelse(Year == "2015", Ht2015.cm_spring, 0))))
 ```
 
-
 ## Find missing heights
 ```{r}
 df %>% 
   filter(is.na(Ht_cm)) %>% 
-  dplyr::select(Sdlg, LastYearGrth.cm, Ht2016.cm_spring, Ht2017.cm.fall, Ht2015.meas2016, Year, VertGrowth_cm, notes)
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht2016.cm_spring, Ht2017.cm.fall, Ht2015.meas2016, Year, VertGrowth_cm,  Note1_2016, Note2_2016, Notes2017)
 ```
 
 # Change years since fire depending on year of growth
@@ -381,7 +380,7 @@ df %>%
 
 ```{r}
 df <- df %>% 
-  mutate(FireYear = ifelse(Fire == "AMCR", 2008, ifelse(Fire == "CLVD", 1992, ifelse(Fire == "FRDS", 2004, ifelse(Fire == "STAR", 2001, 1981))))) %>% 
+  mutate(FireYear = ifelse(Fire == "AMRC", 2008, ifelse(Fire == "CLVD", 1992, ifelse(Fire == "FRDS", 2004, ifelse(Fire == "STAR", 2001, 1981))))) %>% 
   mutate(Years = as.numeric(paste(Year))-FireYear)
 ```
 

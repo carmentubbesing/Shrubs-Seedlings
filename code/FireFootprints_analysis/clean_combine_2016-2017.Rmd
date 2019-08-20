@@ -51,6 +51,18 @@ df17 <- df17 %>%
   rename(DataSheet2017 = DataSheet)
 ```
 
+## Rename notes columns
+```{r}
+df16 <- df16 %>% 
+  rename(Note1_2016 = Note1, Note2_2016 = Note2)
+```
+
+```{r}
+df17 <- df17 %>% 
+  rename(Notes2017 = notes)
+```
+
+
 ## Take out non-PIPO or ABCO in 2017 data
 ```{r}
 df17 <- df17 %>% 
@@ -123,7 +135,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(Ht2017.cm) & is.na(Status)) %>% 
-  dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, notes)
+  dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, Notes2017)
 ```
 
 ## Record why things were left out 
