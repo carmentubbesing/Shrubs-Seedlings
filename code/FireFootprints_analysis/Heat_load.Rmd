@@ -221,7 +221,6 @@ for(i in 1:length(files)){
     table_all <- full_join(table_all, table)
   )
 }
-table_all %>% arrange(Name)
 nrow(table_all)
 ```
 
@@ -240,7 +239,7 @@ table_n1 <- table_all %>%
 table_n1 %>% 
   group_by(Name) %>% 
   filter(n()>1) %>% 
-  arrange(Name)
+  arrange(desc(Name))
 ```
 
 ```{r}
@@ -248,7 +247,6 @@ table_n1 <- table_n1 %>%
   filter(!(Name==26 & file_lat == "Freds_JB_A.csv")) %>% 
   filter(!(Name %in% c(76, 77, 80, 81, 83, 88, 89, 94, 97) & file_lat == "AMR - Aerial - 2.csv"))
 ```
-
 
 #### Join
 ```{r}
@@ -274,7 +272,7 @@ table_n <- table_n %>%
   filter(!(Name %in% dups$Name & file_lat == "AMR - Aerial - NW.csv"))
 ```
 
-#### Create a function
+#### Create a function to assign lat/long based on lat files
 ```{r}
 long <- function(sdlgs, name){
   row <- table_n %>% 
@@ -353,7 +351,7 @@ df %>% filter(Sdlg == 227) %>% dplyr::select(Sdlg, X, Y, file_lat)
 table_n[1:4,]
 ```
 
-## Add longitude by hand for the seedlings I couldn't export
+# Add latitude by hand for the seedlings I couldn't export
 
 ### Find all seedlings still needing longitude
 ```{r}
@@ -372,7 +370,7 @@ df %>%
   summarize(n())
 ```
 
-### Function for assigning longitude
+### Function for assigning latitude
 ```{r}
 lati <- function(sdlg, longitude, latitude){
   df <<- df %>% 
@@ -449,9 +447,10 @@ latave(107, c(105))
 latave(282, c(281, 283))
 latave(135, c(125, 121))
 latave(27, c(26))
+latave("125W", c(123, 124))
 ```
 
-#### Check
+#### Check for seedlings with still NA values
 ```{r}
 df %>% 
   filter(is.na(Y)) %>% 

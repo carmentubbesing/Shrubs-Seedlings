@@ -215,12 +215,12 @@ summary {
 <li><a href="#then-join-rows-with-more-than-one-seedling-per-row">Then join rows with more than one seedling per row</a></li>
 <li><a href="#check-2">Check</a></li>
 </ul></li>
-<li><a href="#add-longitude-by-hand-for-the-seedlings-i-couldnt-export">Add longitude by hand for the seedlings I couldn’t export</a><ul>
+</ul></li>
+<li><a href="#add-latitude-by-hand-for-the-seedlings-i-couldnt-export">Add latitude by hand for the seedlings I couldn’t export</a><ul>
 <li><a href="#find-all-seedlings-still-needing-longitude">Find all seedlings still needing longitude</a></li>
 <li><a href="#check-which-patches-theyre-concentrated-in">Check which patches they’re concentrated in</a></li>
-<li><a href="#function-for-assigning-longitude">Function for assigning longitude</a></li>
+<li><a href="#function-for-assigning-latitude">Function for assigning latitude</a></li>
 <li><a href="#for-the-ones-without-points-create-a-function-to-average-the-longitudes-of-the-nearby-points">For the ones without points, create a function to average the longitudes of the nearby points</a></li>
-</ul></li>
 </ul></li>
 <li><a href="#calculate-heat-load-based-on-eqn-3-of-mccune-b.-keon-d.-2002.-equations-for-potential-annual-direct-incident-radiation-and-heat-load.-j.-veg.-sci.-13-603-606.-httpsdoi.org10.1111j.1654-1103.2002.tb02087.x">Calculate heat load based on Eqn 3 of McCune, B., Keon, D., 2002. Equations for potential annual direct incident radiation and heat load. J. Veg. Sci. 13, 603-606. <a href="https://doi.org/10.1111/j.1654-1103.2002.tb02087.x" class="uri">https://doi.org/10.1111/j.1654-1103.2002.tb02087.x</a></a><ul>
 <li><a href="#create-rows-for-the-sample-data-from-mccune-and-keon-to-check-my-values-against">Create rows for the sample data from McCune and Keon to check my values against</a></li>
@@ -247,7 +247,6 @@ summary {
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg)</code></pre>
 <pre><code>## # A tibble: 39 x 49
-## # Groups:   Sdlg [39]
 ##    Sdlg  Species Fire  FirePatch Ht16_meas2016.cm Ht2017.cm Patch Elevation
 ##    &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;
 ##  1 159   PIPO    STAR  STAR-NW                118       124 NW           NA
@@ -263,15 +262,15 @@ summary {
 ## # ... with 29 more rows, and 41 more variables: Nearby_Easting &lt;dbl&gt;,
 ## #   Nearby_Northing &lt;dbl&gt;, Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
 ## #   BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;,
-## #   Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1 &lt;chr&gt;,
-## #   Note2 &lt;chr&gt;, Note3_Light &lt;fct&gt;, Datasheet1_2016 &lt;fct&gt;,
+## #   Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1_2016 &lt;chr&gt;,
+## #   Note2_2016 &lt;chr&gt;, Note3_Light &lt;fct&gt;, Datasheet1_2016 &lt;fct&gt;,
 ## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, return &lt;chr&gt;, Date1_2016 &lt;date&gt;,
 ## #   Date2_2016 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;,
 ## #   Time2 &lt;time&gt;, Photo &lt;chr&gt;, Datasheet2_2016 &lt;chr&gt;, ShrubSpp03 &lt;fct&gt;,
 ## #   Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;,
 ## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;,
 ## #   BasDia2017.mm.2 &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
-## #   Growth_15 &lt;chr&gt;, notes &lt;chr&gt;, shrubarea3 &lt;dbl&gt;, siteclass &lt;dbl&gt;</code></pre>
+## #   Growth_15 &lt;chr&gt;, Notes2017 &lt;chr&gt;, shrubarea3 &lt;dbl&gt;, siteclass &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-elevation-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding elevation data to an individual seedling</h2>
 <pre class="r"><code>elv &lt;- function(sdlg, elev){
@@ -332,12 +331,11 @@ elv(265, 1684)</code></pre>
   dplyr::select(FirePatch, Elevation) %&gt;% 
   distinct() %&gt;% 
   ungroup() %&gt;% 
-  summarize(mean(Elevation))</code></pre>
-<pre><code>## Adding missing grouping variables: `Sdlg`</code></pre>
-<pre class="r"><code>elv_est &lt;- unlist(elv_est)
+  summarize(mean(Elevation))
+elv_est &lt;- unlist(elv_est)
 elv_est</code></pre>
 <pre><code>## mean(Elevation) 
-##          1659.4</code></pre>
+##          1658.5</code></pre>
 <pre class="r"><code>elv(222, elv_est)
 elv(225, elv_est)</code></pre>
 </div>
@@ -348,9 +346,8 @@ elv(225, elv_est)</code></pre>
   dplyr::select(FirePatch, Elevation) %&gt;% 
   distinct() %&gt;% 
   ungroup() %&gt;% 
-  summarize(mean(Elevation))</code></pre>
-<pre><code>## Adding missing grouping variables: `Sdlg`</code></pre>
-<pre class="r"><code>elv_est &lt;- unlist(elv_est)
+  summarize(mean(Elevation))
+elv_est &lt;- unlist(elv_est)
 elv_est</code></pre>
 <pre><code>## mean(Elevation) 
 ##          1680.5</code></pre>
@@ -360,11 +357,10 @@ elv_est</code></pre>
 <h3>Test</h3>
 <pre class="r"><code>df %&gt;% filter(Sdlg %in% c(222, 225, 255)) %&gt;% dplyr::select(Sdlg, FirePatch, Elevation) %&gt;% distinct()</code></pre>
 <pre><code>## # A tibble: 3 x 3
-## # Groups:   Sdlg [3]
 ##   Sdlg  FirePatch Elevation
 ##   &lt;chr&gt; &lt;chr&gt;         &lt;dbl&gt;
-## 1 222   AMRC-2        1659.
-## 2 225   AMRC-2        1659.
+## 1 222   AMRC-2        1658.
+## 2 225   AMRC-2        1658.
 ## 3 255   AMRC-3        1680.</code></pre>
 </div>
 </div>
@@ -376,7 +372,6 @@ elv_est</code></pre>
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 0 x 5
-## # Groups:   Sdlg [0]
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 </div>
@@ -389,7 +384,6 @@ elv_est</code></pre>
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
 <pre><code>## # A tibble: 0 x 5
-## # Groups:   Sdlg [0]
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-aspect-data-to-an-individual-seedling" class="section level2">
@@ -418,7 +412,6 @@ asp(9, 34)</code></pre>
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct() </code></pre>
 <pre><code>## # A tibble: 0 x 5
-## # Groups:   Sdlg [0]
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 </div>
@@ -431,7 +424,6 @@ asp(9, 34)</code></pre>
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 0 x 5
-## # Groups:   Sdlg [0]
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-slope-data-to-an-individual-seedling" class="section level2">
@@ -460,7 +452,6 @@ slp(9, 15)</code></pre>
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 0 x 5
-## # Groups:   Sdlg [0]
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
 </div>
@@ -525,417 +516,6 @@ for(i in 1:length(files)){
 <pre><code>## Joining, by = c(&quot;Name&quot;, &quot;Y&quot;, &quot;X&quot;, &quot;file_lat&quot;)</code></pre>
 <pre><code>## Warning: Column `Name` joining character vector and factor, coercing into
 ## character vector</code></pre>
-<pre class="r"><code>table_all %&gt;% arrange(Name)</code></pre>
-<pre><code>##                                             Name        Y         X
-## 1                                             10 38.85488 -120.4142
-## 2                                      100 Ceco3 39.22030 -120.6204
-## 3                                      100 Ceco3 39.22030 -120.6204
-## 4                                          101-2 39.22032 -120.6204
-## 5                                          101-2 39.22032 -120.6204
-## 6                                            103 39.22052 -120.6201
-## 7                                  103 - Return  39.22052 -120.6201
-## 8                                            108 38.78163 -120.3917
-## 9                                            109 38.78146 -120.3913
-## 10                                            11 38.85501 -120.4143
-## 11                                           110 38.78153 -120.3912
-## 12                                           111 38.78109 -120.3915
-## 13                                           112 38.79718 -120.2449
-## 14                                           113 38.79683 -120.2447
-## 15                                           114 38.79707 -120.2448
-## 16                                           115 38.79694 -120.2445
-## 17                                   116,119-121 38.79708 -120.2444
-## 18                                       117-118 38.79710 -120.2445
-## 19                                      12,13,14 38.85504 -120.4145
-## 20                                           122 38.79740 -120.2441
-## 21                                           123 38.79841 -120.2444
-## 22                                           124 38.79839 -120.2444
-## 23                                           125 38.79491 -120.3378
-## 24                                           127 38.79487 -120.3374
-## 25                                           128 38.79482 -120.3377
-## 26                                           129 38.79491 -120.3378
-## 27                                           130 38.79497 -120.3379
-## 28                                       131-132 38.79495 -120.3386
-## 29                                       133-134 38.79535 -120.3366
-## 30                                       140-142 38.77666 -120.2901
-## 31                                           143 38.77668 -120.2900
-## 32                                       144-145 38.77668 -120.2902
-## 33                                       147-148 38.77672 -120.2908
-## 34                                       149-151 38.77662 -120.2907
-## 35                                            15 38.85524 -120.4143
-## 36                                   15 Remarked 38.85512 -120.4144
-## 37                                           152 38.77660 -120.2912
-## 38                                       153-154 38.77669 -120.2918
-## 39                                           155 38.77741 -120.2928
-## 40                                       156-160 39.13535 -120.4837
-## 41                                            16 38.85487 -120.4146
-## 42                                           161 39.13539 -120.4850
-## 43                                       162-164 39.13559 -120.4851
-## 44                                           165 39.13588 -120.4855
-## 45                                         166-7 39.13606 -120.4858
-## 46                                           168 39.13564 -120.4861
-## 47                                           169 39.13542 -120.4863
-## 48                                            17 38.85478 -120.4146
-## 49                                       170-173 39.13318 -120.4901
-## 50                                           174 39.13336 -120.4902
-## 51                                           175 39.11939 -120.4672
-## 52                                           176 39.11887 -120.4677
-## 53                                           177 39.11976 -120.4708
-## 54                                           178 39.11959 -120.4709
-## 55                       179-180, Possible Abcos 39.10636 -120.4686
-## 56                                           181 39.10649 -120.4686
-## 57                                     182 &amp; 189 39.10656 -120.4687
-## 58                                       183-184 39.10651 -120.4685
-## 59                                       185-186 39.10656 -120.4685
-## 60                                      187, 188 39.10671 -120.4687
-## 61                                           190 39.10668 -120.4687
-## 62                                           191 38.77659 -120.2908
-## 63                                     191 &amp; 193 39.10653 -120.4695
-## 64                                           192 39.10695 -120.4687
-## 65                                           194 38.77677 -120.2920
-## 66                                           195 38.77718 -120.2922
-## 67                                           196 38.77668 -120.2920
-## 68                                           197 38.77889 -120.2912
-## 69                                           198 38.77731 -120.2905
-## 70                                       199-201 38.77647 -120.2907
-## 71                                         20-25 38.78420 -120.3184
-## 72                                   202 and 203 39.22078 -120.6208
-## 73                                           204 39.22078 -120.6208
-## 74                                       205,206 39.22073 -120.6208
-## 75                                       207,208 39.22063 -120.6208
-## 76                                           209 39.22056 -120.6208
-## 77                                           210 39.22053 -120.6209
-## 78                                       212,213 39.22042 -120.6210
-## 79                                           214 39.22037 -120.6210
-## 80                                           215 39.22039 -120.6210
-## 81                                           220 39.22017 -120.6212
-## 82                                           221 39.22028 -120.6211
-## 83                                   223 and 224 39.22009 -120.6208
-## 84                                           226 39.22004 -120.6207
-## 85                                   227 and 228 39.23838 -120.5940
-## 86                                   237 and 238 39.23907 -120.5945
-## 87                                   239 and 240 39.23892 -120.5948
-## 88                                           241 39.23891 -120.5948
-## 89                                     242 - 244 39.23867 -120.5950
-## 90                                           245 39.23865 -120.5951
-## 91                                   251 and 252 39.21928 -120.6355
-## 92                                   256 and 257 39.21925 -120.6365
-## 93                                           258 39.21906 -120.6364
-## 94                                           259 39.21899 -120.6364
-## 95                                            26 38.78755 -120.2996
-## 96                                            26 38.78755 -120.2996
-## 97                                           260 39.21893 -120.6362
-## 98                                           263 39.21909 -120.6360
-## 99                                   264 and 265 39.21904 -120.6356
-## 100                                         268? 39.21910 -120.6355
-## 101                                          275 38.85513 -120.4143
-## 102                                  277,278,276 38.85437 -120.4151
-## 103                                          279 38.85445 -120.4149
-## 104                                          280 38.85447 -120.4150
-## 105                                          281 38.85443 -120.4149
-## 106                                          283 38.85489 -120.4144
-## 107                                          284 38.85533 -120.4143
-## 108                                          285 38.85537 -120.4141
-## 109                                        286-9 38.78755 -120.2998
-## 110                                          290 38.78731 -120.3002
-## 111                                        291-2 38.78721 -120.3002
-## 112                                          293 38.78731 -120.3003
-## 113                                          294 38.78741 -120.3005
-## 114                                      35 - 40 39.23366 -120.6489
-## 115                                           41 39.23363 -120.6488
-## 116                                           43 39.23370 -120.6487
-## 117                                           44 39.23373 -120.6484
-## 118                                            5 38.85439 -120.4149
-## 119                                           51 39.23821 -120.5939
-## 120                                           53 39.23827 -120.5939
-## 121                                           54 39.23827 -120.5939
-## 122                                           56 39.23830 -120.5940
-## 123                                           57 39.23827 -120.5940
-## 124                                           58 39.23843 -120.5935
-## 125                                            6 38.85481 -120.4141
-## 126                                           60 39.23436 -120.6480
-## 127                                           61 39.23436 -120.6480
-## 128                                           62 39.23436 -120.6480
-## 129                                           63 39.23436 -120.6480
-## 130                                           64 39.23444 -120.6480
-## 131                                           65 39.23444 -120.6480
-## 132                                           66 39.23439 -120.6480
-## 133                                           67 39.23444 -120.6483
-## 134                                           68 39.23432 -120.6484
-## 135                                           69 39.23440 -120.6484
-## 136                                            7 38.85483 -120.4141
-## 137                                           71 39.23443 -120.6484
-## 138                                           72 39.23441 -120.6485
-## 139                                        73-75 39.21968 -120.6199
-## 140                                        73-75 39.21968 -120.6199
-## 141                                           76 39.21962 -120.6197
-## 142                                           76 39.21962 -120.6197
-## 143                                           77 39.21952 -120.6195
-## 144                                           77 39.21952 -120.6195
-## 145                                       78, 79 39.21973 -120.6196
-## 146                              78, 79, and 105 39.21973 -120.6196
-## 147                                            8 38.85541 -120.4141
-## 148                                           80 39.21966 -120.6196
-## 149                                           80 39.21966 -120.6196
-## 150                                           81 39.21979 -120.6191
-## 151                                           81 39.21979 -120.6191
-## 152                                           83 39.21989 -120.6190
-## 153                                           83 39.21989 -120.6190
-## 154                                        85-87 39.22002 -120.6192
-## 155                                        85-87 39.22002 -120.6192
-## 156                                           88 39.22021 -120.6193
-## 157                                           88 39.22021 -120.6193
-## 158                                           89 39.22021 -120.6193
-## 159                                           89 39.22021 -120.6193
-## 160                                            9 38.85516 -120.4143
-## 161                                    90 Ceco2  39.21988 -120.6194
-## 162                                    90 Ceco2  39.21988 -120.6194
-## 163                                        91-93 39.21993 -120.6196
-## 164                                        91-93 39.21993 -120.6196
-## 165                                           94 39.21990 -120.6197
-## 166                                           94 39.21990 -120.6197
-## 167                                       95, 96 39.21970 -120.6197
-## 168                                       95, 96 39.21970 -120.6197
-## 169                                           97 39.22008 -120.6205
-## 170                                           97 39.22008 -120.6205
-## 171                                        98-99 39.22017 -120.6203
-## 172                                        98-99 39.22017 -120.6203
-## 173                                 Another Pipo 38.77679 -120.2919
-## 174                                       Arpa-1 38.78144 -120.3915
-## 175                                       Ceci-1 39.11943 -120.4708
-## 176                                       Ceco 1 39.21985 -120.6194
-## 177                                       Ceco 1 39.21985 -120.6194
-## 178                                       Ceco2  39.21984 -120.6197
-## 179                                       Ceco2  39.21984 -120.6197
-## 180                                       Chfo-1 38.77807 -120.2918
-## 181                               Dead Manzanita 38.79569 -120.2471
-## 182                Flagged, Unknown, Return Here 39.22046 -120.6202
-## 183                                         Good 38.79706 -120.2445
-## 184 Good Place For Dead Shrub Light Measurements 38.79607 -120.2472
-## 185                         high Sev, Deer brush 38.77163 -120.3498
-## 186                                      June 10 38.77874 -120.3150
-## 187                                       Lide-3 39.23389 -120.6481
-## 188                             Lide Light Area  39.23363 -120.6488
-## 189                                        LIDE4 39.23436 -120.6480
-## 190                                   Light Only 38.78748 -120.2983
-## 191                                  Locked Gate 38.79229 -120.3482
-## 192               No Seedlings In This Whole Gap 38.78246 -120.3904
-## 193                                   Park Here  39.23513 -120.6491
-## 194                                 Placemark 13 38.79570 -120.2471
-## 195                                 Placemark 15 38.85443 -120.4149
-## 196                                 Placemark 22 39.23436 -120.6480
-## 197                                  Placemark 4 38.78144 -120.3915
-## 198                                  Placemark 7 39.23376 -120.6483
-## 199                                  Placemark 7 38.85500 -120.4141
-## 200                          Possible Seedlings? 38.77692 -120.2901
-## 201                            Seedlings 1,2,3,4 38.85433 -120.4150
-## 202                                  Some Abcos? 39.11963 -120.4708
-## 203                                    The Rest  39.23376 -120.6483
-## 204                    Turn Down From Skid Trail 38.78399 -120.3213
-##                          file_lat
-## 1                       CLVDN.csv
-## 2   AMR - Aerial - 2 - iphone.csv
-## 3            AMR - Aerial - 2.csv
-## 4   AMR - Aerial - 2 - iphone.csv
-## 5            AMR - Aerial - 2.csv
-## 6            AMR - Aerial - 2.csv
-## 7   AMR - Aerial - 2 - iphone.csv
-## 8                      CLVDSE.csv
-## 9                      CLVDSE.csv
-## 10                      CLVDN.csv
-## 11                     CLVDSE.csv
-## 12                     CLVDSE.csv
-## 13                    Wrights.csv
-## 14                    Wrights.csv
-## 15                    Wrights.csv
-## 16                    Wrights.csv
-## 17                    Wrights.csv
-## 18                    Wrights.csv
-## 19                      CLVDN.csv
-## 20                    Wrights.csv
-## 21                    Wrights.csv
-## 22                    Wrights.csv
-## 23                     FredsN.csv
-## 24                     FredsN.csv
-## 25                     FredsN.csv
-## 26                     FredsN.csv
-## 27                     FredsN.csv
-## 28                     FredsN.csv
-## 29                     FredsN.csv
-## 30                 FredsMidSE.csv
-## 31                 FredsMidSE.csv
-## 32                 FredsMidSE.csv
-## 33                 FredsMidSE.csv
-## 34                 FredsMidSE.csv
-## 35                      CLVDN.csv
-## 36                      CLVDN.csv
-## 37                 FredsMidSE.csv
-## 38                 FredsMidSE.csv
-## 39                 FredsMidSE.csv
-## 40                  STAR_NW_S.csv
-## 41                      CLVDN.csv
-## 42                  STAR_NW_S.csv
-## 43                  STAR_NW_S.csv
-## 44                  STAR_NW_S.csv
-## 45                  STAR_NW_S.csv
-## 46                  STAR_NW_S.csv
-## 47                  STAR_NW_S.csv
-## 48                      CLVDN.csv
-## 49                  STAR_NW_S.csv
-## 50                  STAR_NW_S.csv
-## 51                   STAR_Mid.csv
-## 52                   STAR_Mid.csv
-## 53                   STAR_Mid.csv
-## 54                   STAR_Mid.csv
-## 55                  STAR_NW_S.csv
-## 56                  STAR_NW_S.csv
-## 57                  STAR_NW_S.csv
-## 58                  STAR_NW_S.csv
-## 59                  STAR_NW_S.csv
-## 60                  STAR_NW_S.csv
-## 61                  STAR_NW_S.csv
-## 62                 FredsMidSE.csv
-## 63                  STAR_NW_S.csv
-## 64                  STAR_NW_S.csv
-## 65                 FredsMidSE.csv
-## 66                 FredsMidSE.csv
-## 67                 FredsMidSE.csv
-## 68                 FredsMidSE.csv
-## 69                 FredsMidSE.csv
-## 70                 FredsMidSE.csv
-## 71                 Freds_JB_A.csv
-## 72           AMR - Aerial - 2.csv
-## 73           AMR - Aerial - 2.csv
-## 74  AMR - Aerial - 2 - iphone.csv
-## 75  AMR - Aerial - 2 - iphone.csv
-## 76           AMR - Aerial - 2.csv
-## 77           AMR - Aerial - 2.csv
-## 78  AMR - Aerial - 2 - iphone.csv
-## 79  AMR - Aerial - 2 - iphone.csv
-## 80  AMR - Aerial - 2 - iphone.csv
-## 81  AMR - Aerial - 2 - iphone.csv
-## 82  AMR - Aerial - 2 - iphone.csv
-## 83           AMR - Aerial - 2.csv
-## 84           AMR - Aerial - 2.csv
-## 85                    AMCRNE1.csv
-## 86                    AMCRNE1.csv
-## 87                    AMCRNE1.csv
-## 88                    AMCRNE1.csv
-## 89                    AMCRNE1.csv
-## 90                    AMCRNE1.csv
-## 91           AMR - Aerial - 3.csv
-## 92           AMR - Aerial - 3.csv
-## 93           AMR - Aerial - 3.csv
-## 94           AMR - Aerial - 3.csv
-## 95                 Freds_JB_A.csv
-## 96                 FredsMidSE.csv
-## 97           AMR - Aerial - 3.csv
-## 98           AMR - Aerial - 3.csv
-## 99           AMR - Aerial - 3.csv
-## 100          AMR - Aerial - 3.csv
-## 101                     CLVDN.csv
-## 102                     CLVDN.csv
-## 103                     CLVDN.csv
-## 104                     CLVDN.csv
-## 105                     CLVDN.csv
-## 106                     CLVDN.csv
-## 107                     CLVDN.csv
-## 108                     CLVDN.csv
-## 109                FredsMidSE.csv
-## 110                FredsMidSE.csv
-## 111                FredsMidSE.csv
-## 112                FredsMidSE.csv
-## 113                FredsMidSE.csv
-## 114         AMR - Aerial - NW.csv
-## 115         AMR - Aerial - NW.csv
-## 116         AMR - Aerial - NW.csv
-## 117         AMR - Aerial - NW.csv
-## 118                     CLVDN.csv
-## 119                   AMCRNE1.csv
-## 120                   AMCRNE1.csv
-## 121                   AMCRNE1.csv
-## 122                   AMCRNE1.csv
-## 123                   AMCRNE1.csv
-## 124                   AMCRNE1.csv
-## 125                     CLVDN.csv
-## 126         AMR - Aerial - NW.csv
-## 127         AMR - Aerial - NW.csv
-## 128         AMR - Aerial - NW.csv
-## 129         AMR - Aerial - NW.csv
-## 130         AMR - Aerial - NW.csv
-## 131         AMR - Aerial - NW.csv
-## 132         AMR - Aerial - NW.csv
-## 133         AMR - Aerial - NW.csv
-## 134         AMR - Aerial - NW.csv
-## 135         AMR - Aerial - NW.csv
-## 136                     CLVDN.csv
-## 137         AMR - Aerial - NW.csv
-## 138         AMR - Aerial - NW.csv
-## 139 AMR - Aerial - 2 - iphone.csv
-## 140          AMR - Aerial - 2.csv
-## 141 AMR - Aerial - 2 - iphone.csv
-## 142          AMR - Aerial - 2.csv
-## 143 AMR - Aerial - 2 - iphone.csv
-## 144          AMR - Aerial - 2.csv
-## 145 AMR - Aerial - 2 - iphone.csv
-## 146          AMR - Aerial - 2.csv
-## 147                     CLVDN.csv
-## 148 AMR - Aerial - 2 - iphone.csv
-## 149          AMR - Aerial - 2.csv
-## 150 AMR - Aerial - 2 - iphone.csv
-## 151          AMR - Aerial - 2.csv
-## 152 AMR - Aerial - 2 - iphone.csv
-## 153          AMR - Aerial - 2.csv
-## 154 AMR - Aerial - 2 - iphone.csv
-## 155          AMR - Aerial - 2.csv
-## 156 AMR - Aerial - 2 - iphone.csv
-## 157          AMR - Aerial - 2.csv
-## 158 AMR - Aerial - 2 - iphone.csv
-## 159          AMR - Aerial - 2.csv
-## 160                     CLVDN.csv
-## 161 AMR - Aerial - 2 - iphone.csv
-## 162          AMR - Aerial - 2.csv
-## 163 AMR - Aerial - 2 - iphone.csv
-## 164          AMR - Aerial - 2.csv
-## 165 AMR - Aerial - 2 - iphone.csv
-## 166          AMR - Aerial - 2.csv
-## 167 AMR - Aerial - 2 - iphone.csv
-## 168          AMR - Aerial - 2.csv
-## 169 AMR - Aerial - 2 - iphone.csv
-## 170          AMR - Aerial - 2.csv
-## 171 AMR - Aerial - 2 - iphone.csv
-## 172          AMR - Aerial - 2.csv
-## 173                FredsMidSE.csv
-## 174                    CLVDSE.csv
-## 175                  STAR_Mid.csv
-## 176 AMR - Aerial - 2 - iphone.csv
-## 177          AMR - Aerial - 2.csv
-## 178 AMR - Aerial - 2 - iphone.csv
-## 179          AMR - Aerial - 2.csv
-## 180                FredsMidSE.csv
-## 181                   Wrights.csv
-## 182 AMR - Aerial - 2 - iphone.csv
-## 183                   Wrights.csv
-## 184                   Wrights.csv
-## 185                Freds_JB_A.csv
-## 186                Freds_JB_A.csv
-## 187         AMR - Aerial - NW.csv
-## 188         AMR - Aerial - NW.csv
-## 189         AMR - Aerial - NW.csv
-## 190                Freds_JB_A.csv
-## 191                    FredsN.csv
-## 192                    CLVDSE.csv
-## 193         AMR - Aerial - NW.csv
-## 194                   Wrights.csv
-## 195                     CLVDN.csv
-## 196         AMR - Aerial - NW.csv
-## 197                    CLVDSE.csv
-## 198         AMR - Aerial - NW.csv
-## 199                     CLVDN.csv
-## 200                FredsMidSE.csv
-## 201                     CLVDN.csv
-## 202                  STAR_Mid.csv
-## 203         AMR - Aerial - NW.csv
-## 204                Freds_JB_A.csv</code></pre>
 <pre class="r"><code>nrow(table_all)</code></pre>
 <pre><code>## [1] 204</code></pre>
 </div>
@@ -953,31 +533,31 @@ for(i in 1:length(files)){
 <pre class="r"><code>table_n1 %&gt;% 
   group_by(Name) %&gt;% 
   filter(n()&gt;1) %&gt;% 
-  arrange(Name)</code></pre>
+  arrange(desc(Name))</code></pre>
 <pre><code>## # A tibble: 20 x 4
 ## # Groups:   Name [10]
 ##    Name      Y     X file_lat                     
 ##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                        
-##  1 26     38.8 -120. Freds_JB_A.csv               
-##  2 26     38.8 -120. FredsMidSE.csv               
-##  3 76     39.2 -121. AMR - Aerial - 2 - iphone.csv
-##  4 76     39.2 -121. AMR - Aerial - 2.csv         
-##  5 77     39.2 -121. AMR - Aerial - 2 - iphone.csv
-##  6 77     39.2 -121. AMR - Aerial - 2.csv         
-##  7 80     39.2 -121. AMR - Aerial - 2 - iphone.csv
-##  8 80     39.2 -121. AMR - Aerial - 2.csv         
-##  9 81     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 10 81     39.2 -121. AMR - Aerial - 2.csv         
-## 11 83     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 12 83     39.2 -121. AMR - Aerial - 2.csv         
-## 13 88     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 14 88     39.2 -121. AMR - Aerial - 2.csv         
-## 15 89     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 16 89     39.2 -121. AMR - Aerial - 2.csv         
-## 17 94     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 18 94     39.2 -121. AMR - Aerial - 2.csv         
-## 19 97     39.2 -121. AMR - Aerial - 2 - iphone.csv
-## 20 97     39.2 -121. AMR - Aerial - 2.csv</code></pre>
+##  1 97     39.2 -121. AMR - Aerial - 2 - iphone.csv
+##  2 97     39.2 -121. AMR - Aerial - 2.csv         
+##  3 94     39.2 -121. AMR - Aerial - 2 - iphone.csv
+##  4 94     39.2 -121. AMR - Aerial - 2.csv         
+##  5 89     39.2 -121. AMR - Aerial - 2 - iphone.csv
+##  6 89     39.2 -121. AMR - Aerial - 2.csv         
+##  7 88     39.2 -121. AMR - Aerial - 2 - iphone.csv
+##  8 88     39.2 -121. AMR - Aerial - 2.csv         
+##  9 83     39.2 -121. AMR - Aerial - 2 - iphone.csv
+## 10 83     39.2 -121. AMR - Aerial - 2.csv         
+## 11 81     39.2 -121. AMR - Aerial - 2 - iphone.csv
+## 12 81     39.2 -121. AMR - Aerial - 2.csv         
+## 13 80     39.2 -121. AMR - Aerial - 2 - iphone.csv
+## 14 80     39.2 -121. AMR - Aerial - 2.csv         
+## 15 77     39.2 -121. AMR - Aerial - 2 - iphone.csv
+## 16 77     39.2 -121. AMR - Aerial - 2.csv         
+## 17 76     39.2 -121. AMR - Aerial - 2 - iphone.csv
+## 18 76     39.2 -121. AMR - Aerial - 2.csv         
+## 19 26     38.8 -120. Freds_JB_A.csv               
+## 20 26     38.8 -120. FredsMidSE.csv</code></pre>
 <pre class="r"><code>table_n1 &lt;- table_n1 %&gt;% 
   filter(!(Name==26 &amp; file_lat == &quot;Freds_JB_A.csv&quot;)) %&gt;% 
   filter(!(Name %in% c(76, 77, 80, 81, 83, 88, 89, 94, 97) &amp; file_lat == &quot;AMR - Aerial - 2.csv&quot;))</code></pre>
@@ -1223,8 +803,8 @@ dups</code></pre>
 table_n &lt;- table_n %&gt;%
   filter(!(Name %in% dups$Name &amp; file_lat == &quot;AMR - Aerial - NW.csv&quot;))</code></pre>
 </div>
-<div id="create-a-function" class="section level4">
-<h4>Create a function</h4>
+<div id="create-a-function-to-assign-latlong-based-on-lat-files" class="section level4">
+<h4>Create a function to assign lat/long based on lat files</h4>
 <pre class="r"><code>long &lt;- function(sdlgs, name){
   row &lt;- table_n %&gt;% 
     filter(Name == name)
@@ -1298,7 +878,6 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 <h3>Check</h3>
 <pre class="r"><code>df %&gt;% filter(Sdlg == 227) %&gt;% dplyr::select(Sdlg, X, Y, file_lat)</code></pre>
 <pre><code>## # A tibble: 1 x 4
-## # Groups:   Sdlg [1]
 ##   Sdlg      X     Y file_lat   
 ##   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;      
 ## 1 227   -121.  39.2 AMCRNE1.csv</code></pre>
@@ -1310,8 +889,9 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 ## 4   80 39.21966 -120.6196 AMR - Aerial - 2.csv</code></pre>
 </div>
 </div>
-<div id="add-longitude-by-hand-for-the-seedlings-i-couldnt-export" class="section level2">
-<h2>Add longitude by hand for the seedlings I couldn’t export</h2>
+</div>
+<div id="add-latitude-by-hand-for-the-seedlings-i-couldnt-export" class="section level1">
+<h1>Add latitude by hand for the seedlings I couldn’t export</h1>
 <div id="find-all-seedlings-still-needing-longitude" class="section level3">
 <h3>Find all seedlings still needing longitude</h3>
 <pre class="r"><code>df %&gt;% 
@@ -1319,7 +899,6 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   dplyr::select(Sdlg, FirePatch, X, Species) %&gt;% 
   distinct()</code></pre>
 <pre><code>## # A tibble: 38 x 4
-## # Groups:   Sdlg [38]
 ##    Sdlg  FirePatch     X Species
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;  
 ##  1 282   CLVD-N       NA ABCO   
@@ -1341,7 +920,6 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   dplyr::select(FirePatch, X, Species) %&gt;% 
   group_by(FirePatch) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## Adding missing grouping variables: `Sdlg`</code></pre>
 <pre><code>## # A tibble: 7 x 2
 ##   FirePatch `n()`
 ##   &lt;chr&gt;     &lt;int&gt;
@@ -1353,8 +931,8 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
 ## 6 FRDS-A        1
 ## 7 WRTS-1        2</code></pre>
 </div>
-<div id="function-for-assigning-longitude" class="section level3">
-<h3>Function for assigning longitude</h3>
+<div id="function-for-assigning-latitude" class="section level3">
+<h3>Function for assigning latitude</h3>
 <pre class="r"><code>lati &lt;- function(sdlg, longitude, latitude){
   df &lt;&lt;- df %&gt;% 
     mutate(X = ifelse(Sdlg == sdlg, longitude, X)) %&gt;% 
@@ -1427,10 +1005,11 @@ latave(106, c(105))
 latave(107, c(105))
 latave(282, c(281, 283))
 latave(135, c(125, 121))
-latave(27, c(26))</code></pre>
+latave(27, c(26))
+latave(&quot;125W&quot;, c(123, 124))</code></pre>
 </div>
-<div id="check-4" class="section level4">
-<h4>Check</h4>
+<div id="check-for-seedlings-with-still-na-values" class="section level4">
+<h4>Check for seedlings with still NA values</h4>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Y)) %&gt;% 
   dplyr::select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
@@ -1438,7 +1017,6 @@ latave(27, c(26))</code></pre>
 <pre><code>## # A tibble: 0 x 5
 ## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, X &lt;dbl&gt;, Y &lt;dbl&gt;,
 ## #   Species &lt;chr&gt;</code></pre>
-</div>
 </div>
 </div>
 </div>
