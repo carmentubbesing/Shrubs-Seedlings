@@ -200,6 +200,12 @@ load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rda
 </div>
 <div id="combine-seedling-data-with-shrub-data" class="section level1">
 <h1>Combine seedling data with shrub data</h1>
+<div id="make-seedling-names-with-letters-uppercase" class="section level2">
+<h2>Make seedling names with letters uppercase</h2>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  ungroup() %&gt;% 
+  mutate(Sdlg = toupper(Sdlg))</code></pre>
+</div>
 <div id="take-out-variables-in-both-besides-sdlg" class="section level2">
 <h2>Take out variables in both besides Sdlg</h2>
 <pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
@@ -208,8 +214,6 @@ load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rda
 <pre><code>## [1] 221</code></pre>
 <pre class="r"><code>df &lt;- left_join(df, shr_by_sdlg)</code></pre>
 <pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
-<pre><code>## Warning: Column `Sdlg` joining factor and character vector, coercing into
-## character vector</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
 <pre><code>## [1] 221</code></pre>
 </div>

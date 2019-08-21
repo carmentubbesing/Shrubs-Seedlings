@@ -190,9 +190,10 @@ summary {
 <li><a href="#read-in-2017-data">Read in 2017 data</a></li>
 <li><a href="#read-in-2016-data">Read in 2016 data</a></li>
 <li><a href="#combine">Combine</a><ul>
+<li><a href="#make-df17-sdlg-uppercase">Make df17 Sdlg uppercase</a></li>
 <li><a href="#rename-dates-columns">Rename dates columns</a></li>
 <li><a href="#rename-notes-columns">Rename notes columns</a></li>
-<li><a href="#take-out-non-pipo-or-abco-in-2017-data">Take out non-PIPO or ABCO in 2017 data</a></li>
+<li><a href="#take-out-non-pipoabco-in-2017-data">Take out non-PIPO/ABCO in 2017 data</a></li>
 <li><a href="#take-out-seedling-268-because-it-doesnt-have-shrub-data">Take out Seedling 268 because it doesn’t have shrub data</a></li>
 </ul></li>
 <li><a href="#to-do-try-to-figure-out-what-seedling-268-was-in-2016-data">TO DO: TRY TO FIGURE OUT WHAT SEEDLING 268 WAS in 2016 DATA</a><ul>
@@ -230,6 +231,11 @@ remove(df)</code></pre>
 </div>
 <div id="combine" class="section level1">
 <h1>Combine</h1>
+<div id="make-df17-sdlg-uppercase" class="section level2">
+<h2>Make df17 Sdlg uppercase</h2>
+<pre class="r"><code>df17 &lt;- df17 %&gt;% 
+  mutate(Sdlg = toupper(Sdlg))</code></pre>
+</div>
 <div id="rename-dates-columns" class="section level2">
 <h2>Rename dates columns</h2>
 <pre class="r"><code>df16 &lt;- df16 %&gt;% 
@@ -248,8 +254,8 @@ remove(df)</code></pre>
 <pre class="r"><code>df17 &lt;- df17 %&gt;% 
   rename(Notes2017 = notes)</code></pre>
 </div>
-<div id="take-out-non-pipo-or-abco-in-2017-data" class="section level2">
-<h2>Take out non-PIPO or ABCO in 2017 data</h2>
+<div id="take-out-non-pipoabco-in-2017-data" class="section level2">
+<h2>Take out non-PIPO/ABCO in 2017 data</h2>
 <pre class="r"><code>df17 &lt;- df17 %&gt;% 
   filter(Species %in% c(&quot;PIPO&quot;, &quot;ABCO&quot;))</code></pre>
 </div>
@@ -291,7 +297,6 @@ names(df)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(Species.x != Species.y)</code></pre>
 <pre><code>## # A tibble: 0 x 50
-## # Groups:   Sdlg [0]
 ## # ... with 50 variables: Fire.x &lt;chr&gt;, Patch &lt;chr&gt;, Elevation &lt;dbl&gt;,
 ## #   Nearby_Easting &lt;dbl&gt;, Nearby_Northing &lt;dbl&gt;, Sdlg &lt;chr&gt;,
 ## #   Species.x &lt;chr&gt;, Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
@@ -319,7 +324,6 @@ names(df)</code></pre>
   filter(FirePatch.x != FirePatch.y) %&gt;% 
   dplyr::select(Sdlg, FirePatch.x, FirePatch.y)</code></pre>
 <pre><code>## # A tibble: 123 x 3
-## # Groups:   Sdlg [123]
 ##    Sdlg  FirePatch.x FirePatch.y
 ##    &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;      
 ##  1 28    AMRC-A      AMCR-A     
@@ -340,7 +344,6 @@ names(df)</code></pre>
   filter(Fire.x != Fire.y) %&gt;% 
   dplyr::select(Sdlg, Fire.x, Fire.y)</code></pre>
 <pre><code>## # A tibble: 0 x 3
-## # Groups:   Sdlg [0]
 ## # ... with 3 variables: Sdlg &lt;chr&gt;, Fire.x &lt;chr&gt;, Fire.y &lt;chr&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   rename(Fire = Fire.x) %&gt;% 
@@ -365,7 +368,6 @@ names(df)</code></pre>
   filter(is.na(Ht2017.cm) &amp; is.na(Status)) %&gt;% 
   dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, Notes2017)</code></pre>
 <pre><code>## # A tibble: 18 x 5
-## # Groups:   Sdlg [18]
 ##    Sdlg  Status FirePatch  DataSheet2017                          Notes2017
 ##    &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;                                  &lt;chr&gt;    
 ##  1 28    &lt;NA&gt;   AMRC-A     Shrubs_Summer17_AMRC_2_Sep11           &lt;NA&gt;     

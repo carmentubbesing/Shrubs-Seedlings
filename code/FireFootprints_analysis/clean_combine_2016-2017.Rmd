@@ -36,6 +36,12 @@ remove(df)
 
 # Combine
 
+## Make df17 Sdlg uppercase 
+```{r}
+df17 <- df17 %>% 
+  mutate(Sdlg = toupper(Sdlg))
+```
+
 ## Rename dates columns
 ```{r}
 df16 <- df16 %>% 
@@ -63,7 +69,7 @@ df17 <- df17 %>%
 ```
 
 
-## Take out non-PIPO or ABCO in 2017 data
+## Take out non-PIPO/ABCO in 2017 data
 ```{r}
 df17 <- df17 %>% 
   filter(Species %in% c("PIPO", "ABCO"))

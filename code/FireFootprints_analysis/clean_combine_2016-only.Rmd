@@ -23,6 +23,13 @@ load(file = "../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 
 # Combine seedling data with shrub data 
 
+## Make seedling names with letters uppercase
+```{r}
+df <- df %>% 
+  ungroup() %>% 
+  mutate(Sdlg = toupper(Sdlg))
+```
+
 ## Take out variables in both besides Sdlg
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>% 
