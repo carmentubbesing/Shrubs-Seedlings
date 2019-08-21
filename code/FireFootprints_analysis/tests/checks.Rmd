@@ -13,10 +13,11 @@ require(tidyverse)
 
 # Compare pine seedlings from Aug 15 analysis to those from Aug 19 analysis
 ```{r}
-load("../../compiled_data/fire_footprints/pine_vert.Rdata")
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/tests/")
+load("../../../compiled_data/fire_footprints/pine_vert.Rdata")
 dfnew <- df
 remove(df)
-load("../../compiled_data/archives/pine_vert_Aug15_2019.Rdata")
+load("../../../compiled_data/archives/pine_vert_Aug15_2019.Rdata")
 dfold <- df
 remove(df)
 ```
@@ -63,10 +64,10 @@ remove(dfnew, dfold, boo, antijoin)
 
 # Look at 2016 seedlings not in both seedling df and shrub df and make sure nothing got missed
 ```{r}
-load("../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
+load("../../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 df_seedlings <- df
 remove(df)
-load("../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
+load("../../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
 ```
 
 ## Find mismatching seedlings that are ABCO or PIPO
@@ -95,19 +96,26 @@ remove(df_seedlings, mismatch, original_seedlings, shr_by_sdlg)
 
 ## Pines
 ```{r}
-load("../../compiled_data/fire_footprints/pine_vert.Rdata")
+load("../../../compiled_data/fire_footprints/pine_vert.Rdata")
+sort(names(df))
 ```
 
-Why aren't both 2016 data sheets in here??
+Why aren't both 2016 data sheet cokumns in here??
 
 ### Randomly choose a row number
 ```{r}
+set.seed(12345)
 sample <- sort(sample(1:251, 10))
-df[sample,] %>% select(Sdlg, Fire, FirePatch, Datasheet2016, Light_File, DataSheet2017, notes, Note1, Note2, everything()) %>% View()
+dfsample <- df[sample,] %>% 
+  select(Sdlg, Fire, FirePatch, Datasheet1_2016, Datasheet2_2016, Light_File, DataSheet2017, Notes2017, Note1_2016, Note2_2016, everything()) %>% 
+  arrange(Fire, Sdlg)
 ```
 
-### Look at those seedlings
+### Look at those seedlings one by one, checking each column
 ```{r}
-df[sample,] %>% select(Sdlg, Fire, FirePatch, Date1_2016, Date2_2016, Date2017, Datasheet2016, Light_File, DataSheet2017, notes, Note1, Note2, everything()) %>% View()
+check205 <- t(dfsample[1,])
+View(check205)
+write.csv(check205, file = "check205.csv")
 ```
 
+# Check years since fire for final data

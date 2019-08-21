@@ -28,7 +28,9 @@ print(strt-Sys.time())
 ```{r main_analysis, message = F, warning = F}
 strt <- Sys.time()
 #rmarkdown::render("DIFN_analysis.Rmd", "html_document", quiet= T)
-rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document", quiet = T)
+#rmarkdown::render("fir_vert_growth_all_years.Rmd", "html_document", quiet = T)
+rmarkdown::render("VSURF_pine.Rmd", "html_document", quiet = T)
+rmarkdown::render("VSURF_fir.Rmd", "html_document", quiet = T)
 rmarkdown::render("Pinus_vertical_growth.Rmd", "html_document", quiet = T)
 print(strt-Sys.time())
 ```

@@ -206,16 +206,17 @@ rmarkdown::render(&quot;add_site_class.Rmd&quot;, &quot;html_document&quot;, qui
 rmarkdown::render(&quot;Heat_load.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Clean_vert_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -29.47132 secs</code></pre>
+<pre><code>## Time difference of -33.18727 secs</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
 <pre class="r"><code>strt &lt;- Sys.time()
 #rmarkdown::render(&quot;DIFN_analysis.Rmd&quot;, &quot;html_document&quot;, quiet= T)
-rmarkdown::render(&quot;fir_vert_growth_all_years.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+#rmarkdown::render(&quot;fir_vert_growth_all_years.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;VSURF_pine.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Pinus_vertical_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -2.394212 mins</code></pre>
+<pre><code>## Time difference of -2.294317 mins</code></pre>
 </div>
 
 
