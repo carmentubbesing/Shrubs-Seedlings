@@ -44,6 +44,23 @@ df <- df %>%
   filter(Species == "PIPO")
 ```
 
+# Count totals and by fire
+```{r}
+length(unique(df$Sdlg))
+nrow(df)
+```
+
+```{r}
+df %>% 
+  group_by(Sdlg, Fire) %>%
+  select(Sdlg, Fire) %>%
+  distinct() %>% 
+  ungroup() %>% 
+  group_by(Fire) %>% 
+  summarize(n = n()) %>% 
+  mutate(total = sum(n))
+```
+
 # Find average growth rate
 ```{r}
 mean(df$VertGrowth_Rel)

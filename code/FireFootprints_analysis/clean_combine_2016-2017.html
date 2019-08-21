@@ -367,7 +367,7 @@ names(df)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Ht2017.cm) &amp; is.na(Status)) %&gt;% 
   dplyr::select(Sdlg, Status, FirePatch, DataSheet2017, Notes2017)</code></pre>
-<pre><code>## # A tibble: 18 x 5
+<pre><code>## # A tibble: 20 x 5
 ##    Sdlg  Status FirePatch  DataSheet2017                          Notes2017
 ##    &lt;chr&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;                                  &lt;chr&gt;    
 ##  1 28    &lt;NA&gt;   AMRC-A     Shrubs_Summer17_AMRC_2_Sep11           &lt;NA&gt;     
@@ -384,10 +384,12 @@ names(df)</code></pre>
 ## 12 132   &lt;NA&gt;   FRDS-N     &lt;NA&gt;                                   &lt;NA&gt;     
 ## 13 229   &lt;NA&gt;   AMRC-NE    Shrubs_Summer17_AMRC_2_Sep11           &lt;NA&gt;     
 ## 14 20    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
-## 15 21    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
-## 16 22    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
-## 17 23    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
-## 18 139   &lt;NA&gt;   PLKN-W     &lt;NA&gt;                                   &lt;NA&gt;</code></pre>
+## 15 20    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
+## 16 21    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
+## 17 21    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
+## 18 22    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
+## 19 23    &lt;NA&gt;   FRDS-JB    &lt;NA&gt;                                   &lt;NA&gt;     
+## 20 139   &lt;NA&gt;   PLKN-W     &lt;NA&gt;                                   &lt;NA&gt;</code></pre>
 <div id="record-why-things-were-left-out" class="section level2">
 <h2>Record why things were left out</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
@@ -403,7 +405,7 @@ summary(as.factor(df$Status))</code></pre>
 <pre><code>##          alive could not find           dead           done           DONE 
 ##             21              2              7             27            130 
 ##          eaten      herbicide     herbicided      not found         unsure 
-##              1              3              6             17              1 
+##              1              3              6             19              1 
 ##           NA's 
 ##              1</code></pre>
 </div>

@@ -21,7 +21,6 @@ require(tree)
 require(knitr)
 require(tidyverse)
 require(ggplot2)
-require(VSURF)
 require(effects)
 require(sjstats)
 require(MuMIn)
@@ -53,7 +52,7 @@ df %>%
 
 ```{r}
 df <- df %>% 
-  filter(Species == "ABCO" & !df$Fire %in% c("PLKN","FRDS"))
+  filter(Species == "ABCO")
 ```
 
 ## Change species and Sdlg to factor
@@ -63,17 +62,26 @@ df <- df %>%
   mutate(Sdlg = as.factor(Sdlg))
 ```
 
-
 # Convert shrub area to square root
 ```{r}
 df <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
 ```
 
-# Count
+# Count totals and by fire
 ```{r}
-length(unique(df$Sdlg))
 nrow(df)
+```
+
+```{r}
+df %>% 
+  group_by(Sdlg, Fire) %>%
+  select(Sdlg, Fire) %>%
+  distinct() %>% 
+  ungroup() %>% 
+  group_by(Fire) %>% 
+  summarize(n = n()) %>% 
+  mutate(total = sum(n))
 ```
 
 # Find average growth rate
@@ -90,14 +98,14 @@ ggplot(df)+
 
 ## Structure data for LM
 
-
-## Normalize function
+### Normalize function
 ```{r}
 normalize <- function(x) {
     return ((x - mean(x)) / sd(x))
   }
 ```
 
+### Filter and normalize
 ```{r}
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
@@ -108,9 +116,7 @@ LMdf <- df %>%
 LMdf <- droplevels(LMdf)
 ```
 
-
-
-# Model using VSURF var results
+# LME model using VSURF var results
 
 ## Convert vars to formula structure
 ```{r}
@@ -126,46 +132,40 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
 
 
-
-## See whether model with or without interaction is better
+# Check collinearity - use vif from car pkg because in pines it was the same as the Zuur code
 ```{r}
-without <- lme(VertGrowth_Rel ~ 
-           Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+vif(LM)
+```
 
-with <- lme(VertGrowth_Rel ~  
-           sqrt_shrubarea3*Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+## A VIF cutoff value of 5 is often used, and heatload has a GVIF much higher than that, so take it out and run the model again:
 
-AIC(with)
-AIC(without)
-anova(with, without)
+```{r}
+vars <- vars[vars != "heatload"]
+vars_one <- paste(vars, collapse = " + ")
+f <- update(as.formula(f), ~ . - heatload) 
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
+## Repeat vif test
+```{r}
+vif(LM)
+```
+
+Now everything looks ok.
+
+# See whether model with or without interaction is better
+```{r}
+vars_int <- paste(vars_one, "+ Ht_cm1:sqrt_shrubarea3")
+f_int <- formula(paste("VertGrowth_Rel ~ ",vars_int))
+LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+AIC(LM)
+AIC(LM_int)
+if(
+  AIC(LM) > AIC(LM_int)
+) print(paste("WITH INTERACTION WINS BY", round(AIC(LM)-AIC(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AIC(LM_int)-AIC(LM), digits = 2)))
 ```
 
 No difference, so I'll leave out the interaction
-
-## Re-establish best model
-```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-            Ht_cm1 + heatload +  Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-```
-
-## Check collinearity - use vif from car pkg because in pines it was the same as the Zuur code
-```{r}
-vif(LM)
-```
-
-### A VIF cutoff value of 5 is often used, and heatload has a GVIF off 11.8, so take it out and run the model again:
-
-```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-          Ht_cm1 + Years + Aspect.rad.fold.NESW + incidrad + BasDia2016.cm + sqrt_shrubarea3,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-vif(LM)
-summary(LM)
-```
-
 
 ## Look at drop1 results
 ```{r}
@@ -178,24 +178,17 @@ drop %>%
   mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
 ```
 
-
 ### Look at individual effects
 
-Note: the plots look exactly the same but with different axes if you don't normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data
-
 ```{r}
-eff_years <- predictorEffect("Years", LM)
-plot(eff_years)
-
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
-plot(eff_shrubarea)
+plot(predictorEffect("Years", LM))
+plot(predictorEffect("sqrt_shrubarea3", LM))
 ```
 
 ## Calculate Nakagawa's pseudo R2
 ```{r}
 r.squaredGLMM(LM)
 ```
-
 
 # Re-create effects plots using predictorEffects() and ggplot
 
@@ -218,7 +211,6 @@ hist(effects_df$sqrt_shrubarea3)
 hist(sqrt(df$shrubarea3))
 ```
 
-
 # Summarize range of shrub cover and height
 ```{r}
 summary(df$Cov1.3)
@@ -226,11 +218,10 @@ summary(df$Ht1.3)
 summary(df$shrubarea3)
 ```
 
-# Convert cover to Percent
+# Summarize cover as percent
 ```{r}
 summary(df$Cov1.3/(300*4))
 ```
-
 
 # Find the shrubarea values associated with each quartile, and the mean growth for each of those
 ```{r}

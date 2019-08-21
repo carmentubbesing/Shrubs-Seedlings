@@ -221,7 +221,7 @@ shr$Ht.cm[is.na(shr$Ht.cm)] &lt;- 0</code></pre>
 </div>
 <div id="take-out-dead-shrubs" class="section level2">
 <h2>Take out dead shrubs</h2>
-<pre class="r"><code>#shr &lt;- subset(shr, shr$Dead.!= 1)</code></pre>
+<pre class="r"><code>shr &lt;- subset(shr, shr$Dead.!= 1)</code></pre>
 </div>
 <div id="take-out-pea-shrub-cover-because-its-not-a-shrub" class="section level2">
 <h2>Take out “pea” shrub cover because it’s not a shrub</h2>
@@ -231,11 +231,11 @@ shr$Ht.cm[is.na(shr$Ht.cm)] &lt;- 0</code></pre>
 <h2>Take out “conifer” since it’s not a shrub</h2>
 <pre class="r"><code>summary(as.factor(shr$ShrubSpp))</code></pre>
 <pre><code>##            APAN    ARNE    ARPA    ARVI    CECO    CEIN    CEPR    CHFO 
-##       2       1      47     903      41    1655     349      51     267 
+##       2       1      47     898      41    1536     327      51     263 
 ##    CHSE    CHUM conifer    CONU    LIDE    none   other     pea    PREM 
-##     275       3     254      10     110     263     142       0     164 
+##     270       3     254       9     110     262     125       0     146 
 ##    QUKA    QUKE    QUVA   Ribes    RIRO    SYMO  willow  Willow 
-##       1      14      66       3      21      28      75       2</code></pre>
+##       1      14      66       2      21      28      75       2</code></pre>
 <pre class="r"><code>shr &lt;- shr %&gt;% 
   filter(!(ShrubSpp == &quot;conifer&quot;))</code></pre>
 </div>
@@ -257,7 +257,7 @@ if(shr$Segment[i] %in% c(&quot;0-1 m &quot;,&quot;0 -1 m&quot;,&quot;0-1 m&quot;
 }
 summary(as.factor(shr$Seg))</code></pre>
 <pre><code>##    1    2    3 
-## 1517 1542 1434</code></pre>
+## 1447 1463 1390</code></pre>
 </div>
 <div id="cover" class="section level2">
 <h2>Cover</h2>
@@ -337,14 +337,18 @@ summary(as.factor(shr$Seg))</code></pre>
   group_by(Sdlg) %&gt;% 
   mutate(n = n()) %&gt;% 
   filter(n != 1)</code></pre>
-<pre><code>## # A tibble: 4 x 4
-## # Groups:   Sdlg [2]
+<pre><code>## # A tibble: 8 x 4
+## # Groups:   Sdlg [4]
 ##   Sdlg  ShrubSpp03   cov     n
 ##   &lt;fct&gt; &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;
-## 1 190   willow       300     2
-## 2 190   CECO         300     2
-## 3 285   CECO         470     2
-## 4 285   ARPA         470     2</code></pre>
+## 1 20    PREM         100     2
+## 2 20    CECO         100     2
+## 3 21    PREM         100     2
+## 4 21    CECO         100     2
+## 5 188   CECO         490     2
+## 6 188   CONU         490     2
+## 7 190   willow       300     2
+## 8 190   CECO         300     2</code></pre>
 <!-- ##### Fix spp3 data for seedling 20 -->
 <!-- ```{r} -->
 <!-- shr %>%  -->
@@ -403,22 +407,19 @@ summary(as.factor(shr$Seg))</code></pre>
 <pre class="r"><code>shr %&gt;% 
   filter(Sdlg == 285 &amp; ShrubSpp %in% c(&quot;ARPA&quot;, &quot;CECO&quot;)) %&gt;% 
   dplyr::select(Sdlg, ShrubSpp, Dead., Cover.cm, Ht.cm) </code></pre>
-<pre><code>## # A tibble: 13 x 5
+<pre><code>## # A tibble: 10 x 5
 ##    Sdlg  ShrubSpp Dead. Cover.cm Ht.cm
 ##    &lt;fct&gt; &lt;fct&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
 ##  1 285   CECO         0       80    50
-##  2 285   CECO         1       50    10
-##  3 285   CECO         0       70    70
-##  4 285   ARPA         0       80   100
-##  5 285   ARPA         0      100   150
-##  6 285   CECO         0       90    80
-##  7 285   ARPA         0       60   140
-##  8 285   CECO         0       80    80
-##  9 285   ARPA         0      100   190
-## 10 285   CECO         0       70    50
-## 11 285   CECO         1       30    60
-## 12 285   ARPA         0      100   150
-## 13 285   ARPA         1       30    70</code></pre>
+##  2 285   CECO         0       70    70
+##  3 285   ARPA         0       80   100
+##  4 285   ARPA         0      100   150
+##  5 285   CECO         0       90    80
+##  6 285   ARPA         0       60   140
+##  7 285   CECO         0       80    80
+##  8 285   ARPA         0      100   190
+##  9 285   CECO         0       70    50
+## 10 285   ARPA         0      100   150</code></pre>
 <pre class="r"><code>shr %&gt;% 
   filter(Sdlg == 285 &amp; ShrubSpp %in% c(&quot;ARPA&quot;, &quot;CECO&quot;)) %&gt;% 
   dplyr::select(Sdlg, ShrubSpp, Dead., Cover.cm, Ht.cm) %&gt;% 
@@ -429,8 +430,8 @@ summary(as.factor(shr$Seg))</code></pre>
 <pre><code>## # A tibble: 2 x 2
 ##   ShrubSpp `sum(math)`
 ##   &lt;fct&gt;          &lt;dbl&gt;
-## 1 ARPA           67500
-## 2 CECO           28300</code></pre>
+## 1 ARPA           65400
+## 2 CECO           26000</code></pre>
 <pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
   filter(!(Sdlg==285 &amp; ShrubSpp03 ==&quot;CECO&quot;))</code></pre>
 </div>
@@ -453,7 +454,7 @@ shr_by_sdlg</code></pre>
 ##    Sdlg   Cov1  Cov2  Cov3   Ht1   Ht2   Ht3 ShrubSpp03 Cov1.3 Ht1.3
 ##    &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;
 ##  1 1       290   580   440 105   114.   99.4 ARPA         1310 106. 
-##  2 10      330   440   420  90    81.1 116.  ARPA         1190  95.6
+##  2 10      330   400   420  90    83.8 116.  ARPA         1150  96.5
 ##  3 100     360   400   400  90    87.5  87.5 CECO         1160  88.3
 ##  4 103     400   360   390  97.5 118.  106   CECO         1150 107  
 ##  5 104     400   400   400 128.  118.  120   CECO         1200 122. 
@@ -494,11 +495,11 @@ shr_by_sdlg &lt;- left_join(shr_by_sdlg, df_light)</code></pre>
 ## character vector</code></pre>
 <pre class="r"><code>shr_by_sdlg</code></pre>
 <pre><code>## # A tibble: 286 x 8
-## # Groups:   Sdlg [286]
+## # Groups:   Sdlg [283]
 ##    Sdlg  ShrubSpp03 Cov1.3 Ht1.3 Light_File   DIFN FirePatch Species
 ##    &lt;chr&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
 ##  1 1     ARPA         1310 106.          NA NA     &lt;NA&gt;      &lt;NA&gt;   
-##  2 10    ARPA         1190  95.6         27  0.325 CLVD-N    PIPO   
+##  2 10    ARPA         1150  96.5         27  0.325 CLVD-N    PIPO   
 ##  3 100   CECO         1160  88.3          0  0     AMRC-2    ABCO   
 ##  4 103   CECO         1150 107            0  0     AMRC-2    ABCO   
 ##  5 104   CECO         1200 122.           0  0     AMRC-2    ABCO   
@@ -515,7 +516,7 @@ shr_by_sdlg &lt;- left_join(shr_by_sdlg, df_light)</code></pre>
   mutate(ref = ifelse(Sdlg %in% c(&quot;ARPA-1&quot;,  &quot;ceco-1&quot;,  &quot;CEIN-1&quot;, &quot;CEIN-2&quot;,&quot;chfo-1&quot;, &quot;DCECO-1&quot;, &quot;DCECO-2&quot;, &quot;DCECO-3&quot;, &quot;LIDE-1&quot;,  &quot;LIDE-2&quot;, &quot;LIDE-3&quot;, &quot;LIDE-4&quot;), 1,0))
 summary(as.factor(shr_by_sdlg$ref))</code></pre>
 <pre><code>##   0   1 
-## 274  12</code></pre>
+## 277   9</code></pre>
 </div>
 </div>
 <div id="make-sdlg-all-caps" class="section level1">
@@ -563,7 +564,7 @@ shr_by_sdlg</code></pre>
 ##    Sdlg  ShrubSpp03 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species
 ##    &lt;chr&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
 ##  1 1     ARPA         1310 106.          NA   NA     &lt;NA&gt;      &lt;NA&gt;   
-##  2 10    ARPA         1190  95.6         27    0.325 CLVD-N    PIPO   
+##  2 10    ARPA         1150  96.5         27    0.325 CLVD-N    PIPO   
 ##  3 100   CECO         1160  88.3          0    0     AMRC-2    ABCO   
 ##  4 103   CECO         1150 107            0    0     AMRC-2    ABCO   
 ##  5 104   CECO         1200 122.           0    0     AMRC-2    ABCO   
@@ -581,8 +582,12 @@ shr_by_sdlg</code></pre>
   group_by(Sdlg) %&gt;% 
   summarize(n=n()) %&gt;% 
   filter(n !=1)</code></pre>
-<pre><code>## # A tibble: 0 x 2
-## # ... with 2 variables: Sdlg &lt;chr&gt;, n &lt;int&gt;</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   Sdlg      n
+##   &lt;chr&gt; &lt;int&gt;
+## 1 188       2
+## 2 20        2
+## 3 21        2</code></pre>
 </div>
 <div id="find-which-seedlings-have-difn.all-but-lack-difn.53" class="section level2">
 <h2>Find which seedlings have DIFN.all but lack DIFN.53</h2>
@@ -616,47 +621,47 @@ shr_by_sdlg[shr_by_sdlg$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$
 <div id="list-seedlings" class="section level1">
 <h1>List seedlings</h1>
 <pre class="r"><code>sort(shr_by_sdlg$Sdlg)</code></pre>
-<pre><code>##   [1] &quot;1&quot;       &quot;10&quot;      &quot;100&quot;     &quot;103&quot;     &quot;104&quot;     &quot;105&quot;     &quot;106&quot;    
-##   [8] &quot;107&quot;     &quot;108&quot;     &quot;109&quot;     &quot;11&quot;      &quot;110&quot;     &quot;111&quot;     &quot;112&quot;    
-##  [15] &quot;113&quot;     &quot;115&quot;     &quot;116&quot;     &quot;117&quot;     &quot;118&quot;     &quot;119&quot;     &quot;12&quot;     
-##  [22] &quot;120&quot;     &quot;121&quot;     &quot;122&quot;     &quot;123&quot;     &quot;124&quot;     &quot;125F&quot;    &quot;125W&quot;   
-##  [29] &quot;126&quot;     &quot;127&quot;     &quot;128&quot;     &quot;129&quot;     &quot;13&quot;      &quot;130&quot;     &quot;131&quot;    
-##  [36] &quot;132&quot;     &quot;133&quot;     &quot;134&quot;     &quot;135&quot;     &quot;136&quot;     &quot;137&quot;     &quot;138&quot;    
-##  [43] &quot;139&quot;     &quot;14&quot;      &quot;140&quot;     &quot;141&quot;     &quot;142&quot;     &quot;143&quot;     &quot;144&quot;    
-##  [50] &quot;145&quot;     &quot;146&quot;     &quot;147&quot;     &quot;148&quot;     &quot;149&quot;     &quot;15&quot;      &quot;150&quot;    
-##  [57] &quot;151&quot;     &quot;152&quot;     &quot;153&quot;     &quot;154&quot;     &quot;155&quot;     &quot;156&quot;     &quot;157&quot;    
-##  [64] &quot;158&quot;     &quot;159&quot;     &quot;16&quot;      &quot;160&quot;     &quot;161&quot;     &quot;162&quot;     &quot;163&quot;    
-##  [71] &quot;164&quot;     &quot;165&quot;     &quot;166&quot;     &quot;167&quot;     &quot;168&quot;     &quot;169&quot;     &quot;170&quot;    
-##  [78] &quot;171&quot;     &quot;172&quot;     &quot;173&quot;     &quot;174&quot;     &quot;175&quot;     &quot;176&quot;     &quot;177&quot;    
-##  [85] &quot;178&quot;     &quot;179&quot;     &quot;180&quot;     &quot;181&quot;     &quot;182&quot;     &quot;183&quot;     &quot;184&quot;    
-##  [92] &quot;185&quot;     &quot;186&quot;     &quot;187&quot;     &quot;188&quot;     &quot;189&quot;     &quot;19&quot;      &quot;190&quot;    
-##  [99] &quot;191&quot;     &quot;192&quot;     &quot;193&quot;     &quot;194&quot;     &quot;195&quot;     &quot;196&quot;     &quot;197&quot;    
-## [106] &quot;198&quot;     &quot;199&quot;     &quot;2&quot;       &quot;20&quot;      &quot;200&quot;     &quot;201&quot;     &quot;202&quot;    
-## [113] &quot;203&quot;     &quot;204&quot;     &quot;205&quot;     &quot;206&quot;     &quot;207&quot;     &quot;208&quot;     &quot;209&quot;    
-## [120] &quot;21&quot;      &quot;210&quot;     &quot;211&quot;     &quot;212&quot;     &quot;213&quot;     &quot;214&quot;     &quot;215&quot;    
-## [127] &quot;216&quot;     &quot;217&quot;     &quot;218&quot;     &quot;219&quot;     &quot;22&quot;      &quot;220&quot;     &quot;221&quot;    
-## [134] &quot;222&quot;     &quot;223&quot;     &quot;224&quot;     &quot;225&quot;     &quot;226&quot;     &quot;227&quot;     &quot;228&quot;    
-## [141] &quot;229&quot;     &quot;23&quot;      &quot;230&quot;     &quot;231&quot;     &quot;232&quot;     &quot;233&quot;     &quot;234&quot;    
-## [148] &quot;235&quot;     &quot;236&quot;     &quot;237&quot;     &quot;238&quot;     &quot;239&quot;     &quot;24&quot;      &quot;240&quot;    
-## [155] &quot;241&quot;     &quot;242&quot;     &quot;243&quot;     &quot;244&quot;     &quot;245&quot;     &quot;246&quot;     &quot;247&quot;    
-## [162] &quot;248&quot;     &quot;249&quot;     &quot;25&quot;      &quot;250&quot;     &quot;251&quot;     &quot;252&quot;     &quot;253&quot;    
-## [169] &quot;254&quot;     &quot;255&quot;     &quot;256&quot;     &quot;257&quot;     &quot;258&quot;     &quot;259&quot;     &quot;26&quot;     
-## [176] &quot;260&quot;     &quot;261&quot;     &quot;262&quot;     &quot;263&quot;     &quot;264&quot;     &quot;265&quot;     &quot;27&quot;     
-## [183] &quot;275&quot;     &quot;276&quot;     &quot;277&quot;     &quot;278&quot;     &quot;279&quot;     &quot;28&quot;      &quot;280&quot;    
-## [190] &quot;281&quot;     &quot;282&quot;     &quot;283&quot;     &quot;284&quot;     &quot;285&quot;     &quot;286&quot;     &quot;287&quot;    
-## [197] &quot;288&quot;     &quot;289&quot;     &quot;290&quot;     &quot;291&quot;     &quot;292&quot;     &quot;293&quot;     &quot;294&quot;    
-## [204] &quot;3&quot;       &quot;35&quot;      &quot;36&quot;      &quot;37&quot;      &quot;38&quot;      &quot;39&quot;      &quot;4&quot;      
-## [211] &quot;40&quot;      &quot;41&quot;      &quot;42&quot;      &quot;43&quot;      &quot;44&quot;      &quot;45&quot;      &quot;46&quot;     
-## [218] &quot;47&quot;      &quot;48&quot;      &quot;49&quot;      &quot;5&quot;       &quot;50&quot;      &quot;51&quot;      &quot;52&quot;     
-## [225] &quot;53&quot;      &quot;54&quot;      &quot;55&quot;      &quot;56&quot;      &quot;57&quot;      &quot;58&quot;      &quot;6&quot;      
-## [232] &quot;60&quot;      &quot;61&quot;      &quot;62&quot;      &quot;63&quot;      &quot;64&quot;      &quot;65&quot;      &quot;66&quot;     
-## [239] &quot;67&quot;      &quot;68&quot;      &quot;69&quot;      &quot;7&quot;       &quot;70&quot;      &quot;71&quot;      &quot;72&quot;     
-## [246] &quot;73&quot;      &quot;74&quot;      &quot;75&quot;      &quot;76&quot;      &quot;77&quot;      &quot;78&quot;      &quot;79&quot;     
-## [253] &quot;8&quot;       &quot;80&quot;      &quot;81&quot;      &quot;82&quot;      &quot;83&quot;      &quot;84&quot;      &quot;85&quot;     
-## [260] &quot;86&quot;      &quot;87&quot;      &quot;88&quot;      &quot;89&quot;      &quot;9&quot;       &quot;90&quot;      &quot;91&quot;     
-## [267] &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;      &quot;96&quot;      &quot;97&quot;      &quot;98&quot;     
-## [274] &quot;99&quot;      &quot;ARPA-1&quot;  &quot;CECO-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;CHFO-1&quot;  &quot;DCECO-1&quot;
-## [281] &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot;  &quot;LIDE-4&quot;</code></pre>
+<pre><code>##   [1] &quot;1&quot;      &quot;10&quot;     &quot;100&quot;    &quot;103&quot;    &quot;104&quot;    &quot;105&quot;    &quot;106&quot;   
+##   [8] &quot;107&quot;    &quot;108&quot;    &quot;109&quot;    &quot;11&quot;     &quot;110&quot;    &quot;111&quot;    &quot;112&quot;   
+##  [15] &quot;113&quot;    &quot;115&quot;    &quot;116&quot;    &quot;117&quot;    &quot;118&quot;    &quot;119&quot;    &quot;12&quot;    
+##  [22] &quot;120&quot;    &quot;121&quot;    &quot;122&quot;    &quot;123&quot;    &quot;124&quot;    &quot;125F&quot;   &quot;125W&quot;  
+##  [29] &quot;126&quot;    &quot;127&quot;    &quot;128&quot;    &quot;129&quot;    &quot;13&quot;     &quot;130&quot;    &quot;131&quot;   
+##  [36] &quot;132&quot;    &quot;133&quot;    &quot;134&quot;    &quot;135&quot;    &quot;136&quot;    &quot;137&quot;    &quot;138&quot;   
+##  [43] &quot;139&quot;    &quot;14&quot;     &quot;140&quot;    &quot;141&quot;    &quot;142&quot;    &quot;143&quot;    &quot;144&quot;   
+##  [50] &quot;145&quot;    &quot;146&quot;    &quot;147&quot;    &quot;148&quot;    &quot;149&quot;    &quot;15&quot;     &quot;150&quot;   
+##  [57] &quot;151&quot;    &quot;152&quot;    &quot;153&quot;    &quot;154&quot;    &quot;155&quot;    &quot;156&quot;    &quot;157&quot;   
+##  [64] &quot;158&quot;    &quot;159&quot;    &quot;16&quot;     &quot;160&quot;    &quot;161&quot;    &quot;162&quot;    &quot;163&quot;   
+##  [71] &quot;164&quot;    &quot;165&quot;    &quot;166&quot;    &quot;167&quot;    &quot;168&quot;    &quot;169&quot;    &quot;170&quot;   
+##  [78] &quot;171&quot;    &quot;172&quot;    &quot;173&quot;    &quot;174&quot;    &quot;175&quot;    &quot;176&quot;    &quot;177&quot;   
+##  [85] &quot;178&quot;    &quot;179&quot;    &quot;180&quot;    &quot;181&quot;    &quot;182&quot;    &quot;183&quot;    &quot;184&quot;   
+##  [92] &quot;185&quot;    &quot;186&quot;    &quot;187&quot;    &quot;188&quot;    &quot;188&quot;    &quot;189&quot;    &quot;19&quot;    
+##  [99] &quot;190&quot;    &quot;191&quot;    &quot;192&quot;    &quot;193&quot;    &quot;194&quot;    &quot;195&quot;    &quot;196&quot;   
+## [106] &quot;197&quot;    &quot;198&quot;    &quot;199&quot;    &quot;2&quot;      &quot;20&quot;     &quot;20&quot;     &quot;200&quot;   
+## [113] &quot;201&quot;    &quot;202&quot;    &quot;203&quot;    &quot;204&quot;    &quot;205&quot;    &quot;206&quot;    &quot;207&quot;   
+## [120] &quot;208&quot;    &quot;209&quot;    &quot;21&quot;     &quot;21&quot;     &quot;210&quot;    &quot;211&quot;    &quot;212&quot;   
+## [127] &quot;213&quot;    &quot;214&quot;    &quot;215&quot;    &quot;216&quot;    &quot;217&quot;    &quot;218&quot;    &quot;219&quot;   
+## [134] &quot;22&quot;     &quot;220&quot;    &quot;221&quot;    &quot;222&quot;    &quot;223&quot;    &quot;224&quot;    &quot;225&quot;   
+## [141] &quot;226&quot;    &quot;227&quot;    &quot;228&quot;    &quot;229&quot;    &quot;23&quot;     &quot;230&quot;    &quot;231&quot;   
+## [148] &quot;232&quot;    &quot;233&quot;    &quot;234&quot;    &quot;235&quot;    &quot;236&quot;    &quot;237&quot;    &quot;238&quot;   
+## [155] &quot;239&quot;    &quot;24&quot;     &quot;240&quot;    &quot;241&quot;    &quot;242&quot;    &quot;243&quot;    &quot;244&quot;   
+## [162] &quot;245&quot;    &quot;246&quot;    &quot;247&quot;    &quot;248&quot;    &quot;249&quot;    &quot;25&quot;     &quot;250&quot;   
+## [169] &quot;251&quot;    &quot;252&quot;    &quot;253&quot;    &quot;254&quot;    &quot;255&quot;    &quot;256&quot;    &quot;257&quot;   
+## [176] &quot;258&quot;    &quot;259&quot;    &quot;26&quot;     &quot;260&quot;    &quot;261&quot;    &quot;262&quot;    &quot;263&quot;   
+## [183] &quot;264&quot;    &quot;265&quot;    &quot;27&quot;     &quot;275&quot;    &quot;276&quot;    &quot;277&quot;    &quot;278&quot;   
+## [190] &quot;279&quot;    &quot;28&quot;     &quot;280&quot;    &quot;281&quot;    &quot;282&quot;    &quot;283&quot;    &quot;284&quot;   
+## [197] &quot;285&quot;    &quot;286&quot;    &quot;287&quot;    &quot;288&quot;    &quot;289&quot;    &quot;290&quot;    &quot;291&quot;   
+## [204] &quot;292&quot;    &quot;293&quot;    &quot;294&quot;    &quot;3&quot;      &quot;35&quot;     &quot;36&quot;     &quot;37&quot;    
+## [211] &quot;38&quot;     &quot;39&quot;     &quot;4&quot;      &quot;40&quot;     &quot;41&quot;     &quot;42&quot;     &quot;43&quot;    
+## [218] &quot;44&quot;     &quot;45&quot;     &quot;46&quot;     &quot;47&quot;     &quot;48&quot;     &quot;49&quot;     &quot;5&quot;     
+## [225] &quot;50&quot;     &quot;51&quot;     &quot;52&quot;     &quot;53&quot;     &quot;54&quot;     &quot;55&quot;     &quot;56&quot;    
+## [232] &quot;57&quot;     &quot;58&quot;     &quot;6&quot;      &quot;60&quot;     &quot;61&quot;     &quot;62&quot;     &quot;63&quot;    
+## [239] &quot;64&quot;     &quot;65&quot;     &quot;66&quot;     &quot;67&quot;     &quot;68&quot;     &quot;69&quot;     &quot;7&quot;     
+## [246] &quot;70&quot;     &quot;71&quot;     &quot;72&quot;     &quot;73&quot;     &quot;74&quot;     &quot;75&quot;     &quot;76&quot;    
+## [253] &quot;77&quot;     &quot;78&quot;     &quot;79&quot;     &quot;8&quot;      &quot;80&quot;     &quot;81&quot;     &quot;82&quot;    
+## [260] &quot;83&quot;     &quot;84&quot;     &quot;85&quot;     &quot;86&quot;     &quot;87&quot;     &quot;88&quot;     &quot;89&quot;    
+## [267] &quot;9&quot;      &quot;90&quot;     &quot;91&quot;     &quot;92&quot;     &quot;93&quot;     &quot;94&quot;     &quot;95&quot;    
+## [274] &quot;96&quot;     &quot;97&quot;     &quot;98&quot;     &quot;99&quot;     &quot;ARPA-1&quot; &quot;CECO-1&quot; &quot;CEIN-1&quot;
+## [281] &quot;CEIN-2&quot; &quot;CHFO-1&quot; &quot;LIDE-1&quot; &quot;LIDE-2&quot; &quot;LIDE-3&quot; &quot;LIDE-4&quot;</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>
