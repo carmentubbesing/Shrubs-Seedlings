@@ -28,6 +28,11 @@ setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
+# Load VSURF results
+```{r}
+load("../../results/VSURF_pipo_vars.Rdata")
+```
+
 ## Filter to just PIPO
 ```{r}
 df %>% 
@@ -39,54 +44,6 @@ df <- df %>%
   filter(Species == "PIPO")
 ```
 
-## Change species and site class to factors
-```{r}
-df <- df %>% 
-  mutate(Species = as.factor(Species)) %>% 
-  mutate(Sdlg = as.factor(Sdlg), siteclass= as.factor(siteclass)) 
-df <- droplevels(df)
-```
-
-# Convert shrub area to sqrt
-```{r}
-df <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
-```
-
-# Count the seedlings
-```{r}
-length(unique(df$Sdlg))
-nrow(df)
-```
-
-# Try using VSURF
-
-## Make df of just the predictor variables I want to include
-```{r}
-xdf <- df %>% 
-  dplyr::select(Elevation,
-         Slope.Deg,
-         heatload,
-         incidrad,
-         Aspect.rad.fold.NESW,
-         siteclass,
-         Year,
-         Years,
-         BasDia2016.cm, 
-         Ht_cm1,
-         sqrt_shrubarea3,
-         ShrubSpp03) 
-```
-
-## Normalize the numeric ones
-```{r}
-normalize <- function(x) {
-    return ((x - mean(x)) / sd(x))
-  }
-xdf <- xdf %>% mutate_if(is.numeric, normalize)
-xdf
-```
-
 # Find average growth rate
 ```{r}
 mean(df$VertGrowth_Rel)
@@ -96,52 +53,16 @@ ggplot(df)+
   geom_boxplot(aes(y = VertGrowth_Rel))
 ```
 
-# Run a random forest on everything
+# Structure data for LM
+
+## Normalize function
 ```{r}
-forest <- randomForest(
-     x = xdf,
-     y = df$VertGrowth_Rel, 
-     importance = TRUE, 
-     scale = TRUE, 
-     ntree=5000)
-varImpPlot(forest)
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
 ```
 
-# STOP HERE TO SAVE TIME
-
-<!-- # Apply VSURF to vertical growth -->
-<!-- ```{r} -->
-<!-- vsurf <- VSURF(x = xdf, -->
-<!--                y = df$VertGrowth_Rel, -->
-<!--                na.action = na.omit, -->
-<!--                parallel = T) -->
-<!-- summary(vsurf) -->
-<!-- vsurf$varselect.pred -->
-<!-- xdf[vsurf$varselect.pred] -->
-<!-- ``` -->
-
-<!-- ## Save the results -->
-<!-- ```{r} -->
-<!-- vars <- names(xdf[vsurf$varselect.pred]) -->
-<!-- vars -->
-<!-- ``` -->
-
-<!-- ## Look at final random forest -->
-<!-- ```{r} -->
-<!-- forest <- randomForest( -->
-<!--   x = xdf %>% -->
-<!--     dplyr::select(vars), -->
-<!--   y = df$VertGrowth_Rel, -->
-<!--   importance = TRUE, -->
-<!--   scale = TRUE) -->
-<!-- varImpPlot(forest) -->
-<!-- ``` -->
-
-# RESUME HERE
-
-# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
-
-## Structure data for LM
+## filter and normalize df
 ```{r}
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
@@ -151,7 +72,6 @@ LMdf <- df %>%
          VertGrowth_Rel, 
          Years, 
          Ht_cm1, 
-         shrubarea3, 
          sqrt_shrubarea3, 
          log_shrubarea3, 
          BasDia2016.cm, 
@@ -166,11 +86,19 @@ LMdf <- df %>%
 LMdf <- droplevels(LMdf)
 ```
 
+# Model using VSURF var results
+
+## Convert vars to formula structure
 ```{r}
-vars
-LM <- lme(VertGrowth_Rel ~  Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-summary(LM)
+vars_one <- paste(vars, collapse = " + ")
+vars_one
+f <- formula(paste("VertGrowth_Rel ~ ",vars_one))
+f
+```
+
+## Run lme model
+```{r}
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
 
 ## Check collinearity
@@ -178,65 +106,41 @@ summary(LM)
 ### Compare Zuur model with vif function from car package
 ```{r}
 source("~/../Documents/HighstatLibV10.R.txt") # from Zuur https://highstat.com/index.php/mixed-effects-models-and-extensions-in-ecology-with-r
-corvif(LMdf[c("Years", "Ht_cm1", "shrubarea3", "heatload", "incidrad", "Year", "ShrubSpp03")])
+corvif(LMdf %>% select(!!vars))
 vif(LM)
 ```
 
 A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok.
 
+# See whether model with or without interaction is better
 ```{r}
-LM <- lme(VertGrowth_Rel ~  Ht_cm1 + sqrt_shrubarea3 + heatload + Years + ShrubSpp03 + siteclass + Year,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-drop1(LM, test = "Chisq")
+vars_int <- paste(vars_one, "+ Ht_cm1:sqrt_shrubarea3")
+f_int <- formula(paste("VertGrowth_Rel ~ ",vars_int))
+LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 AIC(LM)
-LM_int <- lme(VertGrowth_Rel ~  Ht_cm1*sqrt_shrubarea3 + heatload + Years + ShrubSpp03 + siteclass + Year,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 AIC(LM_int)
+if(
+  AIC(LM) > AIC(LM_int)
+) print(paste("WITH INTERACTION WINS BY", round(AIC(LM)-AIC(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AIC(LM_int)-AIC(LM), digits = 2)))
 ```
-
-
-## See whether model with or without interaction is better
-```{r}
-without <- lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-AIC(without)
-with_ht <- lme(VertGrowth_Rel ~  
-            Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-        data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-
-AIC(with_ht)
-
-anova(with_ht, without)
-```
-
 
 # See whether residuals are better for log transformed or not
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 plot(LM)
 ```
 
 ```{r}
-LM <-  lme(exp(VertGrowth_Rel) ~ 
-             Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-plot(LM)
+f_no_log <- formula(paste("exp(VertGrowth_Rel) ~", vars_one))
+LM_no_log <-  lme(f_no_log, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+plot(LM_no_log)
 ```
 
-Log transformed looks better 
+Log transformed looks better.
 
-# Re-establish the best LM so far and look at summary and drop1 results
+# Look at summary and drop1 results
 ```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1*sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 summary(LM)
 ```
-
-Note: Chisq here is performing likelihood ratio tests
 
 ```{r}
 drop <- drop1(LM, test = "Chisq")
@@ -245,22 +149,23 @@ drop <- tbl_df(drop)
 drop %>% 
   arrange( `Pr(>Chi)`) %>% 
   mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
-
 ```
 
 ## Run anova by hand for the interacting variables since drop1 doesn't do that by default
 ```{r}
-LM_noshrub <- lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1+ heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-anova(LM, LM_noshrub)
+vars_no_shrub <- str_replace(vars_one, "sqrt_shrubarea3 +", "")
+vars_no_shrub
+f_no_shrub <- formula(paste("VertGrowth_Rel ~ ", vars_no_shrub))
+LM_noshrub <- lme(f_no_shrub, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM_int, LM_noshrub)
 ```
 
 ```{r}
-LM_noheight <- lme(VertGrowth_Rel ~ 
-            Years + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-anova(LM, LM_noheight)
+vars_no_ht <- vars[vars != "Ht_cm1"]
+vars_no_ht_one <- paste(vars_no_ht, collapse = " + ")
+f_no_ht <- formula(paste("VertGrowth_Rel ~ ", vars_no_ht_one))
+LM_noht <- lme(f_no_ht, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+anova(LM_int, LM_noht)
 ```
 
 # Look at collinearity between height and shrub competition
@@ -296,17 +201,10 @@ ggplot(df, aes(x = log(df$shrubarea3), y = E))+
 Note: the plots look exactly the same but with different axes if you don't normalize the numeric predictors. So for including plots to visualize in the paper, I just use non-normalized data
 
 ```{r}
-eff_years <- predictorEffect("Years", LM)
-plot(eff_years)
-
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
-plot(eff_shrubarea)
-
-eff_ht <- predictorEffect("Ht_cm1", LM)
-plot(eff_ht)
-
+plot(predictorEffect("Years", LM))
+plot(predictorEffect("sqrt_shrubarea3", LM))
+plot(predictorEffect("Ht_cm1", LM))
 plot(predictorEffect("Year", LM))
-
 plot(predictorEffect("ShrubSpp03", LM))
 ```
 
@@ -315,10 +213,10 @@ plot(predictorEffect("ShrubSpp03", LM))
 r.squaredGLMM(LM)
 ```
 
-# Re-create effects plots using predictorEffects() and ggplot
+# Plot shrub effects with an interaction
 
 ```{r}
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM_int)
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
@@ -327,10 +225,9 @@ head(effects_df)
 ```{r}
 quartiles <- summary(df$Ht_cm1)[c(2,5)]
 quartiles <- (quartiles-mean(df$Ht_cm1))/sd(df$Ht_cm1)
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM, xlevels = list(Ht_cm1 = quartiles))
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM_int, xlevels = list(Ht_cm1 = quartiles))
 effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
-summary(as.factor(effects_df$Ht_cm1))
 ```
 
 ## Transform variables back to original units
@@ -374,20 +271,11 @@ ggplot(effects_df)+
   theme(text = element_text(size = 11),
         #panel.grid.minor = element_blank(),
         panel.grid.major = element_blank())
-ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 3, height = 3, dpi = 400)
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel_int.png", width = 3, height = 3, dpi = 400)
 ```
 
 
-## Plot effects of shrubarea WITHOUT interaction
-
-### Re-establish the best LM so far:
-```{r}
-LM <-  lme(VertGrowth_Rel ~ 
-            Years +  Ht_cm1 + sqrt_shrubarea3 + heatload + BasDia2016.cm + Year + ShrubSpp03,
-           data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-drop1(LM, test = "Chisq")
-```
-
+# Plot shrub effects WITHOUT interaction
 
 ### Re-create effects plots using predictorEffects() and ggplot
 
@@ -420,7 +308,7 @@ ggplot(effects_df)+
         #panel.grid.minor = element_blank(),
         #panel.grid.major = element_blank(),
         text = element_text(size = 11))
-ggsave(file = "../../results/figures/FireFootprints/PineVertRel.png", width = 3, height = 3, dpi = 400)
+ggsave(file = "../../results/figures/FireFootprints/PineVertRel_noint.png", width = 3, height = 3, dpi = 400)
 ```
 
 
@@ -443,7 +331,6 @@ summary(df$shrubarea3)
 ```{r}
 summary(df$Cov1.3/(300*4))
 ```
-
 
 # Find the shrubarea values associated with each quartile, and the mean growth for each of those
 ```{r}
@@ -485,9 +372,7 @@ collins_shrubarea <- sqrt((.6*1200)*86)
 effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart1)),]$fit
 ```
 
-
 ```{r}
-
 sd <- sd(df$shrubarea3/10000)
 ```
 
@@ -531,5 +416,5 @@ sort(unique(df$Sdlg))
 
 # Save final data
 ```{r}
-save(df, file ="../../compiled_data/fire_footprints/pine_vert.Rdata)")
+save(df, file ="../../compiled_data/fire_footprints/pine_vert.Rdata")
 ```

@@ -1,0 +1,90 @@
+---
+title: "VSURF_pine"
+author: "Carmen"
+date: "August 20, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = F}
+require(randomForest)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(VSURF)
+set.seed(12346)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+## Filter to just PIPO
+```{r}
+df %>% 
+  filter(Species == "PIPO") %>% 
+  group_by(Fire) %>% 
+  summarize(n()) %>% 
+  arrange(`n()`)
+df <- df %>% 
+  filter(Species == "PIPO")
+```
+
+# Make df of just the predictor variables I want to include in VSURF
+```{r}
+xdf <- df %>% 
+  dplyr::select(Elevation,
+         Slope.Deg,
+         heatload,
+         incidrad,
+         Aspect.rad.fold.NESW,
+         siteclass,
+         Year,
+         Years,
+         BasDia2016.cm, 
+         Ht_cm1,
+         sqrt_shrubarea3,
+         ShrubSpp03) 
+```
+
+## Normalize the numeric ones
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+xdf <- xdf %>% mutate_if(is.numeric, normalize)
+xdf
+```
+
+# Apply VSURF to vertical growth
+```{r}
+vsurf <- VSURF(x = xdf,
+               y = df$VertGrowth_Rel,
+               na.action = na.omit,
+               parallel = T)
+summary(vsurf)
+vsurf$varselect.pred
+xdf[vsurf$varselect.pred]
+```
+
+## Save the results
+```{r}
+vars <- names(xdf[vsurf$varselect.pred])
+vars
+save(vars, file = "../../results/VSURF_pipo_vars.Rdata")
+```
+
+## Look at final random forest
+```{r}
+forest <- randomForest(
+  x = xdf %>%
+    dplyr::select(vars),
+  y = df$VertGrowth_Rel,
+  importance = TRUE,
+  scale = TRUE)
+varImpPlot(forest)
+```
+
