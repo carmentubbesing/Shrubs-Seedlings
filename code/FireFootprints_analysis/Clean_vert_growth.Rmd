@@ -156,10 +156,9 @@ df %>%
   arrange(Date1_2016)
 ```
 
+### For those seedlings, find 2015 growth by creating a regression model
 
-### For those seedlings, find 2015 growth by assuming that Growth_16 was the full apical growth as of 2016 measurements and using the ratio of 2016 growth to 2015 growth as measured in 2016
-
-### Find average 2016 growing season apical growth relative to 2015 growth
+### Find average 2016 growing season apical growth for the seedlings with data on it
 ```{r}
 find_apical_growth <- df %>%
   filter(!is.na(Ht2015.meas2016)) %>%
@@ -173,33 +172,15 @@ find_apical_growth
 
 ### Check whether that ratio changes with height or date, excluding the very high values that seem like mistakes
 
-#### height
-```{r}
-ggplot(find_apical_growth %>% filter(apical_ratio<5), aes(x = Ht2015.meas2016, y = apical_ratio, col = Species)) +
-  geom_point()+
-  geom_smooth(method = "lm")
-```
-
-No clear trend, at least for PIPO.
-
-#### date
-```{r}
-ggplot(find_apical_growth, aes(x = Date1_2016, y = apical_ratio, col = Species)) +
-  geom_point()+
-  geom_smooth(method = "lm")
-```
-
-Slight increase.
-
-##### Test for each species:
+#### Reformat data for LM
 
 ```{r}
-cov(as.integer(find_apical_growth$Date1_2016), find_apical_growth$apical_ratio)
+df <- df %>% 
+  mutate(Species = as.factor(Species))
 test <- find_apical_growth %>% 
   mutate(Date1_2016 = as.numeric(Date1_2016)) %>% 
   mutate(Species = as.factor(Species))
 ```
-
 
 #### Model growth based on species, date, and last year of growth
 ```{r}
@@ -222,26 +203,18 @@ find_apical_growth %>%
 df$apical_growth_pred <- predict(lm, newdata = df %>% mutate(Date1_2016 = as.numeric(Date1_2016)))
 ```
 
-
 ### Then use this value for the seedlings that don't have 2015 height recorded
 ```{r}
 df <- df %>%
    mutate(Ht2015.calc2016 =
            ifelse(is.na(Ht2017.cm.fall) &
-                    is.na(Ht2015.meas2016) &
-                            Species == "ABCO",
+                    is.na(Ht2015.meas2016),
                   Ht16_meas2016.cm - LastYearGrth.cm - apical_growth_pred,
-                  Ht2015.meas2016)) %>%
-    mutate(Ht2015.calc2016 =
-           ifelse(is.na(Ht2017.cm.fall) &
-                    is.na(Ht2015.meas2016) &
-                            Species == "PIPO",
-                  Ht16_meas2016.cm - LastYearGrth.cm - apical_growth_pred,
-                  Ht2015.calc2016))
+                  Ht2015.meas2016)) 
 
 df %>%
   filter(is.na(Ht2017.cm.fall)) %>%
-  dplyr::select(Species, Sdlg, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, Ht2015.calc2016)
+  dplyr::select(Sdlg, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, Ht2015.calc2016)
 ```
 
 ## Assign 2015 spring height as Ht2015 calculated in 2016 if there's no 2017 value
