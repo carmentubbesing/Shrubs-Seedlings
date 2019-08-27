@@ -234,10 +234,10 @@ load(&quot;../../compiled_data/fire_footprints/master_seedlings.Rdata&quot;)</co
 </div>
 <div id="apply-function" class="section level1">
 <h1>Apply function</h1>
-<pre class="r"><code>scp(&quot;AMCR-NW&quot;, 4)
-scp(&quot;AMCR-NE&quot;, 4)
-scp(&quot;AMCR-3&quot;, 3)
-scp(&quot;AMCR-2&quot;, 4)
+<pre class="r"><code>scp(&quot;AMRC-NW&quot;, 4)
+scp(&quot;AMRC-NE&quot;, 4)
+scp(&quot;AMRC-3&quot;, 3)
+scp(&quot;AMRC-2&quot;, 4)
 scss(c(85, 86, 87, 81, 83), 3)
 scp(&quot;STAR-NW&quot;, 6)
 scss(c(170:174), 4)
@@ -256,13 +256,8 @@ scs(122, 6)</code></pre>
   filter(siteclass == 0) %&gt;% 
   dplyr::select(FirePatch) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 4 x 1
-##   FirePatch
-##   &lt;chr&gt;    
-## 1 AMRC-NW  
-## 2 AMRC-NE  
-## 3 AMRC-2   
-## 4 AMRC-3</code></pre>
+<pre><code>## # A tibble: 0 x 1
+## # ... with 1 variable: FirePatch &lt;chr&gt;</code></pre>
 <pre class="r"><code>df %&gt;% 
   dplyr::select(Sdlg, FirePatch, siteclass) %&gt;% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))</code></pre>
@@ -272,12 +267,15 @@ scs(122, 6)</code></pre>
 ## 1 12    CLVD-N            3
 ## 2 85    AMRC-2            3
 ## 3 86    AMRC-2            3
-## 4 89    AMRC-2            0
+## 4 89    AMRC-2            4
 ## 5 161   STAR-NW           6
 ## 6 172   STAR-NW           4
 ## 7 176   STAR-mid          4
-## 8 227   AMRC-NE           0
-## 9 265   AMRC-3            0</code></pre>
+## 8 227   AMRC-NE           4
+## 9 265   AMRC-3            3</code></pre>
+<pre class="r"><code>summary(as.factor(df$siteclass))</code></pre>
+<pre><code>##   2   3   4   6 
+##  17  55 134  10</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>

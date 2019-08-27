@@ -58,10 +58,10 @@ scp <- function(patch, site_class){
 
 # Apply function
 ```{r}
-scp("AMCR-NW", 4)
-scp("AMCR-NE", 4)
-scp("AMCR-3", 3)
-scp("AMCR-2", 4)
+scp("AMRC-NW", 4)
+scp("AMRC-NE", 4)
+scp("AMRC-3", 3)
+scp("AMRC-2", 4)
 scss(c(85, 86, 87, 81, 83), 3)
 scp("STAR-NW", 6)
 scss(c(170:174), 4)
@@ -90,6 +90,10 @@ df %>%
 df %>% 
   dplyr::select(Sdlg, FirePatch, siteclass) %>% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))
+```
+
+```{r}
+summary(as.factor(df$siteclass))
 ```
 
 # Save
