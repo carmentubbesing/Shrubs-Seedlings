@@ -68,7 +68,6 @@ df17 <- df17 %>%
   rename(Notes2017 = notes)
 ```
 
-
 ## Take out non-PIPO/ABCO in 2017 data
 ```{r}
 df17 <- df17 %>% 
@@ -86,7 +85,7 @@ df17 <- df17 %>%
 ## Full join
 ```{r}
 df <- full_join(df16, df17, by = "Sdlg")
-names(df)
+sort(names(df))
 ```
 
 # Sync up repeat column names
@@ -106,6 +105,12 @@ df <- df %>%
 
 ## Sync fire and fire patch
 ```{r}
+df <- df %>% 
+  mutate(FirePatch.y = ifelse(FirePatch.y=="AMCR-NW", "AMRC-NW", FirePatch.y)) %>% 
+  mutate(FirePatch.y = ifelse(FirePatch.y=="AMCR-NE", "AMRC-NE", FirePatch.y)) %>% 
+  mutate(FirePatch.y = ifelse(FirePatch.y=="AMCR-2", "AMRC-2", FirePatch.y)) %>% 
+  mutate(FirePatch.y = ifelse(FirePatch.y=="AMCR-3", "AMRC-3", FirePatch.y)) %>% 
+  mutate(FirePatch.y = ifelse(FirePatch.y=="AMCR-A", "AMRC-A", FirePatch.y))
 df %>% 
   filter(FirePatch.x != FirePatch.y) %>% 
   dplyr::select(Sdlg, FirePatch.x, FirePatch.y)
@@ -115,6 +120,9 @@ df <- df %>%
 ```
 
 ```{r}
+summary(as.factor(df17$Fire))
+summary(as.factor(df16$Fire))
+
 df %>% 
   filter(Fire.x != Fire.y) %>% 
   dplyr::select(Sdlg, Fire.x, Fire.y)
@@ -137,7 +145,7 @@ df <- df %>%
   dplyr::select(Sdlg, Species, Fire, FirePatch, Ht16_meas2016.cm, Ht2017.cm, everything())
 ```
 
-# Find missing seedlings from 2017 data
+# Find seedlings that are missing from 2017 data AND don't have status recorded already
 ```{r}
 df %>% 
   filter(is.na(Ht2017.cm) & is.na(Status)) %>% 
@@ -149,7 +157,8 @@ df %>%
 df <- df %>% 
   mutate(Status = ifelse(Sdlg %in% c(19,28, 139, 137), "exclude, lone in patch", Status)) %>% 
   mutate(Status = ifelse(FirePatch == "FRDS-JB" | Sdlg %in% c(58,80,91,92,93,100,103,106,107,229,176), "not found",Status)) %>% 
-  mutate(Status = ifelse(Sdlg == 7, "exclude, under oak", Status))
+  mutate(Status = ifelse(Sdlg == 7, "exclude, under oak", Status)) %>% 
+  mutate(Status = ifelse(Sdlg ==132, "Actually PILA", Status))
 ```
 
 ## Remove seedlings that were excluded for reasons other than dead or couldn't find them
@@ -163,6 +172,13 @@ summary(as.factor(df$Status))
 ```{r}
 df <- df %>% 
   mutate(shrubarea3 = Ht1.3 * Cov1.3)
+```
+
+# Find seedlings with no 2017 Datasheet recorded
+```{r}
+df %>% 
+  filter(is.na(DataSheet2017)) %>% 
+  select(Sdlg, Species, FirePatch, Date2017, Status)
 ```
 
 # Save
