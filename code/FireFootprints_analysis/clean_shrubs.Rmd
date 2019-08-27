@@ -16,6 +16,7 @@ require(tidyverse)
 
 # Load data
 ```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 shr <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv")
 load("../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 ```
@@ -52,6 +53,11 @@ shr <- shr %>% filter(ShrubSpp != "pea")
 summary(as.factor(shr$ShrubSpp))
 shr <- shr %>% 
   filter(!(ShrubSpp == "conifer"))
+```
+
+## Drop levels
+```{r}
+shr <- droplevels(shr)
 ```
 
 
@@ -97,28 +103,19 @@ cov <- cov %>%
 ### Summarize height by segment 
 ```{r}
 ht <- shr %>%
-  group_by(Sdlg, Seg) %>%
-  summarise(ht =mean(Ht.cm)) %>%
-  spread(Seg, ht) %>% 
-  rename(Sdlg = Sdlg) %>%
-  rename(Ht1=`1`) %>%
-  rename(Ht2=`2`) %>%
-  rename(Ht3=`3`)  
+  select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %>% 
+  group_by(Sdlg) %>% 
+  mutate(ht_wm.cm = weighted.mean(Ht.cm, Cover.cm)) %>% 
+  ungroup() %>% 
+  select(Sdlg, ht_wm.cm) %>% 
+  distinct() 
 ```
 
 ### Replace NA height with 0
 ```{r}
-ht %>% filter(is.na(Ht1))
+ht %>% filter(is.na(ht_wm.cm))
 ht <- ht %>% 
-  replace_na(list(Ht1 = 0, Ht2 = 0, Ht3 = 0))
-```
-
-## Test cover and height - all should be TRUE
-```{r}
-sum(shr[shr$Sdlg==10 & shr$Seg==1,]$Cover.cm) == cov[cov$Sdlg==10,2]
-sum(shr[shr$Sdlg==1 & shr$Seg==3,]$Cover.cm) == cov[cov$Sdlg==1,4]
-mean(shr[shr$Sdlg==10 & shr$Seg==1,]$Ht.cm) == ht[ht$Sdlg==10,2]
-mean(shr[shr$Sdlg==1 & shr$Seg==3,]$Ht.cm) == ht[ht$Sdlg==1,4]
+  replace_na(list(ht_wm.cm=0))
 ```
 
 ## Combine cover and ht values into one data frame
@@ -142,51 +139,62 @@ spp3 <- shr %>%
 ```{r}
 spp3 %>% 
   group_by(Sdlg) %>% 
-  mutate(n = n()) %>% 
-  filter(n != 1)
+  filter(n()>1)
 ```
 
-<!-- ##### Fix spp3 data for seedling 20 -->
-<!-- ```{r} -->
-<!-- shr %>%  -->
-<!--   filter(Sdlg == 20 & ShrubSpp %in% c("PREM", "CECO")) %>%  -->
-<!--   dplyr::select(Sdlg, ShrubSpp, Cover.cm, Ht.cm) %>%  -->
-<!--   arrange(ShrubSpp) -->
-<!-- ``` -->
+##### Fix spp3 data for seedling 20
+```{r}
+shr %>%
+  filter(Sdlg == 20 & ShrubSpp %in% c("PREM", "CECO")) %>%
+  dplyr::select(Sdlg, ShrubSpp, Cover.cm, Ht.cm) %>%
+  arrange(ShrubSpp) %>% 
+  mutate(product = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  mutate(total_product = sum(product)) %>% 
+  ungroup() %>% 
+  mutate(winner = ifelse(total_product == max(total_product), 1, 0))
+```
 
-<!-- ```{r} -->
-<!-- spp3 <- spp3 %>%  -->
-<!--   filter(!(Sdlg==20 & ShrubSpp03 =="PREM")) -->
-<!-- ``` -->
+```{r}
+spp3 <- spp3 %>%
+  filter(!(Sdlg==20 & ShrubSpp03 =="PREM"))
+```
 
-<!-- ##### Fix spp3 data for seedling 21 -->
-<!-- ```{r} -->
-<!-- shr %>%  -->
-<!--   filter(Sdlg == 21 & ShrubSpp %in% c("PREM", "CECO")) %>%  -->
-<!--   dplyr::select(Sdlg, ShrubSpp, Cover.cm, Ht.cm) %>%  -->
-<!--   arrange(ShrubSpp) -->
-<!-- ``` -->
+##### Fix spp3 data for seedling 21
+```{r}
+shr %>%
+  filter(Sdlg == 21 & ShrubSpp %in% c("PREM", "CECO")) %>%
+  dplyr::select(Sdlg, ShrubSpp, Cover.cm, Ht.cm) %>%
+  arrange(ShrubSpp) %>% 
+  mutate(product = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  mutate(total_product = sum(product)) %>% 
+  ungroup() %>% 
+  mutate(winner = ifelse(total_product == max(total_product), 1, 0))
+```
 
-<!-- ```{r} -->
-<!-- spp3 <- spp3 %>%  -->
-<!--   filter(!(Sdlg==21 & ShrubSpp03 =="PREM")) -->
-<!-- ``` -->
+```{r}
+spp3 <- spp3 %>%
+  filter(!(Sdlg==21 & ShrubSpp03 =="PREM"))
+```
 
-<!-- ##### Fix spp3 data for seedling 188 -->
-<!-- ```{r} -->
-<!-- shr %>%  -->
-<!--   filter(Sdlg == 188 & ShrubSpp %in% c("CONU", "CECO")) %>%  -->
-<!--   dplyr::select(Sdlg, ShrubSpp, Dead., Cover.cm, Ht.cm) %>%  -->
-<!--   arrange(ShrubSpp) %>%  -->
-<!--   mutate(math = Cover.cm*Ht.cm) %>%  -->
-<!--   group_by(ShrubSpp) %>%  -->
-<!--   summarise(sum(math)) -->
-<!-- ``` -->
+##### Fix spp3 data for seedling 188
+```{r}
+shr %>%
+  filter(Sdlg == 188 & ShrubSpp %in% c("CONU", "CECO")) %>%
+  dplyr::select(Sdlg, ShrubSpp, Cover.cm, Ht.cm) %>%
+  arrange(ShrubSpp) %>% 
+  mutate(product = Cover.cm*Ht.cm) %>% 
+  group_by(ShrubSpp) %>% 
+  mutate(total_product = sum(product)) %>% 
+  ungroup() %>% 
+  mutate(winner = ifelse(total_product == max(total_product), 1, 0))
+```
 
-<!-- ```{r} -->
-<!-- spp3 <- spp3 %>%  -->
-<!--   filter(!(Sdlg==188 & ShrubSpp03 =="CECO")) -->
-<!-- ``` -->
+```{r}
+spp3 <- spp3 %>%
+  filter(!(Sdlg==188 & ShrubSpp03 =="CECO"))
+```
 
 
 ##### Fix spp3 data for seedling 190
@@ -237,14 +245,14 @@ shr_by_sdlg <- full_join(shr_by_sdlg, spp3, by = c("Sdlg" ="Sdlg"))
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>%
   mutate(Cov1.3 = Cov1 + Cov2 +Cov3) %>%
-  mutate(Ht1.3 = (Ht1+Ht2+Ht3)/3)
+  mutate(Ht1.3 = ht_wm.cm)
 shr_by_sdlg
 ```
 
 ### Delete unnecessary columns
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>% 
-  dplyr::select(-Cov1, -Cov2, -Cov3, -Ht1, -Ht2, -Ht3)
+  dplyr::select(-Cov1, -Cov2, -Cov3)
 ```
 
 # Light files and DIFN
