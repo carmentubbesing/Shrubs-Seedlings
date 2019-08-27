@@ -137,7 +137,7 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 vif(LM)
 ```
 
-## A VIF cutoff value of 5 is often used, and heatload has a GVIF much higher than that, so take it out and run the model again:
+## If VIF>5, remove the variable
 
 ```{r}
 vars <- vars[vars != "heatload"]
@@ -258,24 +258,40 @@ print(paste("fit_median_log = ", fit_median))
 print(paste("fit_min_log = ", fit_min))
 print(paste("fit_max_log = ", fit_max))
 print(paste("fit_mean_log = ", fit_mean))
+
+gr_minshrub_abco <- exp(fit_min)
+gr_maxshrub_abco <- exp(fit_max)
+gr_medshrub_abco <- exp(fit_median)
+```
+
+## Save them
+```{r}
+save(gr_minshrub_abco, file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
+save(gr_maxshrub_abco, file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
+save(gr_medshrub_abco, file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
 ```
 
 ## Plot effects of shrubarea
+
+### LOad colors from PIPO graph
+```{r}
+load("../../results/figures/FireFootprints/plot_min.Rdata")
+load("../../results/figures/FireFootprints/plot_max.Rdata")
+```
+
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
-  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#fdbb84")+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = "#8da0cb")+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#8da0cb")+
   theme_bw()+
   xlab(bquote(
     (sqrt(`cover (cm)`%*%`height (cm)`))            
     ))+
-#  xlab(bquote((sqrt(`cover (cm)`%*%`height (cm)`)))+
   ylab("Relative growth rate")+
- # ggtitle("Fir growth in relation to shrub environment within 2 m")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.04,0.3))+
+  ylim(c(plot_min, plot_max))+
   theme(
-    #panel.grid.minor = element_blank(),
+    panel.grid.minor = element_blank(),
     #panel.grid.major = element_blank(),
     text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
@@ -303,7 +319,6 @@ ggplot(df, aes(x = shrubarea3, y = E))+
   geom_point()+
   geom_smooth()
 ```
-
 
 ## Save final data
 ```{r}

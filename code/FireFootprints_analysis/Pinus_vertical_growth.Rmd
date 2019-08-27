@@ -185,7 +185,7 @@ LM_noht <- lme(f_no_ht, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 anova(LM_int, LM_noht)
 ```
 
-# Look at collinearity between height and shrub competition
+# Look at collinearity between seedling height and shrub competition
 ```{r}
 cor(df$Ht_cm1, df$sqrt_shrubarea3)
 ggplot(df, aes(x = Ht_cm1, y = sqrt_shrubarea3))+
@@ -221,7 +221,6 @@ Note: the plots look exactly the same but with different axes if you don't norma
 plot(predictorEffect("Years", LM))
 plot(predictorEffect("sqrt_shrubarea3", LM))
 plot(predictorEffect("Ht_cm1", LM))
-plot(predictorEffect("Year", LM))
 plot(predictorEffect("ShrubSpp03", LM))
 ```
 
@@ -308,21 +307,30 @@ effects_df <- effects_df %>%
   mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) 
 ```
 
+
+### Save min and max bounds for use in the fir graph
+```{r}
+plot_min <- exp(min(effects_df$lower))
+plot_max <- exp(max(effects_df$upper))
+save(plot_min, file = "../../results/figures/FireFootprints/plot_min.Rdata")
+save(plot_max, file = "../../results/figures/FireFootprints/plot_max.Rdata")
+```
+
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)))+
-  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .2)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = "#fc8d62")+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), fill = "#fc8d62", alpha = .4)+
   theme_bw()+
   xlab(bquote('                           Shrub competition ' ))+
   ylab("Relative growth rate")+
   #ggtitle("Pine growth in relation to shrub environment within 2 m")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  ylim(c(0.04,0.35))+
+  ylim(c(plot_min, plot_max))+
   labs(fill = "Juvenile tree height (cm)")+
   labs(col = "Juvenile tree height (cm)")+
   theme(legend.position = c(0.62, 0.8))+
   theme(
-        #panel.grid.minor = element_blank(),
+        panel.grid.minor = element_blank(),
         #panel.grid.major = element_blank(),
         text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel_noint.png", width = 3, height = 3, dpi = 400)
@@ -381,6 +389,17 @@ print(paste("fit_median_log = ", fit_median))
 print(paste("fit_min_log = ", fit_min))
 print(paste("fit_max_log = ", fit_max))
 print(paste("fit_mean_log = ", fit_mean))
+
+gr_minshrub_pipo <- exp(fit_min)
+gr_maxshrub_pipo <- exp(fit_max)
+gr_medshrub_pipo <- exp(fit_median)
+```
+
+## Save them
+```{r}
+save(gr_minshrub_pipo, file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
+save(gr_maxshrub_pipo, file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
+save(gr_medshrub_pipo, file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
 ```
 
 ## Repeat for 60% shrub cover and 86 cm ht similar to what's in COllins and ROller

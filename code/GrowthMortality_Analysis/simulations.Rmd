@@ -35,11 +35,11 @@ dfp <- df %>% filter(SPECIES == "PIPO")
 ```
 
 # Define ymax to be used throughout both abco and pipo graphs
+
+## Set y limits for graphs later
 ```{r}
-ymax <- 15
+ymax_set <- 10
 ```
-
-
 
 #  _
 # ABCO SIMULATIONS
@@ -185,23 +185,30 @@ dfgraph_upper <- dfgraph_upper %>%
 
 # Plot it
 
+## Load growth results from fire footprings
+```{r}
+load(file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
+load(file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
+load(file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
+```
+
 ```{r}
 ggplot()+
   geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
-  geom_vline(aes(xintercept = exp(-2.268595)), col = "dark orange")+
-  geom_text(aes(x= exp(-2.268595), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="dark orange", angle=90, size = 3) +
+  geom_vline(aes(xintercept = gr_minshrub_abco), col = "dark orange")+
+  #geom_text(aes(x= gr_minshrub_abco, label="\nminimum fire footprint shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
   
-  geom_vline(aes(xintercept = exp(-1.68245)), col = "dark red")+
-  geom_text(aes(x= exp(-1.68245), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="dark red", angle=90, size = 3) +
+  geom_vline(aes(xintercept = gr_maxshrub_abco), col = "dark red")+
+  #geom_text(aes(x= gr_maxshrub_abco, label="\nmaximum fire footprint shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
   
-  geom_vline(aes(xintercept = exp(-1.97947)), col = "red")+
-  geom_text(aes(x= exp(-1.97947), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
+  geom_vline(aes(xintercept = gr_medshrub_abco), col = "red")+
+  #geom_text(aes(x= gr_medshrub_abco, label="\nmedian fire footprint shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) +
   
   xlim(0.03, .25)+
-  ylim(0, ymax)+
+  ylim(0, ymax_set)+
    theme(text = element_text(size = 11),
         #panel.grid.minor = element_blank(),
         panel.grid.major = element_blank())+
@@ -391,27 +398,34 @@ dfgraph_upper <- dfgraph_upper %>%
 
 # Plot it
 
+## Load growth results from fire footprings
+```{r}
+load(file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
+load(file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
+load(file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
+```
+
+
 ```{r}
 ggplot()+
   geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
-  xlim(0.03, .3)+
-  ylim(0, 5)+
+  ylim(0, ymax_set)+
   ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
   theme(#panel.grid.major = element_blank(),
         text = element_text(size = 11))+
   
-  geom_vline(aes(xintercept = exp(-1.307347)), col = "dark orange")+
-  geom_text(aes(x= exp(-1.307347), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="dark orange", angle=90, size = 3) +
+  geom_vline(aes(xintercept = gr_minshrub_pipo), col = "dark orange")+
+  geom_text(aes(x= gr_minshrub_pipo, label="\nminimum fire footprint shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
   
-  geom_vline(aes(xintercept = exp(-2.325)), col = "dark red")+
-  geom_text(aes(x= exp(-2.325), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="dark red", angle=90, size = 3) +
+  geom_vline(aes(xintercept = gr_maxshrub_pipo), col = "dark red")+
+  geom_text(aes(x= gr_maxshrub_pipo, label="\nmaximum fire footprint shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
   
-  geom_vline(aes(xintercept = exp( -1.8263763)), col = "red")+
-  geom_text(aes(x= exp( -1.8263763), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) 
+  geom_vline(aes(xintercept = gr_medshrub_pipo), col = "red")+
+  geom_text(aes(x= gr_medshrub_pipo, label="\nmedian fire footprint shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) 
  
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
