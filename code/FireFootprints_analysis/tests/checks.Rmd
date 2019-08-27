@@ -11,58 +11,29 @@ require(dplyr)
 require(tidyverse)
 ```
 
-# Compare pine seedlings from Aug 15 analysis to those from Aug 19 analysis
 ```{r}
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/tests/")
-load("../../../compiled_data/fire_footprints/pine_vert.Rdata")
-dfnew <- df
-remove(df)
-load("../../../compiled_data/archives/pine_vert_Aug15_2019.Rdata")
-dfold <- df
-remove(df)
 ```
 
-## Remove irrelevant variables
+# 1. Look for replicates in master_seedlings df
 ```{r}
-dfold <- dfold %>% 
-  select(-E)
-```
-
-
-## Find Sdlg/year combinations that are different
-```{r}
-antijoin <- anti_join(dfold, dfnew)
-antijoin
-```
-
-## Find repeats in old df
-```{r}
-dfold %>% 
-  group_by(Sdlg, Year) %>% 
-  filter(n()>1) %>% 
-  arrange(Sdlg) %>% 
-  dplyr::select(Sdlg, Year, everything())
-
+load("../../../compiled_data/fire_footprints/master_seedlings.Rdata")
 ```
 
 ```{r}
-boo <- (function(x) x[sapply(x, nrow)>0])(lapply(lapply(antijoin, function(x) tapply(x, antijoin$Sdlg, function(x) x[1]!=x[2])), function(x) subset(antijoin, Sdlg %in% names(which(x)))))
+dups <- df %>% 
+  group_by(Sdlg) %>% 
+  filter(n()>1)
+nrow(dups)==0
+```
+
+## Find which columns are duplicated
+```{r}
+boo <- (function(x) x[sapply(x, nrow)>0])(lapply(lapply(dups, function(x) tapply(x, dups$Sdlg, function(x) x[1]!=x[2])), function(x) subset(dups, Sdlg %in% names(which(x)))))
 print(boo)
 ```
 
-```{r}
-antijoin %>% 
-  select(Sdlg, Years) %>% 
-  group_by(Sdlg, Years) %>% 
-  filter(n()>1) %>% 
-  arrange(Sdlg)
-```
-
-```{r}
-remove(dfnew, dfold, boo, antijoin)
-```
-
-# Look at 2016 seedlings not in both seedling df and shrub df and make sure nothing got missed
+# 2. Look at 2016 seedlings not in both seedling df and shrub df and make sure nothing got missed
 ```{r}
 load("../../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 df_seedlings <- df
@@ -72,27 +43,58 @@ load("../../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
 
 ## Find mismatching seedlings that are ABCO or PIPO
 ```{r}
-anti_join(df_seedlings, shr_by_sdlg)
 mismatch <- anti_join(shr_by_sdlg, df_seedlings)
 mismatch
 ```
 
 ```{r}
 original_seedlings <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_seedlings.csv")
-mismatch <- mismatch %>% select(-Species)
+mismatch <- mismatch %>% dplyr::select(-Species)
 mismatch <- left_join(mismatch, original_seedlings, by = c("Sdlg" = "Seedling."))
-mismatch %>% 
+mismatch <- mismatch %>% 
   filter(Species %in% c("PIPO", "ABCO")) %>% 
-  select(Sdlg, Fire, Patch, DataSheet, Note1, Note2)
+  dplyr::select(Sdlg, Fire, Patch, DataSheet, Note1, Note2)
 ```
 
 Seedling 16 was marked as PIPO originally but marked as PILA in subsequent measurements.
 
 ```{r}
-remove(df_seedlings, mismatch, original_seedlings, shr_by_sdlg)
+mismatch <- mismatch %>% filter(Sdlg != "16")
+nrow(mismatch %>% filter()) == 0
 ```
 
-# Randomly select trees and check them from original data sheet to present
+## Clear the environment
+```{r}
+remove(df_seedlings,original_seedlings, shr_by_sdlg)
+```
+
+# 3. Check years since fire for final data
+```{r}
+load("../../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+```{r}
+check_years <- df %>% 
+  group_by(Fire, Years, Year) %>% 
+  summarize(n()) %>% 
+  mutate(Year = as.numeric(paste(Year))) %>% 
+  mutate(Fire_year = Year-Years) %>% 
+  mutate(check = ifelse(Fire == "AMRC" & Fire_year==2008, 0, 1)) %>% 
+  mutate(check = ifelse(Fire == "CLVD" & Fire_year==1992, 0, check)) %>% 
+  mutate(check = ifelse(Fire == "FRDS" & Fire_year==2004, 0, check)) %>% 
+  mutate(check = ifelse(Fire == "STAR" & Fire_year==2001, 0, check)) %>% 
+  mutate(check = ifelse(Fire == "WRTS" & Fire_year==1981, 0, check))
+sum(check_years$check)==0
+```
+
+# 4. Check siteclasses
+```{r}
+siteclass <- df$siteclass
+all(siteclass %in% c(2,3,4,6))
+```
+
+
+# 5. Randomly select trees and check them from original data sheet to present
 
 ## Pines
 ```{r}
@@ -106,6 +108,7 @@ Why aren't both 2016 data sheet cokumns in here??
 ```{r}
 set.seed(12345)
 sample <- sort(sample(1:251, 10))
+sample
 dfsample <- df[sample,] %>% 
   select(Sdlg, Fire, FirePatch, Datasheet1_2016, Datasheet2_2016, Light_File, DataSheet2017, Notes2017, Note1_2016, Note2_2016, everything()) %>% 
   arrange(Fire, Sdlg)
@@ -113,9 +116,20 @@ dfsample <- df[sample,] %>%
 
 ### Look at those seedlings one by one, checking each column
 ```{r}
-check205 <- t(dfsample[1,])
-View(check205)
-write.csv(check205, file = "check205.csv")
+check1 <- t(dfsample[1,])
+check1[1,]
+write.csv(check1, file = "check1.csv")
 ```
 
-# Check years since fire for final data
+```{r}
+check3 <- t(dfsample[3,])
+check3[1,]
+write.csv(check3, file = "check3.csv")
+```
+
+```{r}
+check4 <- t(dfsample[4,])
+check4[1,]
+write.csv(check4, file = "check4.csv")
+```
+
