@@ -189,15 +189,16 @@ summary {
 <ul>
 <li><a href="#cleaning">Cleaning</a></li>
 <li><a href="#main-analysis">Main Analysis</a></li>
+<li><a href="#checks---these-should-all-be-true">Checks - these should all be TRUE</a></li>
 </ul>
 </div>
 
 <p>This code contains all of the steps necessary to clean and analyze Fire Footprint data</p>
+<pre class="r"><code>library(knitr)
+setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)</code></pre>
 <div id="cleaning" class="section level1">
 <h1>Cleaning</h1>
-<pre class="r"><code>library(knitr)
-setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
-strt &lt;- Sys.time()
+<pre class="r"><code>strt &lt;- Sys.time()
 rmarkdown::render(&quot;clean_seedlings_2016.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;clean_shrubs.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;clean_combine_2016-only.Rmd&quot;, &quot;html_document&quot;, quiet = T)
@@ -206,18 +207,31 @@ rmarkdown::render(&quot;add_site_class.Rmd&quot;, &quot;html_document&quot;, qui
 rmarkdown::render(&quot;Heat_load.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Clean_vert_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -50.97495 secs</code></pre>
+<pre><code>## Time difference of -29.4689 secs</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
 <pre class="r"><code>strt &lt;- Sys.time()
 #rmarkdown::render(&quot;DIFN_analysis.Rmd&quot;, &quot;html_document&quot;, quiet= T)
-#rmarkdown::render(&quot;fir_vert_growth_all_years.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;VSURF_pine.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;VSURF_fir.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;Pinus_vertical_growth.Rmd&quot;, &quot;html_document&quot;, quiet = T)
+rmarkdown::render(&quot;fir_vert_growth_all_years.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(strt-Sys.time())</code></pre>
-<pre><code>## Time difference of -4.974934 mins</code></pre>
+<pre><code>## Time difference of -4.26028 mins</code></pre>
+</div>
+<div id="checks---these-should-all-be-true" class="section level1">
+<h1>Checks - these should all be TRUE</h1>
+<pre class="r"><code>source(purl(&quot;tests/checks.Rmd&quot;, quiet = T))</code></pre>
+<pre><code>## named list()</code></pre>
+<pre class="r"><code>nrow(dups) == 0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>nrow(mismatch) == 0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>all(siteclass %in% c(2,3,4,6))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>sum(check_years$check)==0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
 
 

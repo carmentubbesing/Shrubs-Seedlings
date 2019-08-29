@@ -215,14 +215,14 @@ load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rda
 <pre class="r"><code>df &lt;- left_join(df, shr_by_sdlg)</code></pre>
 <pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 223</code></pre>
+<pre><code>## [1] 221</code></pre>
 </div>
 <div id="add-years-since-fire" class="section level2">
 <h2>Add years since fire</h2>
 <pre class="r"><code>df &lt;- droplevels(df)
 summary(as.factor(df$Fire))</code></pre>
 <pre><code>## AMRC CLVD FRDS PLKN STAR WRTS 
-##  123   27   38    2   19   14</code></pre>
+##  123   27   36    2   19   14</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Years = ifelse(Fire == &quot;AMRC&quot;, 8, 0)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;CLVD&quot;, 24, Years)) %&gt;% 
@@ -232,7 +232,7 @@ summary(as.factor(df$Fire))</code></pre>
   mutate(Years = ifelse(Fire == &quot;WRTS&quot;, 35, Years))
 summary(as.factor(df$Years))</code></pre>
 <pre><code>##   8  12  14  24  35  43 
-## 123  38  19  27  14   2</code></pre>
+## 123  36  19  27  14   2</code></pre>
 </div>
 <div id="check-out-numbers-of-seedlings" class="section level2">
 <h2>Check out numbers of seedlings</h2>
@@ -243,7 +243,7 @@ summary(as.factor(df$Years))</code></pre>
 ##   Species `n()`
 ##   &lt;chr&gt;   &lt;int&gt;
 ## 1 ABCO      126
-## 2 PIPO       97</code></pre>
+## 2 PIPO       95</code></pre>
 </div>
 <div id="save" class="section level2">
 <h2>Save</h2>

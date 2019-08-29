@@ -42,10 +42,10 @@ df[unique (unlist (lapply (xdf, function (x) which (is.na (x))))),]
 ```{r}
 xdf <- df %>% 
   dplyr::select(Elevation,
-         Slope.Deg,
+         #Slope.Deg,
          heatload,
          incidrad,
-         Aspect.rad.fold.NESW,
+         #Aspect.rad.fold.NESW,
          siteclass,
          Year,
          Years,

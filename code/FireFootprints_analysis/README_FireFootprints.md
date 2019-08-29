@@ -62,6 +62,8 @@ Files are dependent in the following order:
 * creates:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
 
+## 3. Main analyses
+
 #### **fir_vert_growth_all_years**
 * uses: 
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
@@ -73,12 +75,9 @@ Files are dependent in the following order:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata`
 * creates:
     * `~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/pinus_vert.Rdata`
-    
 
-## 3. Main analyses
-#### **Pinus_vertical_growth**
-* uses:
-    * `master_seedlings_vert.Rdata`
+#   _____________________________________________________________________________________________
+
 
 
 # ARCHIVES

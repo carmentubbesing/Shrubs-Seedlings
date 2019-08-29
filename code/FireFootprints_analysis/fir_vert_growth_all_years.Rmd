@@ -27,10 +27,6 @@ require(MuMIn)
 require(car)
 ```
 
-```{r set.seed(333)}
-knitr::opts_chunk$set(cache = T)
-set.seed(333)
-```
 
 # Load data
 ```{r}
@@ -131,8 +127,17 @@ f
 LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
 
+# Check collinearity 
 
-# Check collinearity - use vif from car pkg because in pines it was the same as the Zuur code
+## Make collinearity plot using Zuur code
+```{r}
+source("~/../Documents/HighstatLibV10.R.txt")
+z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Aspect.rad.fold.NESW, df$incidrad, df$Ht_cm1, df$BasDia2016.cm, df$Slope.Deg, df$sqrt_shrubarea3, df$Elevation, df$Year)
+colnames(z) <- c("Growth", "Years", "heatload", "Aspect", "incidrad", "Ht_cm1", "BasDia", "Slope", "shrubs", "Elevation", "Year")
+pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist)
+```
+
+## use vif from car pkg because in pines it was the same as the Zuur code
 ```{r}
 vif(LM)
 ```
@@ -140,8 +145,6 @@ vif(LM)
 ## If VIF>5, remove the variable
 
 ```{r}
-vars <- vars[vars != "heatload"]
-vars_one <- paste(vars, collapse = " + ")
 f <- update(as.formula(f), ~ . - heatload) 
 LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
@@ -151,23 +154,55 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 vif(LM)
 ```
 
-Now everything looks ok.
+<!-- ## Repeat removing variables with VIF>5 -->
+<!-- ```{r} -->
+<!-- f <- update(as.formula(f), ~ . - Ht_cm1)  -->
+<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- vif(LM) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- f <- update(as.formula(f), ~ . - Years)  -->
+<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
+<!-- vif(LM) -->
+<!-- ``` -->
+
+
+<!-- ## Repeat removing variables with VIF>5 -->
+<!-- ```{r} -->
+<!-- vars <- vars[vars != "Years"] -->
+<!-- vars_one <- paste(vars, collapse = " + ") -->
+<!-- f <- update(as.formula(f), ~ . - Years)  -->
+<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- vif(LM) -->
+<!-- ``` -->
+
 
 # See whether model with or without interaction is better
 ```{r}
 vars_int <- paste(vars_one, "+ Ht_cm1:sqrt_shrubarea3")
 f_int <- formula(paste("VertGrowth_Rel ~ ",vars_int))
 LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-AIC(LM)
-AIC(LM_int)
+AICcmodavg::AICc(LM)
+AICcmodavg::AICc(LM_int)
 if(
-  AIC(LM) > AIC(LM_int)
-) print(paste("WITH INTERACTION WINS BY", round(AIC(LM)-AIC(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AIC(LM_int)-AIC(LM), digits = 2)))
+  AICcmodavg::AICc(LM) > AICcmodavg::AICc(LM_int)
+) print(paste("WITH INTERACTION WINS BY", round(AICcmodavg::AICc(LM)-AICcmodavg::AICc(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AICcmodavg::AICc(LM_int)-AICcmodavg::AICc(LM), digits = 2)))
 ```
 
 No difference, so I'll leave out the interaction
 
-## Look at drop1 results
+## Look at summary and drop1 results
+```{r}
+summary(LM)
+```
+
 ```{r}
 drop <- drop1(LM, test = "Chisq")
 drop
@@ -181,7 +216,6 @@ drop %>%
 ### Look at individual effects
 
 ```{r}
-plot(predictorEffect("Years", LM))
 plot(predictorEffect("sqrt_shrubarea3", LM))
 ```
 

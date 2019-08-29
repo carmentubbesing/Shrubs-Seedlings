@@ -40,7 +40,7 @@ shr$Ht.cm[is.na(shr$Ht.cm)] <- 0
 
 ## Take out dead shrubs
 ```{r}
-shr <- subset(shr, shr$Dead.!= 1)
+#shr <- subset(shr, shr$Dead.!= 1)
 ```
 
 ## Take out "pea" shrub cover because it's not a shrub
