@@ -516,7 +516,7 @@ df <- df %>%
   filter(VertGrowth_cm!=0)
 ```
 
-# Save
+# Save df
 ```{r}
 save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```

@@ -199,19 +199,18 @@ ggplot()+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
   geom_vline(aes(xintercept = gr_minshrub_abco), col = "dark orange")+
-  #geom_text(aes(x= gr_minshrub_abco, label="\nminimum fire footprint shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
+  geom_text(aes(x= gr_minshrub_abco, label="\ngrowth at minimum shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
   
   geom_vline(aes(xintercept = gr_maxshrub_abco), col = "dark red")+
-  #geom_text(aes(x= gr_maxshrub_abco, label="\nmaximum fire footprint shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
+  geom_text(aes(x= gr_maxshrub_abco, label="\ngrowth at maximum shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
   
   geom_vline(aes(xintercept = gr_medshrub_abco), col = "red")+
-  #geom_text(aes(x= gr_medshrub_abco, label="\nmedian fire footprint shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) +
+  geom_text(aes(x= gr_medshrub_abco, label="\ngrowth at median shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) +
   
-  xlim(0.03, .25)+
+  xlim(0.03, .27)+
   ylim(0, ymax_set)+
    theme(text = element_text(size = 11),
-        #panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank())+
+        panel.grid.minor = element_blank())+
   #ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+    ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
   ylab("Annual % mortality probability")
@@ -230,7 +229,7 @@ calc_prob_mort <- function(log_growth){
 }
 ```
 
-### CHeck it
+## Check it
 ```{r}
 test_log_growth <- head(dfgraph)[1,1]
 test_log_growth
@@ -240,22 +239,46 @@ calc_prob_mort(log(.05))
 
 
 ```{r}
-prob_median <-calc_prob_mort(-1.97947)
-prob_mean <-calc_prob_mort( -1.97947)
-
+prob_median <-calc_prob_mort(log(gr_medshrub_abco))
 prob_median
-prob_mean
 ```
 
-## Repeat for min and max
+## Use it
 ```{r}
-prob_min <- calc_prob_mort(-2.268595)
-prob_max <- calc_prob_mort(-1.68245)
+prob_min <- calc_prob_mort(log(gr_minshrub_abco))
+prob_max <- calc_prob_mort(log(gr_maxshrub_abco))
 
 prob_min
 prob_max
 
 (prob_max-prob_min)/prob_min
+```
+
+## Compile the results
+```{r}
+abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
+
+abco_growth_pred <- as.data.frame(t(abco_growth_pred)) %>% 
+  rename(ABCO_perc_mort = V1) %>% 
+  mutate(metric = names(as.data.frame(abco_growth_pred))) %>% 
+  mutate(ABCO_perc_mort = ABCO_perc_mort*100) %>% 
+  dplyr::select(metric, ABCO_perc_mort)
+abco_growth_pred
+```
+
+
+## Compile the results
+```{r}
+abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
+abco_growth_pred <- as.data.frame(t(abco_growth_pred)) 
+row.names(abco_growth_pred) <- c("min", "max", "median")
+abco_growth_pred
+abco_growth_pred <- abco_growth_pred %>% 
+  mutate(shrubs = row.names(abco_growth_pred)) %>%  
+  rename(Mort = "V1") %>% 
+  mutate(Species = "ABCO") %>% 
+  mutate(Perc_mort = Mort*100) 
+abco_growth_pred
 ```
 
 
@@ -413,19 +436,20 @@ ggplot()+
   geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
   theme_bw()+
   ylim(0, ymax_set)+
+  xlim(0.03, .27)+
   ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
-  theme(#panel.grid.major = element_blank(),
+  theme(panel.grid.minor = element_blank(),
         text = element_text(size = 11))+
   
   geom_vline(aes(xintercept = gr_minshrub_pipo), col = "dark orange")+
-  geom_text(aes(x= gr_minshrub_pipo, label="\nminimum fire footprint shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
+  geom_text(aes(x= gr_minshrub_pipo, label="\ngrowth at minimum shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
   
   geom_vline(aes(xintercept = gr_maxshrub_pipo), col = "dark red")+
-  geom_text(aes(x= gr_maxshrub_pipo, label="\nmaximum fire footprint shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
+  geom_text(aes(x= gr_maxshrub_pipo, label="\ngrowth at maximum shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
   
   geom_vline(aes(xintercept = gr_medshrub_pipo), col = "red")+
-  geom_text(aes(x= gr_medshrub_pipo, label="\nmedian fire footprint shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) 
+  geom_text(aes(x= gr_medshrub_pipo, label="\ngrowth at median shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) 
  
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
@@ -440,42 +464,91 @@ calc_prob_mort <- function(log_growth){
 }
 ```
 
-### Check it
+## Check it
 ```{r}
 test_log_growth <- head(dfgraph)[1,1]
 test_log_growth
 calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
 ```
 
-
+## Use it
 ```{r}
-prob_min <- calc_prob_mort(-1.307347)
-prob_max <- calc_prob_mort(-2.302585)  
-
-prob_mean <- calc_prob_mort(-1.99224995391199)
+prob_min <- calc_prob_mort(log(gr_minshrub_pipo))
+prob_max <- calc_prob_mort(log(gr_maxshrub_pipo))  
 
 prob_min
 prob_max
-prob_mean
 prob_min-prob_max
 (prob_max-prob_min)/prob_min
 ```
 
 ```{r}
-prob_median <-calc_prob_mort(-1.955775)
-prob_quart1 <- calc_prob_mort(-1.8115886)
-prob_quart3 <- calc_prob_mort(-2.10016998)
+prob_median <-calc_prob_mort(log(gr_medshrub_pipo))
 prob_median
-prob_quart1
-prob_quart3
-prob_median - prob_quart1
-(prob_quart3 - prob_median)/prob_median
 ```
 
-test
+## Compile the results
 ```{r}
-log(.05)
-prob_test <- calc_prob_mort(log(.05))
-prob_test
+pipo_growth_pred <- cbind(prob_min, prob_max, prob_median)
+pipo_growth_pred <- as.data.frame(t(pipo_growth_pred)) 
+row.names(pipo_growth_pred) <- c("min", "max", "median")
+pipo_growth_pred
+pipo_growth_pred <- pipo_growth_pred %>% 
+  mutate(shrubs = row.names(pipo_growth_pred)) %>%  
+  rename(Mort = "V1") %>% 
+  mutate(Species = "PIPO") %>% 
+  mutate(Perc_mort = Mort*100) 
+pipo_growth_pred
 ```
+
+# Compile results for both species
+
+```{r}
+results <- full_join(abco_growth_pred, pipo_growth_pred)
+results
+```
+
+```{r}
+abco_growth <- cbind(gr_minshrub_abco, gr_maxshrub_abco, gr_medshrub_abco)
+abco_growth <- as.data.frame(t(abco_growth))
+row.names(abco_growth) <- c("min", "max", "median")
+abco_growth <- abco_growth %>%
+  mutate(shrubs = row.names(abco_growth)) %>% 
+  rename(Growth = "V1") %>% 
+  mutate(Species = "ABCO")
+abco_growth
+```
+
+```{r}
+pipo_growth <- cbind(gr_minshrub_pipo, gr_maxshrub_pipo, gr_medshrub_pipo)
+pipo_growth <- as.data.frame(t(pipo_growth))
+row.names(pipo_growth) <- c("min", "max", "median")
+pipo_growth <- pipo_growth %>%
+  mutate(shrubs = row.names(pipo_growth)) %>% 
+  rename(Growth = "V1") %>% 
+  mutate(Species = "PIPO")
+pipo_growth
+```
+
+```{r}
+growth <- rbind(abco_growth, pipo_growth)
+growth
+```
+
+```{r}
+results_final <- full_join(results, growth) %>% 
+  dplyr::select(shrubs, Species, Growth, Perc_mort) %>% 
+  arrange(desc(shrubs), desc(Species))
+results_final
+results_nomedian <- results_final %>% 
+  filter(shrubs != "median")
+results_nomedian
+```
+
+
+```{r}
+save(results, file = "../../results/tables/mort_rates.Rdata")
+write.csv(results_nomedian, file = "../../results/tables/mort_rates.csv")
+```
+
 

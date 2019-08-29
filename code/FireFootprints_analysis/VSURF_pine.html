@@ -227,7 +227,7 @@ load(file=&quot;../../compiled_data/fire_footprints/master_seedlings_vert.Rdata&
 <h1>Make df of just the predictor variables I want to include in VSURF</h1>
 <pre class="r"><code>xdf &lt;- df %&gt;% 
   dplyr::select(Elevation,
-         #Slope.Deg,
+         Slope.Deg,
          heatload,
          incidrad,
          #Aspect.rad.fold.NESW,
@@ -245,21 +245,21 @@ load(file=&quot;../../compiled_data/fire_footprints/master_seedlings_vert.Rdata&
   }
 xdf &lt;- xdf %&gt;% mutate_if(is.numeric, normalize)
 xdf</code></pre>
-<pre><code>## # A tibble: 251 x 10
-##    Elevation heatload incidrad siteclass Year  Years BasDia2016.cm  Ht_cm1
-##        &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;     &lt;fct&gt; &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;
-##  1    0.0878    -1.50    -1.95 3         2017   1.80       0.371    1.50  
-##  2    0.0878    -1.50    -1.95 3         2017   1.80      -0.429    0.0781
-##  3    0.0878    -1.05    -1.39 3         2017   1.80       1.76     2.04  
-##  4    0.0907    -1.50    -1.21 3         2017   1.80       2.26     2.25  
-##  5    0.0907    -1.63    -1.22 3         2017   1.80       1.59     1.50  
-##  6    0.0907    -1.62    -1.37 3         2017   1.80      -0.907   -0.875 
-##  7    0.0585    -1.74    -1.88 3         2017   1.80      -0.112    0.0521
-##  8    0.0585    -1.74    -1.88 3         2017   1.80      -0.00120  0.225 
-##  9    0.0585    -1.60    -2.49 3         2017   1.80       0.210    0.465 
-## 10    0.0585    -1.67    -2.38 3         2017   1.80      -0.706   -0.184 
-## # ... with 241 more rows, and 2 more variables: sqrt_shrubarea3 &lt;dbl&gt;,
-## #   ShrubSpp03 &lt;fct&gt;</code></pre>
+<pre><code>## # A tibble: 251 x 11
+##    Elevation Slope.Deg heatload incidrad siteclass Year  Years
+##        &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;     &lt;fct&gt; &lt;dbl&gt;
+##  1    0.0878    0.388     -1.50    -1.95 3         2017   1.80
+##  2    0.0878    0.388     -1.50    -1.95 3         2017   1.80
+##  3    0.0878   -0.231     -1.05    -1.39 3         2017   1.80
+##  4    0.0907   -0.0765    -1.50    -1.21 3         2017   1.80
+##  5    0.0907    0.0783    -1.63    -1.22 3         2017   1.80
+##  6    0.0907    0.0783    -1.62    -1.37 3         2017   1.80
+##  7    0.0585    0.388     -1.74    -1.88 3         2017   1.80
+##  8    0.0585    0.388     -1.74    -1.88 3         2017   1.80
+##  9    0.0585    1.01      -1.60    -2.49 3         2017   1.80
+## 10    0.0585    0.852     -1.67    -2.38 3         2017   1.80
+## # ... with 241 more rows, and 4 more variables: BasDia2016.cm &lt;dbl&gt;,
+## #   Ht_cm1 &lt;dbl&gt;, sqrt_shrubarea3 &lt;dbl&gt;, ShrubSpp03 &lt;fct&gt;</code></pre>
 </div>
 </div>
 <div id="apply-vsurf-to-vertical-growth" class="section level1">
@@ -273,13 +273,13 @@ summary(vsurf)</code></pre>
 ##  VSURF computation time: 1.6 mins 
 ## 
 ##  VSURF selected: 
-##  10 variables at thresholding step (in 34.2 secs)
-##  8 variables at interpretation step (in 26 secs)
-##  7 variables at prediction step (in 33.9 secs)
+##  11 variables at thresholding step (in 34.2 secs)
+##  8 variables at interpretation step (in 30.8 secs)
+##  7 variables at prediction step (in 31.8 secs)
 ## 
 ##  VSURF ran in parallel on a PSOCK cluster and used 3 cores</code></pre>
 <pre class="r"><code>vsurf$varselect.pred</code></pre>
-<pre><code>## [1]  8  6  9  2 10  7  5</code></pre>
+<pre><code>## [1]  9  7 10  3 11  8  6</code></pre>
 <pre class="r"><code>xdf[vsurf$varselect.pred]</code></pre>
 <pre><code>## # A tibble: 251 x 7
 ##     Ht_cm1 Years sqrt_shrubarea3 heatload ShrubSpp03 BasDia2016.cm Year 

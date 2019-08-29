@@ -37,7 +37,7 @@ df <- df %>%
 ```{r}
 xdf <- df %>% 
   dplyr::select(Elevation,
-         #Slope.Deg,
+         Slope.Deg,
          heatload,
          incidrad,
          #Aspect.rad.fold.NESW,

@@ -37,6 +37,40 @@ load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 # Load VSURF results
 ```{r}
 load("../../results/VSURF_abco_vars.Rdata")
+vars
+```
+
+# Before filtering to just ABCO, save min and max shrub cover for growth estiamtes at the end. Use min and max that have BOTH SPECIES
+```{r}
+df_summary <- df %>% 
+  group_by(Species) %>% 
+  mutate(shrubarea3 = sqrt(shrubarea3)) %>% 
+  summarize(min= min(shrubarea3), max = max(shrubarea3), median = median(shrubarea3))
+
+min <- df_summary %>% 
+  filter(min == max(min)) %>% 
+  select(min) %>% 
+  unlist()
+min
+
+max <- df_summary %>% 
+  filter(max == min(max)) %>% 
+  select(max) %>% 
+  unlist()
+max
+
+median <- df %>% 
+  mutate(shrubarea3 = sqrt(shrubarea3)) %>%
+  summarize(median = median(shrubarea3)) %>% 
+  unlist
+median
+
+
+summary <- summary(sqrt(df$shrubarea3))
+summary
+quart1 <- summary[2]
+quart3 <- summary[5]
+mean <- mean(sqrt(df$shrubarea3))
 ```
 
 # Filter to just white firs
@@ -142,17 +176,17 @@ pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = pane
 vif(LM)
 ```
 
-## If VIF>5, remove the variable
+<!-- ## If VIF>5, remove the variable -->
 
-```{r}
-f <- update(as.formula(f), ~ . - heatload) 
-LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-```
+<!-- ```{r} -->
+<!-- f <- update(as.formula(f), ~ . - heatload)  -->
+<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
+<!-- ``` -->
 
-## Repeat vif test
-```{r}
-vif(LM)
-```
+<!-- ## Repeat vif test -->
+<!-- ```{r} -->
+<!-- vif(LM) -->
+<!-- ``` -->
 
 <!-- ## Repeat removing variables with VIF>5 -->
 <!-- ```{r} -->
@@ -259,15 +293,6 @@ summary(df$Cov1.3/(300*4))
 
 # Find the shrubarea values associated with each quartile, and the mean growth for each of those
 ```{r}
-summary <- summary(sqrt(df$shrubarea3))
-summary
-quart1 <- summary[2]
-quart3 <- summary[5]
-median <- summary[3]
-min <- summary[1]
-max <- summary[6]
-mean <- mean(sqrt(df$shrubarea3))
-
 fit_quart1 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart1)),]$fit
 fit_quart1
 fit_quart3 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart3)),]$fit
