@@ -196,6 +196,7 @@ summary {
 <li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a></li>
 <li><a href="#need-to-do-add-back-in-difn-measurements-for-other-species-psme-cade-etc-for-difnshrub-analysis">NEED TO DO: ADD BACK IN DIFN MEASUREMENTS FOR OTHER SPECIES (PSME, CADE, ETC) FOR DIFN~SHRUB ANALYSIS</a></li>
 <li><a href="#list-seedlings">List seedlings</a></li>
+<li><a href="#figure-out-where-the-arvi-is">Figure out where the ARVI is</a></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
@@ -219,10 +220,6 @@ load(&quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata&quot
 shr$Dead.[is.na(shr$Dead.)] &lt;- 0
 shr$Cover.cm[is.na(shr$Cover.cm)] &lt;- 0
 shr$Ht.cm[is.na(shr$Ht.cm)] &lt;- 0</code></pre>
-</div>
-<div id="take-out-dead-shrubs" class="section level2">
-<h2>Take out dead shrubs</h2>
-<pre class="r"><code>#shr &lt;- subset(shr, shr$Dead.!= 1)</code></pre>
 </div>
 <div id="take-out-pea-shrub-cover-because-its-not-a-shrub" class="section level2">
 <h2>Take out “pea” shrub cover because it’s not a shrub</h2>
@@ -287,11 +284,11 @@ summary(as.factor(shr$Seg))</code></pre>
 <div id="summarize-height-by-segment" class="section level3">
 <h3>Summarize height by segment</h3>
 <pre class="r"><code>ht &lt;- shr %&gt;%
-  select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %&gt;% 
+  dplyr::select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %&gt;% 
   group_by(Sdlg) %&gt;% 
   mutate(ht_wm.cm = weighted.mean(Ht.cm, Cover.cm)) %&gt;% 
   ungroup() %&gt;% 
-  select(Sdlg, ht_wm.cm) %&gt;% 
+  dplyr::select(Sdlg, ht_wm.cm) %&gt;% 
   distinct() </code></pre>
 </div>
 <div id="replace-na-height-with-0" class="section level3">
@@ -691,6 +688,18 @@ shr_by_sdlg[shr_by_sdlg$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$
 ## [267] &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;      &quot;96&quot;      &quot;97&quot;      &quot;98&quot;     
 ## [274] &quot;99&quot;      &quot;ARPA-1&quot;  &quot;CECO-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;CHFO-1&quot;  &quot;DCECO-1&quot;
 ## [281] &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot;  &quot;LIDE-4&quot;</code></pre>
+</div>
+<div id="figure-out-where-the-arvi-is" class="section level1">
+<h1>Figure out where the ARVI is</h1>
+<pre class="r"><code>shr_by_sdlg %&gt;% 
+  filter(ShrubSpp03==&quot;ARVI&quot;)</code></pre>
+<pre><code>## # A tibble: 2 x 13
+##   Sdlg  ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch
+##   &lt;chr&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;    
+## 1 111       163. ARVI         1040  163.         NA       NA &lt;NA&gt;     
+## 2 ARPA~     197. ARVI         1190  197.         94       NA &lt;NA&gt;     
+## # ... with 5 more variables: Species &lt;chr&gt;, ref &lt;dbl&gt;, Date &lt;fct&gt;,
+## #   LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>

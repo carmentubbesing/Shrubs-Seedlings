@@ -68,7 +68,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %>% 
-  select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)
+  dplyr::select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)
 ```
 
 # Correct mis-recorded growth based on photos

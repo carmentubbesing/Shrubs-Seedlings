@@ -160,103 +160,19 @@ mean_coef_gr <- mean(coefficient_gr)
 mean_coef_int <- mean(coefficient_int)
 mean_coef_gr
 mean_coef_int
-
-  
-  # Check
-  dfp_new2 %>% arrange(PAIR) %>% dplyr::select(SEEDLING, DEAD_ALIVE, gr1, gr2, gr3, death_year, death_year_temp, gr_rel_ave, log_gr_rel_ave)
-  ###########
-  
-
 ```
 
-## Plot the mean coefficient and CI
-
-### Calculate probabilities
+## Check
 ```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-dfgraph <- as.data.frame(log_gr_rel)
-dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
-summary(dfgraph$prob)
+dfp_new2 %>% arrange(PAIR) %>% dplyr::select(SEEDLING, DEAD_ALIVE, gr1, gr2, gr3, death_year, death_year_temp, gr_rel_ave, log_gr_rel_ave)
 ```
 
-### CI
+## Save
 ```{r}
-CI_low_int <- sort(coefficient_int)[25]
-CI_high_int <- sort(coefficient_int)[975]
-CI_low_gr <- sort(coefficient_gr)[25]
-CI_high_gr <- sort(coefficient_gr)[975]
-```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_lower <- as.data.frame(log_gr_rel)
-dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
-summary(dfgraph_lower$prob)
-```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_upper <- as.data.frame(log_gr_rel)
-dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
-summary(dfgraph_upper$prob)
-```
-
-### Adjust probabilities to be yearly, since I found dead trees from 3 years 
-```{r}
-head(dfgraph)
-dfgraph <- dfgraph %>% 
-  mutate(prob = prob/3)
-head(dfgraph_lower)
-dfgraph_lower <- dfgraph_lower %>% 
-  mutate(prob = prob/3)
-dfgraph_upper <- dfgraph_upper %>% 
-  mutate(prob = prob/3)
-```
-
-# Plot it
-```{r}
-ggplot()+
-  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
-  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  theme_bw()+
-  theme(text = element_text(size = 11),
-      panel.grid.major = element_blank())+
-  xlim(0.03, .25)+
-  ylim(0, ymax)+
-  ylab("Annual % mortality probability")+
-  geom_vline(aes(xintercept = exp(-1.41822)), col = "red")+
-  geom_text(aes(x= exp(-1.41822), label="\nminimum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
-  geom_vline(aes(xintercept = exp(-2.5906)), col = "red")+
-  geom_text(aes(x= exp(-2.5906), label="\nmaximum fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
-  geom_vline(aes(xintercept = exp(-2.0161789)), col = "red")+
-  #ggtitle("HYBRID SIMULATIONS Pine mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
-  geom_text(aes(x= exp(-2.0161789), label="\nmedian fire footprint shrub competition", y = ymax*.6), colour="red", angle=90, size = 3) +
-  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
-ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo_hybrid.png", height = 4, width = 5)
-```
-
-# Calculate the range of mortality probabilities captured by the fire footprint growth data
-```{r}
-prob_min <- exp(mean_coef_int + mean_coef_gr*(-1.70428)/(1+exp(mean_coef_int + mean_coef_gr*(-1.70428))))
-prob_max <- exp(mean_coef_int + mean_coef_gr*(-2.5877)/(1+exp(mean_coef_int + mean_coef_gr*(-2.5877))))
-prob_min
-prob_max
-prob_min-prob_max
-(prob_max-prob_min)/prob_min
-```
-
-```{r}
-prob_median <- exp(mean_coef_int + mean_coef_gr*(-1.955775)/(1+exp(mean_coef_int + mean_coef_gr*(-1.955775))))
-prob_quart1 <- exp(mean_coef_int + mean_coef_gr*(-1.8115886)/(1+exp(mean_coef_int + mean_coef_gr*(-1.8115886))))
-prob_quart3 <- exp(mean_coef_int + mean_coef_gr*(-2.10016998)/(1+exp(mean_coef_int + mean_coef_gr*(-2.10016998))))
-prob_median
-prob_quart1
-prob_quart3
-prob_median - prob_quart1
-(prob_quart3 - prob_median)/prob_median
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_pipo_hybrid.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_pipo_hybrid.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_pipo_hybrid.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_pipo_hybrid.Rdata")
 ```
 
 # _
@@ -333,7 +249,6 @@ for(i in 1:1000){
     mutate(death_year_temp = ifelse(death_year == 2015, 
                                     sample(c(2015, 2016), 1, replace = T), 
                                     death_year_temp)) %>% 
-    mutate(death_year_temp = ifelse(death_year == 2015, 2015, death_year_temp)) %>% 
     ungroup()
   
   dfa_new2 <- dfa_new %>%
@@ -380,98 +295,18 @@ mean_coef_gr <- mean(coefficient_gr)
 mean_coef_int <- mean(coefficient_int)
 mean_coef_gr
 mean_coef_int
-
-  
-  # Check
-  dfa_new2 %>% arrange(PAIR) %>% dplyr::select(SEEDLING, DEAD_ALIVE, gr1, gr2, gr3, death_year, death_year_temp, gr_rel_ave, log_gr_rel_ave)
-  ###########
-  
-
 ```
 
-## Plot the mean coefficient and CI
-
-### Calculate probabilities
+## Check
 ```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-dfgraph <- as.data.frame(log_gr_rel)
-dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
-summary(dfgraph$prob)
+dfa_new2 %>% arrange(PAIR) %>% dplyr::select(SEEDLING, DEAD_ALIVE, gr1, gr2, gr3, death_year, death_year_temp, gr_rel_ave, log_gr_rel_ave)
 ```
 
-### CI
+
+## Save
 ```{r}
-CI_low_int <- sort(coefficient_int)[25]
-CI_high_int <- sort(coefficient_int)[975]
-CI_low_gr <- sort(coefficient_gr)[25]
-CI_high_gr <- sort(coefficient_gr)[975]
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_abco_hybrid.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_abco_hybrid.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_abco_hybrid.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_abco_hybrid.Rdata")
 ```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_lower <- as.data.frame(log_gr_rel)
-dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
-summary(dfgraph_lower$prob)
-```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_upper <- as.data.frame(log_gr_rel)
-dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
-summary(dfgraph_upper$prob)
-```
-
-### Adjust probabilities to be yearly, since I found dead trees from 3 years 
-```{r}
-head(dfgraph)
-dfgraph <- dfgraph %>% 
-  mutate(prob = prob/3)
-head(dfgraph_lower)
-dfgraph_lower <- dfgraph_lower %>% 
-  mutate(prob = prob/3)
-dfgraph_upper <- dfgraph_upper %>% 
-  mutate(prob = prob/3)
-```
-
-# Plot it
-```{r}
-ggplot()+
-  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
-  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  theme_bw()+
-  theme(text = element_text(size = 11),
-    panel.grid.major = element_blank())+
-  xlim(0.03, .25)+
-  ylim(0, ymax)+
-  theme(text = element_text(size = 11),
-      panel.grid.major = element_blank())+
-  ylab("Annual % mortality probability")+
-  #ggtitle("HYBRID SIMULATIONS Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+
-  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))
-ggsave("../../results/figures/GrowthMortality/predict_mortality_abco_hybrid.png", height = 4, width = 5)
-```
-
-# Calculate the range of mortality probabilities captured by the fire footprint growth data
-```{r}
-prob_min <- exp(mean_coef_int + mean_coef_gr*(-1.70428)/(1+exp(mean_coef_int + mean_coef_gr*(-1.70428))))
-prob_max <- exp(mean_coef_int + mean_coef_gr*(-2.5877)/(1+exp(mean_coef_int + mean_coef_gr*(-2.5877))))
-prob_min
-prob_max
-prob_min-prob_max
-(prob_max-prob_min)/prob_min
-```
-
-```{r}
-prob_median <- exp(mean_coef_int + mean_coef_gr*(-1.955775)/(1+exp(mean_coef_int + mean_coef_gr*(-1.955775))))
-prob_quart1 <- exp(mean_coef_int + mean_coef_gr*(-1.8115886)/(1+exp(mean_coef_int + mean_coef_gr*(-1.8115886))))
-prob_quart3 <- exp(mean_coef_int + mean_coef_gr*(-2.10016998)/(1+exp(mean_coef_int + mean_coef_gr*(-2.10016998))))
-prob_median
-prob_quart1
-prob_quart3
-prob_median - prob_quart1
-(prob_quart3 - prob_median)/prob_median
-```
-

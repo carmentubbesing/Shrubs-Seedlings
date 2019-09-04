@@ -38,11 +38,6 @@ shr$Cover.cm[is.na(shr$Cover.cm)] <- 0
 shr$Ht.cm[is.na(shr$Ht.cm)] <- 0
 ```
 
-## Take out dead shrubs
-```{r}
-#shr <- subset(shr, shr$Dead.!= 1)
-```
-
 ## Take out "pea" shrub cover because it's not a shrub
 ```{r}
 shr <- shr %>% filter(ShrubSpp != "pea")
@@ -103,11 +98,11 @@ cov <- cov %>%
 ### Summarize height by segment 
 ```{r}
 ht <- shr %>%
-  select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %>% 
+  dplyr::select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %>% 
   group_by(Sdlg) %>% 
   mutate(ht_wm.cm = weighted.mean(Ht.cm, Cover.cm)) %>% 
   ungroup() %>% 
-  select(Sdlg, ht_wm.cm) %>% 
+  dplyr::select(Sdlg, ht_wm.cm) %>% 
   distinct() 
 ```
 
@@ -353,6 +348,12 @@ shr_by_sdlg %>%
 # List seedlings
 ```{r}
 sort(shr_by_sdlg$Sdlg)
+```
+
+# Figure out where the ARVI is
+```{r}
+shr_by_sdlg %>% 
+  filter(ShrubSpp03=="ARVI")
 ```
 
 
