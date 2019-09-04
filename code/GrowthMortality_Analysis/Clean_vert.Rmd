@@ -40,7 +40,6 @@ df_toss <- df %>%
 nrow(df_toss)
 ```
 
-
 ## delete pairs in df_toss from df
 ```{r}
 length(unique(df_toss$PAIR))
@@ -71,9 +70,7 @@ df %>%
   summarise(n())
 ```
 
-
 # Calculate average relative growth rate per seedling, using only years based on year of death
-
 
 ## Restructure so there's a column for each year of growth
 
@@ -124,12 +121,6 @@ df %>%
   dplyr::select(SEEDLING)
 ```
  
-### Delete that one
-```{r}
-df <- df %>% 
-  filter(SEEDLING != "202B")
-```
-
 ## Average growth based on pair's year of death
 ```{r}
 df <- df %>% 
@@ -157,26 +148,17 @@ df <- df %>%
 ```
 
 
-### Check
+# Check
 ```{r}
-df %>% 
-  filter(SPECIES == "ABCO") %>% 
-  dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING, PAIR, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
-  arrange(PAIR)
-df %>% 
-  filter(SPECIES == "PIPO") %>% 
-  dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING, PAIR, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
-  arrange(PAIR)
-summary(df$gr_rel_ave)
-df %>% filter(gr_rel_ave == 999)
+df %>% filter(gr_rel_ave == 999) %>% nrow() ==0
 ```
 
-#### Look at seedling with 0 average growth
 ```{r}
 df %>% 
   filter(gr_rel_ave == 0) %>% 
   dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING, PAIR, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
-  arrange(PAIR)
+  arrange(PAIR) %>% 
+  nrow()==0
 ```
 
 ## Throw out seedling pair that likely died in 2015 AND had 0 growth in 2015
@@ -184,7 +166,6 @@ df %>%
 df <- df %>% 
   filter(PAIR != 214)
 ```
-
 
 ## Add columns for log10 and natural log growth
 ```{r}
@@ -212,10 +193,22 @@ df %>%
 anova(lm(ht4 ~ SPECIES, data = df))
 ```
 
+# List the final seedlings by species
+```{r}
+(df %>% filter(SPECIES=="ABCO") %>% select(SEEDLING) %>% arrange(SEEDLING))[[1]]
+(df %>% filter(SPECIES=="PIPO") %>% select(SEEDLING) %>% arrange(SEEDLING))[[1]]
+```
+
+# Check growth calculations by selecting random seedlings
+```{r}
+test <- (df %>% 
+  dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING, PAIR, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm,MINUS_2_GR_cm, gr1, gr2, gr3, death_year, gr_rel_ave, log_gr_rel_ave) %>% 
+  arrange(PAIR))[sample(nrow(df),1),]
+test
+```
+
 
 # Save vertical growth df
 ```{r}
 save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
 ```
-
-# NEXT STEP: MAYBE TRY TO PAIR UP MATELESS SEEDLINGS WITH EACH OTHER SO I DON'T HAVE TO DELETE AS MANY PAIRS
