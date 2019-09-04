@@ -40,10 +40,10 @@ df <- df %>%
 ```{r}
 df %>% filter(SEEDLING == 202)
 df <- df %>% 
-  mutate(SPECIES = ifelse(SEEDLING == 202, "PIPO", SPECIES))
+  mutate(SPECIES = ifelse(SEEDLING == 202 | SEEDLING == "202b", "PIPO", SPECIES))
 ```
 
-# Make numeric
+# Make growth numeric
 ```{r}
 df <- df %>% 
   mutate(LAST_YR_GR_cm = as.numeric(LAST_YR_GR_cm)) %>% 
@@ -51,33 +51,24 @@ df <- df %>%
   mutate(MINUS_2_GR_cm = as.numeric(MINUS_2_GR_cm))
 ```
 
+
+# Make live/dead status a factor
+
 ```{r}
 df <- df %>% 
   mutate(DEAD = ifelse(DEAD_ALIVE == "DEAD", 1, 0))
 ```
 
-# Fix duplicates
-```{r}
-df %>% 
-  filter(duplicated(SEEDLING))
-df %>% 
-  filter(SEEDLING %in% c("183", "183B"))
-```
-
-## Fix duplicates
 ```{r}
 df <- df %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "ABCO", "183-A", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == 183 & SPECIES == "PIPO", "183-P", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "PIPO", "183B-P", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "183B" & SPECIES == "ABCO", "183B-A", SEEDLING)) 
+  mutate(DEAD = as.factor(DEAD))
 ```
 
 # Look at missing growth data
 ```{r}
-df %>% filter(is.na(as.numeric(df$LAST_YR_GR_cm)))
-df %>% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))
-df %>% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))
+df %>% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %>% 
+  select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)
 ```
 
 # Correct mis-recorded growth based on photos
@@ -86,12 +77,6 @@ df <- df %>%
   mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 98, 7.1, MINUS_2_GR_cm)) %>% 
   mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 77, 6.4, MINUS_2_GR_cm))
 ``` 
-
-# Make live/dead status a factor
-```{r}
-df <- df %>% 
-  mutate(DEAD = as.factor(DEAD))
-```
 
 # Calculate average diameter
 ```{r}
@@ -113,11 +98,12 @@ df <- df %>%
 
 tail(df %>% 
   dplyr::select(SEEDLING, PAIR))
+head(df %>% 
+  dplyr::select(SEEDLING, PAIR))
 ```
 
 ## Fix the funky 183/184/185 ones 
 ```{r}
-df$PAIR[222:235]
 df <- df %>% 
   mutate(PAIR = ifelse(SEEDLING == "184B-P", "184-P",PAIR)) %>% 
   mutate(PAIR = ifelse(SEEDLING == "184B-A", "184-A",PAIR)) %>% 
@@ -127,16 +113,18 @@ df <- df %>%
   mutate(PAIR = ifelse(SEEDLING == "185B-A", "185-A",PAIR)) 
 ```
 
-# Look at the ones missing pairs in df_bu
+# Check for missing diameter data
+```{r}
 
-## Find mateless seedlings
+```
+
+
+# Check that all pairs have two seedlings with growth data
 ```{r}
 df %>% 
+  filter(!is.na(BAS_DIA_AVE) & (!is.na(LAST_YR_GR_cm) | !is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm))) %>% 
   group_by(PAIR) %>% 
-  mutate(count = n()) %>% 
-  dplyr::select(SEEDLING, PAIR, count) %>% 
-  arrange(PAIR) %>% 
-  filter(count != 2) 
+  filter(n() != 2)
 ```
 
 # Delete pairs needing to be thrown out by creating a df with all the bad pairs
@@ -145,8 +133,7 @@ df %>%
 ```{r}
 summary(as.factor(df$Practice))
 df_toss <- df %>% 
-  filter(Practice == "1") %>% 
-  filter(PATH_DAMAGE == "1")
+  filter(Practice == "1" | PATH_DAMAGE == "1")
 nrow(df_toss)
 ```
 
@@ -156,18 +143,6 @@ nrow(df_toss)
 df_toss <- full_join(df_toss, df %>% 
   filter(thrown_out == "1"))
 nrow(df_toss)
-```
-
-
-## delete pairs in df_toss from df
-```{r}
-length(unique(df_toss$PAIR))
-length(unique(df$PAIR))
-
-nrow(df)
-df <- df %>% 
-  filter(!PAIR %in% df_toss$PAIR)
-nrow(df)
 ```
 
 ## Add reasons for exclusion in the notes section of df 
@@ -242,7 +217,7 @@ df <- df %>%
   arrange(desc(mateless))
 ```
 
-## See what thrown out seedlings remain without a exclude_reason
+## See what thrown out seedlings remain without an exclude_reason
 ```{r}
 df %>% 
   filter(thrown_out == 1 & is.na(exclude_reason)) %>% 
@@ -250,13 +225,34 @@ df %>%
   arrange(desc(SEEDLING)) 
 ```
 
-## Correct 184A/184-A/185
+# See if any of the seedlings that need to get thrown out have mates that can be used from other seedlings
+
+### Start by finding dead seedlings that are mateless
 ```{r}
+df %>% 
+  filter(DEAD ==1) %>% 
+  dplyr::select(exclude_reason) %>% 
+  distinct()
+```
+
+```{r}
+df %>% 
+  filter(mateless==1 & DEAD ==1) %>% 
+  dplyr::select(COMP, SEEDLING, HEIGHT, thrown_out, DEAD, exclude_reason, mateless, Notes) %>% 
+  arrange(HEIGHT)
+```
+
+Nope, none of the dead seedlings got thrown out simply for missing a mate
+
+## delete pairs in df_toss from df
+```{r}
+length(unique(df_toss$PAIR))
+length(unique(df$PAIR))
+
+nrow(df)
 df <- df %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "184A", "184-A", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "184BA", "184B-A", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "185BA", "185B-A", SEEDLING)) %>% 
-  mutate(SEEDLING = ifelse(SEEDLING == "185B", "185B-P", SEEDLING))
+  filter(!PAIR %in% df_toss$PAIR)
+nrow(df)
 ```
 
 # Save df

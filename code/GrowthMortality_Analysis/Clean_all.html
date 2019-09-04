@@ -192,31 +192,31 @@ summary {
 <li><a href="#fix-typos">Fix typos</a><ul>
 <li><a href="#correct-tree-mislabeled-as-the-wrong-species">Correct tree mislabeled as the wrong species</a></li>
 </ul></li>
-<li><a href="#make-numeric">Make numeric</a></li>
-<li><a href="#fix-duplicates">Fix duplicates</a><ul>
-<li><a href="#fix-duplicates-1">Fix duplicates</a></li>
-</ul></li>
+<li><a href="#make-growth-numeric">Make growth numeric</a></li>
+<li><a href="#make-livedead-status-a-factor">Make live/dead status a factor</a></li>
 <li><a href="#look-at-missing-growth-data">Look at missing growth data</a></li>
 <li><a href="#correct-mis-recorded-growth-based-on-photos">Correct mis-recorded growth based on photos</a></li>
-<li><a href="#make-livedead-status-a-factor">Make live/dead status a factor</a></li>
 <li><a href="#calculate-average-diameter">Calculate average diameter</a></li>
 <li><a href="#create-a-column-for-pair-or-dead">Create a column for PAIR, or dead</a><ul>
 <li><a href="#fix-the-funky-183184185-ones">Fix the funky 183/184/185 ones</a></li>
 </ul></li>
-<li><a href="#look-at-the-ones-missing-pairs-in-df_bu">Look at the ones missing pairs in df_bu</a><ul>
-<li><a href="#find-mateless-seedlings">Find mateless seedlings</a></li>
-</ul></li>
+<li><a href="#check-for-missing-diameter-data">Check for missing diameter data</a></li>
+<li><a href="#check-that-all-pairs-have-two-seedlings-with-growth-data">Check that all pairs have two seedlings with growth data</a></li>
 <li><a href="#delete-pairs-needing-to-be-thrown-out-by-creating-a-df-with-all-the-bad-pairs">Delete pairs needing to be thrown out by creating a df with all the bad pairs</a><ul>
 <li><a href="#missing-data-or-pathogen-damage">Missing data or pathogen damage</a></li>
 <li><a href="#seedlings-marked-thrown-out">seedlings marked “thrown out”</a></li>
-<li><a href="#delete-pairs-in-df_toss-from-df">delete pairs in df_toss from df</a></li>
 <li><a href="#add-reasons-for-exclusion-in-the-notes-section-of-df">Add reasons for exclusion in the notes section of df</a><ul>
 <li><a href="#create-function-for-add-exclusion-reason">Create function for Add Exclusion Reason</a></li>
 <li><a href="#apply-to-seedlings-one-by-one-by-looking-at-data">Apply to seedlings one by one by looking at data</a></li>
 <li><a href="#add-column-to-df-for-mateless-seedlings">Add column to df for mateless seedlings</a></li>
 </ul></li>
-<li><a href="#see-what-thrown-out-seedlings-remain-without-a-exclude_reason">See what thrown out seedlings remain without a exclude_reason</a></li>
-<li><a href="#correct-184a184-a185">Correct 184A/184-A/185</a></li>
+<li><a href="#see-what-thrown-out-seedlings-remain-without-an-exclude_reason">See what thrown out seedlings remain without an exclude_reason</a></li>
+</ul></li>
+<li><a href="#need-to-add-stuff-here">NEED TO ADD STUFF HERE</a><ul>
+<li><a href="#see-if-any-of-the-seedlings-that-need-to-get-thrown-out-have-mates-that-can-be-used-from-other-seedlings">See if any of the seedlings that need to get thrown out have mates that can be used from other seedlings</a><ul>
+<li><a href="#start-by-finding-dead-seedlings-that-are-mateless">Start by finding dead seedlings that are mateless</a></li>
+</ul></li>
+<li><a href="#delete-pairs-in-df_toss-from-df">delete pairs in df_toss from df</a></li>
 </ul></li>
 <li><a href="#save-df">Save df</a></li>
 </ul>
@@ -254,11 +254,11 @@ df &lt;- read_excel(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/da
 ## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
 ## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(SPECIES = ifelse(SEEDLING == 202, &quot;PIPO&quot;, SPECIES))</code></pre>
+  mutate(SPECIES = ifelse(SEEDLING == 202 | SEEDLING == &quot;202b&quot;, &quot;PIPO&quot;, SPECIES))</code></pre>
 </div>
 </div>
-<div id="make-numeric" class="section level1">
-<h1>Make numeric</h1>
+<div id="make-growth-numeric" class="section level1">
+<h1>Make growth numeric</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(LAST_YR_GR_cm = as.numeric(LAST_YR_GR_cm)) %&gt;% 
   mutate(MINUS_1_GR_cm = as.numeric(MINUS_1_GR_cm)) %&gt;% 
@@ -266,95 +266,31 @@ df &lt;- read_excel(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/da
 <pre><code>## Warning: NAs introduced by coercion
 
 ## Warning: NAs introduced by coercion</code></pre>
+</div>
+<div id="make-livedead-status-a-factor" class="section level1">
+<h1>Make live/dead status a factor</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(DEAD = ifelse(DEAD_ALIVE == &quot;DEAD&quot;, 1, 0))</code></pre>
-</div>
-<div id="fix-duplicates" class="section level1">
-<h1>Fix duplicates</h1>
-<pre class="r"><code>df %&gt;% 
-  filter(duplicated(SEEDLING))</code></pre>
-<pre><code>## # A tibble: 0 x 31
-## # ... with 31 variables: COMP &lt;dbl&gt;, DATE &lt;dttm&gt;, TIME &lt;chr&gt;,
-## #   SEEDLING &lt;chr&gt;, SPECIES &lt;chr&gt;, HEIGHT &lt;dbl&gt;, `dia/ht` &lt;dbl&gt;,
-## #   DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;, BAS_DIA_2_mm &lt;dbl&gt;,
-## #   LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;, MINUS_2_GR_cm &lt;dbl&gt;,
-## #   PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK DOTS` &lt;chr&gt;,
-## #   BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;, SUPPRESSED &lt;chr&gt;,
-## #   NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;, PATH_DAMAGE &lt;chr&gt;,
-## #   Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked in lab?` &lt;chr&gt;,
-## #   thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;, DEAD &lt;dbl&gt;</code></pre>
-<pre class="r"><code>df %&gt;% 
-  filter(SEEDLING %in% c(&quot;183&quot;, &quot;183B&quot;))</code></pre>
-<pre><code>## # A tibble: 0 x 31
-## # ... with 31 variables: COMP &lt;dbl&gt;, DATE &lt;dttm&gt;, TIME &lt;chr&gt;,
-## #   SEEDLING &lt;chr&gt;, SPECIES &lt;chr&gt;, HEIGHT &lt;dbl&gt;, `dia/ht` &lt;dbl&gt;,
-## #   DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;, BAS_DIA_2_mm &lt;dbl&gt;,
-## #   LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;, MINUS_2_GR_cm &lt;dbl&gt;,
-## #   PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK DOTS` &lt;chr&gt;,
-## #   BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;, SUPPRESSED &lt;chr&gt;,
-## #   NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;, PATH_DAMAGE &lt;chr&gt;,
-## #   Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked in lab?` &lt;chr&gt;,
-## #   thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;, DEAD &lt;dbl&gt;</code></pre>
-<div id="fix-duplicates-1" class="section level2">
-<h2>Fix duplicates</h2>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == 183 &amp; SPECIES == &quot;ABCO&quot;, &quot;183-A&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == 183 &amp; SPECIES == &quot;PIPO&quot;, &quot;183-P&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;183B&quot; &amp; SPECIES == &quot;PIPO&quot;, &quot;183B-P&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;183B&quot; &amp; SPECIES == &quot;ABCO&quot;, &quot;183B-A&quot;, SEEDLING)) </code></pre>
-</div>
+  mutate(DEAD = as.factor(DEAD))</code></pre>
 </div>
 <div id="look-at-missing-growth-data" class="section level1">
 <h1>Look at missing growth data</h1>
-<pre class="r"><code>df %&gt;% filter(is.na(as.numeric(df$LAST_YR_GR_cm)))</code></pre>
-<pre><code>## # A tibble: 1 x 31
-##    COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
-##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-## 1   180 2017-08-16 00:00:00 0.66~ 119      ABCO        48    0.167
-## # ... with 24 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
-## #   BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;,
-## #   MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK
-## #   DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;,
-## #   SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;,
-## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
-## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;,
-## #   DEAD &lt;dbl&gt;</code></pre>
-<pre class="r"><code>df %&gt;% filter(is.na(as.numeric(df$MINUS_1_GR_cm)))</code></pre>
-<pre><code>## # A tibble: 0 x 31
-## # ... with 31 variables: COMP &lt;dbl&gt;, DATE &lt;dttm&gt;, TIME &lt;chr&gt;,
-## #   SEEDLING &lt;chr&gt;, SPECIES &lt;chr&gt;, HEIGHT &lt;dbl&gt;, `dia/ht` &lt;dbl&gt;,
-## #   DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;, BAS_DIA_2_mm &lt;dbl&gt;,
-## #   LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;, MINUS_2_GR_cm &lt;dbl&gt;,
-## #   PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK DOTS` &lt;chr&gt;,
-## #   BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;, SUPPRESSED &lt;chr&gt;,
-## #   NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;, PATH_DAMAGE &lt;chr&gt;,
-## #   Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked in lab?` &lt;chr&gt;,
-## #   thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;, DEAD &lt;dbl&gt;</code></pre>
-<pre class="r"><code>df %&gt;% filter(is.na(as.numeric(df$MINUS_2_GR_cm)))</code></pre>
-<pre><code>## # A tibble: 2 x 31
-##    COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
-##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-## 1   380 2017-08-29 00:00:00 &lt;NA&gt;  187b     ABCO        18    0.122
-## 2   180 2017-08-17 00:00:00 &lt;NA&gt;  156      PIPO        39    0.177
-## # ... with 24 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
-## #   BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;,
-## #   MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK
-## #   DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;,
-## #   SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;,
-## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
-## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;,
-## #   DEAD &lt;dbl&gt;</code></pre>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %&gt;% 
+  select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)</code></pre>
+<pre><code>## # A tibble: 3 x 6
+##   SEEDLING LAST_YR_GR_cm MINUS_1_GR_cm MINUS_2_GR_cm NOTES         Notes   
+##   &lt;chr&gt;            &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;   
+## 1 187b               2.9           3.8          NA   &lt;NA&gt;          throw o~
+## 2 119               NA             7.7           7.8 height taken~ &lt;NA&gt;    
+## 3 156                5.2           7.8          NA   &lt;NA&gt;          &lt;NA&gt;</code></pre>
 </div>
 <div id="correct-mis-recorded-growth-based-on-photos" class="section level1">
 <h1>Correct mis-recorded growth based on photos</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 98, 7.1, MINUS_2_GR_cm)) %&gt;% 
   mutate(MINUS_2_GR_cm = ifelse(SEEDLING == 77, 6.4, MINUS_2_GR_cm))</code></pre>
-</div>
-<div id="make-livedead-status-a-factor" class="section level1">
-<h1>Make live/dead status a factor</h1>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(DEAD = as.factor(DEAD))</code></pre>
 </div>
 <div id="calculate-average-diameter" class="section level1">
 <h1>Calculate average diameter</h1>
@@ -385,11 +321,19 @@ tail(df %&gt;%
 ## 4 98B      98   
 ## 5 99B      99   
 ## 6 9B       9</code></pre>
+<pre class="r"><code>head(df %&gt;% 
+  dplyr::select(SEEDLING, PAIR))</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   SEEDLING PAIR 
+##   &lt;chr&gt;    &lt;chr&gt;
+## 1 1        1    
+## 2 4        4    
+## 3 8        8    
+## 4 9        9    
+## 5 10       10   
+## 6 11       11</code></pre>
 <div id="fix-the-funky-183184185-ones" class="section level2">
 <h2>Fix the funky 183/184/185 ones</h2>
-<pre class="r"><code>df$PAIR[222:235]</code></pre>
-<pre><code>##  [1] &quot;121&quot; &quot;122&quot; &quot;123&quot; &quot;124&quot; &quot;125&quot; &quot;127&quot; &quot;128&quot; &quot;129&quot; &quot;12&quot;  &quot;130&quot; &quot;131&quot;
-## [12] &quot;132&quot; &quot;136&quot; &quot;137&quot;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(PAIR = ifelse(SEEDLING == &quot;184B-P&quot;, &quot;184-P&quot;,PAIR)) %&gt;% 
   mutate(PAIR = ifelse(SEEDLING == &quot;184B-A&quot;, &quot;184-A&quot;,PAIR)) %&gt;% 
@@ -399,20 +343,28 @@ tail(df %&gt;%
   mutate(PAIR = ifelse(SEEDLING == &quot;185B-A&quot;, &quot;185-A&quot;,PAIR)) </code></pre>
 </div>
 </div>
-<div id="look-at-the-ones-missing-pairs-in-df_bu" class="section level1">
-<h1>Look at the ones missing pairs in df_bu</h1>
-<div id="find-mateless-seedlings" class="section level2">
-<h2>Find mateless seedlings</h2>
-<pre class="r"><code>df %&gt;% 
-  group_by(PAIR) %&gt;% 
-  mutate(count = n()) %&gt;% 
-  dplyr::select(SEEDLING, PAIR, count) %&gt;% 
-  arrange(PAIR) %&gt;% 
-  filter(count != 2) </code></pre>
-<pre><code>## # A tibble: 0 x 3
-## # Groups:   PAIR [0]
-## # ... with 3 variables: SEEDLING &lt;chr&gt;, PAIR &lt;chr&gt;, count &lt;int&gt;</code></pre>
+<div id="check-for-missing-diameter-data" class="section level1">
+<h1>Check for missing diameter data</h1>
 </div>
+<div id="check-that-all-pairs-have-two-seedlings-with-growth-data" class="section level1">
+<h1>Check that all pairs have two seedlings with growth data</h1>
+<pre class="r"><code>df %&gt;% 
+  filter(!is.na(BAS_DIA_AVE) &amp; (!is.na(LAST_YR_GR_cm) | !is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm))) %&gt;% 
+  group_by(PAIR) %&gt;% 
+  filter(n() != 2)</code></pre>
+<pre><code>## # A tibble: 1 x 33
+## # Groups:   PAIR [1]
+##    COMP DATE                TIME  SEEDLING SPECIES HEIGHT `dia/ht`
+##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;
+## 1   180 2017-08-17 00:00:00 &lt;NA&gt;  26B      PIPO        32    0.225
+## # ... with 26 more variables: DEAD_ALIVE &lt;chr&gt;, BAS_DIA_1_mm &lt;dbl&gt;,
+## #   BAS_DIA_2_mm &lt;dbl&gt;, LAST_YR_GR_cm &lt;dbl&gt;, MINUS_1_GR_cm &lt;dbl&gt;,
+## #   MINUS_2_GR_cm &lt;dbl&gt;, PERC_NEEDLES &lt;chr&gt;, NEEDLE_COLOR &lt;chr&gt;, `BLACK
+## #   DOTS` &lt;chr&gt;, BARK &lt;chr&gt;, BUDS &lt;chr&gt;, `Growing?` &lt;chr&gt;,
+## #   SUPPRESSED &lt;chr&gt;, NOTES &lt;chr&gt;, `got it` &lt;chr&gt;, MECH_DAMAGE &lt;dbl&gt;,
+## #   PATH_DAMAGE &lt;chr&gt;, Practice &lt;chr&gt;, `Tops cut?` &lt;chr&gt;, `photo checked
+## #   in lab?` &lt;chr&gt;, thrown_out &lt;dbl&gt;, Notes &lt;chr&gt;, Cut_at_bottom &lt;dbl&gt;,
+## #   DEAD &lt;fct&gt;, BAS_DIA_AVE &lt;dbl&gt;, PAIR &lt;chr&gt;</code></pre>
 </div>
 <div id="delete-pairs-needing-to-be-thrown-out-by-creating-a-df-with-all-the-bad-pairs" class="section level1">
 <h1>Delete pairs needing to be thrown out by creating a df with all the bad pairs</h1>
@@ -422,33 +374,19 @@ tail(df %&gt;%
 <pre><code>##    ?    0    1 unkn NA's 
 ##    4    9    4    5  370</code></pre>
 <pre class="r"><code>df_toss &lt;- df %&gt;% 
-  filter(Practice == &quot;1&quot;) %&gt;% 
-  filter(PATH_DAMAGE == &quot;1&quot;)
+  filter(Practice == &quot;1&quot; | PATH_DAMAGE == &quot;1&quot;)
 nrow(df_toss)</code></pre>
-<pre><code>## [1] 2</code></pre>
+<pre><code>## [1] 21</code></pre>
 </div>
 <div id="seedlings-marked-thrown-out" class="section level2">
 <h2>seedlings marked “thrown out”</h2>
 <pre class="r"><code>nrow(df_toss)</code></pre>
-<pre><code>## [1] 2</code></pre>
+<pre><code>## [1] 21</code></pre>
 <pre class="r"><code>df_toss &lt;- full_join(df_toss, df %&gt;% 
   filter(thrown_out == &quot;1&quot;))</code></pre>
 <pre><code>## Joining, by = c(&quot;COMP&quot;, &quot;DATE&quot;, &quot;TIME&quot;, &quot;SEEDLING&quot;, &quot;SPECIES&quot;, &quot;HEIGHT&quot;, &quot;dia/ht&quot;, &quot;DEAD_ALIVE&quot;, &quot;BAS_DIA_1_mm&quot;, &quot;BAS_DIA_2_mm&quot;, &quot;LAST_YR_GR_cm&quot;, &quot;MINUS_1_GR_cm&quot;, &quot;MINUS_2_GR_cm&quot;, &quot;PERC_NEEDLES&quot;, &quot;NEEDLE_COLOR&quot;, &quot;BLACK DOTS&quot;, &quot;BARK&quot;, &quot;BUDS&quot;, &quot;Growing?&quot;, &quot;SUPPRESSED&quot;, &quot;NOTES&quot;, &quot;got it&quot;, &quot;MECH_DAMAGE&quot;, &quot;PATH_DAMAGE&quot;, &quot;Practice&quot;, &quot;Tops cut?&quot;, &quot;photo checked in lab?&quot;, &quot;thrown_out&quot;, &quot;Notes&quot;, &quot;Cut_at_bottom&quot;, &quot;DEAD&quot;, &quot;BAS_DIA_AVE&quot;, &quot;PAIR&quot;)</code></pre>
 <pre class="r"><code>nrow(df_toss)</code></pre>
-<pre><code>## [1] 46</code></pre>
-</div>
-<div id="delete-pairs-in-df_toss-from-df" class="section level2">
-<h2>delete pairs in df_toss from df</h2>
-<pre class="r"><code>length(unique(df_toss$PAIR))</code></pre>
-<pre><code>## [1] 29</code></pre>
-<pre class="r"><code>length(unique(df$PAIR))</code></pre>
-<pre><code>## [1] 196</code></pre>
-<pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 392</code></pre>
-<pre class="r"><code>df &lt;- df %&gt;% 
-  filter(!PAIR %in% df_toss$PAIR)
-nrow(df)</code></pre>
-<pre><code>## [1] 334</code></pre>
+<pre><code>## [1] 54</code></pre>
 </div>
 <div id="add-reasons-for-exclusion-in-the-notes-section-of-df" class="section level2">
 <h2>Add reasons for exclusion in the notes section of df</h2>
@@ -514,24 +452,65 @@ aer(&quot;103B&quot;, &quot;PATH_DAMAGE&quot;)</code></pre>
   arrange(desc(mateless))</code></pre>
 </div>
 </div>
-<div id="see-what-thrown-out-seedlings-remain-without-a-exclude_reason" class="section level2">
-<h2>See what thrown out seedlings remain without a exclude_reason</h2>
+<div id="see-what-thrown-out-seedlings-remain-without-an-exclude_reason" class="section level2">
+<h2>See what thrown out seedlings remain without an exclude_reason</h2>
 <pre class="r"><code>df %&gt;% 
   filter(thrown_out == 1 &amp; is.na(exclude_reason)) %&gt;% 
   dplyr::select(COMP, DATE, SEEDLING, DEAD_ALIVE, thrown_out, NOTES, Notes, PATH_DAMAGE) %&gt;% 
   arrange(desc(SEEDLING)) </code></pre>
-<pre><code>## # A tibble: 0 x 8
-## # ... with 8 variables: COMP &lt;dbl&gt;, DATE &lt;dttm&gt;, SEEDLING &lt;chr&gt;,
-## #   DEAD_ALIVE &lt;chr&gt;, thrown_out &lt;dbl&gt;, NOTES &lt;chr&gt;, Notes &lt;chr&gt;,
-## #   PATH_DAMAGE &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 4 x 8
+##    COMP DATE                SEEDLING DEAD_ALIVE thrown_out NOTES Notes
+##   &lt;dbl&gt; &lt;dttm&gt;              &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;
+## 1   180 2017-08-17 00:00:00 98B      ALIVE      1          &lt;NA&gt;  pitc~
+## 2   180 2017-08-17 00:00:00 98       DEAD       1          &lt;NA&gt;  pitc~
+## 3   180 2017-08-15 00:00:00 76B      ALIVE      1          &lt;NA&gt;  thro~
+## 4   380 2017-08-30 00:00:00 195B     ALIVE      1          &lt;NA&gt;  too ~
+## # ... with 1 more variable: PATH_DAMAGE &lt;chr&gt;</code></pre>
 </div>
-<div id="correct-184a184-a185" class="section level2">
-<h2>Correct 184A/184-A/185</h2>
+</div>
+<div id="need-to-add-stuff-here" class="section level1">
+<h1>NEED TO ADD STUFF HERE</h1>
+<div id="see-if-any-of-the-seedlings-that-need-to-get-thrown-out-have-mates-that-can-be-used-from-other-seedlings" class="section level2">
+<h2>See if any of the seedlings that need to get thrown out have mates that can be used from other seedlings</h2>
+<div id="start-by-finding-dead-seedlings-that-are-mateless" class="section level3">
+<h3>Start by finding dead seedlings that are mateless</h3>
+<pre class="r"><code>df %&gt;% 
+  filter(DEAD ==1) %&gt;% 
+  dplyr::select(exclude_reason) %&gt;% 
+  distinct()</code></pre>
+<pre><code>## # A tibble: 7 x 1
+##   exclude_reason
+##   &lt;chr&gt;         
+## 1 &lt;NA&gt;          
+## 2 MUNCHED       
+## 3 PATH_DAMAGE   
+## 4 beetles       
+## 5 pitching      
+## 6 unkn          
+## 7 TOO YOUNG</code></pre>
+<pre class="r"><code>df %&gt;% 
+  filter(mateless==1 &amp; DEAD ==1) %&gt;% 
+  dplyr::select(COMP, SEEDLING, HEIGHT, thrown_out, DEAD, exclude_reason, mateless, Notes) %&gt;% 
+  arrange(HEIGHT)</code></pre>
+<pre><code>## # A tibble: 0 x 8
+## # ... with 8 variables: COMP &lt;dbl&gt;, SEEDLING &lt;chr&gt;, HEIGHT &lt;dbl&gt;,
+## #   thrown_out &lt;chr&gt;, DEAD &lt;fct&gt;, exclude_reason &lt;chr&gt;, mateless &lt;dbl&gt;,
+## #   Notes &lt;chr&gt;</code></pre>
+<p>Nope, none of the dead seedlings got thrown out simply for missing a mate</p>
+</div>
+</div>
+<div id="delete-pairs-in-df_toss-from-df" class="section level2">
+<h2>delete pairs in df_toss from df</h2>
+<pre class="r"><code>length(unique(df_toss$PAIR))</code></pre>
+<pre><code>## [1] 34</code></pre>
+<pre class="r"><code>length(unique(df$PAIR))</code></pre>
+<pre><code>## [1] 196</code></pre>
+<pre class="r"><code>nrow(df)</code></pre>
+<pre><code>## [1] 392</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;184A&quot;, &quot;184-A&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;184BA&quot;, &quot;184B-A&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;185BA&quot;, &quot;185B-A&quot;, SEEDLING)) %&gt;% 
-  mutate(SEEDLING = ifelse(SEEDLING == &quot;185B&quot;, &quot;185B-P&quot;, SEEDLING))</code></pre>
+  filter(!PAIR %in% df_toss$PAIR)
+nrow(df)</code></pre>
+<pre><code>## [1] 324</code></pre>
 </div>
 </div>
 <div id="save-df" class="section level1">
