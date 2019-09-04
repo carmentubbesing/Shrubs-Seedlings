@@ -18,11 +18,23 @@ require(readxl)
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load("../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
 df_full <- df
+remove(df)
 load("../../compiled_data/dendro_joined.Rdata")
 load("../../compiled_data/rwl_joined.Rdata")
 ```
 
 # Dendro data basic clean
+
+# Take out replicate Seedling 12 - the correct seedling 12 is on Board 43, wrong one is on 45
+```{r}
+df %>% filter(series %in% c("12R1", "12R2", "12R3"))
+nrow(df)
+df <- df %>%
+  filter(!(series %in% c("12R1", "12R2", "12R3") & board == "P1Bd45"))
+nrow(df)
+```
+
+
 
 ## Make series all caps
 ```{r}
@@ -70,14 +82,12 @@ df <- df %>%
     )) 
 df %>% 
   filter(!radius %in% c(1, 2, 3))
-head(df)
 ```
 
 ### Fix tree names for 184A they sync up with detailed data later on
 ```{r}
 df %>%
   filter(tree %in% c("184A", "184BA"))
-df_full %>% filter(SEEDLING %in% c("184-A", "184B-A"))
 ```
 
 ```{r}
@@ -99,19 +109,18 @@ df <- df %>%
   filter(board != "P1BdS ")
 ```
 
+## Make seedling color column all lower case 
+```{r}
+df_full <- df_full %>% 
+  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR))
+```
+
 ## Find trees that don't have the right number of radii
 ```{r}
 df %>% 
   group_by(tree) %>% 
-  mutate(count = n()) %>% 
-  filter(count != 3) %>% 
+  filter(n() != 3) %>% 
   dplyr::select(board, tree, series, radius)
-```
-
-## Make seedling color column all lower case 
-```{r}
-df_full %>% 
-  mutate(NEEDLE_COLOR = tolower(NEEDLE_COLOR))
 ```
 
 ### Fix duplicates
@@ -127,7 +136,8 @@ df %>% filter(tree %in% c(19, "19BU"))
 ```{r}
 df <- df %>% 
   filter(!(tree == 19 & board == "P1Bd62")) %>% 
-  mutate(tree = ifelse(tree %in% c(19, "19BU"), 19, tree))
+  mutate(tree = ifelse(tree %in% c(19, "19BU"), 19, tree)) %>% 
+  mutate(series = ifelse(series=="19R1", "19BUR1", series))
 df %>% filter(tree %in% c(19, "19BU"))
 ```
 
@@ -151,26 +161,29 @@ df <- df %>%
   arrange(desc(BU))
 ```
 
-### View BU duplicates and delete non-BU ones
+### View BU duplicates
 ```{r}
 dups <- df %>% 
   group_by(tree) %>% 
-  mutate(count = n()) %>% 
-  filter(count != 3) %>% 
+  filter(n() != 3) %>% 
   arrange(tree)
 dups
 ```
 
-### Delete the ones that got replaced by backups 
+### Check for trees in dups with more than 6 rows
+```{r}
+dups %>% 
+  group_by(tree) %>% 
+  filter(n() != 6)
+```
+
+### Delete non-BU trees where there is a BU
 ```{r}
 df <- df %>% 
   filter(!(tree %in% dups$tree & BU == 0))
 ```
 
 ## Correct the name of seedling 185B
-```{r}
-df %>% filter(tree == "185B")
-```
 
 Based on notes in the master details excel spreadsheet, 185B-P is on board 45, so I just need to relabel this tree. I can always check the board too, if need be. 
 
@@ -186,36 +199,43 @@ df <- df %>%
 join <- full_join(df, df_full, by = c("tree" = "SEEDLING"))
 ```
 
-## Take out thrown out seedlings
+## Merge notes columns
 ```{r}
 join <- join %>% 
-  filter(thrown_out != 1)
+  mutate(NOTES2 = ifelse(!is.na(NOTES) &!is.na(Notes), paste(NOTES, Notes, sep = "; "), NOTES)) %>% 
+  mutate(NOTES2 = ifelse(is.na(NOTES) & !is.na(Notes), Notes, NOTES2)) %>% 
+  dplyr::select(-Notes, -NOTES) %>% 
+  rename(NOTES = NOTES2)
 ```
+
+
+<!-- ## Take out thrown out seedlings -->
+<!-- ```{r} -->
+<!-- join <- join %>%  -->
+<!--   filter(thrown_out != 1) -->
+<!-- ``` -->
 
 ## Look at seedlings without dendro data
 ```{r}
 join %>%
   filter(is.na(board) | tree %in% (join %>% filter(is.na(board)))$tree) %>% 
-  dplyr::select(board, tree, BAS_DIA_2_mm, NOTES, Notes, `Tops cut?`) 
+  dplyr::select(board, tree, BAS_DIA_2_mm, NOTES, `Tops cut?`) 
 ```
 
 # Check for mateless seedlings not marked as such
 
-## Create a column for PAIR, aka dead #
+## Check for seedlings without anything in the PAIR column
 ```{r}
-join$PAIR <- NA
-bs <- grep("B", join$tree, value = T)
-bs <- substr(bs, 1, nchar(bs)-1)
-join[grep("B", join$tree), "PAIR"] <- bs
-head(bs)
-join <- join %>% 
-  mutate(PAIR = ifelse(is.na(PAIR), tree, PAIR))
+join %>% filter(is.na(PAIR))
 ```
 
-### Check
+### Check for seedlings without a mate
 ```{r}
-head(join %>% 
-  dplyr::select(tree, PAIR))
+join %>% 
+  group_by(PAIR) %>% 
+  filter(n() != 6) %>% 
+  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason, NOTES) %>% 
+  arrange(PAIR)
 ```
 
 # Find mateless seedlings not marked as such and not already flagged for needing me to check them
@@ -226,43 +246,8 @@ join %>%
   filter(count != 6) %>% 
   arrange(PAIR) %>% 
   filter(mateless == 0) %>% 
-  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
-  filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
-```
-
-## Fix the funky 183/184/185 ones 
-```{r}
-join <- join %>% 
-  mutate(PAIR = ifelse(tree == "184B-P", "184-P",PAIR))
-```
-
-```{r}
-join %>% 
-  filter(PAIR == "183B-") %>% 
-  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) 
-```
-
-```{r}
-join <- join %>% 
-  mutate(PAIR = ifelse(tree == "185B-P", "185-P",PAIR)) %>% 
-  mutate(PAIR = ifelse(tree == "185B-A", "185-A",PAIR)) %>% 
-  mutate(PAIR = ifelse(tree == "184B-A", "184-A",PAIR)) %>% 
-  mutate(PAIR = ifelse(tree == "183B-A", "183-A",PAIR)) %>% 
-  mutate(PAIR = ifelse(tree == "183B-P", "183-P",PAIR)) 
-```
-
-The 185B-P correction is based on the "dendro" sheet of the Mort_details... .xls file
-
-# Check again for mateless trees
-```{r}
-join %>% 
-  group_by(PAIR) %>% 
-  mutate(count = n()) %>% 
-  filter(count != 6) %>% 
-  arrange(PAIR) %>% 
-  filter(mateless == 0) %>% 
-  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason) %>% 
-  filter(!PAIR %in% c(12, 155, 26, 98, 63, 163, 159, 195, 205))
+  dplyr::select(board, tree, series, radius, BU, PAIR, mateless, thrown_out, exclude_reason, NOTES) %>% 
+  filter(!PAIR %in% c(12, 26, 63, 163, 159,205))
 ```
 
 # See about pairing up mateless seedlings with each other if possible
@@ -681,5 +666,3 @@ ggplot(prelim)+
   geom_boxplot(aes(x = interaction(SPECIES, DEAD_ALIVE), y= growth_vert))
 
 ```
-
-# It looks preliminarily like dead seedlings have greater radial growth and lower vertical growth than live seedlings
