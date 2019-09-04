@@ -332,7 +332,7 @@ save(gr_medshrub_abco, file = "../../results/data/FireFootprints/gr_medshrub_abc
 
 ## Plot effects of shrubarea
 
-### LOad colors from PIPO graph
+### Load colors from PIPO graph
 ```{r}
 load("../../results/figures/FireFootprints/plot_min.Rdata")
 load("../../results/figures/FireFootprints/plot_max.Rdata")
@@ -347,11 +347,11 @@ ggplot(effects_df)+
     (sqrt(`cover (cm)`%*%`height (cm)`))            
     ))+
   ylab("Relative growth rate")+
-  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
   ylim(c(plot_min, plot_max))+
   theme(
     panel.grid.minor = element_blank(),
-    #panel.grid.major = element_blank(),
+    panel.grid.major.x = element_blank(),
     text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```

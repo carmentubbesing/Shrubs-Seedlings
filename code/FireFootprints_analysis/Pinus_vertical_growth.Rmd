@@ -37,32 +37,31 @@ load("../../results/VSURF_pipo_vars.Rdata")
 ```{r}
 df_summary <- df %>% 
   group_by(Species) %>% 
-  mutate(shrubarea3 = sqrt(shrubarea3)) %>% 
-  summarize(min= min(shrubarea3), max = max(shrubarea3), median = median(shrubarea3))
+  summarize(min= min(sqrt_shrubarea3), max = max(sqrt_shrubarea3), median = median(sqrt_shrubarea3))
 ```
 
 ```{r}
-min <- df_summary %>% 
+min_shrub <- df_summary %>% 
   filter(min == max(min)) %>% 
   select(min) %>% 
   unlist()
-min
+min_shrub
 ```
 
 ```{r}
-max <- df_summary %>% 
+max_shrub <- df_summary %>% 
   filter(max == min(max)) %>% 
   select(max) %>% 
   unlist()
-max
+max_shrub
 ```
 
 ```{r}
-median <- df %>% 
+median_shrub <- df %>% 
   mutate(shrubarea3 = sqrt(shrubarea3)) %>%
   summarize(median = median(shrubarea3)) %>% 
   unlist
-median
+median_shrub
 ```
 
 ```{r}
@@ -273,7 +272,7 @@ ggplot(df, aes(x = Ht_cm1, y = sqrt_shrubarea3))+
 
 # Look at residuals
 
-### Residuals
+## Residuals
 ```{r}
 E <- resid(LM, type = "normalized")
 df$E <- E
@@ -308,77 +307,9 @@ r.squaredGLMM(LM)
 r.squaredGLMM(LM_int)
 ```
 
-# Plot shrub effects with an interaction
+# Plot shrub effects without interaction
 
-```{r}
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM_int)
-effects_df <- as.data.frame(eff_shrubarea)
-head(effects_df)
-```
-
-## Create df for effects and confidence intervals using mean +/- 1 SD
-```{r}
-quartiles <- summary(df$Ht_cm1)[c(2,5)]
-quartiles <- (quartiles-mean(df$Ht_cm1))/sd(df$Ht_cm1)
-eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM_int, xlevels = list(Ht_cm1 = quartiles))
-effects_df <- as.data.frame(eff_shrubarea)
-head(effects_df)
-```
-
-## Transform variables back to original units
-```{r}
-effects_df <- effects_df %>% 
-  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) %>% 
-  mutate(Ht_cm1 = Ht_cm1*sd(df$Ht_cm1)+mean(df$Ht_cm1) ) %>% 
-  mutate(Ht_cm1 = as.factor(round(Ht_cm1)) )
-head(effects_df)
-```
-
-### test
-```{r}
-hist(effects_df$sqrt_shrubarea3)
-hist(sqrt(df$shrubarea3))
-summary(as.factor(effects_df$Ht_cm1))
-summary(df$Ht_cm1)
-```
-
-## Check for whether certain pine tree sizes only occur at certain shrub competition levels
-```{r}
-summary(df$sqrt_shrubarea3[df$Ht_cm1< mean(df$Ht_cm1)])
-summary(df$sqrt_shrubarea3[df$Ht_cm1> mean(df$Ht_cm1)])
-```
-
-## Plot effects of shrubarea WITH interaction
-
-### Look at summary of results
-```{r}
-summary_LM_int <- summary(LM_int)
-```
-
-```{r}
-ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit), group = Ht_cm1, col = Ht_cm1))+
-  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper), group = Ht_cm1, fill = Ht_cm1), alpha = .5)+
-  theme_bw()+
-  #xlab("                                  Shrub competition")+
-  xlab(bquote('                           Shrub competition ' ))+
-  ylab("Relative growth rate")+
-  #ggtitle("Pine growth in relation to shrub environment within 2 m")+
-  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
-  #ylim(c(0.04,0.3))+
-  labs(fill = "Juvenile tree height (cm)")+
-  labs(col = "Juvenile tree height (cm)")+
-  theme(legend.position = c(0.62, 0.8))+
-  theme(text = element_text(size = 11),
-        #panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank())
-ggsave(file = "../../results/figures/FireFootprints/PineVertRel_int.png", width = 3, height = 3, dpi = 400)
-```
-
-
-# Plot shrub effects WITHOUT interaction
-
-### Re-create effects plots using predictorEffects() and ggplot
+## Re-create effects plots using predictorEffects() and ggplot
 
 ```{r}
 eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
@@ -386,14 +317,13 @@ effects_df <- as.data.frame(eff_shrubarea)
 head(effects_df)
 ```
 
-### Transform variables back to original units
+## Transform variables back to original units
 ```{r}
 effects_df <- effects_df %>% 
   mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) ) 
 ```
 
-
-### Save min and max bounds for use in the fir graph
+## Save min and max bounds for use in the fir graph
 ```{r}
 plot_min <- exp(min(effects_df$lower))
 plot_max <- exp(max(effects_df$upper))
@@ -408,15 +338,14 @@ ggplot(effects_df)+
   theme_bw()+
   xlab(bquote('                           Shrub competition ' ))+
   ylab("Relative growth rate")+
-  #ggtitle("Pine growth in relation to shrub environment within 2 m")+
-  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .5, position = "jitter", sides = "b")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
   ylim(c(plot_min, plot_max))+
   labs(fill = "Juvenile tree height (cm)")+
   labs(col = "Juvenile tree height (cm)")+
   theme(legend.position = c(0.62, 0.8))+
   theme(
         panel.grid.minor = element_blank(),
-        #panel.grid.major = element_blank(),
+        panel.grid.major.x = element_blank(),
         text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel_noint.png", width = 3, height = 3, dpi = 400)
 ```
@@ -443,11 +372,88 @@ summary(df$Cov1.3/(300*4))
 ```
 
 # Find predicted mean growth for min, max, median
+
+## min
 ```{r}
-fit_median <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - median)),]$fit
-fit_min <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - min)),]$fit
-fit_max <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - max)),]$fit
-fit_mean <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - mean)),]$fit
+newdata_means <- as.data.frame(LMdf) %>% 
+  ungroup() %>% 
+  summarise_if(is.numeric, .funs = c("mean")) %>% 
+  mutate(sqrt_shrubarea3 = min(LMdf$sqrt_shrubarea3))
+
+newdata_cat <- LMdf %>% 
+  select(ShrubSpp03, Year) %>% 
+  distinct()
+sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
+  rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
+newdata <-cbind(newdata_means, newdata_cat)
+newdata <- cbind(sdlg, newdata)
+Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+newdata <- full_join(Fires, newdata)
+pred <- predict(LM, newdata = newdata)
+gr_minshrub_pipo <- exp(mean(pred))
+```
+
+
+## max
+```{r}
+newdata_means <- as.data.frame(LMdf) %>% 
+  ungroup() %>% 
+  summarise_if(is.numeric, .funs = c("mean")) %>% 
+  mutate(sqrt_shrubarea3 = max(LMdf$sqrt_shrubarea3))
+
+newdata_cat <- LMdf %>% 
+  select(ShrubSpp03, Year) %>% 
+  distinct()
+sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
+  rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
+newdata <-cbind(newdata_means, newdata_cat)
+newdata <- cbind(sdlg, newdata)
+Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+newdata <- full_join(Fires, newdata)
+pred <- predict(LM, newdata = newdata)
+gr_maxshrub_pipo <- exp(mean(pred))
+```
+
+
+## median
+```{r}
+newdata_means <- as.data.frame(LMdf) %>% 
+  ungroup() %>% 
+  summarise_if(is.numeric, .funs = c("mean")) %>% 
+  mutate(sqrt_shrubarea3 = median(LMdf$sqrt_shrubarea3))
+
+newdata_cat <- LMdf %>% 
+  select(ShrubSpp03, Year) %>% 
+  distinct()
+sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
+  rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
+newdata <-cbind(newdata_means, newdata_cat)
+newdata <- cbind(sdlg, newdata)
+Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+newdata <- full_join(Fires, newdata)
+pred <- predict(LM, newdata = newdata)
+gr_medshrub_pipo <- exp(mean(pred))
+```
+
+
+## Save them
+```{r}
+save(gr_minshrub_pipo, file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
+save(gr_maxshrub_pipo, file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
+save(gr_medshrub_pipo, file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
+```
+
+
+
+## Similar method but using results from effects package
+
+```{r}
+fit_median <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - median_shrub)),]$fit
+fit_median
+fit_min <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - min_shrub)),]$fit
+fit_min
+fit_max <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - max_shrub)),]$fit
+#fit_mean <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - mean_shrub)),]$fit
 mean <- mean(df$shrubarea3/10000)
 print(paste("fit_median = ", exp(fit_median)))
 print(paste("fit_min = ", exp(fit_min)))
@@ -455,20 +461,13 @@ print(paste("fit_max = ", exp(fit_max)))
 print(paste("fit_median_log = ", fit_median))
 print(paste("fit_min_log = ", fit_min))
 print(paste("fit_max_log = ", fit_max))
-print(paste("fit_mean_log = ", fit_mean))
+#print(paste("fit_mean_log = ", fit_mean))
 ```
 
 ```{r}
 gr_minshrub_pipo <- exp(fit_min)
 gr_maxshrub_pipo <- exp(fit_max)
 gr_medshrub_pipo <- exp(fit_median)
-```
-
-## Save them
-```{r}
-save(gr_minshrub_pipo, file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
-save(gr_maxshrub_pipo, file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
-save(gr_medshrub_pipo, file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
 ```
 
 ## Repeat for 60% shrub cover and 86 cm ht similar to what's in COllins and ROller
@@ -489,8 +488,9 @@ head(effects_df)
 ```
 
 ```{r}
-ggplot(effects_df)+
+ggplot(effects_df %>% filter(ShrubSpp03 != "Other"  ))+
   geom_point(aes(x = ShrubSpp03, y = exp(fit)))+
+  ylim(.1, .25)+
   ylab("Juvenile pine relative growth rate")+
   theme_bw()+
   geom_errorbar(aes(x = ShrubSpp03, ymin=exp(lower), ymax=exp(upper)), width=.1) +
@@ -511,7 +511,7 @@ ggplot(effects_df)+
   
 
 
- ggsave(file = "../../results/figures/FireFootprints/PineVertShrubSpp.png", width = 4, height = 4, dpi = 400)
+ggsave(file = "../../results/figures/FireFootprints/PineVertShrubSpp.png", width = 4, height = 4, dpi = 400)
 ```
 
 # List the final seedlings used
