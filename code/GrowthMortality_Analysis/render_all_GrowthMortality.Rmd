@@ -10,7 +10,7 @@ output:
 This code contains all of the steps necessary to clean and analyze Growth Mortality data
  
 # Cleaning, etc.
-```{r cleaning, message = F, warning = F}
+```{r cleaning_growth, message = F, warning = F}
 library(knitr)
 setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 strt <- Sys.time()
@@ -26,7 +26,7 @@ print(Sys.time() - strt)
 ```
 
 # Main Analysis
-```{r main_analysis, message = F, warning = F}
+```{r main_analysis_growth, message = F, warning = F}
 strt <- Sys.time()
 rmarkdown::render("growth_analysis_vert.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations.Rmd", "html_document", quiet = T)
@@ -34,3 +34,16 @@ rmarkdown::render("simulations_hybrid.Rmd", "html_document", quiet = T)
 rmarkdown::render("dendro_analysis.Rmd", "html_document", quiet = T)
 print(Sys.time()- strt)
 ```
+
+# Checks - these should all be TRUE
+```{r checks_growth}
+source(purl("checks_growth_mort.Rmd", quiet = T))
+nrow(check_mates) ==0
+df_duplicates %>% 
+  filter(duplicated(SEEDLING)) %>% nrow() ==0
+df_missing %>% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %>% 
+  dplyr::select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes) %>% 
+  nrow()==0
+```
+

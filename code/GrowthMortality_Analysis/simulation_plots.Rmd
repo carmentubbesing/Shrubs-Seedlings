@@ -1,0 +1,244 @@
+---
+title: "Plot simulation results"
+author: "Carmen"
+date: "September 4, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include=F}
+require(tidyverse)
+```
+
+# Define ymax to be used throughout both abco and pipo graphs
+
+## Set y limits for graphs later
+```{r}
+ymax_set <- 10
+```
+
+# Load data
+
+## Growth results from fire footprints
+```{r}
+load(file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
+load(file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
+load(file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
+```
+
+
+# ABCO
+
+## Load simulation results
+```{r}
+load(file = "../../results/coefficients/mean_coef_gr_abco.Rdata")
+load(file = "../../results/coefficients/mean_coef_int_abco.Rdata")
+
+load(file = "../../results/coefficients/coef_gr_abco.Rdata")
+load(file = "../../results/coefficients/coef_int_abco.Rdata")
+```
+
+## Plot the mean coefficient and CI
+
+### Calculate probabilities
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+dfgraph <- as.data.frame(log_gr_rel)
+dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
+summary(dfgraph$prob)
+```
+
+### Calculate confidence intervals to plot
+```{r}
+CI_low_int <- sort(coefficient_int)[25]
+CI_high_int <- sort(coefficient_int)[975]
+CI_low_gr <- sort(coefficient_gr)[25]
+CI_high_gr <- sort(coefficient_gr)[975]
+```
+
+#### lower
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_lower <- as.data.frame(log_gr_rel)
+dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
+summary(dfgraph_lower$prob)
+```
+
+#### upper
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_upper <- as.data.frame(log_gr_rel)
+dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
+summary(dfgraph_upper$prob)
+```
+
+### Adjust probabilities to be yearly, since I found dead trees from 3 years 
+```{r}
+head(dfgraph)
+dfgraph <- dfgraph %>% 
+  mutate(prob = prob/3)
+head(dfgraph_lower)
+dfgraph_lower <- dfgraph_lower %>% 
+  mutate(prob = prob/3)
+dfgraph_upper <- dfgraph_upper %>% 
+  mutate(prob = prob/3)
+```
+
+```{r}
+ggplot()+
+  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
+  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  theme_bw()+
+  #xlim(0.03, .27)+
+  ylim(0, ymax_set)+
+   theme(text = element_text(size = 11),
+        panel.grid.minor = element_blank())+
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
+  ylab("Annual % mortality probability")
+ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 4, width = 5)
+```
+
+# Calculate the min and max and median mortality probability captured by the fire footprint growth data
+
+## Create a function for calculating mort probability
+```{r}
+calc_prob_mort <- function(log_growth){
+  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
+  return(prob_3_yrs/3)
+}
+```
+
+## Check it
+```{r}
+test_log_growth <- head(dfgraph)[1,1]
+test_log_growth
+calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
+calc_prob_mort(log(.05))
+```
+
+```{r}
+prob_median <-calc_prob_mort(log(gr_medshrub_abco))
+prob_median
+```
+
+## Use it
+```{r}
+prob_min <- calc_prob_mort(log(gr_minshrub_abco))
+prob_max <- calc_prob_mort(log(gr_maxshrub_abco))
+
+prob_min
+prob_max
+
+(prob_max-prob_min)/prob_min
+```
+
+## Compile the results
+```{r}
+abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
+
+abco_growth_pred <- as.data.frame(t(abco_growth_pred)) %>% 
+  rename(ABCO_perc_mort = V1) %>% 
+  mutate(metric = names(as.data.frame(abco_growth_pred))) %>% 
+  mutate(ABCO_perc_mort = ABCO_perc_mort*100) %>% 
+  dplyr::select(metric, ABCO_perc_mort)
+abco_growth_pred
+```
+
+## Compile the results
+```{r}
+abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
+abco_growth_pred <- as.data.frame(t(abco_growth_pred)) 
+row.names(abco_growth_pred) <- c("min", "max", "median")
+abco_growth_pred
+abco_growth_pred <- abco_growth_pred %>% 
+  mutate(shrubs = row.names(abco_growth_pred)) %>%  
+  rename(Mort = "V1") %>% 
+  mutate(Species = "ABCO") %>% 
+  mutate(Perc_mort = Mort*100) 
+abco_growth_pred
+```
+
+# PIPO
+
+## Load simulation results
+```{r}
+load(file = "../../results/coefficients/mean_coef_gr_pipo.Rdata")
+load(file = "../../results/coefficients/mean_coef_int_pipo.Rdata")
+
+load(file = "../../results/coefficients/coef_gr_pipo.Rdata")
+load(file = "../../results/coefficients/coef_int_pipo.Rdata")
+```
+
+## Plot the mean coefficient and CI
+
+### Calculate probabilities
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+dfgraph <- as.data.frame(log_gr_rel)
+dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
+```
+
+### CI
+```{r}
+CI_low_int <- sort(coefficient_int)[25]
+CI_high_int <- sort(coefficient_int)[975]
+CI_low_gr <- sort(coefficient_gr)[25]
+CI_high_gr <- sort(coefficient_gr)[975]
+```
+
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_lower <- as.data.frame(log_gr_rel)
+dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
+summary(dfgraph_lower$prob)
+```
+
+```{r}
+log_gr_rel <- seq(log(.03), log(.3), length=1000)
+head(log_gr_rel)
+dfgraph_upper <- as.data.frame(log_gr_rel)
+dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
+summary(dfgraph_upper$prob)
+```
+
+### Adjust probabilities to be yearly, since I found dead trees from 3 years 
+```{r}
+head(dfgraph)
+dfgraph <- dfgraph %>%
+  mutate(prob = prob/3)
+head(dfgraph_lower)
+dfgraph_lower <- dfgraph_lower %>%
+  mutate(prob = prob/3)
+dfgraph_upper <- dfgraph_upper %>%
+  mutate(prob = prob/3)
+```
+
+# Plot it
+
+```{r}
+ggplot()+
+  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
+  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
+  theme_bw()+
+  ylim(0, ymax_set)+
+  #xlim(0.03, .27)+
+  ylab("Annual % mortality probability")+
+  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
+  theme(panel.grid.minor = element_blank(),
+        text = element_text(size = 11))
+ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
+```
+
+```{r}
+save(results, file = "../../results/tables/mort_rates.Rdata")
+write.csv(results_nomedian, file = "../../results/tables/mort_rates.csv")
+```
+
+
+

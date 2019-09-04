@@ -1,0 +1,82 @@
+---
+title: "Checks_growth_mort"
+author: "Carmen"
+date: "August 30, 2019"
+output: 
+    html_document:
+      toc: TRUE
+---
+
+```{r}
+require(tidyverse)
+require(dplR)
+```
+
+
+# Load data - this is the final df created by Clean_vert that's used in the simulations
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load("../../compiled_data/growth_mortality/df_vert.Rdata")
+```
+
+```{r}
+df %>% group_by(SPECIES, DEAD) %>% summarize(n())
+```
+
+# Look for trees with no mate
+```{r}
+check_mates <- df %>% group_by(PAIR) %>% filter(n() != 2)
+nrow(check_mates) ==0
+```
+
+# Look for duplicates
+```{r}
+df_duplicates <- df
+df_duplicates %>% 
+  filter(duplicated(SEEDLING)) %>% nrow() ==0
+```
+
+# Look at missing data
+```{r}
+df_missing <- df
+df_missing %>% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %>% 
+  dplyr::select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes) %>% 
+  nrow()==0
+```
+
+# Check average diameters
+```{r}
+df %>% 
+  filter(BAS_DIA_AVE != (BAS_DIA_1_mm + BAS_DIA_2_mm)/2) %>% nrow() ==0
+```
+
+# Check a random dendro file and random series within that file against the original data
+```{r}
+files <- list.files("../../../../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/data/Growth Mortality Dendro Data/", full.names = T, pattern = ".raw")
+sample <- sample(length(files), 1)
+file <- files[sample]
+rwl <- read.rwl(file)
+```
+
+```{r}
+series_sample <- sample(names(rwl), 1)
+series_sample_data <- as.data.frame(rwl)[series_sample]
+series_sample_data
+```
+
+```{r}
+remove(df)
+load(file = "../../compiled_data/dendro_joined.Rdata")
+compiled_dendro <- df
+remove(rwl)
+load(file = "../../compiled_data/rwl_joined.Rdata")
+compiled_rwl <- rwl
+```
+
+```{r}
+compiled_dendro %>% filter(series==series_sample)
+series_sample_data
+as.data.frame(compiled_rwl)[series_sample]
+```
+

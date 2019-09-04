@@ -189,6 +189,7 @@ summary {
 <ul>
 <li><a href="#cleaning-etc.">Cleaning, etc.</a></li>
 <li><a href="#main-analysis">Main Analysis</a></li>
+<li><a href="#checks---these-should-all-be-true">Checks - these should all be TRUE</a></li>
 </ul>
 </div>
 
@@ -207,7 +208,7 @@ rmarkdown::render(&quot;date_dead_dendro_pipo.Rmd&quot;, &quot;html_document&quo
 rmarkdown::render(&quot;Clean_vert.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;mortality_counts.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time() - strt)</code></pre>
-<pre><code>## Time difference of 1.083654 mins</code></pre>
+<pre><code>## Time difference of 1.136872 mins</code></pre>
 </div>
 <div id="main-analysis" class="section level1">
 <h1>Main Analysis</h1>
@@ -217,7 +218,40 @@ rmarkdown::render(&quot;simulations.Rmd&quot;, &quot;html_document&quot;, quiet 
 rmarkdown::render(&quot;simulations_hybrid.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;dendro_analysis.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()- strt)</code></pre>
-<pre><code>## Time difference of 5.092819 mins</code></pre>
+<pre><code>## Time difference of 4.96067 mins</code></pre>
+</div>
+<div id="checks---these-should-all-be-true" class="section level1">
+<h1>Checks - these should all be TRUE</h1>
+<pre class="r"><code>source(purl(&quot;checks_growth_mort.Rmd&quot;, quiet = T))</code></pre>
+<pre><code>## Attempting to automatically detect format.
+## Assuming a Tucson format file.
+## There does not appear to be a header in the rwl file
+## There are 15 series
+## 1        182bR1       2010    2016   0.01
+## 2        182bR2       2010    2016   0.01
+## 3        182bR3       2010    2016   0.01
+## 4        184b-PR1     2010    2016   0.01
+## 5        184b-PR2     2010    2016   0.01
+## 6        184b-PR3     2010    2016   0.01
+## 7        168bR1       2011    2016   0.01
+## 8        168bR2       2011    2016   0.01
+## 9        168bR3       2011    2016   0.01
+## 10       61bR1        2009    2016   0.01
+## 11       61bR2        2009    2016   0.01
+## 12       61bR3        2009    2016   0.01
+## 13       93bR1        2011    2016   0.01
+## 14       93bR2        2011    2016   0.01
+## 15       93bR3        2011    2016   0.01</code></pre>
+<pre class="r"><code>nrow(check_mates) ==0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>df_duplicates %&gt;% 
+  filter(duplicated(SEEDLING)) %&gt;% nrow() ==0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>df_missing %&gt;% 
+  filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %&gt;% 
+  dplyr::select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes) %&gt;% 
+  nrow()==0</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 </div>
 
 

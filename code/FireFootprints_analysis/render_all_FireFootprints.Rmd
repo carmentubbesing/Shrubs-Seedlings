@@ -15,7 +15,7 @@ setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 ```
 
 # Cleaning
-```{r cleaning, message = F, warning = F}
+```{r cleaning_footprints, message = F, warning = F}
 strt <- Sys.time()
 rmarkdown::render("clean_seedlings_2016.Rmd", "html_document", quiet = T)
 rmarkdown::render("clean_shrubs.Rmd", "html_document", quiet = T)

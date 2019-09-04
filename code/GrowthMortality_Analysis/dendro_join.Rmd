@@ -54,7 +54,7 @@ for(i in 1:length(files)){
 ## Rearrange
 ```{r}
 df <- df %>% 
-  dplyr::select(series, board, everything())
+  dplyr::select(series, board, `2004`, `2005`, `2006`, `2007`, `2008`, `2009`, everything())
 df_bu <- df
 ```
 

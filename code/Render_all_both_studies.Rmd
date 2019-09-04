@@ -1,0 +1,14 @@
+---
+title: "render_both_study_parts"
+author: "Carmen"
+date: "September 4, 2019"
+output: html_document
+---
+
+```{r cleaning, message = F, warning = F}
+library(knitr)
+setwd("~/Shrubs-Seedlings/code/")
+rmarkdown::render("FireFootprints_analysis/render_all_FireFootprints.Rmd", "html_document", quiet = T)
+rmarkdown::render("GrowthMortality_Analysis/render_all_GrowthMortality.Rmd", "html_document", quiet = T)
+strt <- Sys.time()
+```

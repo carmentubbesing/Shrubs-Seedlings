@@ -34,12 +34,6 @@ dfa <- df %>% filter(SPECIES == "ABCO")
 dfp <- df %>% filter(SPECIES == "PIPO")
 ```
 
-# Define ymax to be used throughout both abco and pipo graphs
-
-## Set y limits for graphs later
-```{r}
-ymax_set <- 10
-```
 
 #  _
 # ABCO SIMULATIONS
@@ -56,18 +50,23 @@ means
 sd
 ```
 
+### Create smooth PDF for live and dead
+
+#### Dead
 ```{r}
 x <- seq(-4, 0, length=1000)
 y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
 pdf_dead <- as.data.frame(cbind(x, y))
 ```
 
+#### Live
 ```{r}
 x <- seq(-4, 0, length=1000)
 y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
 pdf_live <- as.data.frame(cbind(x, y))
 ```
 
+#### Plot PDF with histogram of growth values
 ```{r}
 ggplot()+
   geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
@@ -91,8 +90,9 @@ n_dead_pop <- unlist(dfa %>%
 n_dead_pop
 ```
 
+## Come up with # of live seedlings in simulated population by multiplying the dead ones by the ratio of live:dead from surveys
 ```{r}
-n_alive_pop <- n_dead_pop*(1103/25)
+n_alive_pop <- round(n_dead_pop*(1103/25))
 ```
 
 ## Count abco n in MEASURED TREES for live and dead
@@ -114,7 +114,7 @@ gr_set_alive <- dfa %>%
 gr_set_alive <- gr_set_alive[[1]]
 ```
 
-## Loop it 
+## Loop the simulation 1000 times
 ```{r}
 coefficient_gr <- c()
 coefficient_int <- c()
@@ -134,153 +134,13 @@ mean_coef_gr <- mean(coefficient_gr)
 mean_coef_int <- mean(coefficient_int)
 ```
 
-## Plot the mean coefficient and CI
-
-### Calculate probabilities
+## Save
 ```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-dfgraph <- as.data.frame(log_gr_rel)
-dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
-summary(dfgraph$prob)
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_abco.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_abco.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_abco.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_abco.Rdata")
 ```
-
-### Calculate confidence intervals to plot
-```{r}
-CI_low_int <- sort(coefficient_int)[25]
-CI_high_int <- sort(coefficient_int)[975]
-CI_low_gr <- sort(coefficient_gr)[25]
-CI_high_gr <- sort(coefficient_gr)[975]
-```
-
-#### lower
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_lower <- as.data.frame(log_gr_rel)
-dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
-summary(dfgraph_lower$prob)
-```
-
-#### upper
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_upper <- as.data.frame(log_gr_rel)
-dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
-summary(dfgraph_upper$prob)
-```
-
-### Adjust probabilities to be yearly, since I found dead trees from 3 years 
-```{r}
-head(dfgraph)
-dfgraph <- dfgraph %>% 
-  mutate(prob = prob/3)
-head(dfgraph_lower)
-dfgraph_lower <- dfgraph_lower %>% 
-  mutate(prob = prob/3)
-dfgraph_upper <- dfgraph_upper %>% 
-  mutate(prob = prob/3)
-```
-
-
-# Plot it
-
-## Load growth results from fire footprings
-```{r}
-load(file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
-load(file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
-load(file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
-```
-
-```{r}
-ggplot()+
-  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
-  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  theme_bw()+
-  geom_vline(aes(xintercept = gr_minshrub_abco), col = "dark orange")+
-  geom_text(aes(x= gr_minshrub_abco, label="\ngrowth at minimum shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
-  
-  geom_vline(aes(xintercept = gr_maxshrub_abco), col = "dark red")+
-  geom_text(aes(x= gr_maxshrub_abco, label="\ngrowth at maximum shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
-  
-  geom_vline(aes(xintercept = gr_medshrub_abco), col = "red")+
-  geom_text(aes(x= gr_medshrub_abco, label="\ngrowth at median shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) +
-  
-  xlim(0.03, .27)+
-  ylim(0, ymax_set)+
-   theme(text = element_text(size = 11),
-        panel.grid.minor = element_blank())+
-  #ggtitle("Fir mortality probability in relation to growth\nbased on simulation results, with 95% confidence intervals")+    ylab("Annual % mortality probability")+
-  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
-  ylab("Annual % mortality probability")
-ggsave("../../results/figures/GrowthMortality/predict_mortality_abco.png", height = 4, width = 5)
-```
-
-
-# Calculate the min and max and median mortality probability captured by the fire footprint growth data
-
-
-## Create a function for calculating mort probability
-```{r}
-calc_prob_mort <- function(log_growth){
-  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
-  return(prob_3_yrs/3)
-}
-```
-
-## Check it
-```{r}
-test_log_growth <- head(dfgraph)[1,1]
-test_log_growth
-calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
-calc_prob_mort(log(.05))
-```
-
-
-```{r}
-prob_median <-calc_prob_mort(log(gr_medshrub_abco))
-prob_median
-```
-
-## Use it
-```{r}
-prob_min <- calc_prob_mort(log(gr_minshrub_abco))
-prob_max <- calc_prob_mort(log(gr_maxshrub_abco))
-
-prob_min
-prob_max
-
-(prob_max-prob_min)/prob_min
-```
-
-## Compile the results
-```{r}
-abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
-
-abco_growth_pred <- as.data.frame(t(abco_growth_pred)) %>% 
-  rename(ABCO_perc_mort = V1) %>% 
-  mutate(metric = names(as.data.frame(abco_growth_pred))) %>% 
-  mutate(ABCO_perc_mort = ABCO_perc_mort*100) %>% 
-  dplyr::select(metric, ABCO_perc_mort)
-abco_growth_pred
-```
-
-
-## Compile the results
-```{r}
-abco_growth_pred <- cbind(prob_min, prob_max, prob_median)
-abco_growth_pred <- as.data.frame(t(abco_growth_pred)) 
-row.names(abco_growth_pred) <- c("min", "max", "median")
-abco_growth_pred
-abco_growth_pred <- abco_growth_pred %>% 
-  mutate(shrubs = row.names(abco_growth_pred)) %>%  
-  rename(Mort = "V1") %>% 
-  mutate(Species = "ABCO") %>% 
-  mutate(Perc_mort = Mort*100) 
-abco_growth_pred
-```
-
 
 # _
 # PIPO SIMULATIONS
@@ -374,181 +234,12 @@ mean_coef_gr <- mean(coefficient_gr)
 mean_coef_int <- mean(coefficient_int)
 ```
 
-## Plot the mean coefficient and CI
 
-### Calculate probabilities
+## Save
 ```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-dfgraph <- as.data.frame(log_gr_rel)
-dfgraph$prob <- exp(mean_coef_int + mean_coef_gr*log_gr_rel)/(1+exp(mean_coef_int + mean_coef_gr*log_gr_rel))
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_pipo.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_pipo.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_pipo.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_pipo.Rdata")
 ```
-
-### CI
-```{r}
-CI_low_int <- sort(coefficient_int)[25]
-CI_high_int <- sort(coefficient_int)[975]
-CI_low_gr <- sort(coefficient_gr)[25]
-CI_high_gr <- sort(coefficient_gr)[975]
-```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_lower <- as.data.frame(log_gr_rel)
-dfgraph_lower$prob <- exp(mean_coef_int + CI_low_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_low_gr*log_gr_rel))
-summary(dfgraph_lower$prob)
-```
-
-```{r}
-log_gr_rel <- seq(log(.03), log(.3), length=1000)
-head(log_gr_rel)
-dfgraph_upper <- as.data.frame(log_gr_rel)
-dfgraph_upper$prob <- exp(mean_coef_int + CI_high_gr*log_gr_rel)/(1+exp(mean_coef_int + CI_high_gr*log_gr_rel))
-summary(dfgraph_upper$prob)
-```
-
-### Adjust probabilities to be yearly, since I found dead trees from 3 years 
-```{r}
-head(dfgraph)
-dfgraph <- dfgraph %>%
-  mutate(prob = prob/3)
-head(dfgraph_lower)
-dfgraph_lower <- dfgraph_lower %>%
-  mutate(prob = prob/3)
-dfgraph_upper <- dfgraph_upper %>%
-  mutate(prob = prob/3)
-```
-
-# Plot it
-
-## Load growth results from fire footprings
-```{r}
-load(file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
-load(file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
-load(file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
-```
-
-
-```{r}
-ggplot()+
-  geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
-  geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  geom_line(data = dfgraph_upper, aes(x = exp(log_gr_rel), y = prob*100), linetype = "dashed")+
-  theme_bw()+
-  ylim(0, ymax_set)+
-  xlim(0.03, .27)+
-  ylab("Annual % mortality probability")+
-  xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
-  theme(panel.grid.minor = element_blank(),
-        text = element_text(size = 11))+
-  
-  geom_vline(aes(xintercept = gr_minshrub_pipo), col = "dark orange")+
-  geom_text(aes(x= gr_minshrub_pipo, label="\ngrowth at minimum shrub competition", y = ymax_set*.6), colour="dark orange", angle=90, size = 3) +
-  
-  geom_vline(aes(xintercept = gr_maxshrub_pipo), col = "dark red")+
-  geom_text(aes(x= gr_maxshrub_pipo, label="\ngrowth at maximum shrub competition", y = ymax_set*.6), colour="dark red", angle=90, size = 3) +
-  
-  geom_vline(aes(xintercept = gr_medshrub_pipo), col = "red")+
-  geom_text(aes(x= gr_medshrub_pipo, label="\ngrowth at median shrub competition", y = ymax_set*.6), colour="red", angle=90, size = 3) 
- 
-ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
-```
-
-# Calculate the range of mortality probabilities captured by the fire footprint growth data
-
-## Create a function for calculating mort probability
-```{r}
-calc_prob_mort <- function(log_growth){
-  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
-  return(prob_3_yrs/3)
-}
-```
-
-## Check it
-```{r}
-test_log_growth <- head(dfgraph)[1,1]
-test_log_growth
-calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
-```
-
-## Use it
-```{r}
-prob_min <- calc_prob_mort(log(gr_minshrub_pipo))
-prob_max <- calc_prob_mort(log(gr_maxshrub_pipo))  
-
-prob_min
-prob_max
-prob_min-prob_max
-(prob_max-prob_min)/prob_min
-```
-
-```{r}
-prob_median <-calc_prob_mort(log(gr_medshrub_pipo))
-prob_median
-```
-
-## Compile the results
-```{r}
-pipo_growth_pred <- cbind(prob_min, prob_max, prob_median)
-pipo_growth_pred <- as.data.frame(t(pipo_growth_pred)) 
-row.names(pipo_growth_pred) <- c("min", "max", "median")
-pipo_growth_pred
-pipo_growth_pred <- pipo_growth_pred %>% 
-  mutate(shrubs = row.names(pipo_growth_pred)) %>%  
-  rename(Mort = "V1") %>% 
-  mutate(Species = "PIPO") %>% 
-  mutate(Perc_mort = Mort*100) 
-pipo_growth_pred
-```
-
-# Compile results for both species
-
-```{r}
-results <- full_join(abco_growth_pred, pipo_growth_pred)
-results
-```
-
-```{r}
-abco_growth <- cbind(gr_minshrub_abco, gr_maxshrub_abco, gr_medshrub_abco)
-abco_growth <- as.data.frame(t(abco_growth))
-row.names(abco_growth) <- c("min", "max", "median")
-abco_growth <- abco_growth %>%
-  mutate(shrubs = row.names(abco_growth)) %>% 
-  rename(Growth = "V1") %>% 
-  mutate(Species = "ABCO")
-abco_growth
-```
-
-```{r}
-pipo_growth <- cbind(gr_minshrub_pipo, gr_maxshrub_pipo, gr_medshrub_pipo)
-pipo_growth <- as.data.frame(t(pipo_growth))
-row.names(pipo_growth) <- c("min", "max", "median")
-pipo_growth <- pipo_growth %>%
-  mutate(shrubs = row.names(pipo_growth)) %>% 
-  rename(Growth = "V1") %>% 
-  mutate(Species = "PIPO")
-pipo_growth
-```
-
-```{r}
-growth <- rbind(abco_growth, pipo_growth)
-growth
-```
-
-```{r}
-results_final <- full_join(results, growth) %>% 
-  dplyr::select(shrubs, Species, Growth, Perc_mort) %>% 
-  arrange(desc(shrubs), desc(Species))
-results_final
-results_nomedian <- results_final %>% 
-  filter(shrubs != "median")
-results_nomedian
-```
-
-
-```{r}
-save(results, file = "../../results/tables/mort_rates.Rdata")
-write.csv(results_nomedian, file = "../../results/tables/mort_rates.csv")
-```
-
 
