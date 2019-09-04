@@ -376,11 +376,11 @@ LMdf &lt;- droplevels(LMdf)</code></pre>
 <h2>Convert vars to formula structure</h2>
 <pre class="r"><code>vars_one &lt;- paste(vars, collapse = &quot; + &quot;)
 vars_one</code></pre>
-<pre><code>## [1] &quot;Ht_cm1 + Years + sqrt_shrubarea3 + heatload + BasDia2016.cm + ShrubSpp03 + Year&quot;</code></pre>
+<pre><code>## [1] &quot;Ht_cm1 + Years + sqrt_shrubarea3 + heatload + ShrubSpp03 + BasDia2016.cm + Year&quot;</code></pre>
 <pre class="r"><code>f &lt;- formula(paste(&quot;VertGrowth_Rel ~ &quot;,vars_one))
 f</code></pre>
 <pre><code>## VertGrowth_Rel ~ Ht_cm1 + Years + sqrt_shrubarea3 + heatload + 
-##     BasDia2016.cm + ShrubSpp03 + Year</code></pre>
+##     ShrubSpp03 + BasDia2016.cm + Year</code></pre>
 </div>
 <div id="run-lme-model" class="section level2">
 <h2>Run lme model</h2>
@@ -410,8 +410,8 @@ corvif(LMdf %&gt;% select(!!vars))</code></pre>
 ## Years           4.860048  1     2.204552
 ## sqrt_shrubarea3 2.233857  1     1.494609
 ## heatload        3.526984  1     1.878027
-## BasDia2016.cm   6.428203  1     2.535390
 ## ShrubSpp03      2.810259  5     1.108855
+## BasDia2016.cm   6.428203  1     2.535390
 ## Year            1.300583  2     1.067910</code></pre>
 <pre class="r"><code>vif(LM)</code></pre>
 <pre><code>##                     GVIF Df GVIF^(1/(2*Df))
@@ -419,8 +419,8 @@ corvif(LMdf %&gt;% select(!!vars))</code></pre>
 ## Years           4.828155  1        2.197306
 ## sqrt_shrubarea3 2.203537  1        1.484431
 ## heatload        3.424898  1        1.850648
-## BasDia2016.cm   6.132043  1        2.476296
 ## ShrubSpp03      2.793486  5        1.108191
+## BasDia2016.cm   6.132043  1        2.476296
 ## Year            1.446477  2        1.096675</code></pre>
 <!-- A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok. -->
 <!-- ## Take out variable with the highest VIF -->
@@ -486,7 +486,7 @@ plot(LM_no_log)</code></pre>
 ## Random effects:
 ##  Formula: ~1 | Fire
 ##          (Intercept)
-## StdDev: 1.458006e-05
+## StdDev: 1.457842e-05
 ## 
 ##  Formula: ~1 | Sdlg %in% Fire
 ##         (Intercept)  Residual
@@ -499,41 +499,41 @@ plot(LM_no_log)</code></pre>
 ## Years           -0.3392717 0.07807653 154  -4.345373  0.0000
 ## sqrt_shrubarea3 -0.2301320 0.05269488  80  -4.367255  0.0000
 ## heatload        -0.1087555 0.06550283  80  -1.660317  0.1008
-## BasDia2016.cm    0.2950796 0.08825306  80   3.343562  0.0013
 ## ShrubSpp03CECO   0.1625540 0.10300917  80   1.578054  0.1185
 ## ShrubSpp03CEIN   0.2623580 0.13585316  80   1.931188  0.0570
 ## ShrubSpp03CHFO   0.0728016 0.12900645  80   0.564325  0.5741
 ## ShrubSpp03LIDE  -0.1004373 0.14894532  80  -0.674323  0.5020
 ## ShrubSpp03Other  0.2566763 0.16123887  80   1.591901  0.1154
+## BasDia2016.cm    0.2950796 0.08825306  80   3.343562  0.0013
 ## Year2016         0.1856217 0.07053561 154   2.631602  0.0094
 ## Year2017        -0.1344223 0.08181971 154  -1.642909  0.1024
 ##  Correlation: 
-##                 (Intr) Ht_cm1 Years  sqrt_3 heatld BD2016 SS03CEC SS03CEI
+##                 (Intr) Ht_cm1 Years  sqrt_3 heatld SS03CEC SS03CEI SS03CH
 ## Ht_cm1           0.235                                                   
 ## Years           -0.023 -0.161                                            
 ## sqrt_shrubarea3 -0.163 -0.434 -0.233                                     
 ## heatload         0.199 -0.067  0.732 -0.048                              
-## BasDia2016.cm   -0.118 -0.835 -0.118  0.367 -0.033                       
-## ShrubSpp03CECO  -0.614 -0.118  0.250 -0.024  0.042  0.001                
-## ShrubSpp03CEIN  -0.502  0.033  0.239 -0.214 -0.079 -0.267  0.451         
-## ShrubSpp03CHFO  -0.585 -0.018 -0.214  0.197 -0.421  0.011  0.379   0.317 
-## ShrubSpp03LIDE  -0.454 -0.051  0.122  0.256 -0.007  0.019  0.371   0.237 
-## ShrubSpp03Other -0.436  0.002  0.261 -0.015  0.097 -0.130  0.369   0.336 
-## Year2016        -0.441 -0.223 -0.152  0.161 -0.143  0.224  0.001  -0.033 
-## Year2017        -0.444 -0.452 -0.224  0.295 -0.201  0.441  0.000  -0.073 
-##                 SS03CH SS03LI ShS03O Yr2016
+## ShrubSpp03CECO  -0.614 -0.118  0.250 -0.024  0.042                       
+## ShrubSpp03CEIN  -0.502  0.033  0.239 -0.214 -0.079  0.451                
+## ShrubSpp03CHFO  -0.585 -0.018 -0.214  0.197 -0.421  0.379   0.317        
+## ShrubSpp03LIDE  -0.454 -0.051  0.122  0.256 -0.007  0.371   0.237   0.365
+## ShrubSpp03Other -0.436  0.002  0.261 -0.015  0.097  0.369   0.336   0.243
+## BasDia2016.cm   -0.118 -0.835 -0.118  0.367 -0.033  0.001  -0.267   0.011
+## Year2016        -0.441 -0.223 -0.152  0.161 -0.143  0.001  -0.033   0.092
+## Year2017        -0.444 -0.452 -0.224  0.295 -0.201  0.000  -0.073   0.108
+##                 SS03LI ShS03O BD2016 Yr2016
 ## Ht_cm1                                     
 ## Years                                      
 ## sqrt_shrubarea3                            
 ## heatload                                   
-## BasDia2016.cm                              
 ## ShrubSpp03CECO                             
 ## ShrubSpp03CEIN                             
 ## ShrubSpp03CHFO                             
-## ShrubSpp03LIDE   0.365                     
-## ShrubSpp03Other  0.243  0.271              
-## Year2016         0.092 -0.003  0.032       
-## Year2017         0.108 -0.011  0.014  0.536
+## ShrubSpp03LIDE                             
+## ShrubSpp03Other  0.271                     
+## BasDia2016.cm    0.019 -0.130              
+## Year2016        -0.003  0.032  0.224       
+## Year2017        -0.011  0.014  0.441  0.536
 ## 
 ## Standardized Within-Group Residuals:
 ##        Min         Q1        Med         Q3        Max 
@@ -551,8 +551,8 @@ plot(LM_no_log)</code></pre>
 ## 
 ## Random effects:
 ##  Formula: ~1 | Fire
-##          (Intercept)
-## StdDev: 1.653016e-05
+##         (Intercept)
+## StdDev: 1.65307e-05
 ## 
 ##  Formula: ~1 | Sdlg %in% Fire
 ##         (Intercept)  Residual
@@ -565,44 +565,44 @@ plot(LM_no_log)</code></pre>
 ## Years                  -0.3342984 0.07758641 153  -4.308724  0.0000
 ## sqrt_shrubarea3        -0.2195373 0.05251627  80  -4.180368  0.0001
 ## heatload               -0.1274951 0.06549941  80  -1.946508  0.0551
-## BasDia2016.cm           0.3940260 0.09659885  80   4.078993  0.0001
 ## ShrubSpp03CECO          0.2280477 0.10585383  80   2.154364  0.0342
 ## ShrubSpp03CEIN          0.3556621 0.14032762  80   2.534512  0.0132
 ## ShrubSpp03CHFO          0.1469686 0.13174006  80   1.115595  0.2679
 ## ShrubSpp03LIDE         -0.1447296 0.14911852  80  -0.970568  0.3347
 ## ShrubSpp03Other         0.2661514 0.16007099  80   1.662708  0.1003
+## BasDia2016.cm           0.3940260 0.09659885  80   4.078993  0.0001
 ## Year2016                0.2110542 0.07050603 153   2.993420  0.0032
 ## Year2017               -0.0768425 0.08433929 153  -0.911111  0.3637
 ## Ht_cm1:sqrt_shrubarea3  0.1049998 0.04340139 153   2.419273  0.0167
 ##  Correlation: 
-##                        (Intr) Ht_cm1 Years  sqrt_3 heatld BD2016 SS03CEC
-## Ht_cm1                  0.451                                           
-## Years                  -0.034 -0.149                                    
-## sqrt_shrubarea3        -0.182 -0.407 -0.230                             
-## heatload                0.230  0.008  0.724 -0.057                      
-## BasDia2016.cm          -0.309 -0.864 -0.096  0.366 -0.079               
-## ShrubSpp03CECO         -0.641 -0.235  0.248 -0.002  0.010  0.108        
-## ShrubSpp03CEIN         -0.555 -0.123  0.237 -0.183 -0.108 -0.118  0.490 
-## ShrubSpp03CHFO         -0.607 -0.141 -0.202  0.210 -0.434  0.108  0.416 
-## ShrubSpp03LIDE         -0.322  0.025  0.118  0.243  0.007 -0.035  0.325 
-## ShrubSpp03Other        -0.385 -0.011  0.262 -0.014  0.094 -0.108  0.363 
-## Year2016               -0.448 -0.266 -0.147  0.172 -0.158  0.264  0.039 
-## Year2017               -0.509 -0.518 -0.208  0.306 -0.225  0.503  0.071 
-## Ht_cm1:sqrt_shrubarea3 -0.518 -0.546  0.026  0.082 -0.117  0.421  0.256 
-##                        SS03CEI SS03CH SS03LI ShS03O Yr2016 Yr2017
-## Ht_cm1                                                           
-## Years                                                            
-## sqrt_shrubarea3                                                  
-## heatload                                                         
-## BasDia2016.cm                                                    
-## ShrubSpp03CECO                                                   
-## ShrubSpp03CEIN                                                   
-## ShrubSpp03CHFO          0.360                                    
-## ShrubSpp03LIDE          0.192   0.324                            
-## ShrubSpp03Other         0.329   0.242  0.266                     
-## Year2016                0.009   0.123 -0.021  0.035              
-## Year2017                0.009   0.166 -0.045  0.020  0.551       
-## Ht_cm1:sqrt_shrubarea3  0.274   0.232 -0.123  0.023  0.148  0.280
+##                        (Intr) Ht_cm1 Years  sqrt_3 heatld SS03CEC SS03CEI
+## Ht_cm1                  0.451                                            
+## Years                  -0.034 -0.149                                     
+## sqrt_shrubarea3        -0.182 -0.407 -0.230                              
+## heatload                0.230  0.008  0.724 -0.057                       
+## ShrubSpp03CECO         -0.641 -0.235  0.248 -0.002  0.010                
+## ShrubSpp03CEIN         -0.555 -0.123  0.237 -0.183 -0.108  0.490         
+## ShrubSpp03CHFO         -0.607 -0.141 -0.202  0.210 -0.434  0.416   0.360 
+## ShrubSpp03LIDE         -0.322  0.025  0.118  0.243  0.007  0.325   0.192 
+## ShrubSpp03Other        -0.385 -0.011  0.262 -0.014  0.094  0.363   0.329 
+## BasDia2016.cm          -0.309 -0.864 -0.096  0.366 -0.079  0.108  -0.118 
+## Year2016               -0.448 -0.266 -0.147  0.172 -0.158  0.039   0.009 
+## Year2017               -0.509 -0.518 -0.208  0.306 -0.225  0.071   0.009 
+## Ht_cm1:sqrt_shrubarea3 -0.518 -0.546  0.026  0.082 -0.117  0.256   0.274 
+##                        SS03CH SS03LI ShS03O BD2016 Yr2016 Yr2017
+## Ht_cm1                                                          
+## Years                                                           
+## sqrt_shrubarea3                                                 
+## heatload                                                        
+## ShrubSpp03CECO                                                  
+## ShrubSpp03CEIN                                                  
+## ShrubSpp03CHFO                                                  
+## ShrubSpp03LIDE          0.324                                   
+## ShrubSpp03Other         0.242  0.266                            
+## BasDia2016.cm           0.108 -0.035 -0.108                     
+## Year2016                0.123 -0.021  0.035  0.264              
+## Year2017                0.166 -0.045  0.020  0.503  0.551       
+## Ht_cm1:sqrt_shrubarea3  0.232 -0.123  0.023  0.421  0.148  0.280
 ## 
 ## Standardized Within-Group Residuals:
 ##         Min          Q1         Med          Q3         Max 
@@ -621,19 +621,19 @@ drop %&gt;%
 <pre><code>## # A tibble: 8 x 5
 ##      Df   AIC   LRT `Pr(&gt;Chi)`           var            
 ##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                &lt;chr&gt;          
-## 1     1  377. 18.1  2.0737820589399e-05  Ht_cm1         
-## 2     1  376. 17.8  2.49894601745791e-05 Years          
-## 3     1  376. 17.6  2.70618332741965e-05 sqrt_shrubarea3
-## 4     2  377. 20.1  4.38291765826826e-05 Year           
-## 5     1  370. 11.5  0.000702602869984728 BasDia2016.cm  
-## 6     1  361.  2.88 0.0894774079703582   heatload       
-## 7     5  358.  7.22 0.204990741258688    ShrubSpp03     
+## 1     1  377. 18.1  2.07378205892059e-05 Ht_cm1         
+## 2     1  376. 17.8  2.49894601662989e-05 Years          
+## 3     1  376. 17.6  2.70618332967235e-05 sqrt_shrubarea3
+## 4     2  377. 20.1  4.3829176582563e-05  Year           
+## 5     1  370. 11.5  0.000702602869976391 BasDia2016.cm  
+## 6     1  361.  2.88 0.0894774080609863   heatload       
+## 7     5  358.  7.22 0.204990741257148    ShrubSpp03     
 ## 8    NA  361. NA    NA                   &lt;none&gt;</code></pre>
 <div id="run-anova-by-hand-for-the-interacting-variables-since-drop1-doesnt-do-that-by-default" class="section level2">
 <h2>Run anova by hand for the interacting variables since drop1 doesn’t do that by default</h2>
 <pre class="r"><code>vars_no_shrub &lt;- str_replace(vars_one, &quot;sqrt_shrubarea3 +&quot;, &quot;&quot;)
 vars_no_shrub</code></pre>
-<pre><code>## [1] &quot;Ht_cm1 + Years + + heatload + BasDia2016.cm + ShrubSpp03 + Year&quot;</code></pre>
+<pre><code>## [1] &quot;Ht_cm1 + Years + + heatload + ShrubSpp03 + BasDia2016.cm + Year&quot;</code></pre>
 <pre class="r"><code>f_no_shrub &lt;- formula(paste(&quot;VertGrowth_Rel ~ &quot;, vars_no_shrub))
 LM_noshrub &lt;- lme(f_no_shrub, data = LMdf, random = ~ 1| Fire/Sdlg, method = &quot;ML&quot;)
 anova(LM_int, LM_noshrub)</code></pre>
@@ -864,17 +864,17 @@ fit_min</code></pre>
 #fit_mean &lt;- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - mean_shrub)),]$fit
 mean &lt;- mean(df$shrubarea3/10000)
 print(paste(&quot;fit_median = &quot;, exp(fit_median)))</code></pre>
-<pre><code>## [1] &quot;fit_median =  0.168169457733911&quot;</code></pre>
+<pre><code>## [1] &quot;fit_median =  0.168169457733953&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;fit_min = &quot;, exp(fit_min)))</code></pre>
-<pre><code>## [1] &quot;fit_min =  0.249644952653662&quot;</code></pre>
+<pre><code>## [1] &quot;fit_min =  0.2496449526517&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;fit_max = &quot;, exp(fit_max)))</code></pre>
-<pre><code>## [1] &quot;fit_max =  0.111049400012535&quot;</code></pre>
+<pre><code>## [1] &quot;fit_max =  0.111049400013508&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;fit_median_log = &quot;, fit_median))</code></pre>
-<pre><code>## [1] &quot;fit_median_log =  -1.78278313096412&quot;</code></pre>
+<pre><code>## [1] &quot;fit_median_log =  -1.78278313096387&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;fit_min_log = &quot;, fit_min))</code></pre>
-<pre><code>## [1] &quot;fit_min_log =  -1.38771555993002&quot;</code></pre>
+<pre><code>## [1] &quot;fit_min_log =  -1.38771555993788&quot;</code></pre>
 <pre class="r"><code>print(paste(&quot;fit_max_log = &quot;, fit_max))</code></pre>
-<pre><code>## [1] &quot;fit_max_log =  -2.19778013151506&quot;</code></pre>
+<pre><code>## [1] &quot;fit_max_log =  -2.19778013150629&quot;</code></pre>
 <pre class="r"><code>#print(paste(&quot;fit_mean_log = &quot;, fit_mean))</code></pre>
 <pre class="r"><code>gr_minshrub_pipo &lt;- exp(fit_min)
 gr_maxshrub_pipo &lt;- exp(fit_max)

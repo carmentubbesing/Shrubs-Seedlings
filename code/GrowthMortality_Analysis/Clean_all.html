@@ -276,7 +276,7 @@ df &lt;- read_excel(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Growth_mortality/da
 <h1>Look at missing growth data</h1>
 <pre class="r"><code>df %&gt;% 
   filter(is.na(LAST_YR_GR_cm) | is.na(MINUS_1_GR_cm) | is.na(MINUS_2_GR_cm)) %&gt;% 
-  select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)</code></pre>
+  dplyr::select(SEEDLING, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, NOTES, Notes)</code></pre>
 <pre><code>## # A tibble: 3 x 6
 ##   SEEDLING LAST_YR_GR_cm MINUS_1_GR_cm MINUS_2_GR_cm NOTES         Notes   
 ##   &lt;chr&gt;            &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;   
