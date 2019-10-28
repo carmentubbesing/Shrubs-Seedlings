@@ -206,23 +206,23 @@ load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rda
   ungroup() %&gt;% 
   mutate(Sdlg = toupper(Sdlg))</code></pre>
 </div>
-<div id="take-out-variables-in-both-besides-sdlg" class="section level2">
-<h2>Take out variables in both besides Sdlg</h2>
+<div id="take-out-variables-i-dont-need" class="section level2">
+<h2>Take out variables I don’t need</h2>
 <pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3)</code></pre>
+  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3, LAI.53, DIFN.53, ref)</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 221</code></pre>
+<pre><code>## [1] 274</code></pre>
 <pre class="r"><code>df &lt;- left_join(df, shr_by_sdlg)</code></pre>
 <pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 221</code></pre>
+<pre><code>## [1] 274</code></pre>
 </div>
 <div id="add-years-since-fire" class="section level2">
 <h2>Add years since fire</h2>
 <pre class="r"><code>df &lt;- droplevels(df)
 summary(as.factor(df$Fire))</code></pre>
 <pre><code>## AMRC CLVD FRDS PLKN STAR WRTS 
-##  123   27   36    2   19   14</code></pre>
+##  135   32   51    4   38   14</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Years = ifelse(Fire == &quot;AMRC&quot;, 8, 0)) %&gt;% 
   mutate(Years = ifelse(Fire == &quot;CLVD&quot;, 24, Years)) %&gt;% 
@@ -232,18 +232,21 @@ summary(as.factor(df$Fire))</code></pre>
   mutate(Years = ifelse(Fire == &quot;WRTS&quot;, 35, Years))
 summary(as.factor(df$Years))</code></pre>
 <pre><code>##   8  12  14  24  35  43 
-## 123  36  19  27  14   2</code></pre>
+## 135  51  38  32  14   4</code></pre>
 </div>
 <div id="check-out-numbers-of-seedlings" class="section level2">
 <h2>Check out numbers of seedlings</h2>
 <pre class="r"><code>df %&gt;% 
   group_by(Species) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## # A tibble: 2 x 2
+<pre><code>## # A tibble: 5 x 2
 ##   Species `n()`
 ##   &lt;chr&gt;   &lt;int&gt;
 ## 1 ABCO      126
-## 2 PIPO       95</code></pre>
+## 2 CADE       25
+## 3 PILA       18
+## 4 PIPO       95
+## 5 PSME       10</code></pre>
 </div>
 <div id="save" class="section level2">
 <h2>Save</h2>

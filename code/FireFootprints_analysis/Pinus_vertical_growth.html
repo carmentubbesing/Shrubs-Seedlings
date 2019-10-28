@@ -207,9 +207,7 @@ summary {
 <li><a href="#see-whether-model-with-or-without-dia-interaction-is-better">See whether model with or without DIA interaction is better</a></li>
 <li><a href="#see-whether-model-with-or-without-height-interaction-is-better">See whether model with or without HEIGHT interaction is better</a></li>
 <li><a href="#see-whether-residuals-are-better-for-log-transformed-or-not">See whether residuals are better for log transformed or not</a></li>
-<li><a href="#look-at-summary-and-drop1-results">Look at summary and drop1 results</a><ul>
-<li><a href="#run-anova-by-hand-for-the-interacting-variables-since-drop1-doesnt-do-that-by-default">Run anova by hand for the interacting variables since drop1 doesn’t do that by default</a></li>
-</ul></li>
+<li><a href="#look-at-summary-and-drop1-results">Look at summary and drop1 results</a></li>
 <li><a href="#look-at-collinearity-between-seedling-height-and-shrub-competition">Look at collinearity between seedling height and shrub competition</a></li>
 <li><a href="#look-at-residuals">Look at residuals</a><ul>
 <li><a href="#residuals">Residuals</a></li>
@@ -234,6 +232,7 @@ summary {
 </ul></li>
 <li><a href="#pretty-plot-of-shrub-species-effects">Pretty plot of shrub species effects</a></li>
 <li><a href="#list-the-final-seedlings-used">List the final seedlings used</a></li>
+<li><a href="#count-how-many-trees-have-estimated-2015-heights">Count how many trees have estimated 2015 heights</a></li>
 <li><a href="#save-final-data">Save final data</a></li>
 </ul>
 </div>
@@ -543,75 +542,6 @@ plot(LM_no_log)</code></pre>
 ## Number of Groups: 
 ##           Fire Sdlg %in% Fire 
 ##              5             93</code></pre>
-<pre class="r"><code>summary(LM_int)</code></pre>
-<pre><code>## Linear mixed-effects model fit by maximum likelihood
-##  Data: LMdf 
-##       AIC      BIC   logLik
-##   356.462 416.3947 -161.231
-## 
-## Random effects:
-##  Formula: ~1 | Fire
-##         (Intercept)
-## StdDev: 1.65307e-05
-## 
-##  Formula: ~1 | Sdlg %in% Fire
-##         (Intercept)  Residual
-## StdDev:   0.2009255 0.4213729
-## 
-## Fixed effects: list(f_int) 
-##                             Value  Std.Error  DF    t-value p-value
-## (Intercept)            -2.0348172 0.09845377 153 -20.667744  0.0000
-## Ht_cm1                 -0.5691433 0.11629831 153  -4.893823  0.0000
-## Years                  -0.3342984 0.07758641 153  -4.308724  0.0000
-## sqrt_shrubarea3        -0.2195373 0.05251627  80  -4.180368  0.0001
-## heatload               -0.1274951 0.06549941  80  -1.946508  0.0551
-## ShrubSpp03CECO          0.2280477 0.10585383  80   2.154364  0.0342
-## ShrubSpp03CEIN          0.3556621 0.14032762  80   2.534512  0.0132
-## ShrubSpp03CHFO          0.1469686 0.13174006  80   1.115595  0.2679
-## ShrubSpp03LIDE         -0.1447296 0.14911852  80  -0.970568  0.3347
-## ShrubSpp03Other         0.2661514 0.16007099  80   1.662708  0.1003
-## BasDia2016.cm           0.3940260 0.09659885  80   4.078993  0.0001
-## Year2016                0.2110542 0.07050603 153   2.993420  0.0032
-## Year2017               -0.0768425 0.08433929 153  -0.911111  0.3637
-## Ht_cm1:sqrt_shrubarea3  0.1049998 0.04340139 153   2.419273  0.0167
-##  Correlation: 
-##                        (Intr) Ht_cm1 Years  sqrt_3 heatld SS03CEC SS03CEI
-## Ht_cm1                  0.451                                            
-## Years                  -0.034 -0.149                                     
-## sqrt_shrubarea3        -0.182 -0.407 -0.230                              
-## heatload                0.230  0.008  0.724 -0.057                       
-## ShrubSpp03CECO         -0.641 -0.235  0.248 -0.002  0.010                
-## ShrubSpp03CEIN         -0.555 -0.123  0.237 -0.183 -0.108  0.490         
-## ShrubSpp03CHFO         -0.607 -0.141 -0.202  0.210 -0.434  0.416   0.360 
-## ShrubSpp03LIDE         -0.322  0.025  0.118  0.243  0.007  0.325   0.192 
-## ShrubSpp03Other        -0.385 -0.011  0.262 -0.014  0.094  0.363   0.329 
-## BasDia2016.cm          -0.309 -0.864 -0.096  0.366 -0.079  0.108  -0.118 
-## Year2016               -0.448 -0.266 -0.147  0.172 -0.158  0.039   0.009 
-## Year2017               -0.509 -0.518 -0.208  0.306 -0.225  0.071   0.009 
-## Ht_cm1:sqrt_shrubarea3 -0.518 -0.546  0.026  0.082 -0.117  0.256   0.274 
-##                        SS03CH SS03LI ShS03O BD2016 Yr2016 Yr2017
-## Ht_cm1                                                          
-## Years                                                           
-## sqrt_shrubarea3                                                 
-## heatload                                                        
-## ShrubSpp03CECO                                                  
-## ShrubSpp03CEIN                                                  
-## ShrubSpp03CHFO                                                  
-## ShrubSpp03LIDE          0.324                                   
-## ShrubSpp03Other         0.242  0.266                            
-## BasDia2016.cm           0.108 -0.035 -0.108                     
-## Year2016                0.123 -0.021  0.035  0.264              
-## Year2017                0.166 -0.045  0.020  0.503  0.551       
-## Ht_cm1:sqrt_shrubarea3  0.232 -0.123  0.023  0.421  0.148  0.280
-## 
-## Standardized Within-Group Residuals:
-##         Min          Q1         Med          Q3         Max 
-## -3.86295573 -0.47130281  0.08630661  0.57971691  3.73317082 
-## 
-## Number of Observations: 251
-## Number of Groups: 
-##           Fire Sdlg %in% Fire 
-##              5             93</code></pre>
 <pre class="r"><code>drop &lt;- drop1(LM, test = &quot;Chisq&quot;)
 drop$var &lt;- row.names(drop)
 drop &lt;- tbl_df(drop)
@@ -629,26 +559,6 @@ drop %&gt;%
 ## 6     1  361.  2.88 0.0894774080609863   heatload       
 ## 7     5  358.  7.22 0.204990741257148    ShrubSpp03     
 ## 8    NA  361. NA    NA                   &lt;none&gt;</code></pre>
-<div id="run-anova-by-hand-for-the-interacting-variables-since-drop1-doesnt-do-that-by-default" class="section level2">
-<h2>Run anova by hand for the interacting variables since drop1 doesn’t do that by default</h2>
-<pre class="r"><code>vars_no_shrub &lt;- str_replace(vars_one, &quot;sqrt_shrubarea3 +&quot;, &quot;&quot;)
-vars_no_shrub</code></pre>
-<pre><code>## [1] &quot;Ht_cm1 + Years + + heatload + ShrubSpp03 + BasDia2016.cm + Year&quot;</code></pre>
-<pre class="r"><code>f_no_shrub &lt;- formula(paste(&quot;VertGrowth_Rel ~ &quot;, vars_no_shrub))
-LM_noshrub &lt;- lme(f_no_shrub, data = LMdf, random = ~ 1| Fire/Sdlg, method = &quot;ML&quot;)
-anova(LM_int, LM_noshrub)</code></pre>
-<pre><code>##            Model df     AIC      BIC   logLik   Test  L.Ratio p-value
-## LM_int         1 17 356.462 416.3947 -161.231                        
-## LM_noshrub     2 15 376.196 429.0778 -173.098 1 vs 2 23.73404  &lt;.0001</code></pre>
-<pre class="r"><code>vars_no_ht &lt;- vars[vars != &quot;Ht_cm1&quot;]
-vars_no_ht_one &lt;- paste(vars_no_ht, collapse = &quot; + &quot;)
-f_no_ht &lt;- formula(paste(&quot;VertGrowth_Rel ~ &quot;, vars_no_ht_one))
-LM_noht &lt;- lme(f_no_ht, data = LMdf, random = ~ 1| Fire/Sdlg, method = &quot;ML&quot;)
-anova(LM_int, LM_noht)</code></pre>
-<pre><code>##         Model df      AIC      BIC    logLik   Test  L.Ratio p-value
-## LM_int      1 17 356.4620 416.3947 -161.2310                        
-## LM_noht     2 15 376.7025 429.5843 -173.3513 1 vs 2 24.24056  &lt;.0001</code></pre>
-</div>
 </div>
 <div id="look-at-collinearity-between-seedling-height-and-shrub-competition" class="section level1">
 <h1>Look at collinearity between seedling height and shrub competition</h1>
@@ -708,9 +618,6 @@ plot(LM)</code></pre>
 ## page.</code></pre>
 <pre><code>##            R2m       R2c
 ## [1,] 0.6164604 0.6859182</code></pre>
-<pre class="r"><code>r.squaredGLMM(LM_int)</code></pre>
-<pre><code>##            R2m       R2c
-## [1,] 0.6254743 0.6948556</code></pre>
 </div>
 <div id="plot-shrub-effects-without-interaction" class="section level1">
 <h1>Plot shrub effects without interaction</h1>
@@ -933,6 +840,14 @@ head(effects_df)</code></pre>
 ## [69] 289 290 291 292 293 294 36  38  39  4   40  41  42  43  44  5   62 
 ## [86] 63  64  65  69  71  72  8   84 
 ## 216 Levels: 10 100 103 104 105 106 107 108 109 11 110 112 113 115 ... 99</code></pre>
+</div>
+<div id="count-how-many-trees-have-estimated-2015-heights" class="section level1">
+<h1>Count how many trees have estimated 2015 heights</h1>
+<pre class="r"><code>df %&gt;% 
+  filter(Year==2015) %&gt;% 
+  filter(is.na(Ht2017.cm.fall) &amp; is.na(Ht2015.meas2016)) %&gt;% 
+  nrow()</code></pre>
+<pre><code>## [1] 11</code></pre>
 </div>
 <div id="save-final-data" class="section level1">
 <h1>Save final data</h1>

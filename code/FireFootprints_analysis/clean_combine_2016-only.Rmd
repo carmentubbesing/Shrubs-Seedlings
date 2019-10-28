@@ -30,10 +30,10 @@ df <- df %>%
   mutate(Sdlg = toupper(Sdlg))
 ```
 
-## Take out variables in both besides Sdlg
+## Take out variables I don't need
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>% 
-  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3)
+  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3, LAI.53, DIFN.53, ref)
 ```
 
 ```{r}

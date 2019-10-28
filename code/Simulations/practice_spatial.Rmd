@@ -1,0 +1,240 @@
+---
+title: "Practice"
+author: "Carmen"
+date: "October 23, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r}
+require(raster)
+require(tidyverse)
+require(tmap)
+require(sf)
+require(sp)
+require(tmaptools)
+require(knitr)
+```
+
+# Load seedling and shrub data from fire footprints
+```{r}
+load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+# Assign each pixel shrub cov, ht, and competition values. For now, exclude seedlings without 2016 height values.
+```{r}
+df <- df %>% 
+  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, Fire, Years, Year) %>% 
+  filter(Year=="2016") %>% 
+  filter(Fire == "AMRC") %>% 
+  filter(!is.na(Ht2016.cm_spring)) %>% 
+  mutate(Cov_prop = Cov1.3/1200) %>% 
+  distinct()
+```
+
+# Create a raster from scratch
+```{r}
+values <- as.numeric(paste(sample(df$Sdlg, 400, replace = T)))
+values
+xy <- matrix(values, 20,20)
+r <- raster(xy, xmn = 0, xmx = 20, ymn = 0, ymx = 20)
+plot(r)
+```
+
+## Add a crs
+```{r}
+crs_epsg <- CRS("+init=epsg:26910")
+crs_epsg
+```
+
+```{r}
+crs(r) <- crs_epsg
+crs(r)
+get_projection(r)
+```
+
+# Plot
+```{r}
+tm_shape(r)+
+  tm_raster()+
+  tm_layout(asp=1:1)
+```
+
+# Create polygon surrounding the raster
+```{r}
+p <- as(extent(r), "SpatialPolygons")
+crs(p) <- crs(r)
+get_projection(p)
+```
+
+```{r}
+
+tm_shape(r)+
+  tm_raster()+
+  tm_layout(asp=1:1)+
+tm_shape(p)+
+  tm_borders(col = "purple", lwd= 5)
+```
+
+# Create points
+```{r}
+x.left <- 0.5+rpois(10,2.5)
+x.right <- 19.5-rpois(10,2.5)
+y.bottom <- 0.5+rpois(10,2.5)
+y.top <- 19.5-rpois(10,2.5)
+x <- sample(c(x.left, x.right), 20)
+y <- sample(c(y.top, y.bottom), 20)
+
+left.edge <- cbind(x = x.left, y = (0.5 + sample(c(0:19), 10)))
+right.edge <- cbind(x = x.right, y = (0.5 +sample(c(0:19), 10)))
+
+top.edge <- cbind(x =  c(0.5 + sample(c(1:19), 10)), y = y.top)
+bottom.edge <- cbind(x = c(0.5 + sample(c(1:19), 10)),  y = y.bottom)
+
+
+edges <- rbind(left.edge, right.edge, top.edge, bottom.edge)
+pts.xy <- edges
+
+```
+
+```{r}
+pts.xy %>% 
+  as.data.frame() %>% 
+  group_by(x, y) %>% 
+  summarize(n()) %>% 
+  tail()
+left.edge %>% 
+  as.data.frame() %>% 
+  group_by(x, y) %>% 
+  summarize(n()) %>% 
+  tail()
+
+```
+
+
+# Convert to spatial
+```{r}
+pts.sp <- SpatialPoints(coords = pts.xy[,c("x", "y")], proj4string = crs(p))
+plot(pts.sp)
+pts.sf <- as(pts.sp, "sf")
+```
+
+
+# Decide which trees are fir and which are pine - 1.32 fir:pine ratio
+```{r}
+# pts.sf <- pts.sf %>% 
+#   mutate(Species = sample(c("ABCO", "PIPO"), size = nrow(pts.sf), replace = T, prob = c(1.32, 1)))
+# summary(as.factor(pts.sf$Species))
+```
+
+# Find raster values for each seedling 
+```{r}
+pts.sf <- pts.sf %>% 
+  mutate(Sdlg = raster::extract(r, as(pts.sf, "Spatial")))
+head(pts.sf)
+```
+
+
+# Add seedling species, ht, cov, shrub variables to sf object
+```{r}
+head(pts.sf)
+nrow(pts.sf)
+pts.sf <- pts.sf %>% 
+  mutate(Sdlg = as.factor(Sdlg))
+pts.sf <- left_join(pts.sf, df)
+nrow(pts.sf)
+pts.sf
+```
+
+
+# Next: make them grow for a few time steps based on predictive functions from Ch. 2 results. Then make some die based on mortality study results
+
+# For now, keep shrub competition static across years for each pixel
+
+
+
+# Load LM results for both species 
+```{r}
+#source(purl("~/Shrubs-Seedlings/code/FireFootprints_analysis/Pinus_vertical_growth.Rmd"))
+load(file = "~/Shrubs-Seedlings/results/data/FireFootprints/LM_pipo.Rdata")
+```
+
+
+## Normalize function
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+
+# Reformat pts.sf so that it's compatible with LM
+```{r}
+pts.sf.lm <- pts.sf %>% 
+  rename("Ht_cm1" = Ht2016.cm_spring) %>% 
+  mutate(Years = as.factor(Years)) %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  mutate("Year"="2016") %>% 
+  mutate(Year = as.factor(Year)) %>% 
+  mutate_if(is.numeric, normalize) %>% 
+  mutate(ShrubSpp03 = ifelse(ShrubSpp03 %in% c("CEPR", "CHSE", "PREM"), "Other", ShrubSpp03))
+```
+
+
+```{r}
+pts.sf.abco <- pts.sf.lm %>% filter(Species == "ABCO")
+pts.sf.pipo <- pts.sf.lm %>% filter(Species == "PIPO")
+```
+
+# Plot 
+```{r}
+tm_shape(p)+
+  tm_borders(col = "purple", lwd= 5)+
+tm_shape(r)+
+  tm_raster(alpha = .5)+
+  tm_layout(asp=1:1, legend.bg.color = "white", legend.outside = T)+
+tm_shape(pts.sf.pipo)+
+   tm_dots(size = .3, col = "darkgreen")+
+tm_shape(pts.sf.abco)+
+  tm_dots(size = .3, col = "darkblue")
+```
+
+```{r}
+load("~/Shrubs-Seedlings/results/data/FireFootprints/LM_pipo.Rdata")
+LMpipo <- LM
+remove(LM)
+coefpipo <- LMpipo$coefficients$fixed
+coefpipo
+```
+
+# Create a function for predicting growth based on fire footprints results
+```{r}
+pipogrowth <- function(df){
+  df_i <- df
+  df_i <<- df_i %>% 
+    mutate(pred = coefpipo["(Intercept)"] +
+             coefpipo["Ht_cm1"]*Ht_cm1+
+             coefpipo["Years"]*as.numeric(paste(Years))+
+             coefpipo["sqrt_shrubarea3"]*sqrt_shrubarea3+
+             coefpipo["heatload"]*heatload+
+             coefpipo["BasDia2016.cm"]*BasDia2016.cm
+    ) %>% 
+    mutate(pred = case_when(
+      ShrubSpp03 == "CECO" ~ pred + coefpipo["ShrubSpp03CECO"]
+    ))
+}
+pipogrowth(pts.sf.pipo)
+head(df_i)
+```
+
+```{r}
+pts.sf.pipo <- st_drop_geometry(pts.sf.pipo)
+```
+
+
+# Questions I need to decide on:
+
+-  1. How do I determine the shrub competition values of each raster pixel, since my sampling was not random?
+-  2. How do I place the initial seedlings?
+-  3. Do I combine data from different fires, or do them one at a time?

@@ -188,8 +188,45 @@ summary {
 <div id="TOC">
 <ul>
 <li><a href="#load-data">Load data</a></li>
-<li><a href="#basic-df-cleaning">Basic df cleaning</a></li>
-<li><a href="#reshape-to-include-data-from-both-2016-visits">Reshape to include data from both 2016 visits</a></li>
+<li><a href="#basic-df-cleaning">Basic df cleaning</a><ul>
+<li><a href="#rename-2015-height-column">Rename 2015 height column</a></li>
+<li><a href="#take-out-blank-columns-after-making-sure-theyre-blank">Take out blank columns after making sure they’re blank</a></li>
+<li><a href="#take-out-columns-related-to-cade-or-immediately-above-data">Take out columns related to CADE or “immediately above” data</a></li>
+<li><a href="#correct-typos-and-create-variable-for-firepatch">Correct typos and create variable for FirePatch</a><ul>
+<li><a href="#check">Check</a></li>
+</ul></li>
+<li><a href="#take-out-seedling-17-because-it-doesnt-have-shrub-data">Take out Seedling 17 because it doesn’t have shrub data</a></li>
+<li><a href="#make-a-tbl-rename-object-and-rename-seedling-column">Make a tbl, rename object, and rename Seedling column</a></li>
+</ul></li>
+<li><a href="#reshape-to-include-data-from-both-2016-visits">Reshape to include data from both 2016 visits</a><ul>
+<li><a href="#look-for-trees-with-2-different-height-values">Look for trees with 2 different height values</a></li>
+<li><a href="#create-separate-columns-for-dates-of-visit">Create separate columns for dates of visit</a></li>
+<li><a href="#check-1">Check</a></li>
+<li><a href="#move-over-time-and-personel-columns">Move over time and personel columns</a></li>
+<li><a href="#replace-nas-in-numeric-variables-with-0s">Replace NAs in numeric variables with 0s</a><ul>
+<li><a href="#make-factors-numeric-where-possible">Make factors numeric where possible</a></li>
+<li><a href="#use-replace_na-function">Use replace_na function</a></li>
+</ul></li>
+<li><a href="#replace-na-dates-with-a-dummy-date">Replace NA dates with a dummy date</a></li>
+<li><a href="#clean-up-time-columns">Clean up time columns</a></li>
+<li><a href="#make-date-columns-into-date-format-and-time-column-into-time-format">Make date columns into date format and time column into time format</a></li>
+<li><a href="#use-the-real-date-and-time-for-seedlings-with-dummy-date-and-time">Use the real date and time for seedlings with dummy date and time</a><ul>
+<li><a href="#date">Date</a></li>
+<li><a href="#time1">Time1</a></li>
+<li><a href="#time2">Time2</a></li>
+<li><a href="#delete-original-time-column">Delete original time column</a></li>
+</ul></li>
+<li><a href="#merge-elevation-latlong-data-photo-yn-slope-etc.-by-taking-the-average-or-max">Merge elevation, lat/long data, photo y/n, slope, etc. by taking the average or max</a></li>
+<li><a href="#move-personel-info-to-individual-columns">Move personel info to individual columns</a></li>
+<li><a href="#check-for-remaining-columns-that-dont-have-data-synced-between-the-two-visits">Check for remaining columns that don’t have data synced between the two visits</a><ul>
+<li><a href="#check-which-columns-arent-the-same-for-each-seedling">Check which columns aren’t the same for each seedling</a></li>
+</ul></li>
+<li><a href="#sync-notes-columns">Sync notes columns</a></li>
+<li><a href="#make-two-datasheet-columns">Make two datasheet columns</a></li>
+<li><a href="#now-i-can-finally-delete-rows-that-have-return-1">NOW I can finally delete rows that have return == 1</a><ul>
+<li><a href="#check-for-duplicate-seedling-names---this-should-be-true">Check for duplicate seedling names - this should be TRUE</a></li>
+</ul></li>
+</ul></li>
 <li><a href="#save-data">Save data</a></li>
 </ul>
 </div>
@@ -295,14 +332,6 @@ names(sdlt)</code></pre>
 <pre class="r"><code>sdlt &lt;- sdlt %&gt;% 
   filter(Seedling. != &quot;17&quot;)</code></pre>
 </div>
-<div id="take-out-trees-that-arent-abco-or-pipo" class="section level2">
-<h2>Take out trees that aren’t ABCO or PIPO</h2>
-<pre class="r"><code>summary(as.factor(sdlt$Species)) </code></pre>
-<pre><code>## ABCO CADE PILA PIPO PSME 
-##  130   25   19  104   11</code></pre>
-<pre class="r"><code>sdlt &lt;- sdlt %&gt;% 
-  filter(Species %in% c(&quot;ABCO&quot;, &quot;PIPO&quot;))</code></pre>
-</div>
 <div id="make-a-tbl-rename-object-and-rename-seedling-column" class="section level2">
 <h2>Make a tbl, rename object, and rename Seedling column</h2>
 <pre class="r"><code>df &lt;- sdlt
@@ -342,12 +371,12 @@ df &lt;- df %&gt;%
 <pre><code>## # A tibble: 6 x 4
 ##   Sdlg  FirePatch Date1     Date2    
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;fct&gt;     &lt;fct&gt;    
-## 1 2     CLVD-N    5/30/2016 &lt;NA&gt;     
-## 2 2     CLVD-N    &lt;NA&gt;      7/26/2016
-## 3 4     CLVD-N    5/30/2016 &lt;NA&gt;     
-## 4 4     CLVD-N    &lt;NA&gt;      7/26/2016
-## 5 5     CLVD-N    5/30/2016 &lt;NA&gt;     
-## 6 5     CLVD-N    &lt;NA&gt;      7/26/2016</code></pre>
+## 1 1     CLVD-N    5/30/2016 &lt;NA&gt;     
+## 2 1     CLVD-N    &lt;NA&gt;      7/26/2016
+## 3 2     CLVD-N    5/30/2016 &lt;NA&gt;     
+## 4 2     CLVD-N    &lt;NA&gt;      7/26/2016
+## 5 3     CLVD-N    5/30/2016 &lt;NA&gt;     
+## 6 3     CLVD-N    &lt;NA&gt;      7/26/2016</code></pre>
 </div>
 <div id="move-over-time-and-personel-columns" class="section level2">
 <h2>Move over time and personel columns</h2>
@@ -363,12 +392,12 @@ df %&gt;%
 <pre><code>## # A tibble: 6 x 10
 ##   Sdlg  FirePatch Date1 Date2 Closest_Time Time1 Time2 Personel personel1
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt;        &lt;chr&gt; &lt;chr&gt; &lt;fct&gt;    &lt;chr&gt;    
-## 1 2     CLVD-N    5/30~ &lt;NA&gt;  9:45         9:45  1:00  &quot;CT &quot;    &quot;CT &quot;    
-## 2 2     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
-## 3 4     CLVD-N    5/30~ &lt;NA&gt;  13:43        13:43 1:00  &quot;CT &quot;    &quot;CT &quot;    
-## 4 4     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
-## 5 5     CLVD-N    5/30~ &lt;NA&gt;  13:43        13:43 1:00  &quot;CT &quot;    &quot;CT &quot;    
-## 6 5     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
+## 1 1     CLVD-N    5/30~ &lt;NA&gt;  9:45         9:45  1:00  &quot;CT &quot;    &quot;CT &quot;    
+## 2 1     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
+## 3 2     CLVD-N    5/30~ &lt;NA&gt;  9:45         9:45  1:00  &quot;CT &quot;    &quot;CT &quot;    
+## 4 2     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
+## 5 3     CLVD-N    5/30~ &lt;NA&gt;  9:45         9:45  1:00  &quot;CT &quot;    &quot;CT &quot;    
+## 6 3     CLVD-N    &lt;NA&gt;  7/26~ 8:01         1:00  8:01  VF HH    0        
 ## # ... with 1 more variable: personel2 &lt;chr&gt;</code></pre>
 </div>
 <div id="replace-nas-in-numeric-variables-with-0s" class="section level2">
@@ -408,12 +437,12 @@ df %&gt;%
 <pre><code>## # A tibble: 6 x 6
 ##   Sdlg  FirePatch Date1     Date2     Time1 Time2
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt; &lt;chr&gt;
-## 1 2     CLVD-N    5/30/2016 9/9/9999  9:45  1:00 
-## 2 2     CLVD-N    9/9/9999  7/26/2016 1:00  8:01 
-## 3 4     CLVD-N    5/30/2016 9/9/9999  13:43 1:00 
-## 4 4     CLVD-N    9/9/9999  7/26/2016 1:00  8:01 
-## 5 5     CLVD-N    5/30/2016 9/9/9999  13:43 1:00 
-## 6 5     CLVD-N    9/9/9999  7/26/2016 1:00  8:01</code></pre>
+## 1 1     CLVD-N    5/30/2016 9/9/9999  9:45  1:00 
+## 2 1     CLVD-N    9/9/9999  7/26/2016 1:00  8:01 
+## 3 2     CLVD-N    5/30/2016 9/9/9999  9:45  1:00 
+## 4 2     CLVD-N    9/9/9999  7/26/2016 1:00  8:01 
+## 5 3     CLVD-N    5/30/2016 9/9/9999  9:45  1:00 
+## 6 3     CLVD-N    9/9/9999  7/26/2016 1:00  8:01</code></pre>
 </div>
 <div id="clean-up-time-columns" class="section level2">
 <h2>Clean up time columns</h2>
@@ -422,36 +451,43 @@ df %&gt;%
   mutate(Time1 = ifelse(Time1 == &quot;1/7/1900 7:00&quot;, &quot;1:00&quot;, Time1)) %&gt;% 
   mutate(Time1 = ifelse(Time1 == &quot;0.291666667&quot;, &quot;1:00&quot;, Time1))
 df$Time1  </code></pre>
-<pre><code>##   [1] &quot;9:45&quot;  &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot; 
-##   [9] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot; 
-##  [17] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;8:01&quot; 
-##  [25] &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
-##  [33] &quot;8:01&quot;  &quot;8:01&quot;  &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
-##  [41] &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot;
-##  [49] &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
-##  [57] &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot;
-##  [65] &quot;13:31&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
-##  [73] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
-##  [81] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;10:11&quot; &quot;10:11&quot;
-##  [89] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot;  &quot;9:52&quot; 
-##  [97] &quot;9:52&quot;  &quot;10:32&quot; &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
-## [105] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot; &quot;1:00&quot;  &quot;1:00&quot; 
-## [113] &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;9:28&quot; 
-## [121] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;8:09&quot; 
-## [129] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
-## [137] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;8:30&quot; 
-## [145] &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;8:09&quot;  &quot;8:09&quot; 
-## [153] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
-## [161] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
-## [169] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:19&quot;  &quot;7:19&quot; 
-## [177] &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
-## [185] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
-## [193] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
-## [201] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot;
-## [209] &quot;10:35&quot; &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot; 
-## [217] &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot; 
-## [225] &quot;7:33&quot;  &quot;7:33&quot;  &quot;12:00&quot; &quot;12:00&quot; &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot; 
-## [233] &quot;15:00&quot; &quot;1:00&quot;</code></pre>
+<pre><code>##   [1] &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot; 
+##   [9] &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot; 
+##  [17] &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot;
+##  [25] &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
+##  [33] &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
+##  [41] &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
+##  [49] &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
+##  [57] &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot;
+##  [65] &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
+##  [73] &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot;
+##  [81] &quot;13:31&quot; &quot;13:31&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
+##  [89] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
+##  [97] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;10:11&quot;
+## [105] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot; 
+## [113] &quot;9:52&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;10:32&quot; &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot;  &quot;1:00&quot; 
+## [121] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot;
+## [129] &quot;1:00&quot;  &quot;1:00&quot;  &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot; 
+## [137] &quot;1:00&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot;
+## [145] &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;6:16&quot; 
+## [153] &quot;11:33&quot; &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
+## [161] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
+## [169] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
+## [177] &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;13:50&quot; &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot; 
+## [185] &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot; 
+## [193] &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot; 
+## [201] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
+## [209] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
+## [217] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot; 
+## [225] &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
+## [233] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
+## [241] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
+## [249] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot;
+## [257] &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot; 
+## [265] &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;7:33&quot; 
+## [273] &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;12:00&quot;
+## [281] &quot;12:00&quot; &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;15:00&quot;
+## [289] &quot;1:00&quot;</code></pre>
 </div>
 <div id="make-date-columns-into-date-format-and-time-column-into-time-format" class="section level2">
 <h2>Make date columns into date format and time column into time format</h2>
@@ -465,19 +501,19 @@ df %&gt;%
 <pre><code>## # A tibble: 6 x 6
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 2     CLVD-N    2016-05-30 9999-09-09 09:45  01:00 
-## 2 2     CLVD-N    9999-09-09 2016-07-26 01:00  08:01 
-## 3 4     CLVD-N    2016-05-30 9999-09-09 13:43  01:00 
-## 4 4     CLVD-N    9999-09-09 2016-07-26 01:00  08:01 
-## 5 5     CLVD-N    2016-05-30 9999-09-09 13:43  01:00 
-## 6 5     CLVD-N    9999-09-09 2016-07-26 01:00  08:01</code></pre>
+## 1 1     CLVD-N    2016-05-30 9999-09-09 09:45  01:00 
+## 2 1     CLVD-N    9999-09-09 2016-07-26 01:00  08:01 
+## 3 2     CLVD-N    2016-05-30 9999-09-09 09:45  01:00 
+## 4 2     CLVD-N    9999-09-09 2016-07-26 01:00  08:01 
+## 5 3     CLVD-N    2016-05-30 9999-09-09 09:45  01:00 
+## 6 3     CLVD-N    9999-09-09 2016-07-26 01:00  08:01</code></pre>
 </div>
 <div id="use-the-real-date-and-time-for-seedlings-with-dummy-date-and-time" class="section level2">
 <h2>Use the real date and time for seedlings with dummy date and time</h2>
 <div id="date" class="section level3">
 <h3>Date</h3>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 234</code></pre>
+<pre><code>## [1] 289</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   group_by(Sdlg) %&gt;% 
   mutate(Date1 = min(Date1)) %&gt;% 
@@ -489,12 +525,12 @@ df %&gt;%
 ## # Groups:   Sdlg [3]
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 2     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
-## 2 2     CLVD-N    2016-05-30 2016-07-26 01:00  08:01 
-## 3 4     CLVD-N    2016-05-30 2016-07-26 13:43  01:00 
-## 4 4     CLVD-N    2016-05-30 2016-07-26 01:00  08:01 
-## 5 5     CLVD-N    2016-05-30 2016-07-26 13:43  01:00 
-## 6 5     CLVD-N    2016-05-30 2016-07-26 01:00  08:01</code></pre>
+## 1 1     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 2 1     CLVD-N    2016-05-30 2016-07-26 01:00  08:01 
+## 3 2     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 4 2     CLVD-N    2016-05-30 2016-07-26 01:00  08:01 
+## 5 3     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 6 3     CLVD-N    2016-05-30 2016-07-26 01:00  08:01</code></pre>
 </div>
 <div id="time1" class="section level3">
 <h3>Time1</h3>
@@ -514,14 +550,14 @@ df &lt;- left_join(df, max1) %&gt;%
 ## # Groups:   Sdlg [3]
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 2     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
-## 2 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
-## 3 4     CLVD-N    2016-05-30 2016-07-26 13:43  01:00 
-## 4 4     CLVD-N    2016-05-30 2016-07-26 13:43  08:01 
-## 5 5     CLVD-N    2016-05-30 2016-07-26 13:43  01:00 
-## 6 5     CLVD-N    2016-05-30 2016-07-26 13:43  08:01</code></pre>
+## 1 1     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 2 1     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 3 2     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 4 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 5 3     CLVD-N    2016-05-30 2016-07-26 09:45  01:00 
+## 6 3     CLVD-N    2016-05-30 2016-07-26 09:45  08:01</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 234</code></pre>
+<pre><code>## [1] 289</code></pre>
 </div>
 <div id="time2" class="section level3">
 <h3>Time2</h3>
@@ -540,26 +576,26 @@ df &lt;- left_join(df, max2) %&gt;%
 ## # Groups:   Sdlg [3]
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
-## 2 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
-## 3 4     CLVD-N    2016-05-30 2016-07-26 13:43  08:01 
-## 4 4     CLVD-N    2016-05-30 2016-07-26 13:43  08:01 
-## 5 5     CLVD-N    2016-05-30 2016-07-26 13:43  08:01 
-## 6 5     CLVD-N    2016-05-30 2016-07-26 13:43  08:01</code></pre>
+## 1 1     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 2 1     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 3 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 4 2     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 5 3     CLVD-N    2016-05-30 2016-07-26 09:45  08:01 
+## 6 3     CLVD-N    2016-05-30 2016-07-26 09:45  08:01</code></pre>
 <pre class="r"><code>df %&gt;% 
   select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %&gt;% tail()</code></pre>
 <pre><code>## # A tibble: 6 x 6
 ## # Groups:   Sdlg [6]
 ##   Sdlg  FirePatch Date1      Date2      Time1  Time2 
 ##   &lt;fct&gt; &lt;chr&gt;     &lt;date&gt;     &lt;date&gt;     &lt;time&gt; &lt;time&gt;
-## 1 20    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
-## 2 21    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
-## 3 22    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
-## 4 23    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 1 22    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 2 23    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 3 24    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
+## 4 25    FRDS-JB   2016-06-10 9999-09-09 08:39  01:00 
 ## 5 139   PLKN-W    2016-06-30 9999-09-09 15:00  01:00 
 ## 6 125w  WRTS-1    2016-06-29 9999-09-09 01:00  01:00</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 234</code></pre>
+<pre><code>## [1] 289</code></pre>
 </div>
 <div id="delete-original-time-column" class="section level3">
 <h3>Delete original time column</h3>
@@ -619,20 +655,20 @@ df &lt;- df %&gt;%
   select(-Personel)</code></pre>
 <pre class="r"><code>df %&gt;% 
   summarize(any(Photo.==&quot;y&quot;))</code></pre>
-<pre><code>## # A tibble: 222 x 2
+<pre><code>## # A tibble: 274 x 2
 ##    Sdlg  `any(Photo. == &quot;y&quot;)`
 ##    &lt;fct&gt; &lt;lgl&gt;               
-##  1 10    TRUE                
-##  2 100   TRUE                
-##  3 103   TRUE                
-##  4 104   TRUE                
-##  5 105   FALSE               
-##  6 106   FALSE               
-##  7 107   FALSE               
-##  8 108   FALSE               
-##  9 109   FALSE               
-## 10 11    TRUE                
-## # ... with 212 more rows</code></pre>
+##  1 1     TRUE                
+##  2 10    TRUE                
+##  3 100   TRUE                
+##  4 103   TRUE                
+##  5 104   TRUE                
+##  6 105   FALSE               
+##  7 106   FALSE               
+##  8 107   FALSE               
+##  9 108   FALSE               
+## 10 109   FALSE               
+## # ... with 264 more rows</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Photo. = as.character(Photo.)) %&gt;% 
   mutate(Photo = ifelse(any(Photo. %in% c(&quot;y&quot;, &quot;yes&quot;)), &quot;1&quot;, &quot;0&quot;)) %&gt;% 
@@ -718,36 +754,15 @@ df &lt;- df %&gt;%
 ## `forcats::fct_explicit_na`
 
 ## Warning: Factor `Sdlg` contains implicit NA, consider using
-## `forcats::fct_explicit_na`
-
-## Warning: Factor `Sdlg` contains implicit NA, consider using
 ## `forcats::fct_explicit_na`</code></pre>
 <pre class="r"><code>print(boo)</code></pre>
-<pre><code>## $Note1
-## # A tibble: 20 x 31
-## # Groups:   Sdlg [10]
-##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
-##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
-##  1 CLVD  N         1626           72432         4303788 2     PIPO   
-##  2 CLVD  N         1626           72432         4303788 2     PIPO   
-##  3 CLVD  N         1626          724392         4303842 6     ABCO   
-##  4 CLVD  N         1626          724392         4303842 6     ABCO   
-##  5 CLVD  N         1626.         724392         4303842 7     ABCO   
-##  6 CLVD  N         1626.         724392         4303842 7     ABCO   
-##  7 CLVD  N         1626.         724392         4303842 8     PIPO   
-##  8 CLVD  N         1626.         724392         4303842 8     PIPO   
-##  9 CLVD  N         1626.         724392         4303842 9     ABCO   
-## 10 CLVD  N         1626.         724392         4303842 9     ABCO   
-## 11 CLVD  N         1626.         724392         4303842 10    PIPO   
-## 12 CLVD  N         1626.         724392         4303842 10    PIPO   
-## 13 CLVD  N         1626.         724392         4303842 11    PIPO   
-## 14 CLVD  N         1626.         724392         4303842 11    PIPO   
-## 15 CLVD  N         1626.         724392         4303842 15    ABCO   
-## 16 CLVD  N         1626.         724392         4303842 15    ABCO   
-## 17 FRDS  A           NA          734550         4296666 26    PIPO   
-## 18 FRDS  A           NA          734550         4296666 27    PIPO   
-## 19 FRDS  A           NA          734550         4296666 26    PIPO   
-## 20 FRDS  A           NA          734550         4296666 27    PIPO   
+<pre><code>## $Species
+## # A tibble: 2 x 31
+## # Groups:   Sdlg [1]
+##   Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
+##   &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
+## 1 CLVD  N         1626.         724392         4303842 16    PILA   
+## 2 CLVD  N         1626.         724392         4303842 16    PIPO   
 ## # ... with 24 more variables: Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
 ## #   Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;,
 ## #   Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1 &lt;fct&gt;,
@@ -755,6 +770,29 @@ df &lt;- df %&gt;%
 ## #   DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;,
 ## #   personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;,
 ## #   Photo &lt;chr&gt;
+## 
+## $Note1
+## # A tibble: 26 x 31
+## # Groups:   Sdlg [13]
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
+##  1 CLVD  N         1626           72432         4303788 1     PILA   
+##  2 CLVD  N         1626           72432         4303788 1     PILA   
+##  3 CLVD  N         1626           72432         4303788 2     PIPO   
+##  4 CLVD  N         1626           72432         4303788 2     PIPO   
+##  5 CLVD  N         1626           72432         4303788 3     PSME   
+##  6 CLVD  N         1626           72432         4303788 3     PSME   
+##  7 CLVD  N         1626          724392         4303842 6     ABCO   
+##  8 CLVD  N         1626          724392         4303842 6     ABCO   
+##  9 CLVD  N         1626.         724392         4303842 7     ABCO   
+## 10 CLVD  N         1626.         724392         4303842 7     ABCO   
+## # ... with 16 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
+## #   Aspect.deg &lt;dbl&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
+## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
+## #   Note1 &lt;fct&gt;, Note2 &lt;fct&gt;, Note3_Light &lt;fct&gt;, DataSheet &lt;fct&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;,
+## #   Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $Note2
 ## # A tibble: 4 x 31
@@ -774,21 +812,21 @@ df &lt;- df %&gt;%
 ## #   Photo &lt;chr&gt;
 ## 
 ## $DataSheet
-## # A tibble: 24 x 31
-## # Groups:   Sdlg [12]
+## # A tibble: 30 x 31
+## # Groups:   Sdlg [15]
 ##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
-##  1 CLVD  N         1626           72432         4303788 2     PIPO   
-##  2 CLVD  N         1626           72432         4303788 2     PIPO   
-##  3 CLVD  N         1626          724321         4303791 4     PIPO   
-##  4 CLVD  N         1626          724321         4303791 4     PIPO   
-##  5 CLVD  N         1626          724321         4303791 5     PIPO   
-##  6 CLVD  N         1626          724321         4303791 5     PIPO   
-##  7 CLVD  N         1626          724392         4303842 6     ABCO   
-##  8 CLVD  N         1626          724392         4303842 6     ABCO   
-##  9 CLVD  N         1626.         724392         4303842 7     ABCO   
-## 10 CLVD  N         1626.         724392         4303842 7     ABCO   
-## # ... with 14 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
+##  1 CLVD  N          1626          72432         4303788 1     PILA   
+##  2 CLVD  N          1626          72432         4303788 1     PILA   
+##  3 CLVD  N          1626          72432         4303788 2     PIPO   
+##  4 CLVD  N          1626          72432         4303788 2     PIPO   
+##  5 CLVD  N          1626          72432         4303788 3     PSME   
+##  6 CLVD  N          1626          72432         4303788 3     PSME   
+##  7 CLVD  N          1626         724321         4303791 4     PIPO   
+##  8 CLVD  N          1626         724321         4303791 4     PIPO   
+##  9 CLVD  N          1626         724321         4303791 5     PIPO   
+## 10 CLVD  N          1626         724321         4303791 5     PIPO   
+## # ... with 20 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
 ## #   Aspect.deg &lt;dbl&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
 ## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
 ## #   Note1 &lt;fct&gt;, Note2 &lt;fct&gt;, Note3_Light &lt;fct&gt;, DataSheet &lt;fct&gt;,
@@ -797,21 +835,21 @@ df &lt;- df %&gt;%
 ## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $return
-## # A tibble: 24 x 31
-## # Groups:   Sdlg [12]
+## # A tibble: 30 x 31
+## # Groups:   Sdlg [15]
 ##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
-##  1 CLVD  N         1626           72432         4303788 2     PIPO   
-##  2 CLVD  N         1626           72432         4303788 2     PIPO   
-##  3 CLVD  N         1626          724321         4303791 4     PIPO   
-##  4 CLVD  N         1626          724321         4303791 4     PIPO   
-##  5 CLVD  N         1626          724321         4303791 5     PIPO   
-##  6 CLVD  N         1626          724321         4303791 5     PIPO   
-##  7 CLVD  N         1626          724392         4303842 6     ABCO   
-##  8 CLVD  N         1626          724392         4303842 6     ABCO   
-##  9 CLVD  N         1626.         724392         4303842 7     ABCO   
-## 10 CLVD  N         1626.         724392         4303842 7     ABCO   
-## # ... with 14 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
+##  1 CLVD  N          1626          72432         4303788 1     PILA   
+##  2 CLVD  N          1626          72432         4303788 1     PILA   
+##  3 CLVD  N          1626          72432         4303788 2     PIPO   
+##  4 CLVD  N          1626          72432         4303788 2     PIPO   
+##  5 CLVD  N          1626          72432         4303788 3     PSME   
+##  6 CLVD  N          1626          72432         4303788 3     PSME   
+##  7 CLVD  N          1626         724321         4303791 4     PIPO   
+##  8 CLVD  N          1626         724321         4303791 4     PIPO   
+##  9 CLVD  N          1626         724321         4303791 5     PIPO   
+## 10 CLVD  N          1626         724321         4303791 5     PIPO   
+## # ... with 20 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
 ## #   Aspect.deg &lt;dbl&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
 ## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
 ## #   Note1 &lt;fct&gt;, Note2 &lt;fct&gt;, Note3_Light &lt;fct&gt;, DataSheet &lt;fct&gt;,
@@ -820,21 +858,21 @@ df &lt;- df %&gt;%
 ## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $personel1
-## # A tibble: 24 x 31
-## # Groups:   Sdlg [12]
+## # A tibble: 30 x 31
+## # Groups:   Sdlg [15]
 ##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;fct&gt; &lt;chr&gt;  
-##  1 CLVD  N         1626           72432         4303788 2     PIPO   
-##  2 CLVD  N         1626           72432         4303788 2     PIPO   
-##  3 CLVD  N         1626          724321         4303791 4     PIPO   
-##  4 CLVD  N         1626          724321         4303791 4     PIPO   
-##  5 CLVD  N         1626          724321         4303791 5     PIPO   
-##  6 CLVD  N         1626          724321         4303791 5     PIPO   
-##  7 CLVD  N         1626          724392         4303842 6     ABCO   
-##  8 CLVD  N         1626          724392         4303842 6     ABCO   
-##  9 CLVD  N         1626.         724392         4303842 7     ABCO   
-## 10 CLVD  N         1626.         724392         4303842 7     ABCO   
-## # ... with 14 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
+##  1 CLVD  N          1626          72432         4303788 1     PILA   
+##  2 CLVD  N          1626          72432         4303788 1     PILA   
+##  3 CLVD  N          1626          72432         4303788 2     PIPO   
+##  4 CLVD  N          1626          72432         4303788 2     PIPO   
+##  5 CLVD  N          1626          72432         4303788 3     PSME   
+##  6 CLVD  N          1626          72432         4303788 3     PSME   
+##  7 CLVD  N          1626         724321         4303791 4     PIPO   
+##  8 CLVD  N          1626         724321         4303791 4     PIPO   
+##  9 CLVD  N          1626         724321         4303791 5     PIPO   
+## 10 CLVD  N          1626         724321         4303791 5     PIPO   
+## # ... with 20 more rows, and 24 more variables: Slope.Deg &lt;dbl&gt;,
 ## #   Aspect.deg &lt;dbl&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;,
 ## #   HTLCB &lt;dbl&gt;, Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;,
 ## #   Note1 &lt;fct&gt;, Note2 &lt;fct&gt;, Note3_Light &lt;fct&gt;, DataSheet &lt;fct&gt;,
@@ -849,25 +887,28 @@ df &lt;- df %&gt;%
   select(Sdlg, personel1, personel2, return, Note1, Note2) %&gt;% 
   filter(!(Note1==&quot;&quot; &amp; Note2==&quot;&quot;)) %&gt;% 
   filter(Sdlg %in% unlist(df[df$return==1,&quot;Sdlg&quot;]))</code></pre>
-<pre><code>## # A tibble: 15 x 6
+<pre><code>## # A tibble: 18 x 6
 ## # Groups:   Sdlg [275]
 ##    Sdlg  personel1 personel2 return Note1                Note2             
 ##    &lt;fct&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;  &lt;fct&gt;                &lt;fct&gt;             
-##  1 2     0         VF HH     1      &quot;  &quot;                 &quot;&quot;                
-##  2 6     &quot;CT &quot;     VF HH     0      right under log      &quot;&quot;                
-##  3 6     0         VF HH     1      broken top           &quot;&quot;                
-##  4 7     &quot;CT &quot;     VF HH     0      need to exclude, bi~ &quot;&quot;                
-##  5 7     0         VF HH     1      oak greater than 3m~ &quot;&quot;                
-##  6 8     &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
-##  7 9     &quot;CT &quot;     VF HH     0      &quot; missing slope and~ error in file 26?~
-##  8 10    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
-##  9 11    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
-## 10 15    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ center stem missi~
-## 11 15    0         VF HH     1      broken top           &quot;&quot;                
-## 12 26    0         VF HH     1      &quot; combine with othe~ &quot;&quot;                
-## 13 27    0         VF HH     1      combine with other ~ &quot;&quot;                
-## 14 26    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;                
-## 15 27    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;</code></pre>
+##  1 1     &quot;CT &quot;     VF HH     0      first plot using li~ &quot;&quot;                
+##  2 2     0         VF HH     1      &quot;  &quot;                 &quot;&quot;                
+##  3 3     &quot;CT &quot;     VF HH     0      averaged two files'~ &quot;&quot;                
+##  4 6     &quot;CT &quot;     VF HH     0      right under log      &quot;&quot;                
+##  5 6     0         VF HH     1      broken top           &quot;&quot;                
+##  6 7     &quot;CT &quot;     VF HH     0      need to exclude, bi~ &quot;&quot;                
+##  7 7     0         VF HH     1      oak greater than 3m~ &quot;&quot;                
+##  8 8     &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
+##  9 9     &quot;CT &quot;     VF HH     0      &quot; missing slope and~ error in file 26?~
+## 10 10    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
+## 11 11    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
+## 12 15    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ center stem missi~
+## 13 15    0         VF HH     1      broken top           &quot;&quot;                
+## 14 16    &quot;CT &quot;     VF HH     0      &quot; missing slope and~ &quot;&quot;                
+## 15 26    0         VF HH     1      &quot; combine with othe~ &quot;&quot;                
+## 16 27    0         VF HH     1      combine with other ~ &quot;&quot;                
+## 17 26    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;                
+## 18 27    &quot;CT jb &quot;  VF HH     0      return               &quot;&quot;</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(Note2 = as.character(paste(Note2))) %&gt;% 
   mutate(Note1 = as.character(paste(Note1))) %&gt;% 
@@ -881,21 +922,21 @@ df &lt;- df %&gt;%
 <h2>Make two datasheet columns</h2>
 <pre class="r"><code>df &lt;- df %&gt;% rename(DataSheet1 = DataSheet) %&gt;% mutate(DataSheet2 = ifelse(return ==1, paste(DataSheet1), &quot;NA&quot;))
 df %&gt;% filter(Sdlg %in% unlist(df[df$return==1,&quot;Sdlg&quot;])) %&gt;% select(Fire, Sdlg, DataSheet1, DataSheet2) </code></pre>
-<pre><code>## # A tibble: 25 x 4
-## # Groups:   Sdlg [13]
+<pre><code>## # A tibble: 30 x 4
+## # Groups:   Sdlg [15]
 ##    Fire  Sdlg  DataSheet1                     DataSheet2                   
 ##    &lt;chr&gt; &lt;fct&gt; &lt;fct&gt;                          &lt;chr&gt;                        
-##  1 CLVD  2     Data_Sheet_CLVD_N_May_30       NA                           
-##  2 CLVD  2     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
-##  3 CLVD  4     Data_Sheet_CLVD_N_May_30_2     NA                           
-##  4 CLVD  4     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
-##  5 CLVD  5     Data_Sheet_CLVD_N_May_30_2     NA                           
-##  6 CLVD  5     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
-##  7 CLVD  6     Data_Sheet_CLVD_N_May_30_2     NA                           
-##  8 CLVD  6     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
-##  9 CLVD  7     Data_Sheet_CLVD_N_May_31       NA                           
-## 10 CLVD  7     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
-## # ... with 15 more rows</code></pre>
+##  1 CLVD  1     Data_Sheet_CLVD_N_May_30       NA                           
+##  2 CLVD  1     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  3 CLVD  2     Data_Sheet_CLVD_N_May_30       NA                           
+##  4 CLVD  2     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  5 CLVD  3     Data_Sheet_CLVD_N_May_30       NA                           
+##  6 CLVD  3     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  7 CLVD  4     Data_Sheet_CLVD_N_May_30_2     NA                           
+##  8 CLVD  4     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+##  9 CLVD  5     Data_Sheet_CLVD_N_May_30_2     NA                           
+## 10 CLVD  5     Data_Sheet_CLVD_N_JUL_26_2016~ Data_Sheet_CLVD_N_JUL_26_201~
+## # ... with 20 more rows</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(DataSheet2 = ifelse(return==1 &amp; Fire ==&quot;CLVD&quot;, &quot;Data_Sheet_CLVD_N_JUL_26_2016(1)&quot;, DataSheet2)) %&gt;% 
   mutate(DataSheet2 = ifelse(return==1 &amp; Fire == &quot;FRDS&quot;, &quot;Data_Sheet_FRDS_MID_JUL_27_2016&quot;, DataSheet2))</code></pre>
@@ -903,7 +944,7 @@ df %&gt;% filter(Sdlg %in% unlist(df[df$return==1,&quot;Sdlg&quot;])) %&gt;% sel
 <div id="now-i-can-finally-delete-rows-that-have-return-1" class="section level2">
 <h2>NOW I can finally delete rows that have return == 1</h2>
 <pre class="r"><code>nrow(df)</code></pre>
-<pre><code>## [1] 234</code></pre>
+<pre><code>## [1] 289</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   filter(return != 1)</code></pre>
 <div id="check-for-duplicate-seedling-names---this-should-be-true" class="section level3">

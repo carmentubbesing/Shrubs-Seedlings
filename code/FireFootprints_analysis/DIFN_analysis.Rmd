@@ -24,40 +24,81 @@ set.seed(12346)
 
 The point of this script is to see if DIFN decreases with time since fire independent of cover and height 
 
-
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
-load(file="../../compiled_data/fire_footprints/master_data_2016.Rdata")
+load(file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata")
+load(file = "../../compiled_data/fire_footprints/seedlings_DIFN_cleaned_2016.Rdata")
 ```
-
 
 # Add ShrubSpp03 where it's missing for reference measurements
 ```{r}
-df <- df %>% 
+shr_by_sdlg <- shr_by_sdlg %>% 
   mutate(ShrubSpp03 = as.character(ShrubSpp03)) %>% 
   mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
   mutate(ShrubSpp03 = ifelse(Sdlg %in% c("ARPA-1"), "ARPA", as.character(ShrubSpp03))) %>% 
-  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("ceco-1"), "CECO", ShrubSpp03)) %>% 
-  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("CEIN-1", "CEIN-2"), "CEIN", ShrubSpp03)) %>% 
-  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("chfo-1"), "CHFO", ShrubSpp03)) %>% 
-  mutate(ShrubSpp03 = ifelse(Sdlg %in% c("LIDE-1", "LIDE-2", "LIDE-3", "LIDE-4"), "LIDE", ShrubSpp03)) %>% 
   mutate(ShrubSpp03 = ifelse(ShrubSpp03 == "ARVI", "ARPA", ShrubSpp03)) 
-
 ```
 
-# Rename LAI LAI.53
+# Add seedling heights
+```{r}
+df <- left_join(shr_by_sdlg, df)
+```
+
+# Throw out seedling without DIFN data
+```{r}
+df <- df %>% filter(!is.na(DIFN.53))
+```
+
+# Look at seedlings with no fire assignment
+```{r}
+summary(as.factor(df$Fire))
+```
+
 ```{r}
 df <- df %>% 
-  rename(LAI.53 = LAI)
+  mutate(Fire = ifelse(Sdlg == "125F", "FRDS", Fire))
 ```
 
+```{r}
+df %>% 
+  arrange(Date) %>% 
+  select(Sdlg, Date, Fire, DataSheet1, DataSheet2) %>% 
+  View()
+```
+
+# Correct data sheet and fire for the rows that are missing it
+
+```{r}
+df <- df %>% 
+  mutate(DataSheet1 = ifelse(Sdlg %in% c("LIDE-4", "LIDE-3", "LIDE-2", "LIDE-1"),"Data_Sheet_AMRC_NW_JUN_22_1", paste(DataSheet1))) %>% 
+  mutate(Fire = ifelse(Sdlg %in% c("LIDE-4", "LIDE-3", "LIDE-2", "LIDE-1"),"AMRC", paste(Fire))) %>% 
+  mutate(Fire = ifelse(Sdlg=="CECO-1","AMRC", paste(Fire))) %>% 
+  mutate(Fire = ifelse(Sdlg=="ARPA-1","CLVD", paste(Fire))) %>% 
+  mutate(DataSheet1 = ifelse(Sdlg=="ARPA-1", "Data_Sheet_CLVD_SE_JUN24_2", paste(DataSheet1))) %>% 
+  mutate(DataSheet1 = ifelse(Sdlg %in% c("CEIN-1", "CEIN-2"), "Data_Sheet_PLKN_W_JUL_1", paste(DataSheet1))) %>% 
+    mutate(Fire = ifelse(Sdlg %in% c("CEIN-1", "CEIN-2"), "PLKN", paste(Fire))) 
+```
+
+# Add years since fire
+```{r}
+df <- droplevels(df)
+summary(as.factor(df$Fire))
+df <- df %>% 
+  mutate(Years = ifelse(Fire == "AMRC", 8, 0)) %>% 
+  mutate(Years = ifelse(Fire == "CLVD", 24, Years)) %>% 
+  mutate(Years = ifelse(Fire == "FRDS", 12, Years)) %>% 
+  mutate(Years = ifelse(Fire == "PLKN", 43, Years)) %>% 
+  mutate(Years = ifelse(Fire == "STAR", 14, Years)) %>% 
+  mutate(Years = ifelse(Fire == "WRTS", 35, Years))
+summary(as.factor(df$Years))
+```
 
 # Narrow down df to just obsv with DIFN and no repeats
 ```{r}
 dfl <- df %>% 
   filter(!is.na(DIFN.53)) %>% 
-  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File, DIFN.all, ShrubSpp03, Cov1.3, Ht1.3, ShrG1, Years, LAI.53, DIFN.53, Ht1, Cov1, ShrubSpp01, Ht1.2, Cov1.2, ref)
+  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File,ShrubSpp03, Cov1.3, Ht1.3, Years, LAI.53, DIFN.53, ref)
 ```
 
 # Add shrubarea3 column
@@ -70,7 +111,7 @@ dfl <- dfl %>%
 
 ## Load 2017 data with up-to-date heights
 ```{r}
-load("../../compiled_data/fire_footprints/master_seedlings2.Rdata")
+load("../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 df17 <- df
 remove(df)
 ```
@@ -79,14 +120,13 @@ remove(df)
 ```{r}
 df17 <- df17 %>% 
   filter(Year=="2015") %>% 
-  select(Sdlg, Ht_cm2)
+  dplyr::select(Sdlg, Ht_cm2)
 ```
 
 ### Join with DIFN data
 ```{r}
 dfl <- left_join(dfl, df17, by = "Sdlg")
 ```
-
 
 ## Add height of 0 for seedling-less measurements
 ```{r}
@@ -96,42 +136,34 @@ dfl <- dfl %>%
 
 ## Average height for DIFN with multiple seedlings
 ```{r}
-dfl <- dfl %>% 
+dfl %>% 
   arrange(FirePatch) %>% 
   arrange(Fire) %>% 
   arrange(Cov1.3) %>% 
-  arrange(DIFN.all) %>% 
-  group_by(Fire, FirePatch, DIFN.all, Cov1.3, Ht1.3) %>% 
+  arrange(DIFN.53) %>% 
+  group_by(Fire, FirePatch, DIFN.53, Cov1.3, Ht1.3) %>% 
   mutate(Ht.cm = mean(Ht.cm)) %>% 
   ungroup() %>% 
-  select(-Sdlg) %>% 
-  distinct()
+  distinct() 
 ```
 
 ## Take out spots with >30 cm tree height
 ```{r}
 dfl <- dfl %>% 
-  filter(Ht.cm<30)
+  filter(Ht.cm<50)
 ```
-
-
-# NEED TO: CORRECT 2016 HEIGHTS USING 2017 DATA
-
-# NEED TO: CHECK NOTES FROM LIGHT FILES TO SEE IF I TOOK THE LIGHT MEASUREMENTS AT THE HEIGHT OF ONE OR ANOTHER OF THE REPEATED SEEDLINGS
-
 
 # Group shrub species
 ```{r}
 nrow(dfl)
 summary(as.factor(dfl$ShrubSpp03))
 dfl <- dfl %>%   
-  mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CHFO", "CEIN", "LIDE"), "Other", as.character(ShrubSpp03))) %>%   mutate(ShrubSpp01 = ifelse(!ShrubSpp01 %in% c("CECO", "ARPA", "LIDE", "CHSE", "CHFO", "CEIN"), "Other", as.character(ShrubSpp01)))
-summary(as.factor(dfl$ShrubSpp01))
+  mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CHFO", "CEIN", "LIDE"), "Other", as.character(ShrubSpp03))) 
+
 summary(as.factor(dfl$ShrubSpp03))
 dfl <- dfl %>% 
   mutate(ShrubSpp03 = ifelse(ShrubSpp03 %in% c("CEIN", "CECO"), "Ceanothos", ShrubSpp03))
 ```
-
 
 # Look at DIFN in comparison to shrub cover, area, and species
 ```{r}
@@ -150,17 +182,19 @@ hist(log(dfl$DIFN.53))
 
 No reason to transform DIFN
 
-# Take out 2 DIFN measurements because they don't make sense
+# Take out 2 DIFN measurements = 0 because they don't make sense
 ```{r}
 dfl <- dfl %>% 
-  filter(DIFN.all != 0)
+  filter(DIFN.53 != 0)
 nrow(dfl)
 ```
 
 # Model DIFN in relation to shrubarea3, shrub species, years since fire
 
 ```{r}
-LM <- lm(DIFN.53 ~ Years +  shrubarea3, data = dfl)
+dfl <- dfl %>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+LM <- lm(DIFN.53 ~ Years +  shrubarea3 + ShrubSpp03, data = dfl)
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
@@ -179,7 +213,7 @@ ggplot(dfl)+
 
 # To test for the effect of Years since fire when shrubarea and species have been accounted for, model the residuals of that model against Years
 ```{r}
-LM_noyears <- lm(DIFN.all ~ ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
+LM_noyears <- lm(DIFN.53 ~ ShrubSpp03 + Ht1.3 + Cov1.3, data = dfl)
 dfl$E_noyears <- resid(LM_noyears)
 ggplot(dfl, aes(x = as.factor(Years), y = E_noyears))+
   geom_boxplot()
@@ -197,7 +231,7 @@ plot(predictorEffect("Years",LM_resid))
 
 # To test for the effect of Years since fire when only shrubarea has been accounted for, model the residuals of that model against Years
 ```{r}
-LM_noyears <- lm(DIFN.all ~ shrubarea3, data = dfl)
+LM_noyears <- lm(DIFN.53 ~ shrubarea3, data = dfl)
 dfl$E_noyears <- resid(LM_noyears)
 ggplot(dfl, aes(x = as.factor(Years), y = E_noyears))+
   geom_boxplot()

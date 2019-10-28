@@ -20,6 +20,11 @@ setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
+# Take out species that aren't PIPO or ABCO
+```{r}
+df <- df %>% filter(Species %in% c("PIPO", "ABCO"))
+```
+
 # Calculate 2015 height values
 
 ## Calculate 2015 and 2016 height by subtracting growth from 2017 height, unless there's no 2017 height value
@@ -524,6 +529,18 @@ save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata
 # Print final seedlings 
 ```{r}
 sort(df$Sdlg)
+```
+
+## By species
+```{r}
+sort(unique(df$Sdlg[df$Species=="ABCO"]))
+sort(unique(df$Sdlg[df$Species=="PIPO"]))
+
+length(unique(df$Sdlg[df$Species=="ABCO"]))
+length(unique(df$Sdlg[df$Species=="PIPO"]))
+length(df$Sdlg[df$Species=="ABCO"])
+length(df$Sdlg[df$Species=="PIPO"])
+
 ```
 
 # Print all shrub patches

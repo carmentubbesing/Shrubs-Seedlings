@@ -22,6 +22,7 @@ ymax_set <- 10
 
 ## Growth results from fire footprints
 ```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
 load(file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
 load(file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
@@ -156,9 +157,11 @@ row.names(abco_growth_pred) <- c("min", "max", "median")
 abco_growth_pred
 abco_growth_pred <- abco_growth_pred %>% 
   mutate(shrubs = row.names(abco_growth_pred)) %>%  
+   mutate(growth = c(gr_minshrub_abco, gr_maxshrub_abco, gr_medshrub_abco)) %>% 
   rename(Mort = "V1") %>% 
   mutate(Species = "ABCO") %>% 
-  mutate(Perc_mort = Mort*100) 
+  mutate(Perc_mort = Mort*100) %>% 
+  dplyr::select(shrubs, Species, growth, Mort, Perc_mort)
 abco_growth_pred
 ```
 
@@ -218,7 +221,7 @@ dfgraph_upper <- dfgraph_upper %>%
   mutate(prob = prob/3)
 ```
 
-# Plot it
+## Plot it
 
 ```{r}
 ggplot()+
@@ -235,4 +238,69 @@ ggplot()+
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
 
+
+## Calculate the range of mortality probabilities captured by the fire footprint growth data
+
+### Load growth results from fire footprings
+```{r}
+load(file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
+load(file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
+load(file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
+```
+
+### Create a function for calculating mort probability
+```{r}
+calc_prob_mort <- function(log_growth){
+  prob_3_yrs <- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
+  return(prob_3_yrs/3)
+}
+```
+
+### Check it
+```{r}
+test_log_growth <- head(dfgraph)[1,1]
+test_log_growth
+calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]
+```
+
+### Use it
+```{r}
+prob_min <- calc_prob_mort(log(gr_minshrub_pipo))
+prob_max <- calc_prob_mort(log(gr_maxshrub_pipo))  
+prob_min
+prob_max
+prob_min-prob_max
+(prob_max-prob_min)/prob_min
+```
+
+```{r}
+prob_median <-calc_prob_mort(log(gr_medshrub_pipo))
+prob_median
+```
+
+### Compile the results
+```{r}
+pipo_growth_pred <- cbind(prob_min, prob_max, prob_median)
+pipo_growth_pred <- as.data.frame(t(pipo_growth_pred)) 
+row.names(pipo_growth_pred) <- c("min", "max", "median")
+pipo_growth_pred
+pipo_growth_pred <- pipo_growth_pred %>% 
+  mutate(shrubs = row.names(pipo_growth_pred)) %>%  
+  mutate(growth = c(gr_minshrub_pipo, gr_maxshrub_pipo, gr_medshrub_pipo)) %>% 
+  rename(Mort = "V1") %>% 
+  mutate(Species = "PIPO") %>% 
+  mutate(Perc_mort = Mort*100) %>% 
+  dplyr::select(shrubs, Species, growth, Mort, Perc_mort)
+pipo_growth_pred
+```
+
+### Find how large of a change that is from smallest to largest
+```{r}
+pipo_growth_pred[2,4]/pipo_growth_pred[1,4]
+```
+
+# All pred results for both species in one table
+```{r}
+full_join(abco_growth_pred, pipo_growth_pred)
+```
 

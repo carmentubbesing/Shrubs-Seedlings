@@ -242,4 +242,3 @@ save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_pipo.Rdata"
 save(coefficient_gr, file = "../../results/coefficients/coef_gr_pipo.Rdata")
 save(coefficient_int, file = "../../results/coefficients/coef_int_pipo.Rdata")
 ```
-

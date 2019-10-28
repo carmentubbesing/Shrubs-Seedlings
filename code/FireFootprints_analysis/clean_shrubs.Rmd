@@ -29,7 +29,6 @@ shr <- shr %>%
   rename(Sdlg = Seedling.) 
 ```
  
-
 ## Replace NAs with 0
 ```{r}
 shr <- tbl_df(shr)
@@ -191,7 +190,6 @@ spp3 <- spp3 %>%
   filter(!(Sdlg==188 & ShrubSpp03 =="CECO"))
 ```
 
-
 ##### Fix spp3 data for seedling 190
 ```{r}
 shr %>% 
@@ -207,7 +205,6 @@ shr %>%
 spp3 <- spp3 %>% 
   filter(!(Sdlg==190 & ShrubSpp03 =="CECO"))
 ```
-
 
 ##### Fix spp3 data for seedling 285
 ```{r}
@@ -261,7 +258,7 @@ shr_by_sdlg <- left_join(shr_by_sdlg, df_light)
 shr_by_sdlg
 ```
 
-## Mark the measuremetns without seedling as "ref" for reference
+## Mark the measurements without seedling as "ref" for reference
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>% 
   mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0))
@@ -328,8 +325,6 @@ shr_by_sdlg %>%
   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53))
 ```
 
-# NEED TO DO: ADD BACK IN DIFN MEASUREMENTS FOR OTHER SPECIES (PSME, CADE, ETC) FOR DIFN~SHRUB ANALYSIS
-
 ## Fill in a couple seedlings with funky DIFN situations
 
 Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky
@@ -356,6 +351,16 @@ shr_by_sdlg %>%
   filter(ShrubSpp03=="ARVI")
 ```
 
+# Save for DIFN
+```{r}
+save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata")
+```
+
+## Take out trees that aren't ABCO or PIPO
+```{r}
+shr_by_sdlg <- shr_by_sdlg %>% 
+  filter(Species %in% c("ABCO", "PIPO"))
+```
 
 # Save
 ```{r}

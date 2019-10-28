@@ -43,6 +43,16 @@ ggplot(df2)+
   facet_wrap(~SPECIES)
 ```
 
+# Summarize n by species
+```{r}
+df2 %>% 
+  dplyr::select(SPECIES, DEAD_ALIVE, SEEDLING) %>% 
+  distinct() %>%
+  group_by(SPECIES, DEAD_ALIVE) %>% 
+  summarize(n())
+```
+
+
 # Nice graphs for publication
 
 ## ABCO

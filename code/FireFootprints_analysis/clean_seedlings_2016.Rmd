@@ -5,7 +5,6 @@ date: "May 20, 2019"
 output: 
     html_document:
         toc: TRUE
-        toc_depth: 1
 ---
 
 ```{r, include = F}
@@ -67,12 +66,6 @@ sdlt <- sdlt %>%
   filter(Seedling. != "17")
 ```
 
-## Take out trees that aren't ABCO or PIPO
-```{r}
-summary(as.factor(sdlt$Species)) 
-sdlt <- sdlt %>% 
-  filter(Species %in% c("ABCO", "PIPO"))
-```
 
 ## Make a tbl, rename object, and rename Seedling column
 ```{r}

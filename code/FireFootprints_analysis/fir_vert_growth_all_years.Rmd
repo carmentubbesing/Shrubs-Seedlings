@@ -256,6 +256,7 @@ plot(predictorEffect("sqrt_shrubarea3", LM))
 ## Calculate Nakagawa's pseudo R2
 ```{r}
 r.squaredGLMM(LM)
+r.squaredGLMM(LM_int)
 ```
 
 # Re-create effects plots using predictorEffects() and ggplot
@@ -378,6 +379,15 @@ ggplot(df, aes(x = shrubarea3, y = E))+
   geom_point()+
   geom_smooth()
 ```
+
+# Count how many trees have estimated 2015 heights
+```{r}
+df %>% 
+  filter(Year==2015) %>% 
+  filter(is.na(Ht2017.cm.fall) & is.na(Ht2015.meas2016)) %>% 
+  nrow()
+```
+
 
 ## Save final data
 ```{r}

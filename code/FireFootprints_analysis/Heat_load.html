@@ -246,20 +246,20 @@ summary {
 <pre class="r"><code>df %&gt;% 
   filter(is.na(Elevation)) %&gt;% 
   arrange(Sdlg)</code></pre>
-<pre><code>## # A tibble: 39 x 49
+<pre><code>## # A tibble: 51 x 52
 ##    Sdlg  Species Fire  FirePatch Ht16_meas2016.cm Ht2017.cm Patch Elevation
 ##    &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;                &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;
-##  1 159   PIPO    STAR  STAR-NW                118       124 NW           NA
-##  2 161   PIPO    STAR  STAR-NW                 81        76 NW           NA
-##  3 162   ABCO    STAR  STAR-NW                 44        49 NW           NA
-##  4 163   ABCO    STAR  STAR-NW                 61        59 NW           NA
-##  5 164   ABCO    STAR  STAR-NW                 60        68 NW           NA
-##  6 166   ABCO    STAR  STAR-NW                 46        48 NW           NA
-##  7 167   PIPO    STAR  STAR-NW                134       235 NW           NA
-##  8 168   PIPO    STAR  STAR-NW                186       200 NW           NA
-##  9 169   PIPO    STAR  STAR-NW                 66       190 NW           NA
-## 10 170   ABCO    STAR  STAR-NW                 64        48 NW           NA
-## # ... with 29 more rows, and 41 more variables: Nearby_Easting &lt;dbl&gt;,
+##  1 156   CADE    STAR  STAR-NW                107        NA NW           NA
+##  2 157   CADE    STAR  STAR-NW                106        NA NW           NA
+##  3 158   CADE    STAR  STAR-NW                123        NA NW           NA
+##  4 159   PIPO    STAR  STAR-NW                118       124 NW           NA
+##  5 160   CADE    STAR  STAR-NW                 56        NA NW           NA
+##  6 161   PIPO    STAR  STAR-NW                 81        76 NW           NA
+##  7 162   ABCO    STAR  STAR-NW                 44        49 NW           NA
+##  8 163   ABCO    STAR  STAR-NW                 61        59 NW           NA
+##  9 164   ABCO    STAR  STAR-NW                 60        68 NW           NA
+## 10 165   PILA    STAR  STAR-NW                133        NA NW           NA
+## # ... with 41 more rows, and 44 more variables: Nearby_Easting &lt;dbl&gt;,
 ## #   Nearby_Northing &lt;dbl&gt;, Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;,
 ## #   BasDia2016.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;,
 ## #   Dia2016 &lt;dbl&gt;, Dia2015 &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1_2016 &lt;chr&gt;,
@@ -267,10 +267,11 @@ summary {
 ## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, return &lt;chr&gt;, Date1_2016 &lt;date&gt;,
 ## #   Date2_2016 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;,
 ## #   Time2 &lt;time&gt;, Photo &lt;chr&gt;, Datasheet2_2016 &lt;chr&gt;, ShrubSpp03 &lt;fct&gt;,
-## #   Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;,
-## #   DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;,
-## #   BasDia2017.mm.2 &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
-## #   Growth_15 &lt;chr&gt;, Notes2017 &lt;chr&gt;, shrubarea3 &lt;dbl&gt;, siteclass &lt;dbl&gt;</code></pre>
+## #   Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;, ref &lt;dbl&gt;,
+## #   Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Map &lt;chr&gt;,
+## #   Status &lt;chr&gt;, BasDia2017.mm.1 &lt;chr&gt;, BasDia2017.mm.2 &lt;chr&gt;,
+## #   Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, Notes2017 &lt;chr&gt;,
+## #   shrubarea3 &lt;dbl&gt;, siteclass &lt;dbl&gt;</code></pre>
 <div id="create-function-for-adding-elevation-data-to-an-individual-seedling" class="section level2">
 <h2>Create function for adding elevation data to an individual seedling</h2>
 <pre class="r"><code>elv &lt;- function(sdlg, elev){
@@ -371,9 +372,16 @@ elv_est</code></pre>
   arrange(Sdlg) %&gt;% 
   dplyr::select(Sdlg, FirePatch, Elevation, Slope.Deg, Aspect.deg) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 0 x 5
-## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, Elevation &lt;dbl&gt;,
-## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 7 x 5
+##   Sdlg  FirePatch Elevation Slope.Deg Aspect.deg
+##   &lt;chr&gt; &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;
+## 1 156   STAR-NW          NA        19        112
+## 2 157   STAR-NW          NA        19        112
+## 3 158   STAR-NW          NA        19        112
+## 4 160   STAR-NW          NA        19        112
+## 5 173   STAR-NW          NA        17        182
+## 6 175   STAR-mid         NA        12        100
+## 7 261   AMRC-3           NA         3        350</code></pre>
 </div>
 </div>
 <div id="repeat-for-aspect" class="section level1">
@@ -898,20 +906,20 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   filter(is.na(X)) %&gt;% 
   dplyr::select(Sdlg, FirePatch, X, Species) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 38 x 4
+<pre><code>## # A tibble: 49 x 4
 ##    Sdlg  FirePatch     X Species
 ##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;  
 ##  1 282   CLVD-N       NA ABCO   
 ##  2 42    AMRC-NW      NA PIPO   
-##  3 46    AMRC-NW      NA ABCO   
-##  4 48    AMRC-NW      NA ABCO   
-##  5 52    AMRC-NE      NA ABCO   
-##  6 55    AMRC-NE      NA ABCO   
-##  7 82    AMRC-2       NA ABCO   
-##  8 84    AMRC-2       NA PIPO   
-##  9 104   AMRC-2       NA ABCO   
-## 10 106   AMRC-2       NA ABCO   
-## # ... with 28 more rows</code></pre>
+##  3 45    AMRC-NW      NA PILA   
+##  4 46    AMRC-NW      NA ABCO   
+##  5 47    AMRC-NW      NA PSME   
+##  6 48    AMRC-NW      NA ABCO   
+##  7 49    AMRC-NW      NA PSME   
+##  8 50    AMRC-NE      NA PILA   
+##  9 52    AMRC-NE      NA ABCO   
+## 10 55    AMRC-NE      NA ABCO   
+## # ... with 39 more rows</code></pre>
 </div>
 <div id="check-which-patches-theyre-concentrated-in" class="section level3">
 <h3>Check which patches they’re concentrated in</h3>
@@ -920,16 +928,19 @@ long(c(&quot;78&quot;, 79), &quot;78, 79&quot;)</code></pre>
   dplyr::select(FirePatch, X, Species) %&gt;% 
   group_by(FirePatch) %&gt;% 
   summarize(n())</code></pre>
-<pre><code>## # A tibble: 7 x 2
-##   FirePatch `n()`
-##   &lt;chr&gt;     &lt;int&gt;
-## 1 AMRC-2       12
-## 2 AMRC-3        5
-## 3 AMRC-NE      14
-## 4 AMRC-NW       3
-## 5 CLVD-N        1
-## 6 FRDS-A        1
-## 7 WRTS-1        2</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    FirePatch  `n()`
+##    &lt;chr&gt;      &lt;int&gt;
+##  1 AMRC-2        12
+##  2 AMRC-3         6
+##  3 AMRC-NE       15
+##  4 AMRC-NW        7
+##  5 CLVD-N         1
+##  6 FRDS-A         1
+##  7 FRDS-N         2
+##  8 FRDS-SE        1
+##  9 PLKN-MID W     2
+## 10 WRTS-1         2</code></pre>
 </div>
 <div id="function-for-assigning-latitude" class="section level3">
 <h3>Function for assigning latitude</h3>
@@ -1014,9 +1025,20 @@ latave(&quot;125W&quot;, c(123, 124))</code></pre>
   filter(is.na(Y)) %&gt;% 
   dplyr::select(Sdlg, FirePatch, X, Y, Species) %&gt;% 
   distinct()</code></pre>
-<pre><code>## # A tibble: 0 x 5
-## # ... with 5 variables: Sdlg &lt;chr&gt;, FirePatch &lt;chr&gt;, X &lt;dbl&gt;, Y &lt;dbl&gt;,
-## #   Species &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 11 x 5
+##    Sdlg  FirePatch      X     Y Species
+##    &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  
+##  1 45    AMRC-NW       NA    NA PILA   
+##  2 47    AMRC-NW       NA    NA PSME   
+##  3 49    AMRC-NW       NA    NA PSME   
+##  4 50    AMRC-NE       NA    NA PILA   
+##  5 70    AMRC-NW       NA    NA CADE   
+##  6 136   PLKN-MID W    NA    NA CADE   
+##  7 138   PLKN-MID W    NA    NA CADE   
+##  8 126   FRDS-N        NA    NA PILA   
+##  9 125F  FRDS-N        NA    NA PILA   
+## 10 146   FRDS-SE       NA    NA CADE   
+## 11 261   AMRC-3        NA    NA CADE</code></pre>
 </div>
 </div>
 </div>
@@ -1080,11 +1102,22 @@ df$Aspect.rad.fold.NESW &lt;- abs(pi - abs(df$Aspect.rad - (5*pi)/4))</code></pr
 <pre class="r"><code>df %&gt;% 
   filter(is.na(heatload)) %&gt;% 
   dplyr::select(Aspect.deg, Aspect.rad, Aspect.rad.fold.NS, Aspect.rad.fold.NESW, Slope.Deg, Slope.rad, Y, Lat.rad, heatload, incidrad)</code></pre>
-<pre><code>## # A tibble: 0 x 10
-## # ... with 10 variables: Aspect.deg &lt;dbl&gt;, Aspect.rad &lt;dbl&gt;,
-## #   Aspect.rad.fold.NS &lt;dbl&gt;, Aspect.rad.fold.NESW &lt;dbl&gt;, Slope.Deg &lt;dbl&gt;,
-## #   Slope.rad &lt;dbl&gt;, Y &lt;dbl&gt;, Lat.rad &lt;dbl&gt;, heatload &lt;dbl&gt;,
-## #   incidrad &lt;dbl&gt;</code></pre>
+<pre><code>## # A tibble: 11 x 10
+##    Aspect.deg Aspect.rad Aspect.rad.fold~ Aspect.rad.fold~ Slope.Deg
+##         &lt;dbl&gt;      &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;     &lt;dbl&gt;
+##  1         22      0.384            0.384            0.401        22
+##  2         22      0.384            0.384            0.401        19
+##  3         22      0.384            0.384            0.401        19
+##  4        188      3.28             3.00             2.50         17
+##  5        185      3.23             3.05             2.44         12
+##  6        220      3.84             2.44             3.05         11
+##  7        190      3.32             2.97             2.53         22
+##  8        340      5.93             0.349            1.13         20
+##  9        310      5.41             0.873            1.66         18
+## 10        224      3.91             2.37             3.12         18
+## 11        350      6.11             0.175            0.960         3
+## # ... with 5 more variables: Slope.rad &lt;dbl&gt;, Y &lt;dbl&gt;, Lat.rad &lt;dbl&gt;,
+## #   heatload &lt;dbl&gt;, incidrad &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <div id="save" class="section level1">

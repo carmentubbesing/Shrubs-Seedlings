@@ -214,8 +214,17 @@ summary {
 <li><a href="#ci">CI</a></li>
 <li><a href="#adjust-probabilities-to-be-yearly-since-i-found-dead-trees-from-3-years-1">Adjust probabilities to be yearly, since I found dead trees from 3 years</a></li>
 </ul></li>
-</ul></li>
 <li><a href="#plot-it">Plot it</a></li>
+<li><a href="#calculate-the-range-of-mortality-probabilities-captured-by-the-fire-footprint-growth-data">Calculate the range of mortality probabilities captured by the fire footprint growth data</a><ul>
+<li><a href="#load-growth-results-from-fire-footprings">Load growth results from fire footprings</a></li>
+<li><a href="#create-a-function-for-calculating-mort-probability-1">Create a function for calculating mort probability</a></li>
+<li><a href="#check-it-1">Check it</a></li>
+<li><a href="#use-it-1">Use it</a></li>
+<li><a href="#compile-the-results-2">Compile the results</a></li>
+<li><a href="#find-how-large-of-a-change-that-is-from-smallest-to-largest">Find how large of a change that is from smallest to largest</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#all-pred-results-for-both-species-in-one-table">All pred results for both species in one table</a></li>
 </ul>
 </div>
 
@@ -230,7 +239,8 @@ summary {
 <h1>Load data</h1>
 <div id="growth-results-from-fire-footprints" class="section level2">
 <h2>Growth results from fire footprints</h2>
-<pre class="r"><code>load(file = &quot;../../results/data/FireFootprints/gr_minshrub_abco.Rdata&quot;)
+<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/code/GrowthMortality_Analysis/&quot;)
+load(file = &quot;../../results/data/FireFootprints/gr_minshrub_abco.Rdata&quot;)
 load(file = &quot;../../results/data/FireFootprints/gr_maxshrub_abco.Rdata&quot;)
 load(file = &quot;../../results/data/FireFootprints/gr_medshrub_abco.Rdata&quot;)</code></pre>
 </div>
@@ -347,7 +357,7 @@ test_log_growth</code></pre>
 <pre><code>## [1] 0.02405893</code></pre>
 <pre class="r"><code>prob_median &lt;-calc_prob_mort(log(gr_medshrub_abco))
 prob_median</code></pre>
-<pre><code>## [1] 0.008845081</code></pre>
+<pre><code>## [1] 0.008850949</code></pre>
 </div>
 <div id="use-it" class="section level2">
 <h2>Use it</h2>
@@ -355,11 +365,11 @@ prob_median</code></pre>
 prob_max &lt;- calc_prob_mort(log(gr_maxshrub_abco))
 
 prob_min</code></pre>
-<pre><code>## [1] 0.01072523</code></pre>
+<pre><code>## [1] 0.01076249</code></pre>
 <pre class="r"><code>prob_max</code></pre>
-<pre><code>## [1] 0.007228348</code></pre>
+<pre><code>## [1] 0.007211806</code></pre>
 <pre class="r"><code>(prob_max-prob_min)/prob_min</code></pre>
-<pre><code>## [1] -0.3260423</code></pre>
+<pre><code>## [1] -0.3299126</code></pre>
 </div>
 <div id="compile-the-results" class="section level2">
 <h2>Compile the results</h2>
@@ -372,9 +382,9 @@ abco_growth_pred &lt;- as.data.frame(t(abco_growth_pred)) %&gt;%
   dplyr::select(metric, ABCO_perc_mort)
 abco_growth_pred</code></pre>
 <pre><code>##        metric ABCO_perc_mort
-## 1    prob_min      1.0725226
-## 2    prob_max      0.7228348
-## 3 prob_median      0.8845081</code></pre>
+## 1    prob_min      1.0762486
+## 2    prob_max      0.7211806
+## 3 prob_median      0.8850949</code></pre>
 </div>
 <div id="compile-the-results-1" class="section level2">
 <h2>Compile the results</h2>
@@ -383,19 +393,21 @@ abco_growth_pred &lt;- as.data.frame(t(abco_growth_pred))
 row.names(abco_growth_pred) &lt;- c(&quot;min&quot;, &quot;max&quot;, &quot;median&quot;)
 abco_growth_pred</code></pre>
 <pre><code>##                 V1
-## min    0.010725226
-## max    0.007228348
-## median 0.008845081</code></pre>
+## min    0.010762486
+## max    0.007211806
+## median 0.008850949</code></pre>
 <pre class="r"><code>abco_growth_pred &lt;- abco_growth_pred %&gt;% 
   mutate(shrubs = row.names(abco_growth_pred)) %&gt;%  
+   mutate(growth = c(gr_minshrub_abco, gr_maxshrub_abco, gr_medshrub_abco)) %&gt;% 
   rename(Mort = &quot;V1&quot;) %&gt;% 
   mutate(Species = &quot;ABCO&quot;) %&gt;% 
-  mutate(Perc_mort = Mort*100) 
+  mutate(Perc_mort = Mort*100) %&gt;% 
+  dplyr::select(shrubs, Species, growth, Mort, Perc_mort)
 abco_growth_pred</code></pre>
-<pre><code>##          Mort shrubs Species Perc_mort
-## 1 0.010725226    min    ABCO 1.0725226
-## 2 0.007228348    max    ABCO 0.7228348
-## 3 0.008845081 median    ABCO 0.8845081</code></pre>
+<pre><code>##   shrubs Species    growth        Mort Perc_mort
+## 1    min    ABCO 0.1091419 0.010762486 1.0762486
+## 2    max    ABCO 0.1594805 0.007211806 0.7211806
+## 3 median    ABCO 0.1314222 0.008850949 0.8850949</code></pre>
 </div>
 </div>
 <div id="pipo" class="section level1">
@@ -465,9 +477,8 @@ dfgraph_upper &lt;- dfgraph_upper %&gt;%
   mutate(prob = prob/3)</code></pre>
 </div>
 </div>
-</div>
-<div id="plot-it" class="section level1">
-<h1>Plot it</h1>
+<div id="plot-it" class="section level2">
+<h2>Plot it</h2>
 <pre class="r"><code>ggplot()+
   geom_line(data = dfgraph, aes(x = exp(log_gr_rel), y = prob*100))+
   geom_line(data = dfgraph_lower, aes(x = exp(log_gr_rel), y = prob*100), linetype = &quot;dashed&quot;)+
@@ -486,6 +497,87 @@ dfgraph_upper &lt;- dfgraph_upper %&gt;%
 <pre><code>## Warning: Removed 90 rows containing missing values (geom_path).
 
 ## Warning: Removed 332 rows containing missing values (geom_path).</code></pre>
+</div>
+<div id="calculate-the-range-of-mortality-probabilities-captured-by-the-fire-footprint-growth-data" class="section level2">
+<h2>Calculate the range of mortality probabilities captured by the fire footprint growth data</h2>
+<div id="load-growth-results-from-fire-footprings" class="section level3">
+<h3>Load growth results from fire footprings</h3>
+<pre class="r"><code>load(file = &quot;../../results/data/FireFootprints/gr_minshrub_pipo.Rdata&quot;)
+load(file = &quot;../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata&quot;)
+load(file = &quot;../../results/data/FireFootprints/gr_medshrub_pipo.Rdata&quot;)</code></pre>
+</div>
+<div id="create-a-function-for-calculating-mort-probability-1" class="section level3">
+<h3>Create a function for calculating mort probability</h3>
+<pre class="r"><code>calc_prob_mort &lt;- function(log_growth){
+  prob_3_yrs &lt;- (exp(mean_coef_int + mean_coef_gr*log_growth)/(1+exp(mean_coef_int + mean_coef_gr* log_growth)))
+  return(prob_3_yrs/3)
+}</code></pre>
+</div>
+<div id="check-it-1" class="section level3">
+<h3>Check it</h3>
+<pre class="r"><code>test_log_growth &lt;- head(dfgraph)[1,1]
+test_log_growth</code></pre>
+<pre><code>## [1] -3.506558</code></pre>
+<pre class="r"><code>calc_prob_mort(test_log_growth) == head(dfgraph)[1,2]</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
+<div id="use-it-1" class="section level3">
+<h3>Use it</h3>
+<pre class="r"><code>prob_min &lt;- calc_prob_mort(log(gr_minshrub_pipo))
+prob_max &lt;- calc_prob_mort(log(gr_maxshrub_pipo))  
+prob_min</code></pre>
+<pre><code>## [1] 0.0007812959</code></pre>
+<pre class="r"><code>prob_max</code></pre>
+<pre><code>## [1] 0.01065232</code></pre>
+<pre class="r"><code>prob_min-prob_max</code></pre>
+<pre><code>## [1] -0.009871028</code></pre>
+<pre class="r"><code>(prob_max-prob_min)/prob_min</code></pre>
+<pre><code>## [1] 12.63417</code></pre>
+<pre class="r"><code>prob_median &lt;-calc_prob_mort(log(gr_medshrub_pipo))
+prob_median</code></pre>
+<pre><code>## [1] 0.002668788</code></pre>
+</div>
+<div id="compile-the-results-2" class="section level3">
+<h3>Compile the results</h3>
+<pre class="r"><code>pipo_growth_pred &lt;- cbind(prob_min, prob_max, prob_median)
+pipo_growth_pred &lt;- as.data.frame(t(pipo_growth_pred)) 
+row.names(pipo_growth_pred) &lt;- c(&quot;min&quot;, &quot;max&quot;, &quot;median&quot;)
+pipo_growth_pred</code></pre>
+<pre><code>##                  V1
+## min    0.0007812959
+## max    0.0106523237
+## median 0.0026687883</code></pre>
+<pre class="r"><code>pipo_growth_pred &lt;- pipo_growth_pred %&gt;% 
+  mutate(shrubs = row.names(pipo_growth_pred)) %&gt;%  
+  mutate(growth = c(gr_minshrub_pipo, gr_maxshrub_pipo, gr_medshrub_pipo)) %&gt;% 
+  rename(Mort = &quot;V1&quot;) %&gt;% 
+  mutate(Species = &quot;PIPO&quot;) %&gt;% 
+  mutate(Perc_mort = Mort*100) %&gt;% 
+  dplyr::select(shrubs, Species, growth, Mort, Perc_mort)
+pipo_growth_pred</code></pre>
+<pre><code>##   shrubs Species     growth         Mort  Perc_mort
+## 1    min    PIPO 0.27319092 0.0007812959 0.07812959
+## 2    max    PIPO 0.09888493 0.0106523237 1.06523237
+## 3 median    PIPO 0.16996795 0.0026687883 0.26687883</code></pre>
+</div>
+<div id="find-how-large-of-a-change-that-is-from-smallest-to-largest" class="section level3">
+<h3>Find how large of a change that is from smallest to largest</h3>
+<pre class="r"><code>pipo_growth_pred[2,4]/pipo_growth_pred[1,4]</code></pre>
+<pre><code>## [1] 13.63417</code></pre>
+</div>
+</div>
+</div>
+<div id="all-pred-results-for-both-species-in-one-table" class="section level1">
+<h1>All pred results for both species in one table</h1>
+<pre class="r"><code>full_join(abco_growth_pred, pipo_growth_pred)</code></pre>
+<pre><code>## Joining, by = c(&quot;shrubs&quot;, &quot;Species&quot;, &quot;growth&quot;, &quot;Mort&quot;, &quot;Perc_mort&quot;)</code></pre>
+<pre><code>##   shrubs Species     growth         Mort  Perc_mort
+## 1    min    ABCO 0.10914191 0.0107624855 1.07624855
+## 2    max    ABCO 0.15948052 0.0072118058 0.72118058
+## 3 median    ABCO 0.13142223 0.0088509486 0.88509486
+## 4    min    PIPO 0.27319092 0.0007812959 0.07812959
+## 5    max    PIPO 0.09888493 0.0106523237 1.06523237
+## 6 median    PIPO 0.16996795 0.0026687883 0.26687883</code></pre>
 </div>
 
 
