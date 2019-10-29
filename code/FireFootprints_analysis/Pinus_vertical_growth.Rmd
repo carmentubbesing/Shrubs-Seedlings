@@ -161,38 +161,20 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 # Check collinearity
 
-## Make collinearity plot using Zuur code
-```{r}
-source("~/../Documents/HighstatLibV10.R.txt")
-z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Ht_cm1, df$BasDia2016.cm, df$sqrt_shrubarea3, df$Elevation, df$Year)
-colnames(z) <- c("Growth", "Years", "heatload", "Ht_cm1", "BasDia", "shrubs", "Elevation", "Year")
-pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist)
-```
-
+<!-- ## Make collinearity plot using Zuur code -->
+<!-- ```{r} -->
+<!-- source("~/../Documents/HighstatLibV10.R.txt") -->
+<!-- z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Ht_cm1, df$BasDia2016.cm, df$sqrt_shrubarea3, df$Elevation, df$Year) -->
+<!-- colnames(z) <- c("Growth", "Years", "heatload", "Ht_cm1", "BasDia", "shrubs", "Elevation", "Year") -->
+<!-- pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist) -->
+<!-- ``` -->
 
 ## Calculate vif function from car package
 ```{r}
-source("~/../Documents/HighstatLibV10.R.txt") # from Zuur https://highstat.com/index.php/mixed-effects-models-and-extensions-in-ecology-with-r
-corvif(LMdf %>% select(!!vars))
+# source("~/../Documents/HighstatLibV10.R.txt") # from Zuur https://highstat.com/index.php/mixed-effects-models-and-extensions-in-ecology-with-r
+# corvif(LMdf %>% select(!!vars))
 vif(LM)
 ```
-
-<!-- A VIF cutoff value of 5 is often used, and none of my variables have values larger than that, so I think I'm ok. -->
-
-<!-- ## Take out variable with the highest VIF -->
-<!-- ```{r} -->
-<!-- f <-  update(as.formula(f), ~ . - Ht_cm1) -->
-<!-- f -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- vif(LM) -->
-<!-- ``` -->
-
-<!-- # Repeat until VIF < 5 -->
-<!-- ```{r} -->
-<!-- f <- update(as.formula(f), ~ . - Years)  -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- vif(LM) -->
-<!-- ``` -->
 
 # See whether model with or without DIA interaction is better
 ```{r}

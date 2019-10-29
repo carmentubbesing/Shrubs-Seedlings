@@ -163,60 +163,18 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 
 # Check collinearity 
 
-## Make collinearity plot using Zuur code
-```{r}
-source("~/../Documents/HighstatLibV10.R.txt")
-z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Aspect.rad.fold.NESW, df$incidrad, df$Ht_cm1, df$BasDia2016.cm, df$Slope.Deg, df$sqrt_shrubarea3, df$Elevation, df$Year)
-colnames(z) <- c("Growth", "Years", "heatload", "Aspect", "incidrad", "Ht_cm1", "BasDia", "Slope", "shrubs", "Elevation", "Year")
-pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist)
-```
+<!-- ## Make collinearity plot using Zuur code -->
+<!-- ```{r} -->
+<!-- source("~/../Documents/HighstatLibV10.R.txt") -->
+<!-- z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Aspect.rad.fold.NESW, df$incidrad, df$Ht_cm1, df$BasDia2016.cm, df$Slope.Deg, df$sqrt_shrubarea3, df$Elevation, df$Year) -->
+<!-- colnames(z) <- c("Growth", "Years", "heatload", "Aspect", "incidrad", "Ht_cm1", "BasDia", "Slope", "shrubs", "Elevation", "Year") -->
+<!-- pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist) -->
+<!-- ``` -->
 
 ## use vif from car pkg because in pines it was the same as the Zuur code
 ```{r}
 vif(LM)
 ```
-
-<!-- ## If VIF>5, remove the variable -->
-
-<!-- ```{r} -->
-<!-- f <- update(as.formula(f), ~ . - heatload)  -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- ``` -->
-
-<!-- ## Repeat vif test -->
-<!-- ```{r} -->
-<!-- vif(LM) -->
-<!-- ``` -->
-
-<!-- ## Repeat removing variables with VIF>5 -->
-<!-- ```{r} -->
-<!-- f <- update(as.formula(f), ~ . - Ht_cm1)  -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- vif(LM) -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- f <- update(as.formula(f), ~ . - Years)  -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- vif(LM) -->
-<!-- ``` -->
-
-
-<!-- ## Repeat removing variables with VIF>5 -->
-<!-- ```{r} -->
-<!-- vars <- vars[vars != "Years"] -->
-<!-- vars_one <- paste(vars, collapse = " + ") -->
-<!-- f <- update(as.formula(f), ~ . - Years)  -->
-<!-- LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML") -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- vif(LM) -->
-<!-- ``` -->
-
 
 # See whether model with or without interaction is better
 ```{r}
@@ -357,6 +315,13 @@ ggplot(effects_df)+
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
 
+# Save LM
+```{r}
+save(LM, file = "../../results/data/FireFootprints/LM_abco.Rdata")
+```
+
+
+
 # Look at relationship between years and shrubarea
 ```{r}
 ggplot(df)+
@@ -391,5 +356,5 @@ df %>%
 
 ## Save final data
 ```{r}
-save(df, file ="~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/fir_vert.Rdata")
+save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
 ```
