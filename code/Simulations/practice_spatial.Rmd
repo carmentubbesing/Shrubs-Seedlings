@@ -19,11 +19,15 @@ require(knitr)
 
 # Load seedling and shrub data from fire footprints
 ```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
 load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
-# Assign each pixel shrub cov, ht, and competition values. For now, exclude seedlings without 2016 height values.
+# Create shrub patch
+
+## Assign each pixel shrub cov, ht, and competition values. For now, exclude seedlings without 2016 height values.
 ```{r}
+dffull <- df
 df <- df %>% 
   dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>% 
   filter(Year=="2016") %>% 
@@ -33,7 +37,7 @@ df <- df %>%
   distinct()
 ```
 
-# Create a raster from scratch
+## Create a raster from scratch
 ```{r}
 values <- as.numeric(paste(sample(df$Sdlg, 400, replace = T)))
 values
@@ -54,27 +58,11 @@ crs(r)
 get_projection(r)
 ```
 
-# Plot
-```{r}
-tm_shape(r)+
-  tm_raster()+
-  tm_layout(asp=1:1)
-```
-
 # Create polygon surrounding the raster
 ```{r}
 p <- as(extent(r), "SpatialPolygons")
 crs(p) <- crs(r)
 get_projection(p)
-```
-
-```{r}
-
-tm_shape(r)+
-  tm_raster()+
-  tm_layout(asp=1:1)+
-tm_shape(p)+
-  tm_borders(col = "purple", lwd= 5)
 ```
 
 # Create points
@@ -117,13 +105,6 @@ plot(pts.sp)
 pts.sf <- as(pts.sp, "sf")
 ```
 
-# Decide which trees are fir and which are pine - 1.32 fir:pine ratio
-```{r}
-# pts.sf <- pts.sf %>% 
-#   mutate(Species = sample(c("ABCO", "PIPO"), size = nrow(pts.sf), replace = T, prob = c(1.32, 1)))
-# summary(as.factor(pts.sf$Species))
-```
-
 # Find raster values for each seedling 
 ```{r}
 pts.sf <- pts.sf %>% 
@@ -142,16 +123,11 @@ nrow(pts.sf)
 pts.sf
 ```
 
-
-# Next: make them grow for a few time steps based on predictive functions from Ch. 2 results. Then make some die based on mortality study results
-
 # For now, keep shrub competition static across years for each pixel
 
 ## Normalize function
 ```{r}
-normalize <- function(x) {
-    return ((x - mean(x)) / sd(x))
-  }
+source("functions/normalize.R")
 ```
 
 # Reformat pts.sf so that it's compatible with LM
@@ -183,9 +159,9 @@ tm_shape(r)+
   tm_raster(alpha = .5)+
   tm_layout(asp=1:1, legend.bg.color = "white", legend.outside = T)+
 tm_shape(pts.sf.pipo)+
-   tm_dots(size = .3, col = "darkgreen")+
+   tm_dots(size = "Ht_cm1", col = "darkgreen", size.max = 300)+
 tm_shape(pts.sf.abco)+
-  tm_dots(size = .3, col = "darkblue")
+  tm_dots(size = "Ht_cm1", col = "darkblue", size.max = 300)
 ```
 
 # Load LM coefficients
@@ -209,17 +185,59 @@ coefabco
 ```
 
 # Create functions for predicting growth based on fire footprints results
+```{r}
+pts.sf.abco.bu <- pts.sf.abco
+pts.sf.pipo.bu <- pts.sf.pipo
+```
 
-## PIPO
+## Format for function
+
+### abco
+```{r}
+pts.sf.abco <- pts.sf.abco.bu
+
+summary(pts.sf.abco)
+pts.sf.abco <- pts.sf.abco %>% 
+  mutate(Years = as.numeric(paste(Years))) %>% 
+  mutate(Ht_cm_nonnorm = as.factor(paste(Ht_cm1))) %>% 
+   mutate(Years_nonnorm = as.factor(paste(Years))) %>% 
+  mutate_if(is.numeric, normalize) %>% 
+  mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
+  mutate(Ht_cm_nonnorm = as.numeric(paste(Ht_cm_nonnorm)))%>% 
+  mutate(Years_nonnorm = as.numeric(paste(Years_nonnorm)))
+summary(pts.sf.abco)
+```
+
+### pipo
+```{r}
+pts.sf.pipo <- pts.sf.pipo.bu
+
+summary(pts.sf.pipo)
+pts.sf.pipo <- pts.sf.pipo %>% 
+  mutate(Years = as.numeric(paste(Years))) %>% 
+  mutate(Ht_cm_nonnorm = as.factor(paste(Ht_cm1))) %>% 
+  mutate(Years_nonnorm = as.factor(paste(Years))) %>% 
+  mutate_if(is.numeric, normalize) %>% 
+  mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
+  mutate(Ht_cm_nonnorm = as.numeric(paste(Ht_cm_nonnorm)))%>% 
+  mutate(Years_nonnorm = as.numeric(paste(Years_nonnorm)))
+summary(pts.sf.pipo)
+```
+
+## Define function
+
+### PIPO
 ```{r}
 pipogrowth <- function(){
-   hts <- pts.sf.pipo %>% dplyr::select(Ht_cm1) %>% st_drop_geometry() %>% unlist()# Save hts before normalization to convert it back later
+  hts <- pts.sf.pipo %>% 
+    dplyr::select(Ht_cm_nonnorm) %>% 
+    st_drop_geometry() %>% 
+    unlist()# Save hts before normalization to convert it back later
+  
   pts.sf.pipo <<- pts.sf.pipo %>% 
-    mutate_if(is.numeric, normalize) %>% 
-    mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
     mutate(pred = coefpipo["(Intercept)"] +
              coefpipo["Ht_cm1"]*Ht_cm1+
-             coefpipo["Years"]*as.numeric(paste(Years))+
+             coefpipo["Years"]*Years+
              coefpipo["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefpipo["heatload"]*heatload+
              coefpipo["BasDia2016.cm"]*BasDia2016.cm) %>%
@@ -235,15 +253,14 @@ pipogrowth <- function(){
       Year == "2017" ~ pred + coefpipo["Year2017"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-        mutate(Ht_cm1 = Ht_cm1*sd(hts)+mean(hts)) %>%      # de-normalize ht
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth
+    mutate(Ht_cm_nonnorm = Ht_cm_nonnorm + pred_exp*Ht_cm_nonnorm)     # calculate new ht after growth
 
 }
 pipogrowth()
 head(pts.sf.pipo)
 ```
 
-### Check by plotting
+#### Check by plotting
 ```{r}
 ggplot(pts.sf.pipo)+
   geom_line(aes(x = sqrt_shrubarea3, y = pred_exp), col = "#fc8d62")
@@ -253,16 +270,15 @@ ggplot(pts.sf.pipo)+
   geom_line(aes(x = Ht_cm1, y = pred_exp), col = "#fc8d62")
 ```
 
-## ABCO
+### ABCO
 ```{r}
 abcogrowth <- function(){
-  hts <- pts.sf.abco %>% dplyr::select(Ht_cm1) %>% st_drop_geometry() %>% unlist()# Save hts before normalization to convert it back later
+  hts <- pts.sf.abco %>% dplyr::select(Ht_cm_nonnorm) %>% st_drop_geometry() %>% unlist()# Save hts before normalization to convert it back later
+  
   pts.sf.abco <<- pts.sf.abco %>% 
-    mutate_if(is.numeric, normalize) %>% 
-    mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03))) %>% 
     mutate(pred = coefabco["(Intercept)"] +
              coefabco["Ht_cm1"]*Ht_cm1+
-             coefabco["Years"]*as.numeric(paste(Years))+
+             coefabco["Years"]*Years+
              coefabco["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefabco["heatload"]*heatload+
              coefabco["incidrad"]*incidrad+
@@ -274,8 +290,8 @@ abcogrowth <- function(){
       Year == "2017" ~ pred + coefabco["Year2017"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1*sd(hts)+mean(hts)) %>%      # de-normalize ht
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth
+    mutate(Ht_cm_nonnorm = Ht_cm_nonnorm + pred_exp*Ht_cm_nonnorm)   # calculate new ht after growth
+     
 }
 abcogrowth()
 head(pts.sf.abco)
@@ -293,55 +309,109 @@ ggplot(pts.sf.abco)+
 
 # Plot simulations
 ```{r}
-simplot <- tm_shape(p)+
-  tm_borders(col = "purple", lwd= 5)+
+tm_shape(p)+
+  tm_borders(lwd= 5)+
 tm_shape(r)+
   tm_raster(alpha = .5, title = "Shrub competition")+
-  tm_layout(asp=1:1, legend.bg.color = "white", legend.outside = T)+
+  tm_layout(asp=1:1, legend.outside = T)+
 tm_shape(pts.sf.pipo)+
-  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 300)+
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkgreen", size.max = 300)+
 tm_shape(pts.sf.abco)+
-  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 300)
-simplot
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkblue", size.max = 300)
 ```
 
-# Apply across 30 years
+# Apply across 20 years
 ```{r}
 head(pts.sf.abco)
 dfsim <- data.frame()
+dfsimall <- data.frame()
 
-
-for(i in 1:3){
+for(i in 1:20){
   print(i)
   abcogrowth()
   pipogrowth()
-  pts.sf.pipo <- pts.sf.pipo %>% 
-    mutate(Years = as.numeric(paste(Years))+1) 
-  
   pts.sf.abco <- pts.sf.abco %>% 
-    mutate(Years = as.numeric(paste(Years))+1)
+    mutate(Years_nonnorm = Years_nonnorm + 1) %>% 
+    mutate(Years = normalize(Years_nonnorm))
+  pts.sf.pipo <- pts.sf.pipo %>% 
+    mutate(Years_nonnorm = Years_nonnorm + 1)%>% 
+    mutate(Years = normalize(Years_nonnorm))
+  
   dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
+  if(nrow(dfsimall) == 0){
+    dfsimall <- dfsim
+  } else{
+    dfsimall <- full_join(dfsim, dfsimall)
+  }
 }
-summary(dfsim)
-
-
-simplot
 head(pts.sf.abco)
-  tm_shape(p)+
-  tm_borders(col = "purple", lwd= 5)+
+head(pts.sf.pipo)
+summary(pts.sf.pipo)
+summary(as.factor(dfsimall$Years))
+
+tm_shape(p)+
+  tm_borders(col = "black", lwd= 5)+
 tm_shape(r)+
   tm_raster(alpha = .5, title = "Shrub competition")+
-  tm_layout(asp=1:1, legend.bg.color = "white", legend.outside = T)+
+  tm_layout(asp=1:1, legend.outside = T)+
 tm_shape(pts.sf.pipo)+
-  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 300)+
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkgreen", size.max = 3000)+
 tm_shape(pts.sf.abco)+
-  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 300)
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkblue", size.max = 3000)
 ```
 
-
-# Create a function to kill some seedlings based on mortality~growth relationships
+# Apply across 20 years, 1000 times
 ```{r}
+source("functions/initialize.R")
+```
 
+```{r}
+head(pts.sf.abco)
+dfsim <- data.frame()
+dfsimall <- data.frame()
+
+for(i in 1:20){
+  print(i)
+  abcogrowth()
+  pipogrowth()
+  pts.sf.abco <- pts.sf.abco %>% 
+    mutate(Years_nonnorm = Years_nonnorm + 1) %>% 
+    mutate(Years = normalize(Years_nonnorm))
+  pts.sf.pipo <- pts.sf.pipo %>% 
+    mutate(Years_nonnorm = Years_nonnorm + 1)%>% 
+    mutate(Years = normalize(Years_nonnorm))
+  
+  dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
+  if(nrow(dfsimall) == 0){
+    dfsimall <- dfsim
+  } else{
+    dfsimall <- full_join(dfsim, dfsimall)
+  }
+}
+head(pts.sf.abco)
+head(pts.sf.pipo)
+summary(pts.sf.pipo)
+summary(as.factor(dfsimall$Years))
+
+tm_shape(p)+
+  tm_borders(col = "black", lwd= 5)+
+tm_shape(r)+
+  tm_raster(alpha = .5, title = "Shrub competition")+
+  tm_layout(asp=1:1, legend.outside = T)+
+tm_shape(pts.sf.pipo)+
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkgreen", size.max = 3000)+
+tm_shape(pts.sf.abco)+
+  tm_symbols(size = "Ht_cm_nonnorm", col = "darkblue", size.max = 3000)
+```
+
+# Plot the change over 20 years
+```{r}
+ggplot(dfsimall)+
+  geom_smooth(aes(x = Years, y = Ht_cm_nonnorm, group = Species, col = Species))+
+  theme_bw()
+ggplot(dfsimall %>% filter(Years_nonnorm ==20))+
+  geom_smooth(aes(x = shrubarea3, y = Ht_cm_nonnorm, group = Species, col = Species))+
+  theme_bw()
 ```
 
 # Questions I need to decide on:
@@ -349,4 +419,5 @@ tm_shape(pts.sf.abco)+
 -  1. How do I determine the shrub competition values of each raster pixel, since my sampling was not random?
 -  2. How do I place the initial seedlings?
 -  3. Do I combine data from different fires, or do them one at a time?
+-  4. How do I alter diameter growth? Just a single relationship, or multiple, or multivariable?
 

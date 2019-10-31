@@ -43,7 +43,7 @@ df_summary <- df %>%
 ```{r}
 min_shrub <- df_summary %>% 
   filter(min == max(min)) %>% 
-  select(min) %>% 
+  dplyr::select(min) %>% 
   unlist()
 min_shrub
 ```
@@ -51,7 +51,7 @@ min_shrub
 ```{r}
 max_shrub <- df_summary %>% 
   filter(max == min(max)) %>% 
-  select(max) %>% 
+  dplyr::select(max) %>% 
   unlist()
 max_shrub
 ```
@@ -94,7 +94,7 @@ nrow(df)
 ```{r}
 df %>% 
   group_by(Sdlg, Fire) %>%
-  select(Sdlg, Fire) %>%
+  dplyr::select(Sdlg, Fire) %>%
   distinct() %>% 
   ungroup() %>% 
   group_by(Fire) %>% 
@@ -351,13 +351,13 @@ newdata_means <- as.data.frame(LMdf) %>%
   mutate(sqrt_shrubarea3 = min(LMdf$sqrt_shrubarea3))
 
 newdata_cat <- LMdf %>% 
-  select(ShrubSpp03, Year) %>% 
+  dplyr::select(ShrubSpp03, Year) %>% 
   distinct()
 sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_minshrub_pipo <- exp(mean(pred))
@@ -372,13 +372,13 @@ newdata_means <- as.data.frame(LMdf) %>%
   mutate(sqrt_shrubarea3 = max(LMdf$sqrt_shrubarea3))
 
 newdata_cat <- LMdf %>% 
-  select(ShrubSpp03, Year) %>% 
+  dplyr::select(ShrubSpp03, Year) %>% 
   distinct()
 sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_maxshrub_pipo <- exp(mean(pred))
@@ -393,13 +393,13 @@ newdata_means <- as.data.frame(LMdf) %>%
   mutate(sqrt_shrubarea3 = median(LMdf$sqrt_shrubarea3))
 
 newdata_cat <- LMdf %>% 
-  select(ShrubSpp03, Year) %>% 
+  dplyr::select(ShrubSpp03, Year) %>% 
   distinct()
 sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_medshrub_pipo <- exp(mean(pred))
