@@ -5,6 +5,8 @@ sim <- function(years){
   for(i in 1:years){
     abcogrowth()
     pipogrowth()
+    abcomort()
+    pipomort()
     pts.sf.abco <<- pts.sf.abco %>% 
       mutate(Years_nonnorm = Years_nonnorm + 1) %>% 
       mutate(Years = normalize(Years_nonnorm))
