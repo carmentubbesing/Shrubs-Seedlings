@@ -287,6 +287,6 @@ ggplot(df %>% filter(species == "PIPO" & !is.na(shrubs)))+
 
 # Save data
 ```{r}
-save(df, file = "../../../compiled_data/shrub_removal_cleaned.Rdata")
+save(df, file = "../../../compiled_data/shrub_experiment/shrub_removal_cleaned.Rdata")
 ```
 

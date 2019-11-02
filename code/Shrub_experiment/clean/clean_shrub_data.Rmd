@@ -40,26 +40,38 @@ dfshrub <- dfshrub %>%
 summary(as.factor(dfshrub$spp))
 summary(as.numeric(dfshrub$ht_cm))
 dfshrub$ht_cm <- as.numeric(dfshrub$ht_cm)
+dfshrub %>% 
+  arrange(Compartment, island, plot, transect)
 ```
 
-# Calculate shrubarea for each transect and species
+# Calculate shrub cov, ht, shrubarea for each plot
+
+## Weighted mean shrub height
 ```{r}
-dfshrub <- dfshrub %>% 
-  mutate(shrubarea = cov_cm*ht_cm)
-dfshrub
+ht <- dfshrub %>%
+  dplyr::select(Compartment, island, plot, spp, cov_cm, ht_cm) %>% 
+  group_by(Compartment, island, plot) %>% 
+  mutate(ht_wm.cm = weighted.mean(ht_cm, cov_cm)) %>% 
+  ungroup() %>% 
+  dplyr::select(Compartment, island, plot, ht_wm.cm) %>% 
+  distinct() 
+ht
 ```
 
-# Sum shrubarea for the whole plot
 ```{r}
 dfshrub <- dfshrub %>% 
   group_by(Compartment, island, plot) %>% 
-  summarise(shrubarea = sum(shrubarea))
-summary(dfshrub$shrubarea)
+  summarize(Cov1.3 = sum(cov_cm))
+dfshrub <- full_join(dfshrub, ht)
+dfshrub <- dfshrub %>% 
+  rename(Ht1.3 = ht_wm.cm) %>% 
+  mutate(shrubarea = Cov1.3*Ht1.3)
+dfshrub
 ```
+
 
 # Take a look
 ```{r}
-dfshrub
 hist(dfshrub$shrubarea)
 dfshrub %>% 
   group_by(Compartment, island) %>% 
@@ -74,7 +86,7 @@ dfshrub <- dfshrub %>%
 
 # Save
 ```{r}
-write.csv(dfshrub, file = "~/../Dropbox (Stephens Lab)/Shrub_experiment/Data/JOINED_DATA/dfshrub.csv", row.names = F)
+save(dfshrub, file = "../../../compiled_data/dfshrubs.Rdata")
 ```
 
 

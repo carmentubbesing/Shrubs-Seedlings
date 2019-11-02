@@ -1,0 +1,97 @@
+---
+title: "Diameter ~ Height"
+author: "Carmen"
+date: "November 1, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r}
+require(tidyverse)
+require(readxl)
+require(effects)
+```
+
+# Load experiment data
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+load(file = "../../compiled_data/shrub_experiment/shrub_removal_cleaned.Rdata")
+load( file = "../../compiled_data/dfshrubs.Rdata")
+```
+
+# Add shrub data to df
+```{r}
+dfshrub <- dfshrub %>% 
+  ungroup() %>% 
+  mutate(compartment = as.factor(compartment), plot = as.factor(plot))
+```
+
+
+```{r}
+df <- full_join(df, dfshrub)
+```
+
+## If shrubs = removed, make shrub variables = 0
+```{r}
+df <- df %>% 
+  mutate(Cov1.3 = ifelse(shrubs == "removed", 0, Cov1.3)) %>% 
+  mutate(Ht1.3 = ifelse(shrubs == "removed", 0, Ht1.3)) %>% 
+  mutate(shrubarea = ifelse(shrubs == "removed", 0, shrubarea))
+```
+
+# Look
+```{r}
+names(df)
+ggplot(df, aes(x = dia17_mm_Aug, y = dia18_mm))+
+  geom_point()+
+  geom_smooth()+
+  geom_abline(aes(intercept=0,slope=1))+
+  theme_bw()
+```
+
+# Calculate relative diameter growth
+```{r}
+df <- df %>% 
+  mutate(relgrdia = (dia17_mm_Aug-dia18_mm)/dia17_mm_Aug)
+```
+
+# Model dia growth in relation to previous dia and height
+```{r}
+lm <- lm(relgrdia ~ dia17_mm_Aug + height_2018 + species + shrubarea, data = df)
+summary(lm)
+```
+
+```{r}
+plot(predictorEffect("dia17_mm_Aug", lm))
+plot(predictorEffect("height_2018", lm))
+plot(predictorEffect("species", lm))
+```
+
+# Model dia in relation to ht and competition
+
+## ABCO
+```{r}
+lmabco <- lm(dia18_mm ~ sqrt(shrubarea) + height_2018 * dia17_mm_Aug, data = df %>% filter(species == "ABCO"))
+summary(lmabco)
+drop1(lmabco, test = "F")
+```
+
+```{r}
+plot(predictorEffect("dia17_mm_Aug", lmabco))
+plot(predictorEffect("height_2018", lmabco))
+plot(predictorEffect("shrubarea", lmabco))
+```
+
+## PIPO
+```{r}
+lmabco <- lm(dia18_mm ~ sqrt(shrubarea) + height_2018 * dia17_mm_Aug, data = df %>% filter(species == "PIPO"))
+summary(lmabco)
+drop1(lmabco, test = "F")
+```
+
+```{r}
+plot(predictorEffect("dia17_mm_Aug", lmabco))
+plot(predictorEffect("height_2018", lmabco))
+plot(predictorEffect("shrubarea", lmabco))
+```
