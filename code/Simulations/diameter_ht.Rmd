@@ -27,7 +27,6 @@ dfshrub <- dfshrub %>%
   mutate(compartment = as.factor(compartment), plot = as.factor(plot))
 ```
 
-
 ```{r}
 df <- full_join(df, dfshrub)
 ```
@@ -50,48 +49,63 @@ ggplot(df, aes(x = dia17_mm_Aug, y = dia18_mm))+
   theme_bw()
 ```
 
-# Calculate relative diameter growth
+# Convert dia to cm
 ```{r}
 df <- df %>% 
-  mutate(relgrdia = (dia17_mm_Aug-dia18_mm)/dia17_mm_Aug)
+  mutate(dia17_cm_Aug = dia17_mm_Aug/10) %>% 
+  mutate(dia18_cm = dia18_mm/10)
 ```
 
-# Model dia growth in relation to previous dia and height
+
+# Calculate relative diameter growth 
 ```{r}
-lm <- lm(relgrdia ~ dia17_mm_Aug + height_2018 + species + shrubarea, data = df)
+df <- df %>% 
+  mutate(relgrdia = (dia17_cm_Aug-dia18_cm)/dia17_cm_Aug)
+```
+
+# Model dia growth in relation to previous dia and height, both species together
+```{r}
+lm <- lm(relgrdia ~ dia17_cm_Aug + height_2018 + species + shrubarea, data = df)
 summary(lm)
 ```
 
 ```{r}
-plot(predictorEffect("dia17_mm_Aug", lm))
+plot(predictorEffect("dia17_cm_Aug", lm))
 plot(predictorEffect("height_2018", lm))
 plot(predictorEffect("species", lm))
 ```
 
-# Model dia in relation to ht and competition
+# Model dia in relation to ht and competition, species separate
 
 ## ABCO
 ```{r}
-lmabco <- lm(dia18_mm ~ sqrt(shrubarea) + height_2018 * dia17_mm_Aug, data = df %>% filter(species == "ABCO"))
+lmabco <- lm(dia18_cm ~ sqrt(shrubarea) + height_2018 * dia17_cm_Aug, data = df %>% filter(species == "ABCO"))
 summary(lmabco)
 drop1(lmabco, test = "F")
 ```
 
 ```{r}
-plot(predictorEffect("dia17_mm_Aug", lmabco))
+plot(predictorEffect("dia17_cm_Aug", lmabco))
 plot(predictorEffect("height_2018", lmabco))
 plot(predictorEffect("shrubarea", lmabco))
 ```
 
 ## PIPO
 ```{r}
-lmabco <- lm(dia18_mm ~ sqrt(shrubarea) + height_2018 * dia17_mm_Aug, data = df %>% filter(species == "PIPO"))
-summary(lmabco)
+lmpipo <- lm(dia18_cm ~ sqrt(shrubarea) + height_2018 * dia17_cm_Aug, data = df %>% filter(species == "PIPO"))
+summary(lmpipo)
 drop1(lmabco, test = "F")
 ```
 
 ```{r}
-plot(predictorEffect("dia17_mm_Aug", lmabco))
-plot(predictorEffect("height_2018", lmabco))
-plot(predictorEffect("shrubarea", lmabco))
+plot(predictorEffect("dia17_cm_Aug", lmpipo))
+plot(predictorEffect("height_2018", lmpipo))
+plot(predictorEffect("shrubarea", lmpipo))
 ```
+
+# Save
+```{r}
+save(lmabco, file ="../../results/coefficients/LM_dia_abco.Rdata")
+save(lmpipo, file ="../../results/coefficients/LM_dia_pipo.Rdata")
+```
+

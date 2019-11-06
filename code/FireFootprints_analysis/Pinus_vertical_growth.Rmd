@@ -313,7 +313,6 @@ ggplot(effects_df)+
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel_noint.png", width = 3, height = 3, dpi = 400)
 ```
 
-
 # Look at relationship between years and shrubarea
 ```{r}
 ggplot(df)+
@@ -333,13 +332,6 @@ summary(df$shrubarea3)
 ```{r}
 summary(df$Cov1.3/(300*4))
 ```
-
-# Save LM
-```{r}
-save(LM, file = "../../results/data/FireFootprints/LM_pipo.Rdata")
-```
-
-
 
 # Find predicted mean growth for min, max, median
 
@@ -363,7 +355,6 @@ pred <- predict(LM, newdata = newdata)
 gr_minshrub_pipo <- exp(mean(pred))
 ```
 
-
 ## max
 ```{r}
 newdata_means <- as.data.frame(LMdf) %>% 
@@ -383,7 +374,6 @@ newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_maxshrub_pipo <- exp(mean(pred))
 ```
-
 
 ## median
 ```{r}
@@ -405,15 +395,12 @@ pred <- predict(LM, newdata = newdata)
 gr_medshrub_pipo <- exp(mean(pred))
 ```
 
-
 ## Save them
 ```{r}
 save(gr_minshrub_pipo, file = "../../results/data/FireFootprints/gr_minshrub_pipo.Rdata")
 save(gr_maxshrub_pipo, file = "../../results/data/FireFootprints/gr_maxshrub_pipo.Rdata")
 save(gr_medshrub_pipo, file = "../../results/data/FireFootprints/gr_medshrub_pipo.Rdata")
 ```
-
-
 
 ## Similar method but using results from effects package
 
@@ -501,3 +488,33 @@ df %>%
 ```{r}
 save(df, file ="../../compiled_data/fire_footprints/pine_vert.Rdata")
 ```
+
+# Save LM with non-normalized data
+```{r}
+LMdf_nonnorm <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  dplyr::select(Fire, 
+         Sdlg, 
+         VertGrowth_Rel, 
+         Years, 
+         Ht_cm1, 
+         sqrt_shrubarea3, 
+         BasDia2016.cm, 
+         incidrad, 
+         Year, 
+         Elevation, 
+         siteclass,
+         heatload, 
+         ShrubSpp03) 
+LMdf_nonnorm <- droplevels(LMdf_nonnorm)
+```
+
+```{r}
+LM_pine_nonnorm <- lme(f, data = LMdf_nonnorm, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
+```{r}
+save(LM_pine_nonnorm, file = "../../results/coefficients/LM_pine_nonnorm.Rdata")
+```
+
+

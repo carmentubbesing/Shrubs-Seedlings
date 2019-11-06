@@ -76,13 +76,11 @@ lme(VertGrowth_Rel ~  Year + sqrt(shrubarea3), data = df, random = list(~ 1| Fir
 
 For that model, and created a figure of predicted values for a fictional set of data spanning the actual range of shrub measurements, and for all fires and years:
 
-![](plots/pinus_predicted_actual.jpeg)
-
+<!-- ![](plots/pinus_predicted_actual.jpeg) -->
 Next steps
 ----------
 
 1.  figure out how to normalize in the sense of subtracting the mean and dividing by the standard deviation when I'm then going to take the square root of the variable
     -   square root first?
     -   check in Zuur book
-
 2.  add elevation and slope data in a synthetic variable, and delete fire random effect

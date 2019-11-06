@@ -1,0 +1,23 @@
+---
+title: "README"
+author: "Carmen"
+date: "November 5, 2019"
+output: 
+  github_document:
+    toc: TRUE
+---
+
+# Summary
+
+This folder has all the code to run SORTIE-style simulations of stand-replacing fire patches
+
+# Prep code
+
+#### **diameter_ht.Rmd**
+* uses:
+    * `../../compiled_data/dfshrubs.Rdata`
+* creates:
+    * .Rdata`
+* does:
+    * creates linear models for diameter in relation to height for ABCO and PIPO
+

@@ -1,9 +1,9 @@
 pipogrowth <- function(){
-  hts <- pts.sf.abco %>% dplyr::select(Ht_cm_nonnorm) %>% st_drop_geometry() %>% unlist()# Save hts before normalization to convert it back later
+  hts <- pts.sf.abco %>% dplyr::select(Ht_cm1) %>% st_drop_geometry() %>% unlist()
   
-  load("../../results/data/FireFootprints/LM_pipo.Rdata")
-  LMpipo <- LM
-  remove(LM)
+  load("../../results/coefficients/LM_pine_nonnorm.Rdata")
+  LMpipo <- LM_pine_nonnorm
+  remove(LM_pine_nonnorm)
   coefpipo <<- LMpipo$coefficients$fixed
   
   pts.sf.pipo <<- pts.sf.pipo %>% 
@@ -12,7 +12,7 @@ pipogrowth <- function(){
              coefpipo["Years"]*Years+
              coefpipo["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefpipo["heatload"]*heatload+
-             coefpipo["BasDia2016.cm"]*BasDia2016.cm) %>%
+             coefpipo["BasDia2016.cm"]*dia.cm) %>%
     mutate(pred = case_when(
       ShrubSpp03 == "CECO" ~ pred + coefpipo["ShrubSpp03CECO"],
       ShrubSpp03 == "CEIN" ~ pred + coefpipo["ShrubSpp03CEIN"],
@@ -25,6 +25,6 @@ pipogrowth <- function(){
       Year == "2017" ~ pred + coefpipo["Year2017"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm_nonnorm = Ht_cm_nonnorm + pred_exp*Ht_cm_nonnorm)  
+    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  
   
 }

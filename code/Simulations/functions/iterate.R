@@ -3,7 +3,7 @@ dfsimallreps <- data.frame()
 iterate <- function(n){
   for(i in 1:n){
     suppressMessages(initialize())
-    suppressMessages(sim(20))
+    suppressMessages(sim(years))
     
     dfsimall <<-  dfsimall %>% 
        mutate(rep = i)

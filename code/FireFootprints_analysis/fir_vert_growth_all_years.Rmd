@@ -49,13 +49,13 @@ df_summary <- df %>%
 
 min <- df_summary %>% 
   filter(min == max(min)) %>% 
-  select(min) %>% 
+  dplyr::select(min) %>% 
   unlist()
 min
 
 max <- df_summary %>% 
   filter(max == min(max)) %>% 
-  select(max) %>% 
+  dplyr::select(max) %>% 
   unlist()
 max
 
@@ -106,7 +106,7 @@ nrow(df)
 ```{r}
 df %>% 
   group_by(Sdlg, Fire) %>%
-  select(Sdlg, Fire) %>%
+  dplyr::select(Sdlg, Fire) %>%
   distinct() %>% 
   ungroup() %>% 
   group_by(Fire) %>% 
@@ -358,3 +358,22 @@ df %>%
 ```{r}
 save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
 ```
+
+# Save LM with non-normalized data
+```{r}
+LMdf_nonnorm <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  mutate(log_shrubarea3 = log(shrubarea3)) %>% 
+  dplyr::select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad, VertGrowth_Rel) 
+LMdf_nonnorm <- droplevels(LMdf_nonnorm)
+```
+
+```{r}
+LM_abco_nonnorm <- lme(f, data = LMdf_nonnorm, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
+```{r}
+save(LM_abco_nonnorm, file = "../../results/coefficients/LM_abco_nonnorm.Rdata")
+```
+
+

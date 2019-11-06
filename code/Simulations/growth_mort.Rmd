@@ -2,9 +2,7 @@
 title: "Growth_mort"
 author: "Carmen"
 date: "October 31, 2019"
-output: 
-  html_document:
-    TOC: TRUE
+output: pdf_document
 ---
 
 ```{r, include = F}
@@ -18,37 +16,58 @@ require(tmaptools)
 require(knitr)
 ```
 
+# Define parameters
+```{r}
+years <- 15
+iterations <- 100
+max_shrub_ht_cm <- 250
+max_shrub_ht_years <- 15
+n_seedlings <- 100
+length_m <- 20
+height_m <- 20
+```
+
 # Load functions
 
-## Normalize function
+#### Normalize function
 ```{r}
 source("functions/normalize.R")
 ```
 
-## Initialization function
+#### Initialization function
 ```{r}
 source("functions/initialize.R")
 ```
 
-## Growth functions
+#### Height growth functions
 ```{r}
 source("functions/abcogrowth.R")
 source("functions/pipogrowth.R")
 ```
 
-## Mortality functions
+#### Diameter growth functions
+```{r}
+source("functions/abcodia.R")
+source("functions/pipodia.R")
+```
+
+#### Mortality functions
 ```{r}
 source("functions/abcomort.R")
 source("functions/pipomort.R")
 ```
 
+#### Shrub growth function
+```{r}
+source("functions/shrubgrowth.R")
+```
 
-## Simulation function
+#### Simulation function
 ```{r}
 source("functions/sim.R")
 ```
 
-## Iteration function
+#### Iteration function
 ```{r}
 source("functions/iterate.R")
 ```
@@ -58,13 +77,7 @@ source("functions/iterate.R")
 initialize()
 ```
 
-# Simulate across 20 years
-```{r}
-suppressMessages(sim(20))
-summary(pts.sf.pipo)
-```
-
-# Plot patch
+# Plot patch before simulation
 ```{r}
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
@@ -72,53 +85,54 @@ tm_shape(r)+
   tm_raster(alpha = .5, title = "Shrub competition")+
   tm_layout(asp=1:1, legend.outside = T)+
 tm_shape(pts.sf.pipo)+
-  tm_symbols(size = "Ht_cm_nonnorm", col = "darkgreen", size.max = 3000)+
+  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 500)+
 tm_shape(pts.sf.abco)+
-  tm_symbols(size = "Ht_cm_nonnorm", col = "darkblue", size.max = 3000)
+  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 500)
+```
+
+# Simulate across years
+```{r, warning=FALSE}
+suppressMessages(sim(years))
+```
+
+# Plot patch after simulation
+```{r}
+tm_shape(p)+
+  tm_borders(col = "black", lwd= 5)+
+tm_shape(r)+
+  tm_raster(alpha = .5, title = "Shrub competition")+
+  tm_layout(asp=1:1, legend.outside = T)+
+tm_shape(pts.sf.pipo)+
+  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 500)+
+tm_shape(pts.sf.abco)+
+  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 500)
 ```
 
 # Iterate 
-```{r}
-iterate(100)
+```{r, warning=FALSE}
+iterate(iterations)
 dfsimallreps %>% 
   group_by(rep) %>% 
-  summarize(mean(Ht_cm_nonnorm))
+  summarize(mean(Ht_cm1))
 ```
 
 # Summarize
 
-## Height by shrub competition
-```{r}
-dfsimallreps <- dfsimallreps %>% 
-  ungroup() %>% 
-  mutate(rep = as.factor(paste(rep))) %>% 
-  group_by(rep, shrubarea3, Species) %>% 
-  mutate(mean_ht_shrubs = mean(Ht_cm_nonnorm))
-dfsimallreps %>% select(rep, shrubarea3, mean_ht_shrubs) %>% summary()
-```
-
-```{r}
-ggplot(dfsimallreps)+
-  geom_smooth(aes(x = shrubarea3, y = mean_ht_shrubs, group = Species, col = Species))+
-  geom_point(aes(x = shrubarea3, y = mean_ht_shrubs, group = Species, col = Species))+
-  theme_bw()
-```
-
 ## Height by year
 ```{r}
-dfsimallreps <- dfsimallreps %>% 
-  ungroup() %>% 
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>%
   mutate(rep = as.factor(paste(rep))) %>% 
   group_by(rep, Years, Species) %>% 
-  mutate(mean_ht_years = mean(Ht_cm_nonnorm))
-dfsimallreps %>% select(rep, Years, mean_ht_years) %>% summary()
+  mutate(mean_ht_years = mean(Ht_cm1))
+dfsimallreps_summary %>% dplyr::select(rep, Years, mean_ht_years) %>% summary()
 ```
 
 ```{r}
-ggplot(dfsimallreps, aes(x = as.factor(Years_nonnorm), y = mean_ht_years, fill = Species, col = Species))+
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
-  geom_smooth(aes(x = as.factor(Years_nonnorm), y = mean_ht_years, group = Species, col = Species), size = 1)+
-  ggtitle("Results for 300 simulations")+
+  geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
+  ggtitle("Results for 100 simulations")+
   xlab("Years since fire")+
   ylab("Average tree ht (cm) by simulation")+
   theme_bw()
@@ -126,7 +140,7 @@ ggplot(dfsimallreps, aes(x = as.factor(Years_nonnorm), y = mean_ht_years, fill =
 
 ## Counts by year
 ```{r}
-dfsimallreps <- dfsimallreps %>% 
+dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>% 
   group_by(rep, Years, Species) %>% 
   mutate(count = n()) %>% 
@@ -134,12 +148,72 @@ dfsimallreps <- dfsimallreps %>%
 ```
 
 ```{r}
-ggplot(dfsimallreps, aes(x = as.factor(Years_nonnorm), y = count, fill = Species, col = Species))+
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
-  geom_smooth(aes(x = as.factor(Years_nonnorm), y = count, fill = Species, col = Species), size = 1)+
+  geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
   ggtitle("Results for 100 simulations")+
   xlab("Years since fire")+
   ylab("Tree count")+
   theme_bw()
 ```
+
+## Shrub height by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, Ht1.3) %>% 
+  mutate(mean_shrub_ht = mean(Ht1.3))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_shrub_ht))+
+  geom_smooth(aes(x = Years, y = mean_shrub_ht))+
+  ggtitle("Results for 100 simulations")+
+  xlab("Years since fire")+
+  ylab("Shrub height")+
+  theme_bw()
+```
+
+## Shrub competition by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, sqrt_shrubarea3) %>% 
+  mutate(mean_shrub_comp = mean(sqrt_shrubarea3))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_comp))+
+  geom_smooth()+
+  ggtitle("Results for 100 simulations")+
+  xlab("Years since fire")+
+  ylab("Shrub height")+
+  theme_bw()
+```
+
+
+# Next steps to improve the model
+
+1.  Use Kristen's data or Hugh's data for initial conditions
+2.  Improve dispersal kernel based on Kristen/Hugh's data 
+3.  Improve shrub growth based on data
+4.  Include residual surviving trees and their seed dispersal
+5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
+6.  Add customization of patch size and shape
+7.  Add customization of whether the conditions reflect those of 2015, 2016, or 2017
+8.  Change sapling growth equations once they emerge from the shrub canopy
+
+
+For next week:
+- Improve shrub growth based on data
+- display dominant shrub species
+- make the shrub grid dependent upon surrounding cells so it's not so checkerboard
+- Update display of shrub competition after simulation years
+- what does shrub competition mean for new recruitment?
+- "emergent year" = when 50% of trees are above shrub canopy
+- maybe submit to American Naturalist
+- Global Change Biology - mixing up the years
+- no overstory reproduction for now 
+- apply to King, American River Complex, rest of the fires I measured
+
 
