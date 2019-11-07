@@ -9,35 +9,53 @@ initialize <- function(){
   dffull <<- df
   df <- df %>% 
     dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>% 
-    filter(Year=="2016") %>% 
-    filter(Fire == "AMRC") %>% 
+    filter(Year==year) %>% 
+    filter(Fire == fire) %>% 
     filter(!is.na(Ht2016.cm_spring)) %>% 
     mutate(Cov_prop = Cov1.3/1200) %>% 
     distinct()
   
-  values <- as.numeric(paste(sample(df$Sdlg, n_seedlings, replace = T)))
-  xy <- matrix(values, length_m, height_m)
+  shrub_Sdlg_ID <- as.numeric(paste(sample(df$Sdlg, length_m*height_m, replace = T)))
+  xy <- matrix(shrub_Sdlg_ID, length_m, height_m)
   r <- raster(xy, xmn = 0, xmx = length_m, ymn = 0, ymx = height_m)
   crs_epsg <- CRS("+init=epsg:26910")
   crs(r) <- crs_epsg
+  r <- ratify(r)
+  rat <- levels(r)[[1]]
+  head(rat)
+  raster_df <- df %>% 
+    dplyr::select(Sdlg, Cov1.3, Ht1.3, ShrubSpp03, heatload, incidrad, Slope.Deg, Elevation, Fire) %>% 
+    rename(ID = Sdlg) %>% 
+    mutate(ID = as.numeric(paste(ID)))
+  rat <- left_join(rat, raster_df)
+  levels(r) <- rat
   r <<- r
+
   
   p <- as(extent(r), "SpatialPolygons")
   crs(p) <- crs(r)
   p <<- p
   
-  x.left <- 0.5+rpois(20,2.5)
-  x.right <- 19.5-rpois(20,2.5)
-  y.bottom <- 0.5+rpois(20,2.5)
-  y.top <- 19.5-rpois(20,2.5)
-  x <- sample(c(x.left, x.right), 20)
-  y <- sample(c(y.top, y.bottom), 20)
   
-  left.edge <- cbind(x = x.left, y = (0.5 + sample(c(0:19), 10)))
-  right.edge <- cbind(x = x.right, y = (0.5 +sample(c(0:19), 10)))
+  x.left <- 0.5 + rpois(n_seedlings/2, lambda)
+  x.right <- length_m-.5 - rpois(n_seedlings/2, lambda)
+  y.bottom <- 0.5 + rpois(n_seedlings/2, lambda)
+  y.top <- height_m -0.5 - rpois(n_seedlings/2, lambda)
+  x <- sample(c(x.left, x.right), n_seedlings)
+  y <- sample(c(y.top, y.bottom), n_seedlings)
   
-  top.edge <- cbind(x =  c(0.5 + sample(c(1:19), 20, replace = T)), y = y.top)
-  bottom.edge <- cbind(x = c(0.5 + sample(c(1:19), 20, replace = T)),  y = y.bottom)
+  
+  left.edge.y <- 0.5 + sample(x = c(0:(height_m-.5)), size = length(x.left), replace = T)
+  right.edge.y <- 0.5 + sample(x = c(0:(height_m-.5)), size = length(x.right), replace = T)
+  
+  top.edge.x <- 0.5 + sample(x = c(0:(length_m-.5)), size = length(y.top), replace = T)
+  bottom.edge.x <- 0.5 + sample(x = c(0:(length_m-.5)), size = length(y.bottom), replace = T)
+  
+  left.edge <- cbind(x = x.left, y = left.edge.y)
+  right.edge <- cbind(x = x.right, y = right.edge.y)
+  
+  top.edge <- cbind(x = top.edge.x, y = y.top)
+  bottom.edge <- cbind(x = bottom.edge.x,  y = y.bottom)
   
   edges <- rbind(left.edge, right.edge, top.edge, bottom.edge)
   pts.xy <- edges

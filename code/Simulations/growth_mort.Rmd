@@ -18,21 +18,19 @@ require(knitr)
 
 # Define parameters
 ```{r}
-years <- 15
-iterations <- 100
+fire <- "AMRC"
+year <- "2016"
+years <- 20
+iterations <- 30
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
-length_m <- 20
-height_m <- 20
+length_m <- 40
+height_m <- 40
+lambda <- 4
 ```
 
 # Load functions
-
-#### Normalize function
-```{r}
-source("functions/normalize.R")
-```
 
 #### Initialization function
 ```{r}
@@ -215,5 +213,6 @@ For next week:
 - Global Change Biology - mixing up the years
 - no overstory reproduction for now 
 - apply to King, American River Complex, rest of the fires I measured
+- switch diameter equation to be from dendro work
 
 
