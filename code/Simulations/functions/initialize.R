@@ -26,7 +26,8 @@ initialize <- function(){
   raster_df <- df %>% 
     dplyr::select(Sdlg, Cov1.3, Ht1.3, ShrubSpp03, heatload, incidrad, Slope.Deg, Elevation, Fire) %>% 
     rename(ID = Sdlg) %>% 
-    mutate(ID = as.numeric(paste(ID)))
+    mutate(ID = as.numeric(paste(ID))) %>% 
+    mutate(sqrt_shrubarea3 = sqrt(Cov1.3*Ht1.3))
   rat <- left_join(rat, raster_df)
   levels(r) <- rat
   r <<- r

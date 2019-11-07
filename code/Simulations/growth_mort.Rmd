@@ -77,10 +77,16 @@ initialize()
 
 # Plot patch before simulation
 ```{r}
+max_shrub <- max(r@data@attributes[[1]]$sqrt_shrubarea3)
+r@data@attributes[[1]]$shrub_rel <- r@data@attributes[[1]]$sqrt_shrubarea3/max_shrub
+
+
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
 tm_shape(r)+
-  tm_raster(alpha = .5, title = "Shrub competition")+
+  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys")+
+tm_shape(r)+
+  tm_raster(col = "ShrubSpp03", alpha = .6, title = "Shrub species", palette = "Set1")+
   tm_layout(asp=1:1, legend.outside = T)+
 tm_shape(pts.sf.pipo)+
   tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 500)+
