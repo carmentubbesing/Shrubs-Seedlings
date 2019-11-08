@@ -14,6 +14,7 @@ require(sf)
 require(sp)
 require(tmaptools)
 require(knitr)
+strt <- Sys.time()
 ```
 
 # Define parameters
@@ -21,16 +22,22 @@ require(knitr)
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 30
+iterations <- 100
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
 length_m <- 40
 height_m <- 40
 lambda <- 4
+shrub_clumpiness <- 7
 ```
 
 # Load functions
+
+#### Create shrub patch
+```{r}
+source("functions/shrubclump.R")
+```
 
 #### Initialization function
 ```{r}
@@ -72,6 +79,11 @@ source("functions/iterate.R")
 
 # Initialize
 ```{r}
+shrubclump()
+plot(r)
+```
+
+```{r}
 initialize()
 ```
 
@@ -79,19 +91,28 @@ initialize()
 ```{r}
 max_shrub <- max(r@data@attributes[[1]]$sqrt_shrubarea3)
 r@data@attributes[[1]]$shrub_rel <- r@data@attributes[[1]]$sqrt_shrubarea3/max_shrub
+```
+
+```{r}
+pts.sf.pipo.graph <- pts.sf.pipo %>% 
+  rename("Pine height" = Ht_cm1)
+pts.sf.abco.graph <- pts.sf.abco %>% 
+  rename("Fir height" = Ht_cm1)
+```
 
 
+```{r}
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
 tm_shape(r)+
-  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys")+
+  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
 tm_shape(r)+
-  tm_raster(col = "ShrubSpp03", alpha = .6, title = "Shrub species", palette = "Set1")+
+  tm_raster(col = "ShrubSpp03", alpha = .2, title = "Shrub species", palette = "Set1")+
   tm_layout(asp=1:1, legend.outside = T)+
-tm_shape(pts.sf.pipo)+
-  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 500)+
-tm_shape(pts.sf.abco)+
-  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 500)
+tm_shape(pts.sf.pipo.graph)+
+  tm_symbols(size = "Pine height", col = "darkgreen", size.max = 500, border.col = "white", border.lwd = .05)+
+tm_shape(pts.sf.abco.graph)+
+  tm_symbols(size = "Fir height", col = "darkblue", size.max = 500, border.col = "white", border.lwd = .05)
 ```
 
 # Simulate across years
@@ -99,17 +120,27 @@ tm_shape(pts.sf.abco)+
 suppressMessages(sim(years))
 ```
 
-# Plot patch after simulation
+
+```{r}
+pts.sf.pipo.graph <- pts.sf.pipo %>% 
+  rename("Pine height" = Ht_cm1)
+pts.sf.abco.graph <- pts.sf.abco %>% 
+  rename("Fir height" = Ht_cm1)
+```
+
+
 ```{r}
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
 tm_shape(r)+
-  tm_raster(alpha = .5, title = "Shrub competition")+
+  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
+tm_shape(r)+
+  tm_raster(col = "ShrubSpp03", alpha = .2, title = "Shrub species", palette = "Set1")+
   tm_layout(asp=1:1, legend.outside = T)+
-tm_shape(pts.sf.pipo)+
-  tm_symbols(size = "Ht_cm1", col = "darkgreen", size.max = 500)+
-tm_shape(pts.sf.abco)+
-  tm_symbols(size = "Ht_cm1", col = "darkblue", size.max = 500)
+tm_shape(pts.sf.pipo.graph)+
+  tm_symbols(size = "Pine height", col = "darkgreen", size.max = 500)+
+tm_shape(pts.sf.abco.graph)+
+  tm_symbols(size = "Fir height", col = "darkblue", size.max = 500)
 ```
 
 # Iterate 
@@ -193,6 +224,10 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_comp))+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
+```
+
+```{r}
+print(Sys.time() - strt)
 ```
 
 
