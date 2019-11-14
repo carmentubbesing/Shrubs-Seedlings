@@ -72,7 +72,7 @@ ggplot(dfa)+
   theme_bw()+
   scale_y_continuous(breaks = c(log10(0.01), log10(0.1), log10(1)), labels = c(0.01, 0.1, 1), limits = c(log10(0.007), log10(1.1)))+
   #ggtitle("ABCO average relative vertical growth,\nlog transformed")+
-  theme(legend.position = "none", axis.text=element_text(size=12))
+  theme(legend.position = "none", text=element_text(size=16))
   
   
   
@@ -97,9 +97,9 @@ ggplot(dfp)+
   ylab("Relative growth rate")+
   theme_bw()+
   #ggtitle("PIPO average relative vertical growth,\nlog transformed")+
-  theme(legend.position = "none", axis.text=element_text(size=12))
+  theme(legend.position = "none", text=element_text(size=16))
   
-ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot.png", width = 4, height = 6, dpi = 400)
+ggsave(file = "../../results/figures/GrowthMortality/Pine_vert_boxplot_ppt.png", width = 4, height = 6, dpi = 400)
 ```
 
 

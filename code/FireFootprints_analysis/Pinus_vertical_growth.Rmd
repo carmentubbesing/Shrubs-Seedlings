@@ -296,10 +296,10 @@ save(plot_max, file = "../../results/figures/FireFootprints/plot_max.Rdata")
 
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = "#fc8d62")+
-  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), fill = "#fc8d62",   alpha = .4)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = "#9A8822")+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), fill = "#9A8822",   alpha = .4)+
   theme_bw()+
-  xlab(bquote('                           Shrub competition ' ))+
+  xlab(bquote('Shrub competition ' ))+
   ylab("Relative growth rate")+
   geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
   ylim(c(plot_min, plot_max))+
@@ -309,7 +309,7 @@ ggplot(effects_df)+
   theme(
         panel.grid.minor = element_blank(),
         panel.grid.major.x = element_blank(),
-        text = element_text(size = 11))
+        text = element_text(size = 16))
 ggsave(file = "../../results/figures/FireFootprints/PineVertRel_noint.png", width = 3, height = 3, dpi = 400)
 ```
 
@@ -457,7 +457,7 @@ ggplot(effects_df %>% filter(ShrubSpp03 != "Other"  ))+
                             "CHFO" = "Chamaebatia\nfoliolosa",
                             "LIDE" = "Notholithocarpus\ndensiflorus"
                             ))+
-  theme(  text = element_text(size = 11),
+  theme(  text = element_text(size = 16),
           panel.grid.major.x = element_blank(),
           panel.grid.minor = element_blank(),
           axis.text.x = element_text(face = "bold.italic",

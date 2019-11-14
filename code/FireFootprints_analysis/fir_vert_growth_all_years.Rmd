@@ -299,7 +299,7 @@ load("../../results/figures/FireFootprints/plot_max.Rdata")
 
 ```{r}
 ggplot(effects_df)+
-  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = "#8da0cb")+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = ("#899DA4"))+
   geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#8da0cb")+
   theme_bw()+
   xlab(bquote(
@@ -314,6 +314,27 @@ ggplot(effects_df)+
     text = element_text(size = 11))
 ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
+
+
+
+```{r}
+ggplot(effects_df)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = ("#899DA4"))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#899DA4")+
+  theme_bw()+
+  xlab(bquote(
+    (sqrt(`cover (cm)`%*%`height (cm)`))            
+    ))+
+  ylab("Relative growth rate")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
+  ylim(c(plot_min, plot_max))+
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    text = element_text(size = 16))
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
+```
+
 
 # Save LM
 ```{r}

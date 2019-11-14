@@ -22,7 +22,7 @@ strt <- Sys.time()
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 100
+iterations <- 1000
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -123,9 +123,9 @@ suppressMessages(sim(years))
 
 ```{r}
 pts.sf.pipo.graph <- pts.sf.pipo %>% 
-  rename("Pine height" = Ht_cm1)
+  rename("Pine height (cm)" = Ht_cm1)
 pts.sf.abco.graph <- pts.sf.abco %>% 
-  rename("Fir height" = Ht_cm1)
+  rename("Fir height (cm)" = Ht_cm1)
 ```
 
 
@@ -135,12 +135,12 @@ tm_shape(p)+
 tm_shape(r)+
   tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
 tm_shape(r)+
-  tm_raster(col = "ShrubSpp03", alpha = .2, title = "Shrub species", palette = "Set1")+
-  tm_layout(asp=1:1, legend.outside = T)+
+  tm_raster(col = "ShrubSpp03", alpha = .7, title = "Shrub species", palette = "Pastel1")+
+  tm_layout(asp=1:1, legend.outside = T, legend.title.size = 4, legend.text.size = 2)+
 tm_shape(pts.sf.pipo.graph)+
-  tm_symbols(size = "Pine height", col = "darkgreen", size.max = 500)+
+  tm_symbols(size = "Pine height (cm)", col = "#DCC960", size.max = 300, border.lwd = 3)+
 tm_shape(pts.sf.abco.graph)+
-  tm_symbols(size = "Fir height", col = "darkblue", size.max = 500)
+  tm_symbols(size = "Fir height (cm)", col = "#899DA4", size.max = 300, border.lwd = 3)
 ```
 
 # Iterate 
@@ -167,10 +167,17 @@ dfsimallreps_summary %>% dplyr::select(rep, Years, mean_ht_years) %>% summary()
 ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
   geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
-  ggtitle("Results for 100 simulations")+
+  ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Average tree ht (cm) by simulation")+
-  theme_bw()
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))
+ggsave(file = "../../results/figures/sim_1000_hts.png", width = 6, height =4, dpi = 400)
 ```
 
 ## Counts by year
@@ -186,10 +193,17 @@ dfsimallreps_summary <- dfsimallreps %>%
 ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
   geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
-  ggtitle("Results for 100 simulations")+
+  ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Tree count")+
-  theme_bw()
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))
+ggsave(file = "../../results/figures/sim_1000_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
@@ -203,7 +217,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 ```{r}
 ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_shrub_ht))+
   geom_smooth(aes(x = Years, y = mean_shrub_ht))+
-  ggtitle("Results for 100 simulations")+
+  ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
@@ -220,10 +234,11 @@ dfsimallreps_summary <- dfsimallreps %>%
 ```{r}
 ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_comp))+
   geom_smooth()+
-  ggtitle("Results for 100 simulations")+
+  ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
+ggsave(file = "../../results/figures/sim_1000_shrub.png", width = 3, height = 3, dpi = 400)
 ```
 
 ```{r}

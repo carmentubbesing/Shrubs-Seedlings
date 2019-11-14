@@ -96,7 +96,7 @@ ggplot()+
   theme_bw()+
   #xlim(0.03, .27)+
   ylim(0, ymax_set)+
-   theme(text = element_text(size = 11),
+   theme(text = element_text(size = 16),
         panel.grid.minor = element_blank())+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
   ylab("Annual % mortality probability")
@@ -234,7 +234,7 @@ ggplot()+
   ylab("Annual % mortality probability")+
   xlab(bquote('Annual relative growth defined as '  ~ frac((height[2] - height[1]),height[1])))+
   theme(panel.grid.minor = element_blank(),
-        text = element_text(size = 11))
+        text = element_text(size = 16))
 ggsave("../../results/figures/GrowthMortality/predict_mortality_pipo.png", height = 4, width = 5)
 ```
 
