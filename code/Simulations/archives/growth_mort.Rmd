@@ -5,6 +5,8 @@ date: "October 31, 2019"
 output: pdf_document
 ---
 
+# This script runs simulations
+
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/")
 require(raster)

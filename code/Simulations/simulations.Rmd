@@ -1,0 +1,278 @@
+---
+title: "Growth_mort"
+author: "Carmen"
+date: "October 31, 2019"
+output: pdf_document
+---
+
+# This script runs simulations with the most up-to-date functions
+
+```{r, include = F}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+require(raster)
+require(tidyverse)
+require(tmap)
+require(sf)
+require(sp)
+require(tmaptools)
+require(knitr)
+strt <- Sys.time()
+```
+
+# Define parameters
+```{r}
+fire <- "AMRC"
+year <- "2016"
+years <- 20
+iterations <- 10
+max_shrub_ht_cm <- 250
+max_shrub_ht_years <- 15
+n_seedlings <- 100
+length_m <- 40
+height_m <- 40
+lambda <- 4
+shrub_clumpiness <- 7
+```
+
+# Load functions
+
+#### Create shrub patch
+```{r}
+source("functions/shrubclump.R")
+```
+
+#### Initialization function
+```{r}
+source("functions/initialize.R")
+```
+
+#### Height growth functions
+```{r}
+source("functions/abcogrowth.R")
+source("functions/pipogrowth.R")
+```
+
+#### Diameter growth functions
+```{r}
+source("functions/abcodia.R")
+source("functions/pipodia.R")
+```
+
+#### Mortality functions
+```{r}
+source("functions/abcomort.R")
+source("functions/pipomort.R")
+```
+
+#### Shrub growth function
+```{r}
+source("functions/shrubgrowth.R")
+```
+
+#### Simulation function
+```{r}
+source("functions/sim.R")
+```
+
+#### Iteration function
+```{r}
+source("functions/iterate.R")
+```
+
+# Initialize
+
+## Create clumped shrub pattern
+```{r}
+shrubclump()
+plot(r)
+```
+
+## Randomly select seedlings from data and place them on the shrub patch
+```{r}
+initialize()
+```
+
+## Plot patch with seedlings
+```{r}
+max_shrub <- max(r@data@attributes[[1]]$sqrt_shrubarea3)
+r@data@attributes[[1]]$shrub_rel <- r@data@attributes[[1]]$sqrt_shrubarea3/max_shrub
+```
+
+```{r}
+pts.sf.pipo.graph <- pts.sf.pipo %>% 
+  rename("Pine height" = Ht_cm1)
+pts.sf.abco.graph <- pts.sf.abco %>% 
+  rename("Fir height" = Ht_cm1)
+```
+
+```{r}
+tm_shape(p)+
+  tm_borders(col = "black", lwd= 5)+
+tm_shape(r)+
+  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
+tm_shape(r)+
+  tm_raster(col = "ShrubSpp03", alpha = .2, title = "Shrub species", palette = "Set1")+
+  tm_layout(asp=1:1, legend.outside = T)+
+tm_shape(pts.sf.pipo.graph)+
+  tm_symbols(size = "Pine height", col = "darkgreen", size.max = 500, border.col = "white", border.lwd = .05)+
+tm_shape(pts.sf.abco.graph)+
+  tm_symbols(size = "Fir height", col = "darkblue", size.max = 500, border.col = "white", border.lwd = .05)
+```
+
+# Simulate across years
+```{r, warning=FALSE}
+suppressMessages(sim(years))
+```
+
+
+```{r}
+pts.sf.pipo.graph <- pts.sf.pipo %>% 
+  rename("Pine height (cm)" = Ht_cm1)
+pts.sf.abco.graph <- pts.sf.abco %>% 
+  rename("Fir height (cm)" = Ht_cm1)
+```
+
+
+```{r}
+tm_shape(p)+
+  tm_borders(col = "black", lwd= 5)+
+tm_shape(r)+
+  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
+tm_shape(r)+
+  tm_raster(col = "ShrubSpp03", alpha = .7, title = "Shrub species", palette = "Pastel1")+
+  tm_layout(asp=1:1, legend.outside = T, legend.title.size = 4, legend.text.size = 2)+
+tm_shape(pts.sf.pipo.graph)+
+  tm_symbols(size = "Pine height (cm)", col = "#DCC960", size.max = 300, border.lwd = 3)+
+tm_shape(pts.sf.abco.graph)+
+  tm_symbols(size = "Fir height (cm)", col = "#899DA4", size.max = 300, border.lwd = 3)
+```
+
+# Iterate 
+```{r, warning=FALSE}
+iterate(iterations)
+dfsimallreps %>% 
+  group_by(rep) %>% 
+  summarize(mean(Ht_cm1))
+```
+
+# Summarize
+
+## Height by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>%
+  mutate(rep = as.factor(paste(rep))) %>% 
+  group_by(rep, Years, Species) %>% 
+  mutate(mean_ht_years = mean(Ht_cm1))
+dfsimallreps_summary %>% dplyr::select(rep, Years, mean_ht_years) %>% summary()
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.alpha = .02)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
+  ggtitle("Results for 1000 simulations")+
+  xlab("Years since fire")+
+  ylab("Average tree ht (cm) by simulation")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))
+ggsave(file = "../../results/figures/sim_1000_hts.png", width = 6, height =4, dpi = 400)
+```
+
+## Counts by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, Species) %>% 
+  mutate(count = n()) %>% 
+  mutate(count = as.numeric(count))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.alpha = .02)+
+  geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
+  ggtitle("Results for 1000 simulations")+
+  xlab("Years since fire")+
+  ylab("Tree count")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))
+ggsave(file = "../../results/figures/sim_1000_count.png", width = 6, height = 4, dpi = 400)
+```
+
+## Shrub height by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, Ht1.3) %>% 
+  mutate(mean_shrub_ht = mean(Ht1.3))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_shrub_ht))+
+  geom_smooth(aes(x = Years, y = mean_shrub_ht))+
+  ggtitle("Results for 1000 simulations")+
+  xlab("Years since fire")+
+  ylab("Shrub height")+
+  theme_bw()
+```
+
+## Shrub competition by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, sqrt_shrubarea3) %>% 
+  mutate(mean_shrub_comp = mean(sqrt_shrubarea3))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_comp))+
+  geom_smooth()+
+  ggtitle("Results for 1000 simulations")+
+  xlab("Years since fire")+
+  ylab("Shrub height")+
+  theme_bw()
+ggsave(file = "../../results/figures/sim_1000_shrub.png", width = 3, height = 3, dpi = 400)
+```
+
+```{r}
+print(Sys.time() - strt)
+```
+
+
+# Next steps to improve the model
+
+1.  Use Kristen's data or Hugh's data for initial conditions
+2.  Improve dispersal kernel based on Kristen/Hugh's data 
+3.  Improve shrub growth based on data
+4.  Include residual surviving trees and their seed dispersal
+5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
+6.  Add customization of patch size and shape
+7.  Add customization of whether the conditions reflect those of 2015, 2016, or 2017
+8.  Change sapling growth equations once they emerge from the shrub canopy
+
+
+For next week:
+- Improve shrub growth based on data
+- display dominant shrub species
+- make the shrub grid dependent upon surrounding cells so it's not so checkerboard
+- Update display of shrub competition after simulation years
+- what does shrub competition mean for new recruitment?
+- "emergent year" = when 50% of trees are above shrub canopy
+- maybe submit to American Naturalist
+- Global Change Biology - mixing up the years
+- no overstory reproduction for now 
+- apply to King, American River Complex, rest of the fires I measured
+- switch diameter equation to be from dendro work
+
+

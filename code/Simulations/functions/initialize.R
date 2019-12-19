@@ -69,8 +69,7 @@ initialize <- function(){
 
   pts.sf <- pts.sf %>%
     mutate(Sdlg = as.factor(Sdlg))
-  pts.sf <- left_join(pts.sf, df_new) # THIS LINE IS CAUSING PROBLEMS
-
+  pts.sf <- left_join(pts.sf, df_new) 
   pts.sf.lm <- pts.sf %>%
     rename("Ht_cm1" = Ht2016.cm_spring) %>%
     mutate(Years = as.factor(Years)) %>%

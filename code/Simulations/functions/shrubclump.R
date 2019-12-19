@@ -34,10 +34,9 @@ shrubclump <- function(){
     r <- raster(xy, xmn = 0, xmx = length_m, ymn = 0, ymx = height_m)
     crs_epsg <- CRS("+init=epsg:26910")
     crs(r) <- crs_epsg
-    plot(r)
-    
+
     focalr <- focal(r, w = matrix(1/shrub_clumpiness, nrow = shrub_clumpiness, ncol = shrub_clumpiness), pad = T, padValue = mean(r@data@values))
-    plot(focalr)
+
     summary(getValues(focalr))
     
     # Add random small numbers to values to  make them unique
