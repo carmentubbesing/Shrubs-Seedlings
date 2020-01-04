@@ -1,0 +1,60 @@
+---
+title: "Clean shrub data from Derek's data set"
+author: "Carmen"
+date: "December 19, 2019"
+output: html_document
+---
+
+```{r, include = F}
+setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+require(tidyverse)
+require(lubridate)
+```
+
+# Load Derek's data
+```{r}
+df <- read.csv("../../data/Data_for_shrub_growth/Young_data/Young_Plot_data.csv") %>% 
+  arrange(Regen_Plot) %>% 
+  tbl_df()
+head(df)
+```
+
+# Filter to high severity fire, calculate years since fire
+```{r}
+df <- df %>% 
+  filter(FIRE_SEV >3) %>% 
+  mutate(Date = lubridate::mdy_hm(Date)) %>% 
+  mutate(Year_meas = lubridate::year(Date)) %>% 
+  dplyr::select(Year_meas, Date, everything()) %>% 
+  mutate(years_since_fire = Year_meas - Year.of.Fire) %>% 
+  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
+df
+
+summary(df$years_since_fire)  
+```
+
+# Filter to shrub species I care about
+```{r}
+sort(unique(df$dominant_shrub_1))
+df <- df %>% 
+  filter(dominant_shrub_1 %in% c("ARNE", "ARPA6", "ARVI", "CECO", "CEIN3", "CEINT", "CEPR", "CHFO", "CHSE11", "PREM", "QUVA", "RIBES", "RIRO", "SYMO"))
+```
+
+# Plot by species
+```{r, warning = F}
+ggplot(df, aes(x = years_since_fire, y = dominant_shrub_ht_cm, col = dominant_shrub_1))+
+  geom_point()+ 
+  geom_smooth(method = "loess", span = 1.5)
+```
+
+# Plot across species
+```{r, warning = F}
+ggplot(df, aes(x = years_since_fire, y = dominant_shrub_ht_cm))+
+  geom_point()+ 
+  geom_smooth(method = "loess", span = 1.5)
+```
+
+# Save
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+```

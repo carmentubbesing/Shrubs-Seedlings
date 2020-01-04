@@ -1,0 +1,86 @@
+---
+title: "Shrubs_time_DavisData"
+author: "Carmen"
+date: "December 18, 2019"
+output: html_document
+---
+
+```{r, include = F}
+require(readxl)
+```
+
+
+
+```{r}
+shrub_data <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Data_from_others/Hugh/shrub_regen_RegenDatabase_1_13_16_updatedDates.xlsx")
+plot_data <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Data_from_others/Hugh/plot_data_RegenDatabase_1_13_16_updatedDates.xlsx")
+seed_tree <- read_excel("~/../Dropbox (Stephens Lab)/SORTIE/Data_from_others/Hugh/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx")
+```
+
+# Reformat seed tree table so that it has one row per plot, with minimum distance to seed tree
+```{r}
+seed_tree %>% nrow()
+seed_tree <- seed_tree %>% arrange(Regen_Plot)
+head(seed_tree)
+
+seed_tree <- seed_tree %>% 
+  dplyr::select(Regen_Plot, Dist_m) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Dist_m == min(Dist_m))
+head(seed_tree)
+```
+
+```{r}
+df <- full_join(shrub_data, plot_data, by = "Regen_Plot")
+df <- left_join(df, seed_tree, by = "Regen_Plot")
+```
+
+# Reformat data
+```{r}
+df <- df %>% 
+  filter(FIRE_SEV >3) %>% 
+  mutate(Year_meas = as.numeric(substr(Date,1,4))) %>% 
+  mutate(Years_since_fire = Year_meas - `Year of Fire`) %>% 
+  select(Years_since_fire, Year_meas, `Year of Fire`, Species, Cover, modal_ht_cm, Regen_Plot, Dist_m) %>%
+  distinct() %>% 
+  filter(Species %in% c("ARPA6",  "CECO"))
+df
+```
+
+# Remove plots with trees too close
+```{r}
+df %>% nrow()
+df %>% 
+  filter(Dist_m > 20) %>% 
+  nrow()
+df <- df %>% 
+  filter(Dist_m > 20)
+```
+
+
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(`Year of Fire`), y = sqrt(Cover)))
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(Years_since_fire), y =modal_ht_cm))
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(`Year of Fire`), y = sqrt(Cover*modal_ht_cm)))
+
+```
+
+```{r}
+ggplot(df, aes(x = Years_since_fire, y = modal_ht_cm, col = Species))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme_bw()
+```
+
+```{r}
+ggplot(df, aes(x = Years_since_fire, y = Cover, col = Species))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  theme_bw()
+```
+
+# Questions for Derek:
+- safe to assume that if seed tree is farther than 20 m away, no other overstory is < 20 m from plot?

@@ -1,0 +1,92 @@
+---
+title: "Latimer data cleaning"
+author: "Carmen"
+date: "January 3, 2020"
+output: html_document
+---
+
+# TO DO
+
+-  add seed tree data (separate file) to filter out plots <20 m from overstory trees
+
+
+```{r, include = F}
+require(tidyverse)
+```
+
+# Load data
+```{r}
+shrubs <- read.csv("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/shrubs.csv")
+plots <- read.csv("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/plots_w_gis_data.csv")
+```
+
+# Basic cleaning
+
+## Delete nonsense columns
+```{r}
+shrubs <- shrubs %>% 
+  dplyr::select(-"..7")
+```
+
+## Rename shrub columns
+```{r}
+shrubs <- shrubs %>% 
+  rename(Shrub_species = Species, Shrub_cover = Cover, shrub_density = Density, shrub_ht = Height, shrub_pctdead = PctDead)
+```
+
+
+# Join plot table to shrub table
+```{r}
+df <- full_join(plots, shrubs, by = "PlotID")
+```
+
+# Remove plots with shrub release treatments
+```{r}
+df <- df %>% 
+  filter(facts.released == "no" | is.na(facts.released))
+```
+
+# Filter to plots with high sev and far from seed trees
+```{r}
+df <- df %>% 
+  filter(FireSev > 3) %>% 
+  filter(SeedWallConifer>20 | is.na(SeedWallConifer)) %>% 
+  filter(SeedWallHardwood>20| is.na(SeedWallHardwood))
+```
+
+# Calculate years since fire. All were surveyed in 2018.
+```{r}
+df <- df %>% 
+  mutate(years_since_fire = 2018 - fire_year)
+summary(as.factor(df$years_since_fire))
+```
+
+# Filter to shrub species of interest
+```{r}
+summary(as.factor(df$Shrub_species))
+df <- df %>% 
+  filter(Shrub_species %in% c("ARCNEV", "ARCPAT", "ARCVIS", "CEACOR", "CEAINT", "CEAPRO", "CHAFOL", "CHRSEM", "QUEVAC", "RIBCER", "SYMMOL"))
+```
+
+# Plot
+```{r}
+ggplot(df, aes(x = years_since_fire, y = shrub_ht, col = Shrub_species))+
+  geom_point()+
+  geom_smooth(method = "lm")
+```
+
+# Save
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
+```
+
+
+# Look at the plots in the Cottonwood fire 
+
+Shrub data was recorded for all species that had cover > 10%, up to 4 species. If there were more than 4 species > 10%, the 4 with the greatest cover were measured.
+
+The Cottonwood plots where Type == "control" are from a higher-elevation part of the fire where the conditions are not so climatically marginal. The rest of the fire is right on the edge of the forest-sagebrush transition, as I mentioned.
+
+We just ask that you stick to analyzing this dataset for the specific purpose you described and don't share the data. If you publish data with the paper you can trim the table to just the plots and columns you used.
+
+

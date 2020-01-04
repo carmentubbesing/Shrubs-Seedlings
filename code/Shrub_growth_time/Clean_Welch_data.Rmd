@@ -1,0 +1,23 @@
+---
+title: "Clean Welch data"
+author: "Carmen"
+date: "January 3, 2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = F}
+setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+```
+
+# Load Derek's data
+```{r}
+plot <- read_excel("../../data/Data_for_shrub_growth/Welch_data/plot_data_RegenDatabase_1_13_16_updatedDates.xlsx") 
+seed_tree <- read_excel("../../data/Data_for_shrub_growth/Welch_data/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx") 
+shrub <- read_excel("../../data/Data_for_shrub_growth/Welch_data/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx") 
+
+```

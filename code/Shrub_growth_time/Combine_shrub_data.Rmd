@@ -1,0 +1,161 @@
+---
+title: "Combine_shrub_data"
+author: "Carmen"
+date: "January 3, 2020"
+output: html_document
+---
+
+```{r, include=FALSE}
+require(tidyverse)
+```
+
+# Load data
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
+latimer <- df
+remove(df)
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+young <- df
+remove(df)
+```
+
+# Sync column names
+```{r}
+latimer <- latimer %>% 
+  mutate(Year_meas = 2018) %>% 
+  rename(Year.of.Fire = fire_year, Date = SurveyDate) %>% 
+  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Shrub_species, ShrubHt)
+```
+
+```{r}
+young <- young %>% 
+  rename(Shrub_species = dominant_shrub_1) %>% 
+  rename(ShrubHt = dominant_shrub_ht_cm) %>% 
+  dplyr::select(-Date)
+```
+
+# Add column for df_source
+```{r}
+young$df_source = "young"
+latimer$df_source = "latimer"
+```
+
+# Join
+```{r}
+df <- full_join(young, latimer)
+```
+
+```{r}
+summary(as.factor(df$df_source))
+```
+
+# Sync shrub species names
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARCPAT" ~ "ARPA6",
+                     Shrub_species == "ARCVIS" ~ "ARVI",
+                     Shrub_species == "CEACOR" ~ "CECO",
+                     Shrub_species == "CEAPRO" ~ "CEPR",
+                     Shrub_species == "CEAINT" ~ "CEIN3",
+                     Shrub_species == "CEINT" ~ "CEIN3",
+                     Shrub_species == "CHAFOL" ~ "CHFO",
+                     Shrub_species == "CHRSEM" ~ "CHSE11",
+                     Shrub_species == "QUEVAC" ~ "QUVA",
+                     Shrub_species == "SYMMOL" ~ "SYMO",
+                     Shrub_species == "RIBCER" ~ "RIBES",
+                     Shrub_species == "RIRO" ~ "RIBES",
+                     TRUE ~ Shrub_species))
+```
+
+```{r}
+summary(as.factor(df$Shrub_species))
+```
+
+# Check for same plot, same year
+```{r}
+summary(as.factor(latimer$years_since_fire))
+summary(as.factor(young$years_since_fire))
+```
+
+```{r}
+summary(as.factor(latimer$Fire))
+summary(as.factor(young$Fire))
+```
+
+```{r}
+young %>% 
+  filter(years_since_fire %in% latimer$years_since_fire & Fire %in% c("AMERICAN RIVER", "MOONLIGHT", "POWER"))
+```
+
+All good!
+
+# Plot for all species together
+```{r}
+ggplot(df, aes(x = years_since_fire, y = ShrubHt))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+# Sooo I should take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
+```{r}
+df <- df %>% 
+  filter(years_since_fire<24)
+```
+
+# Plot for all species together again
+```{r}
+ggplot(df, aes(x = years_since_fire, y = ShrubHt))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+
+# Plot just for ARVI and ARPA
+```{r}
+ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
+  geom_point()+
+    geom_smooth(method = "loess")
+```
+
+# Lump ARVI and ARPA
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA6" ~ "ARPA6_ARVI",
+                     Shrub_species == "ARVI" ~ "ARPA6_ARVI",
+                     TRUE ~ Shrub_species))
+```
+
+# Plot for manzanita and deerbrush
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3")) %>%
+         filter(years_since_fire<24), 
+       aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+
+# Plot for each species with more than five years
+```{r}
+years <- df %>% 
+  group_by(Shrub_species) %>% 
+  select(Shrub_species, years_since_fire) %>% 
+  distinct() %>% 
+  summarize(years = n()) %>% 
+  filter(years>5) %>% 
+  dplyr::select(Shrub_species)
+years
+```
+
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% years$Shrub_species) %>%
+         filter(years_since_fire<24), 
+       aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
