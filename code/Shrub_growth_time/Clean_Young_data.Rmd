@@ -27,7 +27,7 @@ df <- df %>%
   mutate(Year_meas = lubridate::year(Date)) %>% 
   dplyr::select(Year_meas, Date, everything()) %>% 
   mutate(years_since_fire = Year_meas - Year.of.Fire) %>% 
-  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
+  dplyr::select(Regen_Plot, Fire, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
 df
 
 summary(df$years_since_fire)  

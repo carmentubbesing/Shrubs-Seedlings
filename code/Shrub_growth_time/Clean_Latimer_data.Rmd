@@ -18,9 +18,22 @@ require(tidyverse)
 ```{r}
 shrubs <- read.csv("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/shrubs.csv")
 plots <- read.csv("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/plots_w_gis_data.csv")
+seedtrees <- read.csv("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/seed_trees.csv")
 ```
 
 # Basic cleaning
+
+## Find minimum seed tree distance per plot
+```{r}
+seedtrees <- seedtrees %>% 
+  group_by(PlotID) %>% 
+  filter(Distance == min(Distance)) %>% 
+  ungroup() %>% 
+  dplyr::select(PlotID, Distance) %>% 
+  distinct()
+```
+
+
 
 ## Delete nonsense columns
 ```{r}
@@ -52,6 +65,21 @@ df <- df %>%
   filter(FireSev > 3) %>% 
   filter(SeedWallConifer>20 | is.na(SeedWallConifer)) %>% 
   filter(SeedWallHardwood>20| is.na(SeedWallHardwood))
+```
+
+# Filter to plots with seed trees <20 m away
+
+## Join plot data with seed tree distances
+```{r}
+nrow(df)
+df <- left_join(df, seedtrees)
+nrow(df)
+```
+
+## Filter
+```{r}
+df <- df %>% 
+  filter(Distance>20)
 ```
 
 # Calculate years since fire. All were surveyed in 2018.

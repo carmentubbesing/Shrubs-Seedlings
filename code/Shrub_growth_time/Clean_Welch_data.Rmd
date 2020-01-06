@@ -14,10 +14,106 @@ require(lubridate)
 require(readxl)
 ```
 
-# Load Derek's data
+# Load Welch data
 ```{r}
 plot <- read_excel("../../data/Data_for_shrub_growth/Welch_data/plot_data_RegenDatabase_1_13_16_updatedDates.xlsx") 
 seed_tree <- read_excel("../../data/Data_for_shrub_growth/Welch_data/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx") 
-shrub <- read_excel("../../data/Data_for_shrub_growth/Welch_data/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx") 
+shrub <- read_excel("../../data/Data_for_shrub_growth/Welch_data/shrub_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+```
 
+# Load cleaned Young data
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+young <- df
+remove(df)
+```
+
+# Join shrub data and plot data
+```{r}
+df <- left_join(shrub, plot, by = "Regen_Plot")
+```
+
+# Create columns for year measured, years since fire, and source
+```{r}
+head(df)
+df <- df %>% 
+  mutate(Year_meas = lubridate::year(Date)) %>% 
+  mutate(years_since_fire = Year_meas - `Year of Fire`) %>% 
+   rename(Shrub_species = Species) %>% 
+  dplyr::select(years_since_fire, Year_meas, `Year of Fire`, Shrub_species, everything())
+head(df)
+```
+
+# Filter plots by fire severity
+```{r}
+df <- df %>% 
+  filter(FIRE_SEV > 3)
+```
+
+# Reshape seed tree table to join with df
+```{r}
+seed_tree <- seed_tree %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Dist_m == min(Dist_m)) %>% 
+  dplyr::select(Regen_Plot, Dist_m) %>% 
+  rename(seed_tree_dist_m = Dist_m) %>% 
+  distinct()
+```
+
+# Join seed tree table with df
+```{r}
+df <- left_join(df, seed_tree)
+```
+
+# Filter df to plots with >20 m distance to seed tree
+```{r}
+df <- df %>% 
+  filter(seed_tree_dist_m>20)
+```
+
+
+# Filter to shrub species of interest
+```{r}
+summary(as.factor(df$Shrub_species))
+df <- df %>% 
+  filter(Shrub_species %in% c("ARNE", "ARPA", "ARPA6", "ARVI", "CECO", "CEIN","CEIN3", "CEPR", "CHFO", "CHSE11", "PREM", "QUVA", "RIBES", "RICE", "RIRO", "SYMO"))
+summary(as.factor(df$Shrub_species))
+```
+
+# Fix species name typos
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA" ~ "ARPA6",
+                     Shrub_species == "CEIN" ~ "CEIN3",
+                    Shrub_species == "RICE" ~ "RIBES",
+                     Shrub_species == "RIRO" ~ "RIBES",
+                     TRUE ~ Shrub_species))
+```
+
+
+# Plot for each species with more than five years
+```{r}
+years <- df %>% 
+  group_by(Shrub_species) %>% 
+  select(Shrub_species, years_since_fire) %>% 
+  distinct() %>% 
+  summarize(years = n()) %>% 
+  filter(years>5) %>% 
+  dplyr::select(Shrub_species)
+years
+```
+
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% years$Shrub_species) %>%
+         filter(years_since_fire<24), 
+       aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+# Save
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
 ```

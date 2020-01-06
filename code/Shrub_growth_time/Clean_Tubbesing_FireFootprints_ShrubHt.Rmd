@@ -1,0 +1,121 @@
+---
+title: "Clean_shrubs"
+author: "Carmen"
+date: "May 20, 2019"
+output: 
+    html_document:
+        toc: TRUE
+        toc_depth: 1
+---
+
+```{r, include = F}
+require(readxl)
+require(dplyr)
+require(tidyverse)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+shr <- read.csv("~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv")
+load("../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
+```
+
+# Basic shrub cleaning
+
+## Rename seedling column
+```{r}
+shr <- shr %>% 
+  rename(Sdlg = Seedling.) 
+```
+ 
+## Replace NAs with 0
+```{r}
+shr <- tbl_df(shr)
+shr$Dead.[is.na(shr$Dead.)] <- 0
+shr$Cover.cm[is.na(shr$Cover.cm)] <- 0
+shr$Ht.cm[is.na(shr$Ht.cm)] <- 0
+```
+
+## Take out "pea" shrub cover because it's not a shrub
+```{r}
+shr <- shr %>% filter(ShrubSpp != "pea")
+```
+
+## Take out "conifer" since it's not a shrub
+```{r}
+summary(as.factor(shr$ShrubSpp))
+shr <- shr %>% 
+  filter(!(ShrubSpp == "conifer"))
+```
+
+## Drop levels
+```{r}
+shr <- droplevels(shr)
+```
+
+# Clean up segment names
+```{r}
+shr$Seg <- 0
+for(i in 1:nrow(shr)){
+if(shr$Segment[i] %in% c("0-1 m ","0 -1 m","0-1 m")){
+  shr$Seg[i] <- 1
+} else if (shr$Segment[i]=="1-2 m "){
+  shr$Seg[i] <- 2
+} else if (shr$Segment[i] %in% c("2-3 m","2-3m")){
+  shr$Seg[i] <- 3
+}  else
+    shr$Seg[i] <- 999
+}
+summary(as.factor(shr$Seg))
+```
+
+# Calculate height shrub species rather than across species
+
+## Weighted mean by seedling + shrub species
+```{r}
+ht_by_spp <- shr %>%
+  group_by(Sdlg, ShrubSpp) %>% 
+  mutate(ht_wm.cm.spp = weighted.mean(Ht.cm, Cover.cm)) %>% 
+  arrange(Sdlg, ShrubSpp)
+ht_by_spp
+```
+
+## Get one value per seedling + shrub species
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  dplyr::select(Sdlg, ShrubSpp, ht_wm.cm.spp) %>% 
+  distinct() %>% 
+  ungroup() %>% 
+  arrange(Sdlg, ShrubSpp)
+ht_by_spp
+```
+
+# Make Sdlg all caps
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  ungroup() %>% 
+  mutate(Sdlg = toupper(Sdlg))
+```
+
+## Check for duplicated seedlings
+```{r}
+ht_by_spp %>% 
+  group_by(Sdlg, ShrubSpp) %>% 
+  summarize(n=n()) %>% 
+  filter(n !=1)
+```
+
+# Add Fire names
+```{r}
+fires <- df %>% 
+  dplyr::select(Fire, Sdlg)
+ht_by_spp <- left_join(ht_by_spp, fires)
+```
+
+
+# Save
+```{r}
+save(ht_by_spp, file="../../compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
+```
+

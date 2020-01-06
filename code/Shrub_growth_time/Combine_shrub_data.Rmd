@@ -10,6 +10,8 @@ require(tidyverse)
 ```
 
 # Load data
+
+## Data from others
 ```{r}
 load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
 latimer <- df
@@ -17,6 +19,15 @@ remove(df)
 load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
 young <- df
 remove(df)
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+welch <- df
+remove(df)
+```
+
+## Data from my fire footprints
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
+me <- ht_by_spp
 ```
 
 # Sync column names
@@ -34,15 +45,52 @@ young <- young %>%
   dplyr::select(-Date)
 ```
 
+```{r}
+me <- me %>% 
+  rename(Shrub_species = ShrubSpp) %>% 
+  rename(modal_ht_cm = ht_wm.cm.spp) %>% 
+  mutate(Year_meas = 2016) %>% 
+  mutate(years_since_fire = ifelse(Fire == "AMRC", 8, 0)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "CLVD", 24, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "FRDS", 12, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "PLKN", 43, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "STAR", 14, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "WRTS", 35, years_since_fire))
+str(me)
+```
+
 # Add column for df_source
 ```{r}
 young$df_source = "young"
 latimer$df_source = "latimer"
+welch$df_source = "welch"
+me$df_source = "me"
 ```
+
+# Remove rows in young that are already in welch
+```{r}
+young <- anti_join(young, welch, by = c("Year_meas", "Regen_Plot"))
+```
+
 
 # Join
 ```{r}
 df <- full_join(young, latimer)
+```
+
+```{r}
+df <- df %>% 
+  rename(modal_ht_cm = ShrubHt)
+```
+
+
+```{r}
+df <- full_join(df, welch)
+```
+
+## Check
+```{r}
+nrow(latimer) + nrow(welch) + nrow(young) == nrow(df)
 ```
 
 ```{r}
@@ -92,7 +140,7 @@ All good!
 
 # Plot for all species together
 ```{r}
-ggplot(df, aes(x = years_since_fire, y = ShrubHt))+
+ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point()+
   geom_smooth(method = "loess", span = 1)
 ```
@@ -105,7 +153,39 @@ df <- df %>%
 
 # Plot for all species together again
 ```{r}
-ggplot(df, aes(x = years_since_fire, y = ShrubHt))+
+ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+# Add data from fire footprints
+```{r}
+me <- me %>% 
+  dplyr::select(Fire, years_since_fire, Year_meas, Shrub_species, modal_ht_cm, df_source)
+df <- full_join(df, me)
+```
+
+## Check
+```{r}
+nrow(latimer) + nrow(welch) + nrow(young) + nrow(me) == nrow(df)
+```
+
+# Sync species names
+```{r}
+summary(as.factor(df$Shrub_species))
+
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA" ~ "ARPA6",
+                     Shrub_species == "CEIN" ~ "CEIN3",
+                     Shrub_species == "CHSE" ~ "CHSE11",
+                     TRUE ~ Shrub_species))
+```
+
+
+# Plot for all species together again
+```{r}
+ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point()+
   geom_smooth(method = "loess", span = 1)
 ```
@@ -113,7 +193,7 @@ ggplot(df, aes(x = years_since_fire, y = ShrubHt))+
 
 # Plot just for ARVI and ARPA
 ```{r}
-ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
+ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
   geom_point()+
     geom_smooth(method = "loess")
 ```
@@ -127,35 +207,53 @@ df <- df %>%
                      TRUE ~ Shrub_species))
 ```
 
-# Plot for manzanita and deerbrush
+# Plot for manzanita, whitethorn, and deerbrush
 ```{r}
 ggplot(df %>% 
-         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3")) %>%
-         filter(years_since_fire<24), 
-       aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
-  geom_point()+
-  geom_smooth(method = "loess", span = 1)
+         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3", "CECO")),
+       aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
 ```
 
 
-# Plot for each species with more than five years
+# Plot for manzanita, whitethorn, and deerbrush
 ```{r}
-years <- df %>% 
-  group_by(Shrub_species) %>% 
+ggplot(df %>% 
+         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3", "CECO")),
+       aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
+```
+
+# Plot for all species that are in my data and have at least 5 years of data
+```{r}
+under6years <- df %>% 
   select(Shrub_species, years_since_fire) %>% 
   distinct() %>% 
-  summarize(years = n()) %>% 
-  filter(years>5) %>% 
-  dplyr::select(Shrub_species)
-years
+  group_by(Shrub_species) %>% 
+  summarize(count = n()) %>% 
+  filter(count >4) %>% 
+  filter(Shrub_species != "none")
+under6years
 ```
 
 ```{r}
-ggplot(df %>% 
-         filter(Shrub_species %in% years$Shrub_species) %>%
-         filter(years_since_fire<24), 
-       aes(x = years_since_fire, y = ShrubHt, col = Shrub_species))+
-  geom_point()+
-  geom_smooth(method = "loess", span = 1)
+focal_spp <- df %>% 
+  filter(df_source == "me") %>% 
+  dplyr::select(Shrub_species) %>% 
+  distinct()
+focal_spp
 ```
+
+```{r}
+ggplot(df %>% filter(Shrub_species %in% under5years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species),
+       aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
+```
+
 
