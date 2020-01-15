@@ -126,6 +126,7 @@ LMdf <- df %>%
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
   mutate(log_shrubarea3 = log(shrubarea3+1)) %>%
   dplyr::select(Fire, 
+        FirePatch,
          Sdlg, 
          VertGrowth_Rel, 
          Years, 
@@ -158,6 +159,12 @@ f
 ```{r}
 LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
 ```
+
+## Compare to model with FirePatch as random effect
+```{r}
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
+```
+
 
 # Check collinearity
 
@@ -345,11 +352,18 @@ newdata_means <- as.data.frame(LMdf) %>%
 newdata_cat <- LMdf %>% 
   dplyr::select(ShrubSpp03, Year) %>% 
   distinct()
+
 sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>% 
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
+
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+
+Fires <- LMdf %>% 
+  dplyr::select(Sdlg, Fire, FirePatch) %>% 
+  mutate(Fire = as.factor(Fire)) %>% 
+  mutate(FirePatch = as.factor(FirePatch))
+
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_minshrub_pipo <- exp(mean(pred))
@@ -369,7 +383,12 @@ sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>%
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+
+Fires <- LMdf %>% 
+  dplyr::select(Sdlg, Fire, FirePatch) %>% 
+  mutate(Fire = as.factor(Fire)) %>% 
+  mutate(FirePatch = as.factor(FirePatch))
+
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_maxshrub_pipo <- exp(mean(pred))
@@ -389,7 +408,12 @@ sdlg <- as.data.frame(sort(rep(LMdf$Sdlg, 18))) %>%
   rename(Sdlg = `sort(rep(LMdf$Sdlg, 18))`)
 newdata <-cbind(newdata_means, newdata_cat)
 newdata <- cbind(sdlg, newdata)
-Fires <- LMdf %>% dplyr::select(Sdlg, Fire) %>% mutate(Fire = as.factor(Fire))
+
+Fires <- LMdf %>% 
+  dplyr::select(Sdlg, Fire, FirePatch) %>% 
+  mutate(Fire = as.factor(Fire)) %>% 
+  mutate(FirePatch = as.factor(FirePatch))
+
 newdata <- full_join(Fires, newdata)
 pred <- predict(LM, newdata = newdata)
 gr_medshrub_pipo <- exp(mean(pred))

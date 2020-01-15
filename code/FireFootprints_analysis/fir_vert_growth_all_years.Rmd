@@ -140,7 +140,7 @@ normalize <- function(x) {
 LMdf <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
   mutate(log_shrubarea3 = log(shrubarea3)) %>% 
-  dplyr::select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad) %>% 
+  dplyr::select(Fire, FirePatch, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad) %>% 
   mutate_if(is.numeric, normalize) %>% 
   mutate(VertGrowth_Rel = df$VertGrowth_Rel)
 LMdf <- droplevels(LMdf)
@@ -159,6 +159,15 @@ f
 ## Run lme model
 ```{r}
 LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+## Compare to model with FirePatch as random effect
+```{r}
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
 ```
 
 # Check collinearity 

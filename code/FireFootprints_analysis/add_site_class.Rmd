@@ -56,7 +56,7 @@ scp <- function(patch, site_class){
 }
 ```
 
-# Apply function
+# Apply function by comparing points to site class layer "C:/Users/Carmen/Dropbox (Stephens Lab)/SORTIE/FireFootprints_2017/data/Site_class/Wilson_site_class_1_7_250m.tif" manually in QGIS file "Users\Carmen\Dropbox (Stephens Lab)\Chapter_2\Figure components\Seedling_locations.qgs"
 ```{r}
 scp("AMRC-NW", 4)
 scp("AMRC-NE", 4)
@@ -90,6 +90,11 @@ df %>%
 df %>% 
   dplyr::select(Sdlg, FirePatch, siteclass) %>% 
   filter(Sdlg %in% c(85, 86, 89, 227, 265, 161, 172, 176, 187,12, 130))
+```
+
+# Compare to site classes at Blodgett
+```{r}
+
 ```
 
 ```{r}

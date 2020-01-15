@@ -250,9 +250,10 @@ focal_spp
 
 ```{r}
 ggplot(df %>% filter(Shrub_species %in% under5years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species),
-       aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
+       aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point(aes(shape = df_source))+
   geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species)+
   theme_bw()
 ```
 
