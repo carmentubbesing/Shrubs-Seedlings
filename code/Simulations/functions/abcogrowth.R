@@ -14,12 +14,7 @@ abcogrowth <- function(){
              coefabco["heatload"]*heatload+
              coefabco["incidrad"]*incidrad+
              coefabco["Slope.Deg"]*Slope.Deg+
-             coefabco["Elevation"]*Elevation+
-             coefabco["BasDia2016.cm"]*dia.cm) %>%
-    mutate(pred = case_when(
-      Year == "2016" ~ pred + coefabco["Year2016"],
-      Year == "2017" ~ pred + coefabco["Year2017"],
-      TRUE ~ as.numeric(pred)) ) %>% 
+             coefabco["Elevation"]*Elevation) %>%
     mutate(pred_exp = exp(pred)) %>% 
     mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth
   

@@ -9,7 +9,7 @@ sim <- function(years){
     pipomort()
     abcodia()
     pipodia()
-   # shrubgrowth()
+    shrubgrowth()
     pts.sf.abco <<- pts.sf.abco %>% 
       mutate(Years = Years + 1)
     pts.sf.pipo <<- pts.sf.pipo %>% 

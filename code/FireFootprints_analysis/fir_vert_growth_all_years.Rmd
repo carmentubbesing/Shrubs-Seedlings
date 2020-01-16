@@ -350,8 +350,6 @@ ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, 
 save(LM, file = "../../results/data/FireFootprints/LM_abco.Rdata")
 ```
 
-
-
 # Look at relationship between years and shrubarea
 ```{r}
 ggplot(df)+
