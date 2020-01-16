@@ -64,9 +64,10 @@ source("functions/abcomort.R")
 source("functions/pipomort.R")
 ```
 
-#### Shrub growth function
+#### Shrub growth functions
 ```{r}
-source("functions/shrubgrowth.R")
+source("functions/abco_shrubgrowth.R")
+source("functions/pipo_shrubgrowth.R")
 ```
 
 #### Simulation function
@@ -124,6 +125,18 @@ tm_shape(pts.sf.abco.graph)+
 suppressMessages(sim(years))
 ```
 
+## Tests
+```{r}
+ggplot(dfsimall %>% filter(Species == "ABCO"))+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
+
+```{r}
+ggplot(dfsimall %>% filter(Species == "PIPO"))+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
 
 ```{r}
 pts.sf.pipo.graph <- pts.sf.pipo %>% 
@@ -131,7 +144,6 @@ pts.sf.pipo.graph <- pts.sf.pipo %>%
 pts.sf.abco.graph <- pts.sf.abco %>% 
   rename("Fir height (cm)" = Ht_cm1)
 ```
-
 
 ```{r}
 tm_shape(p)+
@@ -214,35 +226,18 @@ ggsave(file = "../../results/figures/sim_1000_count.png", width = 6, height = 4,
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>% 
-  group_by(rep, Years, Ht1.3) %>% 
+  group_by(rep, Years, Ht1.3, ShrubSpp03) %>% 
   mutate(mean_shrub_ht = mean(Ht1.3))
 ```
 
 ```{r}
-ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_shrub_ht))+
-  geom_smooth(aes(x = Years, y = mean_shrub_ht))+
-  ggtitle("Results for 1000 simulations")+
-  xlab("Years since fire")+
-  ylab("Shrub height")+
-  theme_bw()
-```
-
-## Shrub competition by year
-```{r}
-dfsimallreps_summary <- dfsimallreps %>% 
-  ungroup() %>% 
-  group_by(rep, Years, sqrt_shrubarea3) %>% 
-  mutate(mean_shrub_comp = mean(sqrt_shrubarea3))
-```
-
-```{r}
-ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_comp))+
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp03, col = ShrubSpp03))+
+  geom_line(aes(group = Sdlg), alpha = .2)+
   geom_smooth()+
   ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
-ggsave(file = "../../results/figures/sim_1000_shrub.png", width = 3, height = 3, dpi = 400)
 ```
 
 ```{r}
@@ -254,11 +249,11 @@ print(Sys.time() - strt)
 
 1.  Use Kristen's data or Hugh's data for initial conditions
 2.  Improve dispersal kernel based on Kristen/Hugh's data 
-3.  Improve shrub growth based on data
+3.  Improve shrub growth based on data - DONE
 4.  Include residual surviving trees and their seed dispersal
 5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
 6.  Add customization of patch size and shape
-7.  Add customization of whether the conditions reflect those of 2015, 2016, or 2017
+7.  Add customization of whether the weather conditions reflect those of 2015, 2016, or 2017
 8.  Change sapling growth equations once they emerge from the shrub canopy
 
 

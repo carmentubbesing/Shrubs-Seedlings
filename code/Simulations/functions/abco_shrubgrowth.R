@@ -1,4 +1,4 @@
-shrubgrowth <- function(){
+abco_shrubgrowth <- function(){
   
   # Load gam models from `Shrub_growth_analysis.Rmd`
   load("~/Shrubs-Seedlings/results/coefficients/gamCECO.Rdata")

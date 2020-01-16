@@ -1,7 +1,7 @@
 sim <- function(years){
   dfsim <- data.frame()
   dfsimall <- data.frame()
-  
+  i <- 1
   for(i in 1:years){
     abcogrowth()
     pipogrowth()
@@ -9,7 +9,9 @@ sim <- function(years){
     pipomort()
     abcodia()
     pipodia()
-    shrubgrowth()
+    abco_shrubgrowth()
+    pipo_shrubgrowth()
+    
     pts.sf.abco <<- pts.sf.abco %>% 
       mutate(Years = Years + 1)
     pts.sf.pipo <<- pts.sf.pipo %>% 

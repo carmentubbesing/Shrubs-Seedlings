@@ -261,6 +261,70 @@ chse_plot <- ggplot()+
 chse_plot
 ```
 
+
+## OTHER
+
+### Filter to just shrub species that are in my data and not one of the species above
+```{r}
+other_spp <- df %>% 
+  filter(df_source == "me") %>% 
+  dplyr::select(Shrub_species) %>% 
+  distinct() %>% 
+  filter(!Shrub_species %in% c("ARPA6_ARVI", "CECO", "CEIN3", "CHSE11"))
+dfOTHER <- df %>% filter(Shrub_species %in% other_spp$Shrub_species)
+```
+
+```{r}
+ggplot(dfOTHER, aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "lm", formula = y ~ x + poly(x, 3))+
+  theme_bw()
+```
+
+### Take out outlier
+```{r}
+dfOTHER <- dfOTHER %>% 
+  filter(modal_ht_cm < 600)
+```
+
+```{r}
+lmOTHER <- lm(modal_ht_cm ~ poly(years_since_fire, 2), data = dfOTHER)
+summary(lmOTHER)
+dfOTHER$pred <- predict(lmOTHER)
+```
+
+```{r}
+gamOTHER <- gam(modal_ht_cm ~ s(years_since_fire, k = 4, bs = "cr"), data = dfOTHER)
+summary(gamOTHER)
+predOTHER <- predict.gam(gamOTHER, se =T, type = "response")
+dfOTHER <- dfOTHER %>% 
+  mutate(predGAM = predOTHER$fit) %>% 
+  mutate(predGAMseL = predGAM - predOTHER$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predOTHER$se.fit)
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(0.5, 45, .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamOTHER, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+OTHER_plot <- ggplot()+
+  geom_point(data = dfOTHER, aes(x = years_since_fire, y = modal_ht_cm), alpha = .2)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill =11,   alpha = .3)+
+  theme_minimal()+
+  ggtitle("OTHER")
+OTHER_plot
+```
+
 # Plot the 4 species together
 ```{r}
 grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot)
@@ -274,5 +338,6 @@ save(gamCECO, file = "~/Shrubs-Seedlings/results/coefficients/gamCECO.Rdata")
 save(gamARPA, file = "~/Shrubs-Seedlings/results/coefficients/gamARPA.Rdata")
 save(gamCEIN, file = "~/Shrubs-Seedlings/results/coefficients/gamCEIN.Rdata")
 save(gamCHSE, file = "~/Shrubs-Seedlings/results/coefficients/gamCHSE.Rdata")
+save(gamOTHER, file = "~/Shrubs-Seedlings/results/coefficients/gamOTHER.Rdata")
 ```
 
