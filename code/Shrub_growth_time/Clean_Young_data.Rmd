@@ -19,6 +19,19 @@ df <- read.csv("../../data/Data_for_shrub_growth/Young_data/Young_Plot_data.csv"
 head(df)
 ```
 
+# Check for NA values
+```{r}
+df %>% 
+  filter(is.na(dominant_shrub_ht_cm)) %>% 
+  select(Regen_Plot, SHRUB, dominant_shrub_1, dominant_shrub_ht_cm, dominant_shrub_2, dominant_shrub_3) 
+```
+
+# Delete rows with no shrub height values
+```{r}
+df <- df %>% 
+  filter(!is.na(dominant_shrub_ht_cm))
+```
+
 # Filter to high severity fire, calculate years since fire
 ```{r}
 df <- df %>% 

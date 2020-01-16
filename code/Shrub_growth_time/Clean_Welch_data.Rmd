@@ -28,6 +28,17 @@ young <- df
 remove(df)
 ```
 
+# Take out unnecessary plot columns
+```{r}
+plot <- plot %>% 
+  dplyr::select(ID, Regen_Plot, Fire, Date, `Year of Fire`, FIRE_SEV)
+```
+
+# Take out shrub columns with no shrub ht data
+```{r}
+shrub <- shrub %>% filter(!is.na(modal_ht_cm))
+```
+
 # Join shrub data and plot data
 ```{r}
 df <- left_join(shrub, plot, by = "Regen_Plot")
@@ -71,7 +82,6 @@ df <- df %>%
   filter(seed_tree_dist_m>20)
 ```
 
-
 # Filter to shrub species of interest
 ```{r}
 summary(as.factor(df$Shrub_species))
@@ -91,6 +101,10 @@ df <- df %>%
                      TRUE ~ Shrub_species))
 ```
 
+# Check for NA modal shrub ht
+```{r}
+df %>% filter(is.na(modal_ht_cm))
+```
 
 # Plot for each species with more than five years
 ```{r}

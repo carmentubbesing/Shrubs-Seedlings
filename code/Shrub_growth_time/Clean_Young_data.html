@@ -222,6 +222,31 @@ head(df)</code></pre>
 ## #   revisit_relocated_precisely &lt;fct&gt;, entered_by &lt;fct&gt;, entered_on &lt;fct&gt;,
 ## #   CGA &lt;int&gt;, ExistVeg &lt;fct&gt;, dominant_shrub_3 &lt;lgl&gt;</code></pre>
 </div>
+<div id="check-for-na-values" class="section level1">
+<h1>Check for NA values</h1>
+<pre class="r"><code>df %&gt;% 
+  filter(is.na(dominant_shrub_ht_cm)) %&gt;% 
+  select(Regen_Plot, SHRUB, dominant_shrub_1, dominant_shrub_ht_cm, dominant_shrub_2, dominant_shrub_3) </code></pre>
+<pre><code>## # A tibble: 515 x 6
+##    Regen_Plot SHRUB dominant_shrub_1 dominant_shrub_~ dominant_shrub_2
+##    &lt;fct&gt;      &lt;dbl&gt; &lt;fct&gt;                       &lt;dbl&gt; &lt;fct&gt;           
+##  1 AMR1300080  53   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  2 AMR1300087  75   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  3 AMR1300091  74   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  4 AMR1300143  NA   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  5 AMR1300161   0.5 &lt;NA&gt;                           NA &lt;NA&gt;            
+##  6 AMR1300170   0   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  7 AMR1300176   0   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  8 AMR1300388   0   &lt;NA&gt;                           NA &lt;NA&gt;            
+##  9 AMR1300412   0   &lt;NA&gt;                           NA &lt;NA&gt;            
+## 10 AMR1300434   0   &lt;NA&gt;                           NA &lt;NA&gt;            
+## # ... with 505 more rows, and 1 more variable: dominant_shrub_3 &lt;lgl&gt;</code></pre>
+</div>
+<div id="delete-rows-with-no-shrub-height-values" class="section level1">
+<h1>Delete rows with no shrub height values</h1>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(!is.na(dominant_shrub_ht_cm))</code></pre>
+</div>
 <div id="filter-to-high-severity-fire-calculate-years-since-fire" class="section level1">
 <h1>Filter to high severity fire, calculate years since fire</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
@@ -232,36 +257,36 @@ head(df)</code></pre>
   mutate(years_since_fire = Year_meas - Year.of.Fire) %&gt;% 
   dplyr::select(Regen_Plot, Fire, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
 df</code></pre>
-<pre><code>## # A tibble: 1,493 x 8
+<pre><code>## # A tibble: 1,365 x 8
 ##    Regen_Plot Fire  years_since_fire Year_meas Year.of.Fire
 ##    &lt;fct&gt;      &lt;fct&gt;            &lt;dbl&gt;     &lt;dbl&gt;        &lt;int&gt;
 ##  1 AMR1300134 AMER~                5      2013         2008
 ##  2 AMR1300135 AMER~                5      2013         2008
 ##  3 AMR1300136 AMER~                5      2013         2008
 ##  4 AMR1300156 AMER~                5      2013         2008
-##  5 AMR1300161 AMER~                5      2013         2008
-##  6 AMR1300167 AMER~                5      2013         2008
-##  7 AMR1300168 AMER~                5      2013         2008
-##  8 AMR1300192 AMER~                5      2013         2008
-##  9 AMR1300194 AMER~                5      2013         2008
-## 10 AMR1300195 AMER~                5      2013         2008
-## # ... with 1,483 more rows, and 3 more variables: Date &lt;dttm&gt;,
+##  5 AMR1300167 AMER~                5      2013         2008
+##  6 AMR1300168 AMER~                5      2013         2008
+##  7 AMR1300192 AMER~                5      2013         2008
+##  8 AMR1300194 AMER~                5      2013         2008
+##  9 AMR1300195 AMER~                5      2013         2008
+## 10 AMR1300196 AMER~                5      2013         2008
+## # ... with 1,355 more rows, and 3 more variables: Date &lt;dttm&gt;,
 ## #   dominant_shrub_1 &lt;fct&gt;, dominant_shrub_ht_cm &lt;dbl&gt;</code></pre>
 <pre class="r"><code>summary(df$years_since_fire)  </code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   3.000   5.000   5.000   5.954   6.000  12.000</code></pre>
+##   3.000   5.000   5.000   5.809   6.000  12.000</code></pre>
 </div>
 <div id="filter-to-shrub-species-i-care-about" class="section level1">
 <h1>Filter to shrub species I care about</h1>
 <pre class="r"><code>sort(unique(df$dominant_shrub_1))</code></pre>
-<pre><code>##  [1]        ADFA   ALINT  ALRH   AMUT   ARCMU  ARCMU? ARGL   ARNE   ARPA6 
-## [11] ARTR2  ARVI   BEAQ   BENE2  CE__   CEAINT CEBE   CECO   CECU   CEDI  
-## [21] CEFR   CEIN3  CEINT  CELE   CEPR   CEVE   CHFO   CHNA   CHSE11 CHVIV4
-## [31] COCO   ERCA6  ERNA10 GACO9  GAEL   GAFR   KELE   LEGL   LOSU2  PREM  
-## [41] PRSU   PRSU2  PRUNUS PRVI   PUTR2  QUVA   RHCA   RIBES  RICE   RIMO  
-## [51] RIRO   RIROR  RIVI3  ROBR   ROGY   RUAR   RUGLG  RULE   RULU   RUPA  
-## [61] RUUR   SAJE   SALIA  SALIX  SAMBU  SAME   SARA2  SASC   SASIA  SOCA8 
-## [71] SYMO   SYRO   TODI   UNK_1  UNK_2 
+<pre><code>##  [1] ADFA   ALINT  ALRH   AMUT   ARCMU  ARCMU? ARGL   ARNE   ARPA6  ARTR2 
+## [11] ARVI   BEAQ   BENE2  CE__   CEAINT CEBE   CECO   CECU   CEDI   CEFR  
+## [21] CEIN3  CEINT  CELE   CEPR   CEVE   CHFO   CHNA   CHSE11 CHVIV4 COCO  
+## [31] ERCA6  ERNA10 GACO9  GAEL   GAFR   KELE   LEGL   LOSU2  PREM   PRSU  
+## [41] PRSU2  PRUNUS PRVI   PUTR2  QUVA   RHCA   RIBES  RICE   RIMO   RIRO  
+## [51] RIROR  RIVI3  ROBR   ROGY   RUAR   RUGLG  RULE   RULU   RUPA   RUUR  
+## [61] SAJE   SALIA  SALIX  SAMBU  SAME   SARA2  SASC   SASIA  SOCA8  SYMO  
+## [71] SYRO   TODI   UNK_1  UNK_2 
 ## 116 Levels:  ADFA ALIN ALINT ALRH AMAL2 AMALS AMUT APAN ARCMU ... UNK_2</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   filter(dominant_shrub_1 %in% c(&quot;ARNE&quot;, &quot;ARPA6&quot;, &quot;ARVI&quot;, &quot;CECO&quot;, &quot;CEIN3&quot;, &quot;CEINT&quot;, &quot;CEPR&quot;, &quot;CHFO&quot;, &quot;CHSE11&quot;, &quot;PREM&quot;, &quot;QUVA&quot;, &quot;RIBES&quot;, &quot;RIRO&quot;, &quot;SYMO&quot;))</code></pre>

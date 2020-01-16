@@ -5,11 +5,6 @@ date: "January 3, 2020"
 output: html_document
 ---
 
-# TO DO
-
--  add seed tree data (separate file) to filter out plots <20 m from overstory trees
-
-
 ```{r, include = F}
 require(tidyverse)
 ```
@@ -33,12 +28,16 @@ seedtrees <- seedtrees %>%
   distinct()
 ```
 
-
-
-## Delete nonsense columns
+## Delete unnecessary columns
 ```{r}
 shrubs <- shrubs %>% 
   dplyr::select(-"..7")
+```
+
+```{r}
+sort(names(plots))
+plots <- plots %>% 
+  dplyr::select(PlotID, Fire, fire_year, FireSev, SeedWallConifer, SeedWallHardwood, SurveyDate, Notes, facts.released, facts.replanted, facts.salvage)
 ```
 
 ## Rename shrub columns
@@ -46,7 +45,6 @@ shrubs <- shrubs %>%
 shrubs <- shrubs %>% 
   rename(Shrub_species = Species, Shrub_cover = Cover, shrub_density = Density, shrub_ht = Height, shrub_pctdead = PctDead)
 ```
-
 
 # Join plot table to shrub table
 ```{r}
@@ -82,6 +80,17 @@ df <- df %>%
   filter(Distance>20)
 ```
 
+# Find NA shrub height 
+```{r}
+df %>% filter(is.na(shrub_ht))
+```
+
+## Remove those plots
+```{r}
+df <- df %>% 
+  filter(!is.na(shrub_ht))
+```
+
 # Calculate years since fire. All were surveyed in 2018.
 ```{r}
 df <- df %>% 
@@ -107,7 +116,6 @@ ggplot(df, aes(x = years_since_fire, y = shrub_ht, col = Shrub_species))+
 ```{r}
 save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
 ```
-
 
 # Look at the plots in the Cottonwood fire 
 

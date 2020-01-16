@@ -113,6 +113,54 @@ fires <- df %>%
 ht_by_spp <- left_join(ht_by_spp, fires)
 ```
 
+# Remove "none" rows
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  filter(ShrubSpp != "none" & ShrubSpp != "")
+```
+
+# Remove rows with dead shrubs
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  filter(!Sdlg %in% c("DCECO-1", "DCECO-2", "DCECO-3"))
+```
+
+# Add missing Fire values
+```{r}
+ht_by_spp %>% filter(is.na(Fire))
+```
+
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  mutate(Fire = ifelse(Sdlg %in% c("LIDE-4", "LIDE-3", "LIDE-2", "LIDE-1"),"AMRC", paste(Fire))) %>% 
+  mutate(Fire = ifelse(Sdlg=="CECO-1","AMRC", paste(Fire))) %>% 
+  mutate(Fire = ifelse(Sdlg=="ARPA-1","CLVD", paste(Fire))) %>% 
+  mutate(Fire = ifelse(Sdlg %in% c("CEIN-1", "CEIN-2"), "PLKN", paste(Fire))) %>% 
+  mutate(Fire = case_when(Sdlg == "125F" ~ "FRDS",
+                          Sdlg == "125W" ~ "WRTS",
+                          Sdlg == "CHFO-1" ~ "FRDS",
+                          TRUE ~ Fire))
+```
+
+```{r}
+ht_by_spp %>% filter(Fire == "NA")
+summary(as.factor(ht_by_spp$Fire))
+```
+
+# Add years since fire
+```{r}
+ht_by_spp <- ht_by_spp %>% 
+  rename(Shrub_species = ShrubSpp) %>% 
+  rename(modal_ht_cm = ht_wm.cm.spp) %>% 
+  mutate(Year_meas = 2016) %>% 
+  mutate(years_since_fire = ifelse(Fire == "AMRC", 8, 0)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "CLVD", 24, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "FRDS", 12, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "PLKN", 43, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "STAR", 14, years_since_fire)) %>% 
+  mutate(years_since_fire = ifelse(Fire == "WRTS", 35, years_since_fire))
+ht_by_spp %>% count(years_since_fire, Fire)
+```
 
 # Save
 ```{r}

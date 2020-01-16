@@ -2,7 +2,9 @@
 title: "Combine_shrub_data"
 author: "Carmen"
 date: "January 3, 2020"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 ```{r, include=FALSE}
@@ -35,7 +37,8 @@ me <- ht_by_spp
 latimer <- latimer %>% 
   mutate(Year_meas = 2018) %>% 
   rename(Year.of.Fire = fire_year, Date = SurveyDate) %>% 
-  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Shrub_species, ShrubHt)
+  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Shrub_species, shrub_ht) %>% 
+  rename(ShrubHt = shrub_ht)
 ```
 
 ```{r}
@@ -43,20 +46,6 @@ young <- young %>%
   rename(Shrub_species = dominant_shrub_1) %>% 
   rename(ShrubHt = dominant_shrub_ht_cm) %>% 
   dplyr::select(-Date)
-```
-
-```{r}
-me <- me %>% 
-  rename(Shrub_species = ShrubSpp) %>% 
-  rename(modal_ht_cm = ht_wm.cm.spp) %>% 
-  mutate(Year_meas = 2016) %>% 
-  mutate(years_since_fire = ifelse(Fire == "AMRC", 8, 0)) %>% 
-  mutate(years_since_fire = ifelse(Fire == "CLVD", 24, years_since_fire)) %>% 
-  mutate(years_since_fire = ifelse(Fire == "FRDS", 12, years_since_fire)) %>% 
-  mutate(years_since_fire = ifelse(Fire == "PLKN", 43, years_since_fire)) %>% 
-  mutate(years_since_fire = ifelse(Fire == "STAR", 14, years_since_fire)) %>% 
-  mutate(years_since_fire = ifelse(Fire == "WRTS", 35, years_since_fire))
-str(me)
 ```
 
 # Add column for df_source
@@ -230,14 +219,14 @@ ggplot(df %>%
 
 # Plot for all species that are in my data and have at least 5 years of data
 ```{r}
-under6years <- df %>% 
+over7years <- df %>% 
   select(Shrub_species, years_since_fire) %>% 
   distinct() %>% 
   group_by(Shrub_species) %>% 
   summarize(count = n()) %>% 
-  filter(count >4) %>% 
+  filter(count > 7) %>% 
   filter(Shrub_species != "none")
-under6years
+over7years
 ```
 
 ```{r}
@@ -249,12 +238,33 @@ focal_spp
 ```
 
 ```{r}
-ggplot(df %>% filter(Shrub_species %in% under5years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species),
-       aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point(aes(shape = df_source))+
-  geom_smooth(method = "loess", span = 1)+
-  facet_wrap(~Shrub_species)+
-  theme_bw()
+df_plot <- df %>% 
+  filter(Shrub_species %in% over7years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species)
+unique(df_plot$Shrub_species)
+df_plot <- droplevels(df_plot)
 ```
 
 
+```{r}
+ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp.png", width = 10)
+```
+
+# Save combined data
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined.Rdata")
+```
+
+# Find rows with NA shrub ht
+```{r}
+df %>% filter(is.na(modal_ht_cm)) %>% count(df_source)
+```
+
+# Find rows with NA years since fire
+```{r}
+df %>% filter(is.na(years_since_fire)) %>% count(df_source)
+```

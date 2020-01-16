@@ -185,12 +185,6 @@ summary {
 </div>
 
 
-<div id="to-do" class="section level1">
-<h1>TO DO</h1>
-<ul>
-<li>add seed tree data (separate file) to filter out plots &lt;20 m from overstory trees</li>
-</ul>
-</div>
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
 <pre class="r"><code>shrubs &lt;- read.csv(&quot;~/Shrubs-Seedlings/data/Data_for_shrub_growth/Latimer_regen_data/shrubs.csv&quot;)
@@ -208,10 +202,69 @@ seedtrees &lt;- read.csv(&quot;~/Shrubs-Seedlings/data/Data_for_shrub_growth/Lat
   dplyr::select(PlotID, Distance) %&gt;% 
   distinct()</code></pre>
 </div>
-<div id="delete-nonsense-columns" class="section level2">
-<h2>Delete nonsense columns</h2>
+<div id="delete-unnecessary-columns" class="section level2">
+<h2>Delete unnecessary columns</h2>
 <pre class="r"><code>shrubs &lt;- shrubs %&gt;% 
   dplyr::select(-&quot;..7&quot;)</code></pre>
+<pre class="r"><code>sort(names(plots))</code></pre>
+<pre><code>##   [1] &quot;Aspect&quot;                         &quot;aspect_dem&quot;                    
+##   [3] &quot;BasalVeg&quot;                       &quot;Camera&quot;                        
+##   [5] &quot;CWD_rotten&quot;                     &quot;CWD_sound&quot;                     
+##   [7] &quot;DronePlotRadius&quot;                &quot;DuffDepth&quot;                     
+##   [9] &quot;elev&quot;                           &quot;EnteredBy&quot;                     
+##  [11] &quot;EnteredDate&quot;                    &quot;facts.planting.first.year&quot;     
+##  [13] &quot;facts.planting.suids.noslivers&quot; &quot;facts.planting.years.post&quot;     
+##  [15] &quot;facts.prep.nyears&quot;              &quot;facts.release.years.post&quot;      
+##  [17] &quot;facts.released&quot;                 &quot;facts.replant.years.post&quot;      
+##  [19] &quot;facts.replanted&quot;                &quot;facts.salvage&quot;                 
+##  [21] &quot;facts.thin.years.post&quot;          &quot;Fire&quot;                          
+##  [23] &quot;fire_code&quot;                      &quot;fire_year&quot;                     
+##  [25] &quot;FireSev&quot;                        &quot;ForbHt&quot;                        
+##  [27] &quot;Forbs&quot;                          &quot;Grasses&quot;                       
+##  [29] &quot;GrassHt&quot;                        &quot;HasDronePlot&quot;                  
+##  [31] &quot;HasPair&quot;                        &quot;HorizontalAreaSeedlings&quot;       
+##  [33] &quot;HorizontalAreaTrees&quot;            &quot;LgRocks&quot;                       
+##  [35] &quot;Litter&quot;                         &quot;LitterDepth&quot;                   
+##  [37] &quot;LiveOverstory&quot;                  &quot;LiveUnderstory&quot;                
+##  [39] &quot;Logged&quot;                         &quot;mass_100h_slope&quot;               
+##  [41] &quot;mass_10h_slope&quot;                 &quot;mass_1h_slope&quot;                 
+##  [43] &quot;mass_cwd_horizontal&quot;            &quot;mass_cwd_rotten_slope&quot;         
+##  [45] &quot;mass_cwd_slope&quot;                 &quot;mass_cwd_sound_slope&quot;          
+##  [47] &quot;mass_fine_horizontal&quot;           &quot;mass_fine_slope&quot;               
+##  [49] &quot;mass_total_horizontal&quot;          &quot;mass_total_slope&quot;              
+##  [51] &quot;normal_annual_precip&quot;           &quot;Notes&quot;                         
+##  [53] &quot;Notetaker&quot;                      &quot;ParentMaterial&quot;                
+##  [55] &quot;PhotoNum&quot;                       &quot;Planted&quot;                       
+##  [57] &quot;planted_ABCO&quot;                   &quot;planted_ABMA&quot;                  
+##  [59] &quot;planted_CADE27&quot;                 &quot;planted_PIJE&quot;                  
+##  [61] &quot;planted_PILA&quot;                   &quot;planted_PIMO3&quot;                 
+##  [63] &quot;planted_PIPO&quot;                   &quot;planted_PSME&quot;                  
+##  [65] &quot;planted_SEGI2&quot;                  &quot;PlArrangement&quot;                 
+##  [67] &quot;PlotID&quot;                         &quot;PlotID_notype&quot;                 
+##  [69] &quot;QUCH_NE&quot;                        &quot;QUCH_NW&quot;                       
+##  [71] &quot;QUCH_SE&quot;                        &quot;QUCH_SW&quot;                       
+##  [73] &quot;QUKE_NE&quot;                        &quot;QUKE_NW&quot;                       
+##  [75] &quot;QUKE_SE&quot;                        &quot;QUKE_SW&quot;                       
+##  [77] &quot;QUXX_NE&quot;                        &quot;QUXX_NW&quot;                       
+##  [79] &quot;QUXX_SE&quot;                        &quot;QUXX_SW&quot;                       
+##  [81] &quot;rad_spring&quot;                     &quot;rad_spring_summer&quot;             
+##  [83] &quot;rad_summer&quot;                     &quot;rad_winter&quot;                    
+##  [85] &quot;rad_winter_spring&quot;              &quot;Released&quot;                      
+##  [87] &quot;Representative&quot;                 &quot;SeedWallConifer&quot;               
+##  [89] &quot;SeedWallHardwood&quot;               &quot;ShrubHt&quot;                       
+##  [91] &quot;Shrubs&quot;                         &quot;slope_dem&quot;                     
+##  [93] &quot;SlopeAreaSeedlings&quot;             &quot;SlopeAreaTrees&quot;                
+##  [95] &quot;SlopeDeg&quot;                       &quot;SlopePos&quot;                      
+##  [97] &quot;SlopeShape&quot;                     &quot;Subsampled&quot;                    
+##  [99] &quot;SurveyDate&quot;                     &quot;tmax&quot;                          
+## [101] &quot;tmean&quot;                          &quot;tmin&quot;                          
+## [103] &quot;tpi100&quot;                         &quot;tpi2000&quot;                       
+## [105] &quot;tpi500&quot;                         &quot;tpi5000&quot;                       
+## [107] &quot;twi&quot;                            &quot;Type&quot;                          
+## [109] &quot;WoodyDebris&quot;                    &quot;X&quot;                             
+## [111] &quot;Y&quot;</code></pre>
+<pre class="r"><code>plots &lt;- plots %&gt;% 
+  dplyr::select(PlotID, Fire, fire_year, FireSev, SeedWallConifer, SeedWallHardwood, SurveyDate, Notes, facts.released, facts.replanted, facts.salvage)</code></pre>
 </div>
 <div id="rename-shrub-columns" class="section level2">
 <h2>Rename shrub columns</h2>
@@ -256,13 +309,47 @@ seedtrees &lt;- read.csv(&quot;~/Shrubs-Seedlings/data/Data_for_shrub_growth/Lat
   filter(Distance&gt;20)</code></pre>
 </div>
 </div>
+<div id="find-na-shrub-height" class="section level1">
+<h1>Find NA shrub height</h1>
+<pre class="r"><code>df %&gt;% filter(is.na(shrub_ht))</code></pre>
+<pre><code>##   PlotID    Fire fire_year FireSev SeedWallConifer SeedWallHardwood
+## 1 D1005C   Piute      2008       5              98               NA
+## 2 D1006C   Piute      2008       5              46               NA
+## 3 E0061I   Ctnwd      1994       5              NA               NA
+## 4 A4012C MoonAnt      2007       5             289               NA
+##   SurveyDate
+## 1  7/31/2018
+## 2  7/31/2018
+## 3  8/30/2018
+## 4  7/19/2018
+##                                                            Notes
+## 1                   Plot moved once due to overlap w/ other plot
+## 2                        2 B-class PIPJ in plot. Metasedimentary
+## 3 JUOC seedling 21.2 m from plot center (could have been plantd)
+## 4                                                           &lt;NA&gt;
+##   facts.released facts.replanted facts.salvage Shrub_species Shrub_cover
+## 1           &lt;NA&gt;            &lt;NA&gt;          &lt;NA&gt;          &lt;NA&gt;          NA
+## 2           &lt;NA&gt;            &lt;NA&gt;          &lt;NA&gt;          &lt;NA&gt;          NA
+## 3           &lt;NA&gt;            &lt;NA&gt;          &lt;NA&gt;          &lt;NA&gt;          NA
+## 4           &lt;NA&gt;            &lt;NA&gt;          &lt;NA&gt;          &lt;NA&gt;          NA
+##   shrub_density shrub_ht shrub_pctdead Distance
+## 1          &lt;NA&gt;       NA            NA     37.5
+## 2          &lt;NA&gt;       NA            NA     27.3
+## 3          &lt;NA&gt;       NA            NA    187.0
+## 4          &lt;NA&gt;       NA            NA    119.0</code></pre>
+<div id="remove-those-plots" class="section level2">
+<h2>Remove those plots</h2>
+<pre class="r"><code>df &lt;- df %&gt;% 
+  filter(!is.na(shrub_ht))</code></pre>
+</div>
+</div>
 <div id="calculate-years-since-fire.-all-were-surveyed-in-2018." class="section level1">
 <h1>Calculate years since fire. All were surveyed in 2018.</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
   mutate(years_since_fire = 2018 - fire_year)
 summary(as.factor(df$years_since_fire))</code></pre>
 <pre><code>## 10 11 14 24 
-## 39 88 13 42</code></pre>
+## 37 87 13 41</code></pre>
 </div>
 <div id="filter-to-shrub-species-of-interest" class="section level1">
 <h1>Filter to shrub species of interest</h1>
@@ -273,8 +360,8 @@ summary(as.factor(df$years_since_fire))</code></pre>
 ##        31         0         8        13        48         3         2 
 ##    FRECAL    NAMLOB PENSTEMON    PRUNIS    PRUVIR    QUEVAC    RIBCER 
 ##         0         0         0         1         4         6         3 
-##    SALSCO    SAMMEX    SYMMOL    SYMROT    SYMSOL      NA's 
-##         4         1         3         2         1         4</code></pre>
+##    SALSCO    SAMMEX    SYMMOL    SYMROT    SYMSOL 
+##         4         1         3         2         1</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
   filter(Shrub_species %in% c(&quot;ARCNEV&quot;, &quot;ARCPAT&quot;, &quot;ARCVIS&quot;, &quot;CEACOR&quot;, &quot;CEAINT&quot;, &quot;CEAPRO&quot;, &quot;CHAFOL&quot;, &quot;CHRSEM&quot;, &quot;QUEVAC&quot;, &quot;RIBCER&quot;, &quot;SYMMOL&quot;))</code></pre>
 </div>
