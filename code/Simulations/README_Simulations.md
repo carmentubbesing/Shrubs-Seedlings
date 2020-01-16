@@ -52,16 +52,16 @@ Functions
     -   uses:
         -   `r@data@values`
         -   `n_seedlings` = number of seedlings to draw from df (note: could be less than final \# due to overlap)
-        -   `lambda` = lambda of the poison distribution used to place seedlings in the raster
+        -   `lambda` = lambda of the poisson distribution used to place seedlings in the raster
     -   creates:
-        -   `r` new version with all the data
+        -   `r` = new version with all the data
         -   `p` = SpatialPolygons border of `r`
         -   `pts.sf.abco` = points where ABCO seedlings are
         -   `pts.sf.pipo` = points where PIPO seedlings are
     -   does:
         -   for each cell in `r`, replaces shrub species code 1-5 with a seedling ID that has dominant shrub species `ShrubSppID` equal to the cell's shrub species code
         -   createst Raster Attribute Table for `r` with all the data from `raster_df`, linked by seedling ID
-        -   creates spatial points objects for seedlings and randomly selects their locations using poison distributions from the edges of the shrub patch
+        -   creates spatial points objects for seedlings and randomly selects their locations using poisson distributions from the edges of the shrub patch
 3.  **sim.R**
     -   uses:
         -   objects:

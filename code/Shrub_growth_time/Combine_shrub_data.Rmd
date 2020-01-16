@@ -33,19 +33,29 @@ me <- ht_by_spp
 ```
 
 # Sync column names
+
+## Latimer
 ```{r}
 latimer <- latimer %>% 
   mutate(Year_meas = 2018) %>% 
   rename(Year.of.Fire = fire_year, Date = SurveyDate) %>% 
-  dplyr::select(Fire, years_since_fire, Year_meas, Year.of.Fire, Shrub_species, shrub_ht) %>% 
+  dplyr::select(Fire, FireSev, years_since_fire, Year_meas, Year.of.Fire, Shrub_species, shrub_ht) %>% 
   rename(ShrubHt = shrub_ht)
 ```
 
+## Young
 ```{r}
 young <- young %>% 
   rename(Shrub_species = dominant_shrub_1) %>% 
-  rename(ShrubHt = dominant_shrub_ht_cm) %>% 
+  rename(ShrubHt = dominant_shrub_ht_cm, FireSev = FIRE_SEV) %>% 
   dplyr::select(-Date)
+```
+
+## Welch
+```{r}
+welch <- welch %>% 
+  rename(fire_year = `Year of Fire`, FireSev = FIRE_SEV) %>% 
+  dplyr::select(-seed_tree_dist_m)
 ```
 
 # Add column for df_source
@@ -61,7 +71,6 @@ me$df_source = "me"
 young <- anti_join(young, welch, by = c("Year_meas", "Regen_Plot"))
 ```
 
-
 # Join
 ```{r}
 df <- full_join(young, latimer)
@@ -69,9 +78,13 @@ df <- full_join(young, latimer)
 
 ```{r}
 df <- df %>% 
-  rename(modal_ht_cm = ShrubHt)
+  rename(modal_ht_cm = ShrubHt, fire_year = Year.of.Fire)
 ```
 
+```{r}
+sort(names(df))
+sort(names(welch))
+```
 
 ```{r}
 df <- full_join(df, welch)
@@ -151,12 +164,12 @@ ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
 ```{r}
 me <- me %>% 
   dplyr::select(Fire, years_since_fire, Year_meas, Shrub_species, modal_ht_cm, df_source)
-df <- full_join(df, me)
 ```
 
-## Check
 ```{r}
-nrow(latimer) + nrow(welch) + nrow(young) + nrow(me) == nrow(df)
+nrow_pre <- nrow(df) 
+df <- full_join(df, me)
+nrow(df) == nrow_pre + nrow(me)
 ```
 
 # Sync species names
@@ -178,7 +191,6 @@ ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point()+
   geom_smooth(method = "loess", span = 1)
 ```
-
 
 # Plot just for ARVI and ARPA
 ```{r}
@@ -244,7 +256,6 @@ unique(df_plot$Shrub_species)
 df_plot <- droplevels(df_plot)
 ```
 
-
 ```{r}
 ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point(aes(shape = df_source, col = Fire))+
@@ -253,6 +264,49 @@ ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
   theme_bw()
 ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp.png", width = 10)
 ```
+
+# Plot for each of those 4 shrubs separately
+
+## CECO
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "CECO"), aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_ceco.png", width = 10)
+```
+
+## ARPA
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "ARPA6_ARVI"), aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_arpa.png", width = 10)
+```
+
+## CEIN
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "CEIN3"), aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_cein.png", width = 10)
+```
+
+## CHSE
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "CHSE11"), aes(x = years_since_fire, y = modal_ht_cm))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_chse.png", width = 10)
+```
+
 
 # Save combined data
 ```{r}

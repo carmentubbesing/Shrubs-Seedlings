@@ -28,10 +28,18 @@ young <- df
 remove(df)
 ```
 
-# Take out unnecessary plot columns
+# Take out unnecessary columns
+
+## Plot
 ```{r}
 plot <- plot %>% 
   dplyr::select(ID, Regen_Plot, Fire, Date, `Year of Fire`, FIRE_SEV)
+```
+
+## shrub
+```{r}
+shrub <- shrub %>% 
+  dplyr::select(-comments, -Cover, -ID, -modal_ht_ft, -OldPLOTID)
 ```
 
 # Take out shrub columns with no shrub ht data
@@ -125,7 +133,14 @@ ggplot(df %>%
        aes(x = years_since_fire, y = modal_ht_cm, col = Shrub_species))+
   geom_point()+
   geom_smooth(method = "loess", span = 1)
+
 ```
+
+# Look at column names
+```{r}
+names(df)
+```
+
 
 # Save
 ```{r}

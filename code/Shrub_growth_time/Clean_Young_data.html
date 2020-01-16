@@ -255,21 +255,21 @@ head(df)</code></pre>
   mutate(Year_meas = lubridate::year(Date)) %&gt;% 
   dplyr::select(Year_meas, Date, everything()) %&gt;% 
   mutate(years_since_fire = Year_meas - Year.of.Fire) %&gt;% 
-  dplyr::select(Regen_Plot, Fire, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
+  dplyr::select(Regen_Plot, Fire, FIRE_SEV, years_since_fire, Year_meas, Year.of.Fire, Date, dominant_shrub_1, dominant_shrub_ht_cm)
 df</code></pre>
-<pre><code>## # A tibble: 1,365 x 8
-##    Regen_Plot Fire  years_since_fire Year_meas Year.of.Fire
-##    &lt;fct&gt;      &lt;fct&gt;            &lt;dbl&gt;     &lt;dbl&gt;        &lt;int&gt;
-##  1 AMR1300134 AMER~                5      2013         2008
-##  2 AMR1300135 AMER~                5      2013         2008
-##  3 AMR1300136 AMER~                5      2013         2008
-##  4 AMR1300156 AMER~                5      2013         2008
-##  5 AMR1300167 AMER~                5      2013         2008
-##  6 AMR1300168 AMER~                5      2013         2008
-##  7 AMR1300192 AMER~                5      2013         2008
-##  8 AMR1300194 AMER~                5      2013         2008
-##  9 AMR1300195 AMER~                5      2013         2008
-## 10 AMR1300196 AMER~                5      2013         2008
+<pre><code>## # A tibble: 1,365 x 9
+##    Regen_Plot Fire  FIRE_SEV years_since_fire Year_meas Year.of.Fire
+##    &lt;fct&gt;      &lt;fct&gt;    &lt;int&gt;            &lt;dbl&gt;     &lt;dbl&gt;        &lt;int&gt;
+##  1 AMR1300134 AMER~        4                5      2013         2008
+##  2 AMR1300135 AMER~        4                5      2013         2008
+##  3 AMR1300136 AMER~        4                5      2013         2008
+##  4 AMR1300156 AMER~        5                5      2013         2008
+##  5 AMR1300167 AMER~        4                5      2013         2008
+##  6 AMR1300168 AMER~        4                5      2013         2008
+##  7 AMR1300192 AMER~        5                5      2013         2008
+##  8 AMR1300194 AMER~        4                5      2013         2008
+##  9 AMR1300195 AMER~        4                5      2013         2008
+## 10 AMR1300196 AMER~        4                5      2013         2008
 ## # ... with 1,355 more rows, and 3 more variables: Date &lt;dttm&gt;,
 ## #   dominant_shrub_1 &lt;fct&gt;, dominant_shrub_ht_cm &lt;dbl&gt;</code></pre>
 <pre class="r"><code>summary(df$years_since_fire)  </code></pre>
