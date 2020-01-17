@@ -5,6 +5,8 @@ date: "October 31, 2019"
 output: pdf_document
 ---
 
+# Next step: Consider adding CEIN to the initialization even though there isn't any in the American River footprint
+
 # This script runs simulations with the most up-to-date functions
 
 ```{r, include = F}
@@ -16,6 +18,7 @@ require(sf)
 require(sp)
 require(tmaptools)
 require(knitr)
+require(mgcv)
 strt <- Sys.time()
 ```
 
@@ -24,7 +27,7 @@ strt <- Sys.time()
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 10
+iterations <- 100
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100

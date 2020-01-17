@@ -76,9 +76,9 @@ initialize <- function(){
     mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
     mutate("Year"="2016") %>%
     mutate(Year = as.factor(Year)) %>%
-    mutate(dia.cm = BasDia2016.cm) %>%
-    mutate(ShrubSpp03 = case_when(ShrubSpp03 == "CHSE" ~ "Other",
-                                  TRUE ~ as.character(ShrubSpp03)))
+    mutate(dia.cm = BasDia2016.cm) #%>%
+    #mutate(ShrubSpp03 = case_when(ShrubSpp03 == "CHSE" ~ "Other",
+     #                             TRUE ~ as.character(ShrubSpp03)))
 
   pts.sf.abco <- pts.sf.lm %>% filter(Species == "ABCO")
   pts.sf.pipo <- pts.sf.lm %>% filter(Species == "PIPO")
