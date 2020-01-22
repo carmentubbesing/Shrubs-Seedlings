@@ -17,7 +17,7 @@ strt <- Sys.time()
 rmarkdown::render("Clean_Welch_data.Rmd", "html_document", quiet = T)
 rmarkdown::render("Clean_Young_data.Rmd", "html_document", quiet = T)
 rmarkdown::render("Clean_Latimer_data.Rmd", "html_document", quiet = T)
-rmarkdown::render("Combine_shrub_data.Rmd", "html_document", quiet = T)
+rmarkdown::render("Combine_shrub_data_HEIGHT.Rmd", "html_document", quiet = T)
 print(strt-Sys.time())
 ```
 
@@ -90,5 +90,9 @@ ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
   guides(col = guide_legend(ncol = 3))
     
 ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp_4spp.png", width = 10)
+```
+
+```{r}
+rmarkdown::render("Combine_shrub_data_COVER.Rmd", "html_document", quiet = T)
 ```
 

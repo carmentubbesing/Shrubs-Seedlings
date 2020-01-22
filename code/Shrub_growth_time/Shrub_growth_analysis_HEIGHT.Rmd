@@ -13,7 +13,7 @@ require(tidyverse)
 require(effects)
 require(mgcv)
 require(gridExtra)
-load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined.Rdata")
+load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
 ```
 
 # Model for each shrub species
@@ -329,7 +329,7 @@ OTHER_plot
 ```{r}
 grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot)
 final_plot <- arrangeGrob(ceco_plot, arpa_plot, chse_plot, cein_plot, nrow = 2, ncol = 2)
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp.png", final_plot, width = 10)
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_HEIGHT.png", final_plot, width = 10)
 ```
 
 # Save the models to use in the simulation

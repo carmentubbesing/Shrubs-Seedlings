@@ -310,7 +310,7 @@ ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_chse.png",
 
 # Save combined data
 ```{r}
-save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined.Rdata")
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
 ```
 
 # Find rows with NA shrub ht

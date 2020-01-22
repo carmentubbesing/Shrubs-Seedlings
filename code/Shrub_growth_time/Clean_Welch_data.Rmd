@@ -39,7 +39,7 @@ plot <- plot %>%
 ## shrub
 ```{r}
 shrub <- shrub %>% 
-  dplyr::select(-comments, -Cover, -ID, -modal_ht_ft, -OldPLOTID)
+  dplyr::select(-comments, Cover, -ID, -modal_ht_ft, -OldPLOTID)
 ```
 
 # Take out shrub columns with no shrub ht data
@@ -114,7 +114,7 @@ df <- df %>%
 df %>% filter(is.na(modal_ht_cm))
 ```
 
-# Plot for each species with more than five years
+# Plot HEIGHT for each species with more than five years
 ```{r}
 years <- df %>% 
   group_by(Shrub_species) %>% 
@@ -136,6 +136,15 @@ ggplot(df %>%
 
 ```
 
+# Plot COVER for each species with more than five years
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% years$Shrub_species) %>%
+         filter(years_since_fire<24), 
+       aes(x = years_since_fire, y = Cover, col = Shrub_species))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
 # Look at column names
 ```{r}
 names(df)

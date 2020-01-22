@@ -1,0 +1,223 @@
+---
+title: "combine shrub data with species lumped"
+author: "Carmen"
+date: "January 21, 2020"
+output: 
+  html_document:
+    TOC: TRUE
+---
+
+```{r, include=FALSE}
+require(tidyverse)
+```
+
+# Load data
+
+## Data from others
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
+latimer <- df
+remove(df)
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+young <- df
+remove(df)
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+welch <- df
+remove(df)
+```
+
+# Sync column names
+
+## Latimer
+```{r}
+latimer <- latimer %>% 
+  mutate(Year_meas = 2018) %>% 
+  dplyr::select(Fire, FireSev, years_since_fire, Year_meas, Shrub_species, shrub_ht, Shrub_cover, PlotID) %>% 
+  rename(modal_ht_cm = shrub_ht)
+```
+
+## Welch
+```{r}
+welch <- welch %>% 
+  rename(fire_year = `Year of Fire`, FireSev = FIRE_SEV, Shrub_cover = Cover, PlotID = Regen_Plot) %>% 
+  dplyr::select(-seed_tree_dist_m)
+```
+
+## Young
+```{r}
+young <- young %>% 
+  rename(Shrub_species = dominant_shrub_1) %>% 
+  rename(modal_ht_cm = dominant_shrub_ht_cm, FireSev = FIRE_SEV, Shrub_cover = Shrub_cover_allspp) %>% 
+  dplyr::select(-Date)
+```
+
+# Restructure data to combine cover for all shrub species in a given plot
+
+## Young
+
+These data are already structured the way I want, as this shows:
+```{r}
+young %>% 
+  group_by(Regen_Plot) %>% 
+  filter(n()>1)
+head(young)
+```
+
+## Welch
+```{r}
+welch %>% 
+  group_by(PlotID) %>% 
+  mutate(Shrub_cover = sum(Shrub_cover)) %>% 
+  arrange(PlotID) 
+```
+
+```{r}
+welch <- welch %>% 
+  group_by(PlotID) %>% 
+  filter(Shrub_cover == max(Shrub_cover)) 
+```
+
+## latimer
+```{r}
+latimer %>% 
+  group_by(PlotID) %>% 
+  mutate(Shrub_cover = sum(Shrub_cover)) %>% 
+  arrange(PlotID) %>% 
+  filter(n()>1) %>% 
+  dplyr::select(PlotID, everything())
+```
+
+```{r}
+latimer <- latimer %>% 
+  group_by(PlotID) %>% 
+  filter(Shrub_cover == max(Shrub_cover)) 
+```
+
+# Combine
+
+## Add column for df_source
+```{r}
+latimer$df_source = "latimer"
+welch$df_source = "welch"
+young$df_source = "young"
+```
+
+## Welch and Latimer data
+```{r}
+df <- full_join(welch, latimer)
+```
+
+## Check
+```{r}
+nrow(latimer) + nrow(welch) == nrow(df)
+```
+
+```{r}
+df %>% 
+  group_by(df_source, PlotID) %>% 
+  count() %>% 
+  group_by(df_source) %>% 
+  count()
+```
+
+## Add young data
+```{r}
+df <- full_join(df, young)
+```
+
+
+# Sync shrub species names
+
+```{r}
+summary(as.factor(df$Shrub_species))
+```
+
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARCPAT" ~ "ARPA6",
+                     Shrub_species == "ARCVIS" ~ "ARVI",
+                     Shrub_species == "CEACOR" ~ "CECO",
+                     Shrub_species == "CEAPRO" ~ "CEPR",
+                     Shrub_species == "CEAINT" ~ "CEIN3",
+                     Shrub_species == "CEINT" ~ "CEIN3",
+                     Shrub_species == "CHAFOL" ~ "CHFO",
+                     Shrub_species == "CHRSEM" ~ "CHSE11",
+                     Shrub_species == "QUEVAC" ~ "QUVA",
+                     Shrub_species == "SYMMOL" ~ "SYMO",
+                     Shrub_species == "RIBCER" ~ "RIBES",
+                     Shrub_species == "RIRO" ~ "RIBES",
+                     TRUE ~ Shrub_species))
+```
+
+```{r}
+summary(as.factor(df$Shrub_species))
+```
+
+# Take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison and which I didn't use in the height analysis
+```{r}
+df <- df %>% 
+  filter(years_since_fire<24)
+```
+
+# Plot for all species together
+```{r}
+ggplot(df, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+
+# Plot just for ARVI and ARPA
+```{r}
+ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = Shrub_cover, col = Shrub_species))+
+  geom_point()+
+    geom_smooth(method = "loess")
+```
+
+# Lump ARVI and ARPA
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA6" ~ "ARPA6_ARVI",
+                     Shrub_species == "ARVI" ~ "ARPA6_ARVI",
+                     TRUE ~ Shrub_species))
+```
+
+# Plot for manzanita, whitethorn, and deerbrush
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3", "CECO")),
+       aes(x = years_since_fire, y = Shrub_cover, col = Shrub_species))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
+```
+
+
+# Plot faceted
+```{r}
+df_plot <- df %>% 
+  filter(Shrub_species %in% c("ARPA6_ARVI", "CECO", "CEIN3", "CHSE11"))
+unique(df_plot$Shrub_species)
+df_plot <- droplevels(df_plot)
+```
+
+```{r}
+ggplot(df_plot, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()+
+  ylim(0, 150)
+
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cover_spp_top4_lumped.png", width = 10)
+```
+
+
+# Save combined data
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_COVER_LUMPED.Rdata")
+```
+
+

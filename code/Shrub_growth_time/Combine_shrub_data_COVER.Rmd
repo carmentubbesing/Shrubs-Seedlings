@@ -1,0 +1,252 @@
+---
+title: "Combine_shrub_data"
+author: "Carmen"
+date: "January 3, 2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+# NEED TO GO IN AND FIX THESE DATA BECAUSE COVER VALUES ARE LUMPED, NOT FOR INDIVIDUAL SPECIES
+
+```{r, include=FALSE}
+require(tidyverse)
+```
+
+# Load data
+
+## Data from others
+```{r}
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
+latimer <- df
+remove(df)
+load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+welch <- df
+remove(df)
+```
+
+# Sync column names
+
+## Latimer
+```{r}
+latimer <- latimer %>% 
+  mutate(Year_meas = 2018) %>% 
+  dplyr::select(Fire, FireSev, years_since_fire, Year_meas, Shrub_species, shrub_ht, Shrub_cover, PlotID) %>% 
+  rename(modal_ht_cm = shrub_ht)
+```
+
+## Welch
+```{r}
+welch <- welch %>% 
+  rename(fire_year = `Year of Fire`, FireSev = FIRE_SEV, Shrub_cover = Cover, PlotID = Regen_Plot) %>% 
+  dplyr::select(-seed_tree_dist_m)
+```
+
+# Add column for df_source
+```{r}
+latimer$df_source = "latimer"
+welch$df_source = "welch"
+```
+
+# Join
+
+```{r}
+sort(names(latimer))
+sort(names(welch))
+```
+
+```{r}
+df <- full_join(welch, latimer)
+```
+
+## Check
+```{r}
+nrow(latimer) + nrow(welch) == nrow(df)
+```
+
+```{r}
+df %>% 
+  group_by(df_source, PlotID) %>% 
+  count() %>% 
+  group_by(df_source) %>% 
+  count()
+```
+
+# Filter to most dominant shrub in each plot
+```{r}
+df <- df %>% 
+  group_by(PlotID) %>% 
+  filter(Shrub_cover == max(Shrub_cover)) 
+```
+
+# Sync shrub species names
+
+```{r}
+summary(as.factor(df$Shrub_species))
+```
+
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARCPAT" ~ "ARPA6",
+                     Shrub_species == "ARCVIS" ~ "ARVI",
+                     Shrub_species == "CEACOR" ~ "CECO",
+                     Shrub_species == "CEAPRO" ~ "CEPR",
+                     Shrub_species == "CEAINT" ~ "CEIN3",
+                     Shrub_species == "CEINT" ~ "CEIN3",
+                     Shrub_species == "CHAFOL" ~ "CHFO",
+                     Shrub_species == "CHRSEM" ~ "CHSE11",
+                     Shrub_species == "QUEVAC" ~ "QUVA",
+                     Shrub_species == "SYMMOL" ~ "SYMO",
+                     Shrub_species == "RIBCER" ~ "RIBES",
+                     Shrub_species == "RIRO" ~ "RIBES",
+                     TRUE ~ Shrub_species))
+```
+
+```{r}
+summary(as.factor(df$Shrub_species))
+```
+
+# Check for same plot, same year
+```{r}
+summary(as.factor(latimer$years_since_fire))
+summary(as.factor(welch$years_since_fire))
+```
+
+```{r}
+summary(as.factor(latimer$Fire))
+summary(as.factor(welch$Fire))
+```
+
+```{r}
+welch %>% 
+  filter(Fire %in% c("AMERICAN RIVER", "MOONLIGHT", "PIUTE", "ANTELOPE", "POWER"))
+welch %>%
+  count()
+welch %>%   
+ filter(years_since_fire %in% latimer$years_since_fire & Fire %in% c("AMERICAN RIVER", "MOONLIGHT", "PIUTE", "ANTELOPE", "POWER"))
+```
+
+All good!
+
+# Plot for all species together
+```{r}
+ggplot(df, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+# Sooo I should take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
+```{r}
+df <- df %>% 
+  filter(years_since_fire<24)
+```
+
+# Plot for all species together again
+```{r}
+ggplot(df, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point()+
+  geom_smooth(method = "loess", span = 1)
+```
+
+# Plot just for ARVI and ARPA
+```{r}
+ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = Shrub_cover, col = Shrub_species))+
+  geom_point()+
+    geom_smooth(method = "loess")
+```
+
+# Lump ARVI and ARPA
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA6" ~ "ARPA6_ARVI",
+                     Shrub_species == "ARVI" ~ "ARPA6_ARVI",
+                     TRUE ~ Shrub_species))
+```
+
+# Plot for manzanita, whitethorn, and deerbrush
+```{r}
+ggplot(df %>% 
+         filter(Shrub_species %in% c("ARPA6_ARVI", "CEIN3", "CECO")),
+       aes(x = years_since_fire, y = Shrub_cover, col = Shrub_species))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
+```
+
+# Plot faceted
+```{r}
+df_plot <- df %>% 
+  filter(Shrub_species %in% c("ARPA6_ARVI", "CECO", "CEIN3", "CHSE11"))
+unique(df_plot$Shrub_species)
+df_plot <- droplevels(df_plot)
+```
+
+```{r}
+ggplot(df_plot, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()+
+  ylim(0, 150)
+
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cover_spp_top4.png", width = 10)
+```
+
+# Plot for each of the top 3 shrubs separately and together
+
+## CECO
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "CECO"), aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cov_ceco.png", width = 10)
+```
+
+## ARPA
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "ARPA6_ARVI"), aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cov_arpa.png", width = 10)
+```
+
+## CEIN
+```{r}
+ggplot(df_plot %>% filter(Shrub_species == "CEIN3"), aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  facet_wrap(~Shrub_species, ncol = 2)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cov_cein.png", width = 10)
+```
+
+## ALL 3
+```{r}
+ggplot(df_plot %>% filter(Shrub_species %in% c("ARPA6_ARVI", "CECO", "CEIN3")), aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source, col = Fire))+
+  geom_smooth(method = "loess", span = 1)+
+  theme_bw()
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cov_top3_together.png", width = 10)
+```
+
+# Save combined data
+```{r}
+save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_COVER.Rdata")
+```
+
+# Find rows with NA shrub cover
+```{r}
+df %>% filter(is.na(Shrub_cover)) %>% count(df_source)
+```
+
+# Find rows with NA years since fire
+```{r}
+df %>% filter(is.na(years_since_fire)) %>% count(df_source)
+```
