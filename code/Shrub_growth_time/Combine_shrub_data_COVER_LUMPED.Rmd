@@ -4,7 +4,7 @@ author: "Carmen"
 date: "January 21, 2020"
 output: 
   html_document:
-    TOC: TRUE
+    toc: TRUE
 ---
 
 ```{r, include=FALSE}
@@ -154,10 +154,22 @@ df <- df %>%
 summary(as.factor(df$Shrub_species))
 ```
 
-# Take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison and which I didn't use in the height analysis
+# Clean
+
+## Take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison and which I didn't use in the height analysis
 ```{r}
 df <- df %>% 
   filter(years_since_fire<24)
+```
+
+## Take out rows with NA shrub cover
+```{r}
+df %>% filter(is.na(Shrub_cover))
+```
+
+```{r}
+df <- df %>% 
+  filter(!is.na(Shrub_cover))
 ```
 
 # Plot for all species together
@@ -169,7 +181,7 @@ ggplot(df, aes(x = years_since_fire, y = Shrub_cover))+
 
 
 # Plot just for ARVI and ARPA
-```{r}
+```{r, warning = F}
 ggplot(df %>% filter(Shrub_species %in% c("ARVI", "ARPA6")), aes(x = years_since_fire, y = Shrub_cover, col = Shrub_species))+
   geom_point()+
     geom_smooth(method = "loess")
@@ -206,7 +218,7 @@ df_plot <- droplevels(df_plot)
 ```{r}
 ggplot(df_plot, aes(x = years_since_fire, y = Shrub_cover))+
   geom_point(aes(shape = df_source, col = Fire))+
-  geom_smooth(method = "loess", span = 1)+
+  geom_smooth(method = "gam")+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()+
   ylim(0, 150)
@@ -220,4 +232,8 @@ ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cover_spp_top
 save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_COVER_LUMPED.Rdata")
 ```
 
+# Look at trends in my data
+```{r}
+
+```
 

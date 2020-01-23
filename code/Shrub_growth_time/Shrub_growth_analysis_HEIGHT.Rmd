@@ -319,7 +319,7 @@ fake <- fake %>%
 OTHER_plot <- ggplot()+
   geom_point(data = dfOTHER, aes(x = years_since_fire, y = modal_ht_cm), alpha = .2)+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
-  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill =11,   alpha = .3)+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "grey",   alpha = .5)+
   theme_minimal()+
   ggtitle("OTHER")
 OTHER_plot
@@ -327,8 +327,8 @@ OTHER_plot
 
 # Plot the 4 species together
 ```{r}
-grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot)
-final_plot <- arrangeGrob(ceco_plot, arpa_plot, chse_plot, cein_plot, nrow = 2, ncol = 2)
+grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot)
+final_plot <- arrangeGrob(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot, nrow = 2, ncol = 3)
 ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_HEIGHT.png", final_plot, width = 10)
 ```
 

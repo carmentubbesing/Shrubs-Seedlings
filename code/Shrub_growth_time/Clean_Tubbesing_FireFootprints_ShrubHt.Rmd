@@ -70,13 +70,19 @@ if(shr$Segment[i] %in% c("0-1 m ","0 -1 m","0-1 m")){
 summary(as.factor(shr$Seg))
 ```
 
+# Calculate cover by seedling/species combo
+```{r}
+
+```
+
+
 # Calculate height shrub species rather than across species
 
 ## Weighted mean by seedling + shrub species
 ```{r}
 ht_by_spp <- shr %>%
   group_by(Sdlg, ShrubSpp) %>% 
-  mutate(ht_wm.cm.spp = weighted.mean(Ht.cm, Cover.cm)) %>% 
+  mutate(ht_wm.cm.spp = weighted.mean(Ht.cm, Cover.cm), cover = sum(Cover.cm)) %>% 
   arrange(Sdlg, ShrubSpp)
 ht_by_spp
 ```
@@ -84,12 +90,18 @@ ht_by_spp
 ## Get one value per seedling + shrub species
 ```{r}
 ht_by_spp <- ht_by_spp %>% 
-  dplyr::select(Sdlg, ShrubSpp, ht_wm.cm.spp) %>% 
+  dplyr::select(Sdlg, ShrubSpp, ht_wm.cm.spp, cover) %>% 
   distinct() %>% 
   ungroup() %>% 
   arrange(Sdlg, ShrubSpp)
 ht_by_spp
 ```
+
+### Check cover calculation
+```{r}
+shr %>% filter(Sdlg == 1) %>% group_by(ShrubSpp) %>% summarize(sum(Cover.cm))
+```
+
 
 # Make Sdlg all caps
 ```{r}

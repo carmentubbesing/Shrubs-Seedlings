@@ -188,15 +188,52 @@ summary {
 <div id="TOC">
 <ul>
 <li><a href="#load-data">Load data</a></li>
-<li><a href="#basic-shrub-cleaning">Basic shrub cleaning</a></li>
-<li><a href="#aggregate-shrub-data-by-seedling">Aggregate shrub data by seedling</a></li>
-<li><a href="#combine-shrub-data-together">Combine shrub data together</a></li>
-<li><a href="#light-files-and-difn">Light files and DIFN</a></li>
-<li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a></li>
-<li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a></li>
+<li><a href="#basic-shrub-cleaning">Basic shrub cleaning</a><ul>
+<li><a href="#rename-seedling-column">Rename seedling column</a></li>
+<li><a href="#replace-nas-with-0">Replace NAs with 0</a></li>
+<li><a href="#take-out-pea-shrub-cover-because-its-not-a-shrub">Take out “pea” shrub cover because it’s not a shrub</a></li>
+<li><a href="#take-out-conifer-since-its-not-a-shrub">Take out “conifer” since it’s not a shrub</a></li>
+<li><a href="#drop-levels">Drop levels</a></li>
+</ul></li>
+<li><a href="#aggregate-shrub-data-by-seedling">Aggregate shrub data by seedling</a><ul>
+<li><a href="#clean-up-segment-names">Clean up segment names</a></li>
+<li><a href="#cover">Cover</a><ul>
+<li><a href="#summarize-shrub-cover-by-segment">Summarize shrub cover by segment</a></li>
+<li><a href="#replace-na-shrub-cover-with-0">Replace NA shrub cover with 0</a></li>
+</ul></li>
+<li><a href="#height">Height</a><ul>
+<li><a href="#summarize-height-by-segment">Summarize height by segment</a></li>
+<li><a href="#replace-na-height-with-0">Replace NA height with 0</a></li>
+</ul></li>
+<li><a href="#combine-cover-and-ht-values-into-one-data-frame">Combine cover and ht values into one data frame</a></li>
+<li><a href="#shrub-species-0-3-m">Shrub species 0-3 m</a></li>
+</ul></li>
+<li><a href="#combine-shrub-data-together">Combine shrub data together</a><ul>
+<li><a href="#combine-segments-into-0-3-m">Combine segments into 0-3 m</a><ul>
+<li><a href="#delete-unnecessary-columns">Delete unnecessary columns</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#light-files-and-difn">Light files and DIFN</a><ul>
+<li><a href="#merge-in-difn-and-light-file-data-from-seedling-df">Merge in DIFN and Light File data from seedling df</a></li>
+<li><a href="#mark-the-measurements-without-seedling-as-ref-for-reference">Mark the measurements without seedling as “ref” for reference</a></li>
+</ul></li>
+<li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a><ul>
+<li><a href="#add-light-files-for-non-seedling-shrub-locations">Add light files for non-seedling shrub locations</a></li>
+</ul></li>
+<li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a><ul>
+<li><a href="#load-in-difn-data-using-only-the-first-4-gaps-down-to-53-degrees">Load in DIFN data using only the first 4 gaps (down to 53 degrees)</a></li>
+<li><a href="#delete-repeat-row-that-only-has-data-in-one-of-the-rows">Delete repeat row that only has data in one of the rows</a></li>
+<li><a href="#join-difn.53-data-with-shrub-data">Join DIFN.53 data with shrub data</a></li>
+<li><a href="#check-for-duplicated-seedlings">Check for duplicated seedlings</a></li>
+<li><a href="#find-which-seedlings-have-difn.all-but-lack-difn.53">Find which seedlings have DIFN.all but lack DIFN.53</a></li>
+<li><a href="#fill-in-a-couple-seedlings-with-funky-difn-situations">Fill in a couple seedlings with funky DIFN situations</a></li>
+<li><a href="#check-again">Check again</a></li>
+</ul></li>
 <li><a href="#list-seedlings">List seedlings</a></li>
 <li><a href="#figure-out-where-the-arvi-is">Figure out where the ARVI is</a></li>
-<li><a href="#save-for-difn">Save for DIFN</a></li>
+<li><a href="#save-for-difn">Save for DIFN</a><ul>
+<li><a href="#take-out-trees-that-arent-abco-or-pipo">Take out trees that aren’t ABCO or PIPO</a></li>
+</ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>

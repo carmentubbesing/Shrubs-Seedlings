@@ -65,9 +65,11 @@ df <- df %>%
   mutate(relgrdia = (dia17_cm_Aug-dia18_cm)/dia17_cm_Aug)
 ```
 
-# Model dia growth in relation to previous dia and height, both species together
+# Model dia growth in relation to previous dia and height and vertical growth
+
+## both species together
 ```{r}
-lm <- lm(relgrdia ~ dia17_cm_Aug + height_2018 + species + shrubarea, data = df)
+lm <- lm(relgrdia ~ dia17_cm_Aug * height_2018*gr_2018_cm + species + shrubarea , data = df)
 summary(lm)
 ```
 
@@ -77,11 +79,15 @@ plot(predictorEffect("height_2018", lm))
 plot(predictorEffect("species", lm))
 ```
 
+## abco
+
+## pipo
+
 # Model dia in relation to ht and competition, species separate
 
 ## ABCO
 ```{r}
-lmabco <- lm(dia18_cm ~ sqrt(shrubarea) + height_2018 * dia17_cm_Aug, data = df %>% filter(species == "ABCO"))
+lmabco <- lm(dia18_cm ~ sqrt(shrubarea) + height_2018 * dia17_cm_Aug+ gr_2018_cm, data = df %>% filter(species == "ABCO"))
 summary(lmabco)
 drop1(lmabco, test = "F")
 ```

@@ -27,7 +27,7 @@ strt <- Sys.time()
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 100
+iterations <- 1000
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -125,10 +125,14 @@ tm_shape(pts.sf.abco.graph)+
 
 # Simulate across years
 ```{r, warning=FALSE}
+time <- Sys.time()
 suppressMessages(sim(years))
+print(paste("One simulation run took", Sys.time()-time, "seconds"))
 ```
 
 ## Tests
+
+### Shrub growth patterns
 ```{r}
 ggplot(dfsimall %>% filter(Species == "ABCO"))+
   geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
@@ -148,6 +152,7 @@ pts.sf.abco.graph <- pts.sf.abco %>%
   rename("Fir height (cm)" = Ht_cm1)
 ```
 
+## Plot
 ```{r}
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
@@ -164,7 +169,9 @@ tm_shape(pts.sf.abco.graph)+
 
 # Iterate 
 ```{r, warning=FALSE}
+time <- Sys.time()
 iterate(iterations)
+print(paste("That took", round(Sys.time()-time, 1), "minutes"))
 dfsimallreps %>% 
   group_by(rep) %>% 
   summarize(mean(Ht_cm1))
@@ -247,6 +254,24 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp0
 print(Sys.time() - strt)
 ```
 
+# Seedling height by shrub species and year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Species, rep, Years, Ht_cm1, ShrubSpp03) %>% 
+  mutate(mean_ht = mean(Ht_cm1))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col = ShrubSpp03, symbol = Species))+
+  geom_line(aes(group = Sdlg), alpha = .2)+
+  geom_smooth()+
+  ggtitle("Results for 1000 simulations")+
+  xlab("Years since fire")+
+  ylab("Focal tree height")+
+  theme_bw()
+```
+
 
 # Next steps to improve the model
 
@@ -261,9 +286,9 @@ print(Sys.time() - strt)
 
 
 For next week:
-- Improve shrub growth based on data
+- Improve shrub growth based on data - DONE
 - display dominant shrub species
-- make the shrub grid dependent upon surrounding cells so it's not so checkerboard
+- make the shrub grid dependent upon surrounding cells so it's not so checkerboard - DONE
 - Update display of shrub competition after simulation years
 - what does shrub competition mean for new recruitment?
 - "emergent year" = when 50% of trees are above shrub canopy

@@ -1,0 +1,247 @@
+---
+title: "Diameter ~ Height"
+author: "Carmen"
+date: "November 1, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+# This code creates linear models for diameter in relation to height for ABCO and PIPO
+
+```{r}
+require(tidyverse)
+require(readxl)
+require(effects)
+require(nlme)
+require(MuMIn)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+load(file = "../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
+```
+
+# Clean and wrangle data
+
+## Check for missing data
+```{r}
+join <- tbl_df(join)
+join %>% 
+  filter(is.na(DEAD))
+```
+
+These missing data are because of pathogen damage, etc. so they should be filtered out
+```{r}
+join <- join %>% 
+  filter(!is.na(DEAD))
+```
+
+## Remove unnecesary variables
+```{r}
+join <- join %>% 
+  dplyr::select(-BAS_DIA_1_mm, -BAS_DIA_2_mm, -BARK, -PERC_NEEDLES, -SUPPRESSED, -`BLACK DOTS`, -MECH_DAMAGE, -PATH_DAMAGE, -exclude_reason, -mateless, -`dia/ht`, -NEEDLE_COLOR, -`Growing?`, -BUDS, -TIME)
+```
+
+## Filter to just live seedlings for now
+```{r}
+join <- join %>% 
+  filter(DEAD==0)
+```
+
+## Restructure to make one row per tree and one column for year
+```{r}
+df <- gather(join, key = "year", value = "growth", 5:17) %>% 
+  tbl_df() %>% 
+  dplyr::select(tree, series, year, growth, everything()) %>% 
+  arrange(tree) %>% 
+  filter(!is.na(growth))
+df
+join %>% filter(tree ==1) %>% dplyr::select(1:20)
+```
+
+```{r}
+df <- df %>% 
+  group_by(tree, year) %>% 
+  mutate(mean_growth_dia = mean(growth)*2) %>% 
+  dplyr::select(-growth,-radius, -series) %>% 
+  distinct() %>% 
+  dplyr::select(tree, year, mean_growth_dia, everything()) %>% 
+  rename(BAS_DIA_AVE_mm = BAS_DIA_AVE)
+df
+```
+
+## Take out growth years before 2014
+```{r}
+df <- df %>% 
+  filter(year>2013)
+```
+
+
+## Restructure height so there's yearly height and yearly height growth
+```{r}
+df <- df %>% 
+  mutate(pre_growth_height = case_when(
+    year == 2016 ~ HEIGHT-LAST_YR_GR_cm,
+    year == 2015 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm,
+    year == 2014 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm,
+    TRUE~0
+  )) %>% 
+   mutate(ht_growth = case_when(
+    year == 2016 ~ LAST_YR_GR_cm,
+    year == 2015 ~ MINUS_1_GR_cm,
+    year == 2014 ~ MINUS_2_GR_cm,
+    TRUE~0
+  )) %>% 
+  dplyr::select(tree, year, mean_growth_dia, SPECIES, HEIGHT, pre_growth_height, ht_growth, everything())
+df
+```
+
+
+## Add a column for yearly diameter by subtracting growth from diameter for each year
+```{r}
+df <- df %>% 
+  filter(year >2010) %>% 
+  ungroup() %>% 
+    mutate(cumulative_growth = ifelse(year == 2016, mean_growth_dia, 0)) %>% 
+    group_by(tree) %>% 
+  mutate(cumulative_growth = ifelse(year == 2015, mean_growth_dia + max(cumulative_growth), cumulative_growth)) %>% 
+  mutate(cumulative_growth = ifelse(year == 2014, mean_growth_dia + max(cumulative_growth), cumulative_growth)) 
+
+df <- df %>% 
+  mutate(pre_growth_diameter = BAS_DIA_AVE_mm-cumulative_growth) %>% 
+  dplyr::select(tree, year, mean_growth_dia, cumulative_growth, pre_growth_diameter, BAS_DIA_AVE_mm, everything())  
+df
+```
+
+## Calculate relative diameter growth 
+```{r}
+df <- df %>% 
+  mutate(relgrdia = (mean_growth_dia)/pre_growth_diameter)
+```
+ 
+## Throw out the two observations where pre-growth diameter is below 0
+```{r}
+df <- df %>% 
+  filter(pre_growth_diameter>0)
+```
+
+# Model dia growth in relation to previous dia and height, both species together
+```{r}
+df$SPECIES <- as.factor(paste(df$SPECIES))
+class(df$SPECIES)
+M1 <- lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + SPECIES + pre_growth_height*ht_growth, data = df, random = ~ 1|tree)
+summary(M1)
+hist(log(df$relgrdia))
+hist(df$relgrdia)
+ggplot(df, aes(x = HEIGHT, y = log(relgrdia), col = SPECIES))+
+  geom_point()+
+  theme_minimal()+
+  geom_smooth(method = "lm")
+
+```
+
+# Do AIC model selection
+```{r}
+AIC(M1)
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + SPECIES + pre_growth_height, data = df, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + SPECIES + ht_growth, data = df, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + SPECIES + ht_growth, data = df, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*ht_growth + pre_growth_height + SPECIES , data = df, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + ht_growth*pre_growth_height + SPECIES , data = df, random = ~ 1|tree))
+```
+
+```{r}
+M2 <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + SPECIES + ht_growth, data = df, random = ~ 1|tree)
+```
+
+
+# Pseudo r2
+```{r}
+r.squaredGLMM(M2)
+```
+
+# Plot predictor effects
+```{r}
+plot(effects::predictorEffect("pre_growth_height", M2))
+plot(effects::predictorEffect("pre_growth_diameter", M2))
+plot(predictorEffect("ht_growth", M2))
+```
+
+# Model dia in relation to ht and competition, species separate
+
+## ABCO
+```{r}
+abcodf <- df %>% filter(SPECIES == "ABCO")
+lmeabco <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, random = ~ 1|tree, data = abcodf, method = "ML")
+summary(lmeabco)
+drop1(lmeabco, test = "Chisq")
+r.squaredGLMM(lmeabco)
+```
+
+### Do AIC model selection
+```{r}
+AIC(lmeabco)
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height*ht_growth,  random = ~ 1|tree, data = abcodf))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + ht_growth, data = abcodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = abcodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*ht_growth + pre_growth_height ,data = abcodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + ht_growth*pre_growth_height, data = abcodf, random = ~ 1|tree))
+```
+
+```{r}
+lmeabco <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = abcodf, random = ~ 1|tree, method = "ML")
+summary(lmeabco)
+drop1(lmeabco, test = "Chisq")
+r.squaredGLMM(lmeabco)
+```
+
+### Plot predictor effects
+```{r}
+plot(predictorEffect("pre_growth_diameter", lmeabco))
+plot(predictorEffect("pre_growth_height", lmeabco))
+plot(predictorEffect("ht_growth", lmeabco))
+```
+
+
+## PIPO
+```{r}
+pipodf <- df %>% filter(SPECIES == "PIPO")
+lmepipo <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, random = ~ 1|tree, data = pipodf, method = "ML")
+summary(lmepipo)
+drop1(lmepipo, test = "Chisq")
+r.squaredGLMM(lmepipo)
+```
+
+### Do AIC model selection
+```{r}
+AIC(lmepipo)
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height*ht_growth,  random = ~ 1|tree, data = pipodf))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*ht_growth + pre_growth_height ,data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + ht_growth*pre_growth_height, data = pipodf, random = ~ 1|tree))
+```
+
+```{r}
+lmepipo <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree, method = "ML")
+summary(lmepipo)
+drop1(lmepipo, test = "Chisq")
+r.squaredGLMM(lmepipo)
+```
+
+
+### Plot predictor effects
+```{r}
+plot(predictorEffect("pre_growth_diameter", lmepipo))
+plot(predictorEffect("pre_growth_height", lmepipo))
+plot(predictorEffect("ht_growth", lmepipo))
+```
+
+# Save
+```{r}
+save(lmeabco, file ="../../results/coefficients/LM_dia_abco_dendro.Rdata")
+save(lmepipo, file ="../../results/coefficients/LM_dia_pipo_dendro.Rdata")
+```
+

@@ -190,6 +190,7 @@ summary {
 <li><a href="#load-data">Load data</a></li>
 <li><a href="#basic-shrub-cleaning">Basic shrub cleaning</a></li>
 <li><a href="#clean-up-segment-names">Clean up segment names</a></li>
+<li><a href="#calculate-cover-by-seedlingspecies-combo">Calculate cover by seedling/species combo</a></li>
 <li><a href="#calculate-height-shrub-species-rather-than-across-species">Calculate height shrub species rather than across species</a></li>
 <li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a></li>
 <li><a href="#add-fire-names">Add Fire names</a></li>
@@ -259,16 +260,19 @@ summary(as.factor(shr$Seg))</code></pre>
 <pre><code>##    1    2    3 
 ## 1517 1542 1434</code></pre>
 </div>
+<div id="calculate-cover-by-seedlingspecies-combo" class="section level1">
+<h1>Calculate cover by seedling/species combo</h1>
+</div>
 <div id="calculate-height-shrub-species-rather-than-across-species" class="section level1">
 <h1>Calculate height shrub species rather than across species</h1>
 <div id="weighted-mean-by-seedling-shrub-species" class="section level2">
 <h2>Weighted mean by seedling + shrub species</h2>
 <pre class="r"><code>ht_by_spp &lt;- shr %&gt;%
   group_by(Sdlg, ShrubSpp) %&gt;% 
-  mutate(ht_wm.cm.spp = weighted.mean(Ht.cm, Cover.cm)) %&gt;% 
+  mutate(ht_wm.cm.spp = weighted.mean(Ht.cm, Cover.cm), cover = sum(Cover.cm)) %&gt;% 
   arrange(Sdlg, ShrubSpp)
 ht_by_spp</code></pre>
-<pre><code>## # A tibble: 4,493 x 13
+<pre><code>## # A tibble: 4,493 x 14
 ## # Groups:   Sdlg, ShrubSpp [789]
 ##    Sdlg  Transect Segment ShrubSpp Cover.cm Ht.cm Dead. Note1 Note2 Note3
 ##    &lt;fct&gt; &lt;fct&gt;    &lt;fct&gt;   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt; &lt;fct&gt; &lt;lgl&gt;
@@ -282,31 +286,42 @@ ht_by_spp</code></pre>
 ##  8 1     S        2-3 m   ARPA           90   130     0 same~ &quot;&quot;    NA   
 ##  9 1     W        &quot;0-1 m~ ARPA          100   170     0 same~ &quot;&quot;    NA   
 ## 10 1     W        &quot;1-2 m~ ARPA          100   170     0 same~ &quot;&quot;    NA   
-## # ... with 4,483 more rows, and 3 more variables: X &lt;lgl&gt;, Seg &lt;dbl&gt;,
-## #   ht_wm.cm.spp &lt;dbl&gt;</code></pre>
+## # ... with 4,483 more rows, and 4 more variables: X &lt;lgl&gt;, Seg &lt;dbl&gt;,
+## #   ht_wm.cm.spp &lt;dbl&gt;, cover &lt;dbl&gt;</code></pre>
 </div>
 <div id="get-one-value-per-seedling-shrub-species" class="section level2">
 <h2>Get one value per seedling + shrub species</h2>
 <pre class="r"><code>ht_by_spp &lt;- ht_by_spp %&gt;% 
-  dplyr::select(Sdlg, ShrubSpp, ht_wm.cm.spp) %&gt;% 
+  dplyr::select(Sdlg, ShrubSpp, ht_wm.cm.spp, cover) %&gt;% 
   distinct() %&gt;% 
   ungroup() %&gt;% 
   arrange(Sdlg, ShrubSpp)
 ht_by_spp</code></pre>
-<pre><code>## # A tibble: 789 x 3
-##    Sdlg  ShrubSpp ht_wm.cm.spp
-##    &lt;fct&gt; &lt;fct&gt;           &lt;dbl&gt;
-##  1 1     ARPA            155. 
-##  2 1     CECO             68.1
-##  3 1     CEIN             64.7
-##  4 1     CHSE            130  
-##  5 10    ARPA            169. 
-##  6 10    CECO             36.7
-##  7 10    CEIN             58.3
-##  8 100   CECO             88.6
-##  9 103   ARPA            110  
-## 10 103   CECO            107. 
+<pre><code>## # A tibble: 789 x 4
+##    Sdlg  ShrubSpp ht_wm.cm.spp cover
+##    &lt;fct&gt; &lt;fct&gt;           &lt;dbl&gt; &lt;dbl&gt;
+##  1 1     ARPA            155.    730
+##  2 1     CECO             68.1    80
+##  3 1     CEIN             64.7   490
+##  4 1     CHSE            130      10
+##  5 10    ARPA            169.    630
+##  6 10    CECO             36.7    30
+##  7 10    CEIN             58.3   530
+##  8 100   CECO             88.6  1160
+##  9 103   ARPA            110      30
+## 10 103   CECO            107.   1120
 ## # ... with 779 more rows</code></pre>
+<div id="check-cover-calculation" class="section level3">
+<h3>Check cover calculation</h3>
+<pre class="r"><code>shr %&gt;% filter(Sdlg == 1) %&gt;% group_by(ShrubSpp) %&gt;% summarize(sum(Cover.cm))</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   ShrubSpp `sum(Cover.cm)`
+##   &lt;fct&gt;              &lt;dbl&gt;
+## 1 ARPA                 730
+## 2 CECO                  80
+## 3 CEIN                 490
+## 4 CHSE                  10</code></pre>
+</div>
 </div>
 </div>
 <div id="make-sdlg-all-caps" class="section level1">
@@ -347,24 +362,24 @@ ht_by_spp &lt;- left_join(ht_by_spp, fires)</code></pre>
 <div id="add-missing-fire-values" class="section level1">
 <h1>Add missing Fire values</h1>
 <pre class="r"><code>ht_by_spp %&gt;% filter(is.na(Fire))</code></pre>
-<pre><code>## # A tibble: 15 x 4
-##    Sdlg   ShrubSpp ht_wm.cm.spp Fire 
-##    &lt;chr&gt;  &lt;fct&gt;           &lt;dbl&gt; &lt;chr&gt;
-##  1 125F   ARPA             58.1 &lt;NA&gt; 
-##  2 125F   CECO             50   &lt;NA&gt; 
-##  3 125F   CHSE             60.4 &lt;NA&gt; 
-##  4 125W   CECO            106.  &lt;NA&gt; 
-##  5 125W   PREM            204.  &lt;NA&gt; 
-##  6 ARPA-1 ARVI            197.  &lt;NA&gt; 
-##  7 CECO-1 CECO            157.  &lt;NA&gt; 
-##  8 CEIN-1 CEIN            176.  &lt;NA&gt; 
-##  9 CEIN-2 CEIN            170.  &lt;NA&gt; 
-## 10 CHFO-1 CHFO             35.7 &lt;NA&gt; 
-## 11 LIDE-1 LIDE             84.2 &lt;NA&gt; 
-## 12 LIDE-2 LIDE            121.  &lt;NA&gt; 
-## 13 LIDE-3 LIDE             95.4 &lt;NA&gt; 
-## 14 LIDE-4 ARPA             94.3 &lt;NA&gt; 
-## 15 LIDE-4 LIDE            105.  &lt;NA&gt;</code></pre>
+<pre><code>## # A tibble: 15 x 5
+##    Sdlg   ShrubSpp ht_wm.cm.spp cover Fire 
+##    &lt;chr&gt;  &lt;fct&gt;           &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+##  1 125F   ARPA             58.1   160 &lt;NA&gt; 
+##  2 125F   CECO             50     150 &lt;NA&gt; 
+##  3 125F   CHSE             60.4   250 &lt;NA&gt; 
+##  4 125W   CECO            106.   1000 &lt;NA&gt; 
+##  5 125W   PREM            204.    430 &lt;NA&gt; 
+##  6 ARPA-1 ARVI            197.   1190 &lt;NA&gt; 
+##  7 CECO-1 CECO            157.   1200 &lt;NA&gt; 
+##  8 CEIN-1 CEIN            176.   1240 &lt;NA&gt; 
+##  9 CEIN-2 CEIN            170.   1120 &lt;NA&gt; 
+## 10 CHFO-1 CHFO             35.7   630 &lt;NA&gt; 
+## 11 LIDE-1 LIDE             84.2  1040 &lt;NA&gt; 
+## 12 LIDE-2 LIDE            121.   1150 &lt;NA&gt; 
+## 13 LIDE-3 LIDE             95.4  1110 &lt;NA&gt; 
+## 14 LIDE-4 ARPA             94.3    70 &lt;NA&gt; 
+## 15 LIDE-4 LIDE            105.    910 &lt;NA&gt;</code></pre>
 <pre class="r"><code>ht_by_spp &lt;- ht_by_spp %&gt;% 
   mutate(Fire = ifelse(Sdlg %in% c(&quot;LIDE-4&quot;, &quot;LIDE-3&quot;, &quot;LIDE-2&quot;, &quot;LIDE-1&quot;),&quot;AMRC&quot;, paste(Fire))) %&gt;% 
   mutate(Fire = ifelse(Sdlg==&quot;CECO-1&quot;,&quot;AMRC&quot;, paste(Fire))) %&gt;% 
@@ -375,9 +390,9 @@ ht_by_spp &lt;- left_join(ht_by_spp, fires)</code></pre>
                           Sdlg == &quot;CHFO-1&quot; ~ &quot;FRDS&quot;,
                           TRUE ~ Fire))</code></pre>
 <pre class="r"><code>ht_by_spp %&gt;% filter(Fire == &quot;NA&quot;)</code></pre>
-<pre><code>## # A tibble: 0 x 4
-## # ... with 4 variables: Sdlg &lt;chr&gt;, ShrubSpp &lt;fct&gt;, ht_wm.cm.spp &lt;dbl&gt;,
-## #   Fire &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 0 x 5
+## # ... with 5 variables: Sdlg &lt;chr&gt;, ShrubSpp &lt;fct&gt;, ht_wm.cm.spp &lt;dbl&gt;,
+## #   cover &lt;dbl&gt;, Fire &lt;chr&gt;</code></pre>
 <pre class="r"><code>summary(as.factor(ht_by_spp$Fire))</code></pre>
 <pre><code>## AMRC CLVD FRDS PLKN STAR WRTS 
 ##  306  106  110   14  109   36</code></pre>
