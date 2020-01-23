@@ -27,7 +27,7 @@ strt <- Sys.time()
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 1000
+iterations <- 10
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -145,6 +145,60 @@ ggplot(dfsimall %>% filter(Species == "PIPO"))+
   theme_bw()
 ```
 
+### Diameter growth patterns
+```{r}
+ggplot(dfsimall, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
+```
+
+### Height growth patterns
+```{r}
+ggplot(dfsimall, aes(x = Years, y = Ht_cm1, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = Ht_cm1, col = Species, group = Species))
+```
+
+### Diameter::Height growth patterns
+```{r}
+ggplot(dfsimall, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Species))
+```
+
+### Diameter:height
+```{r}
+ggplot(dfsimall %>% filter(Years==10))+
+  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
+ggplot(dfsimall %>% filter(Years==20))+
+  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
+
+```
+
+### Diameter and height boxplots
+```{r}
+ggplot(dfsimall)+
+  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Diameter (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+```{r}
+ggplot(dfsimall)+
+  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Height (cm)")+
+  theme(text = element_text(size = 20))
+
+```
+
+## Plot shrub patch spatially
 ```{r}
 pts.sf.pipo.graph <- pts.sf.pipo %>% 
   rename("Pine height (cm)" = Ht_cm1)
@@ -152,7 +206,6 @@ pts.sf.abco.graph <- pts.sf.abco %>%
   rename("Fir height (cm)" = Ht_cm1)
 ```
 
-## Plot
 ```{r}
 tm_shape(p)+
   tm_borders(col = "black", lwd= 5)+
@@ -286,16 +339,17 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
 
 
 For next week:
-- Improve shrub growth based on data - DONE
-- display dominant shrub species
-- make the shrub grid dependent upon surrounding cells so it's not so checkerboard - DONE
+    - Improve shrub growth based on data - DONE
+    - display dominant shrub species
+    - make the shrub grid dependent upon surrounding cells so it's not so checkerboard - DONE
 - Update display of shrub competition after simulation years
 - what does shrub competition mean for new recruitment?
 - "emergent year" = when 50% of trees are above shrub canopy
+- apply to King, American River Complex, rest of the fires I measured
+- switch diameter equation to be from dendro work 
+
+Other notes:
 - maybe submit to American Naturalist
 - Global Change Biology - mixing up the years
 - no overstory reproduction for now 
-- apply to King, American River Complex, rest of the fires I measured
-- switch diameter equation to be from dendro work
-
 

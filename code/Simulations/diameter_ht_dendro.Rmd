@@ -7,7 +7,7 @@ output:
     toc: TRUE
 ---
 
-# This code creates linear models for diameter in relation to height for ABCO and PIPO
+# This code creates linear models for diameter in relation to height for ABCO and PIPO based on dendro data
 
 ```{r}
 require(tidyverse)
@@ -21,6 +21,9 @@ require(MuMIn)
 ```{r}
 setwd("~/Shrubs-Seedlings/code/Simulations/")
 load(file = "../../compiled_data/growth_mortality/dendro_all_vars.Rdata")
+load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+dfvert <- df
+remove(df)
 ```
 
 # Clean and wrangle data
@@ -44,11 +47,11 @@ join <- join %>%
   dplyr::select(-BAS_DIA_1_mm, -BAS_DIA_2_mm, -BARK, -PERC_NEEDLES, -SUPPRESSED, -`BLACK DOTS`, -MECH_DAMAGE, -PATH_DAMAGE, -exclude_reason, -mateless, -`dia/ht`, -NEEDLE_COLOR, -`Growing?`, -BUDS, -TIME)
 ```
 
-## Filter to just live seedlings for now
-```{r}
-join <- join %>% 
-  filter(DEAD==0)
-```
+<!-- ## Filter to just live seedlings for now -->
+<!-- ```{r} -->
+<!-- join <- join %>%  -->
+<!--   filter(DEAD==0) -->
+<!-- ``` -->
 
 ## Restructure to make one row per tree and one column for year
 ```{r}
@@ -72,10 +75,48 @@ df <- df %>%
 df
 ```
 
-## Take out growth years before 2014
+## Take out growth years before 2011
 ```{r}
 df <- df %>% 
-  filter(year>2013)
+  filter(year>2010)
+```
+
+# _
+
+# Combine with `dfvert` to get info on when dead trees died
+```{r}
+dfvert <- dfvert %>% 
+  dplyr::select(SEEDLING, Notes, BAS_DIA_AVE, ht1, ht2, ht3, ht4, gr1, gr2, gr3, death_year, gr_rel_ave) %>% 
+  rename(tree = SEEDLING)
+```
+
+```{r}
+df <- left_join(df, dfvert)
+```
+
+# NOTE: I am not fixing the death year because it doesn't matter to me. I'm not including calenar year as a fixed effect.
+
+## Calculate relative vertical growth for each year
+```{r}
+df %>% 
+   dplyr::select(tree, DEAD_ALIVE, year, year, HEIGHT, LAST_YR_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, ht4) %>% 
+  filter(DEAD_ALIVE == "ALIVE")
+```
+
+```{r}
+df <- df %>% 
+  mutate(relgrvert = case_when(
+    year == 2017 ~ gr1,
+    year == 2016 ~ gr2,
+    year == 2015 ~ gr3,
+    TRUE ~ 0
+  ))
+```
+
+```{r}
+df %>% 
+   dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  arrange(tree)
 ```
 
 
@@ -83,21 +124,25 @@ df <- df %>%
 ```{r}
 df <- df %>% 
   mutate(pre_growth_height = case_when(
-    year == 2016 ~ HEIGHT-LAST_YR_GR_cm,
-    year == 2015 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm,
-    year == 2014 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm,
+    year == 2017 ~ HEIGHT-LAST_YR_GR_cm,
+    year == 2016 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm,
+    year == 2015 ~ HEIGHT - LAST_YR_GR_cm - MINUS_1_GR_cm - MINUS_2_GR_cm,
     TRUE~0
   )) %>% 
    mutate(ht_growth = case_when(
-    year == 2016 ~ LAST_YR_GR_cm,
-    year == 2015 ~ MINUS_1_GR_cm,
-    year == 2014 ~ MINUS_2_GR_cm,
+    year == 2017 ~ LAST_YR_GR_cm,
+    year == 2016 ~ MINUS_1_GR_cm,
+    year == 2015 ~ MINUS_2_GR_cm,
     TRUE~0
-  )) %>% 
-  dplyr::select(tree, year, mean_growth_dia, SPECIES, HEIGHT, pre_growth_height, ht_growth, everything())
-df
+  )) 
 ```
 
+### Check
+```{r}
+df %>% 
+   dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm,gr1, gr2, gr3, ht1, ht2, ht3,ht4, relgrvert, pre_growth_height, ht_growth) %>%
+  arrange(tree)
+```
 
 ## Add a column for yearly diameter by subtracting growth from diameter for each year
 ```{r}
@@ -108,9 +153,16 @@ df <- df %>%
     group_by(tree) %>% 
   mutate(cumulative_growth = ifelse(year == 2015, mean_growth_dia + max(cumulative_growth), cumulative_growth)) %>% 
   mutate(cumulative_growth = ifelse(year == 2014, mean_growth_dia + max(cumulative_growth), cumulative_growth)) 
+```
 
+```{r}
 df <- df %>% 
-  mutate(pre_growth_diameter = BAS_DIA_AVE_mm-cumulative_growth) %>% 
+  mutate(pre_growth_diameter = BAS_DIA_AVE_mm-cumulative_growth) 
+```
+
+### Check
+```{r}
+df %>% 
   dplyr::select(tree, year, mean_growth_dia, cumulative_growth, pre_growth_diameter, BAS_DIA_AVE_mm, everything())  
 df
 ```
@@ -126,6 +178,27 @@ df <- df %>%
 df <- df %>% 
   filter(pre_growth_diameter>0)
 ```
+
+# Throw out tree/year combos without vertical growth
+```{r}
+df <- df %>% 
+  filter(ht_growth>0)
+```
+
+# Take out more columns
+```{r}
+df <- df %>% 
+  dplyr::select(-Practice, `got it`, -`Tops cut?`)
+```
+
+# Take out tree with missing height data
+```{r}
+df <- df %>% 
+  filter(tree != 119)
+```
+
+# _
+# _
 
 # Model dia growth in relation to previous dia and height, both species together
 ```{r}
@@ -169,6 +242,38 @@ plot(effects::predictorEffect("pre_growth_diameter", M2))
 plot(predictorEffect("ht_growth", M2))
 ```
 
+# Plot range of dia and ht in these data
+
+## diameter
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(BAS_DIA_AVE_mm/10,col = SPECIES, stat(density)))+
+  theme_minimal()+
+  xlab("Diameter (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## height
+
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(HEIGHT, col = SPECIES, stat(density)))+
+  theme_minimal()+
+  xlab("Height (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## Ratio
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes((BAS_DIA_AVE_mm/10)/HEIGHT, col = SPECIES, stat(density)))+
+  theme_minimal()+
+  xlab("Diameter:Height (cm:cm)")+
+  theme(text = element_text(size = 20))
+```
+
+# _
+# _
 # Model dia in relation to ht and competition, species separate
 
 ## ABCO
