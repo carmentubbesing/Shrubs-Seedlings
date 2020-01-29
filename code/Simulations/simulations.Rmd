@@ -184,8 +184,22 @@ ggplot(dfsimall)+
   theme_minimal()+
   xlab("Years")+
   ylab("Diameter (cm)")+
+  theme(text = element_text(size = 20))+
+  ylim(c(0,100))+
+  ggtitle("Diameter distribution after first simulation year")
+```
+
+#### Just for first 2 years of the simulation
+```{r}
+ggplot(dfsimall %>% filter(Years<11))+
+  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Diameter (cm)")+
   theme(text = element_text(size = 20))
 ```
+
+Note: use 3 cm as the diameter cutoff for where I switch to a different equation
 
 ```{r}
 ggplot(dfsimall)+
@@ -217,28 +231,6 @@ tm_shape(pts.sf.pipo.graph)+
   tm_symbols(size = "Pine height (cm)", col = "#DCC960", size.max = 300, border.lwd = 3)+
 tm_shape(pts.sf.abco.graph)+
   tm_symbols(size = "Fir height (cm)", col = "#899DA4", size.max = 300, border.lwd = 3)
-```
-
-
-#### Plot the relationships between variables inputting the diameter growth equations to compare them to what I saw in the dendro analysis
-```{r}
-test <- dfsimallreps %>% 
-  filter(Years %in% c(9,10)) %>% 
-  dplyr::select(Sdlg, Species, Ht_cm1, dia.cm, Years, pred_exp, rep) %>% 
-  tbl_df() %>% 
-  arrange(Sdlg)
-test
-test <- test %>% 
-  mutate(ID = paste(Sdlg, rep, sep = "-"))
-test
-test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = "ID")
-test2 %>% 
-  arrange(ID)
-
-test %>% 
-  group_by(Years) %>% 
-  count()
-plot(test[test$Years==9, "dia.cm"], test[test$Years==10, "dia.cm"])
 ```
 
 # Iterate 
@@ -300,8 +292,7 @@ ggplot(dfsimallreps_summary %>% filter(Species == "PIPO"))+
 ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
   geom_line(alpha = .3)+
   theme_bw()+
-  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))+
-  ylim(0,10)
+  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
 ```
 
 #### For a single tree
@@ -375,7 +366,8 @@ ggplot(dfsimallreps_summary)+
   xlab("Years")+
   ylab("Diameter (cm)")+
   theme(text = element_text(size = 20))+
-  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))+
+  ylim(c(0,100))
 ```
 
 ```{r}
@@ -477,7 +469,6 @@ For next week:
 6.  Add 0/1 for "emergent year" = when 50% of trees are above shrub canopy
 7.  apply to King, American River Complex, rest of the fires I measured
 8.  Add diameter equation for larger seedlings -- make it so that the diameter equation being used is different for smaller seedlings vs. larger seedlings
-
 
 Other notes:
 

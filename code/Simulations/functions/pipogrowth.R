@@ -1,9 +1,9 @@
 pipogrowth <- function(){
   hts <- pts.sf.abco %>% dplyr::select(Ht_cm1) %>% st_drop_geometry() %>% unlist()
   
-  load("../../results/coefficients/LM_pine_nonnorm.Rdata")
-  LMpipo <- LM_pine_nonnorm
-  remove(LM_pine_nonnorm)
+  load("../../results/coefficients/LM_pine_nonnorm_sim.Rdata")
+  LMpipo <- LM_pine_nonnorm_sim
+  remove(LM_pine_nonnorm_sim)
   coefpipo <<- LMpipo$coefficients$fixed
   
   pts.sf.pipo <<- pts.sf.pipo %>% 
@@ -12,7 +12,7 @@ pipogrowth <- function(){
              coefpipo["Years"]*Years+
              coefpipo["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefpipo["heatload"]*heatload+
-             coefpipo["BasDia2016.cm"]*dia.cm) %>%
+             coefpipo["Elevation"]*Elevation) %>%
     mutate(pred = case_when(
       ShrubSpp03 == "CECO" ~ pred + coefpipo["ShrubSpp03CECO"],
       ShrubSpp03 == "CEIN" ~ pred + coefpipo["ShrubSpp03CEIN"],
