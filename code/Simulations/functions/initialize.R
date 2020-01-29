@@ -6,7 +6,9 @@ require(knitr)
 
 
 initialize <- function(){
-
+  
+  # Create a raster using just Sdlg ID numbers from the data
+  
   for(i in 1:length(r@data@values)){
    if(r@data@values[i] == 1){
      r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==1) %>% dplyr::select(ID)), 1))
@@ -26,25 +28,26 @@ initialize <- function(){
 
   }
 
+  # Add a raster attribute table (RAT) using data from raster_df
   r <- ratify(r)
 
   rat <- levels(r)[[1]]
   rat <- left_join(rat, raster_df)
   levels(r) <- rat
   r <<- r
-
+  
+  # Create a square polygon surrounding the raster 
   p <- as(extent(r), "SpatialPolygons")
   crs(p) <- crs(r)
   p <<- p
-
-
+  
+  # Disperse seedlings inside that polygon using a poisson dispersal kernel
   x.left <- 0.5 + rpois(n_seedlings/2, lambda)
   x.right <- length_m-.5 - rpois(n_seedlings/2, lambda)
   y.bottom <- 0.5 + rpois(n_seedlings/2, lambda)
   y.top <- height_m -0.5 - rpois(n_seedlings/2, lambda)
   x <- sample(c(x.left, x.right), n_seedlings)
   y <- sample(c(y.top, y.bottom), n_seedlings)
-
 
   left.edge.y <- 0.5 + sample(x = c(0:(height_m-.5)), size = length(x.left), replace = T)
   right.edge.y <- 0.5 + sample(x = c(0:(height_m-.5)), size = length(x.right), replace = T)
@@ -63,12 +66,15 @@ initialize <- function(){
 
   pts.sp <- SpatialPoints(coords = pts.xy[,c("x", "y")], proj4string = crs(p))
   pts.sf <- as(pts.sp, "sf")
-
+  
+  # Figure out which raster cell those points fall onto and assign the points the corresponding Sdlg #
   pts.sf <- pts.sf %>%
     mutate(Sdlg = raster::extract(r, as(pts.sf, "Spatial")))
 
   pts.sf <- pts.sf %>%
     mutate(Sdlg = as.factor(Sdlg))
+  
+  # Join points with seedling data
   pts.sf <- left_join(pts.sf, df_new) 
   pts.sf.lm <- pts.sf %>%
     rename("Ht_cm1" = Ht2016.cm_spring) %>%
@@ -79,7 +85,13 @@ initialize <- function(){
     rename(dia.cm = BasDia2016.cm) %>%
     mutate(ShrubSpp03 = case_when(ShrubSpp03 == "CHSE" ~ "Other",
                                   TRUE ~ as.character(ShrubSpp03)))
-
+  
+  
+  ## Add unique identifier since there are some repeats of Sdlg numbers 
+  pts.sf.lm <- pts.sf.lm %>% 
+    mutate(ID_withinrep = seq(1, nrow(pts.sf.lm)))
+  
+  ## Split up species
   pts.sf.abco <- pts.sf.lm %>% filter(Species == "ABCO")
   pts.sf.pipo <- pts.sf.lm %>% filter(Species == "PIPO")
 
@@ -90,5 +102,7 @@ initialize <- function(){
   pts.sf.pipo <<- pts.sf.pipo %>%
     mutate(Years = as.numeric(paste(Years))) %>%
     mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03)))
+  
+  
 
 }

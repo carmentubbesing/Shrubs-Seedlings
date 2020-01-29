@@ -2,7 +2,9 @@
 title: "Growth_mort"
 author: "Carmen"
 date: "October 31, 2019"
-output: pdf_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 # Next step: Consider adding CEIN to the initialization even though there isn't any in the American River footprint
@@ -26,8 +28,8 @@ strt <- Sys.time()
 ```{r}
 fire <- "AMRC"
 year <- "2016"
-years <- 20
-iterations <- 10
+years <- 19
+iterations <- 5
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -172,10 +174,7 @@ ggplot(dfsimall, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Sdlg))
 ### Diameter:height
 ```{r}
 ggplot(dfsimall %>% filter(Years==10))+
-  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
-ggplot(dfsimall %>% filter(Years==20))+
-  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
-
+  geom_histogram(aes(dia.cm/Ht_cm1, bins = 5))
 ```
 
 ### Diameter and height boxplots
@@ -220,6 +219,28 @@ tm_shape(pts.sf.abco.graph)+
   tm_symbols(size = "Fir height (cm)", col = "#899DA4", size.max = 300, border.lwd = 3)
 ```
 
+
+#### Plot the relationships between variables inputting the diameter growth equations to compare them to what I saw in the dendro analysis
+```{r}
+test <- dfsimallreps %>% 
+  filter(Years %in% c(9,10)) %>% 
+  dplyr::select(Sdlg, Species, Ht_cm1, dia.cm, Years, pred_exp, rep) %>% 
+  tbl_df() %>% 
+  arrange(Sdlg)
+test
+test <- test %>% 
+  mutate(ID = paste(Sdlg, rep, sep = "-"))
+test
+test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = "ID")
+test2 %>% 
+  arrange(ID)
+
+test %>% 
+  group_by(Years) %>% 
+  count()
+plot(test[test$Years==9, "dia.cm"], test[test$Years==10, "dia.cm"])
+```
+
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
@@ -256,8 +277,118 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill =
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
-ggsave(file = "../../results/figures/sim_1000_hts.png", width = 6, height =4, dpi = 400)
+ggsave(file = "../../results/figures/Simulations/sim_1000_hts.png", width = 6, height =4, dpi = 400)
 ```
+
+## Height by year and species
+
+### Shrub growth patterns
+```{r}
+ggplot(dfsimallreps_summary %>% filter(Species == "ABCO"))+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
+
+```{r}
+ggplot(dfsimallreps_summary %>% filter(Species == "PIPO"))+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
+
+### Diameter growth patterns
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))+
+  ylim(0,10)
+```
+
+#### For a single tree
+```{r}
+ggplot(dfsimallreps %>% filter(Sdlg == 244))+
+  geom_line(aes(x = Years, y = dia.cm))
+```
+
+```{r}
+ggplot(dfsimallreps %>% filter(Sdlg == 244))+
+  geom_line(aes(x = Years, y = Ht_cm1))
+```
+
+#### Plot the relationships between variables inputting the diameter growth equations to compare them to what I saw in the dendro analysis
+```{r}
+test <- dfsimallreps %>% 
+  filter(Years %in% c(19,20)) %>% 
+  dplyr::select(Sdlg, Species, Ht_cm1, dia.cm, Years, pred_exp, rep, ID_withinrep) %>% 
+  tbl_df() %>% 
+  arrange(Sdlg)
+test
+test <- test %>% 
+  mutate(ID = paste(Sdlg, rep, ID_withinrep, sep = "-"))
+test %>% 
+  arrange(ID)
+test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = "ID")
+test2 %>% 
+  arrange(ID)
+
+test2 <- test2 %>% 
+  rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
+
+ggplot(test2)+
+  geom_point(aes(x = dia.cmYear19, y = dia.cmYear20))+
+  geom_abline(aes(slope = 1, intercept = 0))+
+  theme_minimal()+
+  ylim(0,20)+
+  xlim(0,20)
+```
+
+### Height growth patterns
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = Ht_cm1, col = Species, group = Species))+
+  ylim(0,300)
+```
+
+### Diameter::Height growth patterns
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Sdlg))+
+  geom_line(alpha = .3)+
+  theme_bw()+
+  ylim(0,.2)
+```
+
+### Diameter:height
+```{r}
+ggplot(dfsimallreps_summary %>% filter(Years==10))+
+  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
+ggplot(dfsimallreps_summary %>% filter(Years==20))+
+  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))
+```
+
+### Diameter and height boxplots
+```{r}
+ggplot(dfsimallreps_summary)+
+  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Diameter (cm)")+
+  theme(text = element_text(size = 20))+
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
+```
+
+```{r}
+ggplot(dfsimall)+
+  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Height (cm)")+
+  theme(text = element_text(size = 20))+
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
+
+```
+
 
 ## Counts by year
 ```{r}
@@ -282,7 +413,7 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
-ggsave(file = "../../results/figures/sim_1000_count.png", width = 6, height = 4, dpi = 400)
+ggsave(file = "../../results/figures/Simulations/sim_1000_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
@@ -339,17 +470,19 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
 
 
 For next week:
-    - Improve shrub growth based on data - DONE
-    - display dominant shrub species
-    - make the shrub grid dependent upon surrounding cells so it's not so checkerboard - DONE
-- Update display of shrub competition after simulation years
-- what does shrub competition mean for new recruitment?
-- "emergent year" = when 50% of trees are above shrub canopy
-- apply to King, American River Complex, rest of the fires I measured
-- switch diameter equation to be from dendro work 
+
+1.  Update display of shrub competition after simulation years
+2. See if there's a way to increase R2 of the dendro diameter growth equations
+3. double check the math on the dendro diameter data wrangling
+6.  Add 0/1 for "emergent year" = when 50% of trees are above shrub canopy
+7.  apply to King, American River Complex, rest of the fires I measured
+8.  Add diameter equation for larger seedlings -- make it so that the diameter equation being used is different for smaller seedlings vs. larger seedlings
+
 
 Other notes:
-- maybe submit to American Naturalist
-- Global Change Biology - mixing up the years
-- no overstory reproduction for now 
+
+1.  maybe submit to American Naturalist
+2.  Global Change Biology - mixing up the years
+3.  no overstory reproduction for now 
+5.  what does shrub competition mean for new recruitment?
 

@@ -35,6 +35,11 @@ join %>%
   filter(is.na(DEAD))
 ```
 
+```{r}
+dfvert %>% filter(is.na(rel))
+```
+
+
 These missing data are because of pathogen damage, etc. so they should be filtered out
 ```{r}
 join <- join %>% 
@@ -113,9 +118,57 @@ df <- df %>%
   ))
 ```
 
+### Check
 ```{r}
 df %>% 
-   dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  filter(is.na(relgrvert)) %>% 
+  dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  arrange(tree)
+```
+
+```{r}
+df <- df %>% 
+  filter(tree != 119) %>% 
+  filter(!(year == 2015 & is.na(MINUS_2_GR_cm)))
+```
+
+```{r}
+df %>% 
+  filter(is.na(relgrvert)) %>% 
+  dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  arrange(tree)
+```
+
+```{r}
+df <- df %>% 
+  mutate(relgrvert = case_when(
+    is.na(relgrvert) & year == 2016 ~ MINUS_1_GR_cm/(HEIGHT-LAST_YR_GR_cm-MINUS_1_GR_cm),
+    is.na(relgrvert) & year == 2015 ~ MINUS_2_GR_cm/(HEIGHT-LAST_YR_GR_cm-MINUS_1_GR_cm - MINUS_2_GR_cm),
+    TRUE ~ relgrvert
+  ))
+```
+
+Check
+```{r}
+df %>% 
+  filter(tree %in% c(1, 214) & year == 2016) %>% 
+  dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  arrange(tree) %>% 
+  mutate(CHECK = MINUS_1_GR_cm/(HEIGHT-LAST_YR_GR_cm-MINUS_1_GR_cm))
+```
+
+```{r}
+df %>% 
+  filter(tree %in% c(1, 214) & year == 2015) %>% 
+  dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
+  arrange(tree) %>% 
+  mutate(CHECK = MINUS_2_GR_cm/(HEIGHT-LAST_YR_GR_cm-MINUS_1_GR_cm-MINUS_2_GR_cm))
+```
+ 
+
+```{r}
+df %>% 
+   dplyr::select(tree, DEAD_ALIVE, year, HEIGHT, LAST_YR_GR_cm, MINUS_1_GR_cm, MINUS_2_GR_cm, gr1, gr2, gr3, ht1, ht2, ht3, relgrvert) %>%
   arrange(tree)
 ```
 
@@ -285,6 +338,15 @@ drop1(lmeabco, test = "Chisq")
 r.squaredGLMM(lmeabco)
 ```
 
+### Try the model that worked best for PIPO
+```{r}
+LMPIPO_final_abco <- lm(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height,data = abcodf)
+summary(LMPIPO_final_abco)
+plot(predictorEffect("relgrvert", LMPIPO_final_abco))
+```
+
+# That worked pretty well!
+
 ### Do AIC model selection
 ```{r}
 AIC(lmeabco)
@@ -319,16 +381,12 @@ drop1(lmepipo, test = "Chisq")
 r.squaredGLMM(lmepipo)
 ```
 
-### Do AIC model selection
 ```{r}
-AIC(lmepipo)
-AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height*ht_growth,  random = ~ 1|tree, data = pipodf))
-AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
-AIC(lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
-AIC(lme(log(relgrdia) ~ pre_growth_diameter*ht_growth + pre_growth_height ,data = pipodf, random = ~ 1|tree))
-AIC(lme(log(relgrdia) ~ pre_growth_diameter + ht_growth*pre_growth_height, data = pipodf, random = ~ 1|tree))
+hist(pipodf$relgrvert)
 ```
 
+
+### Model with random effect
 ```{r}
 lmepipo <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree, method = "ML")
 summary(lmepipo)
@@ -336,17 +394,123 @@ drop1(lmepipo, test = "Chisq")
 r.squaredGLMM(lmepipo)
 ```
 
+### Do AIC model selection
+
+#### no log of dia growth
+```{r}
+AIC(lme(relgrdia ~ pre_growth_diameter*pre_growth_height*relgrvert,  random = ~ 1|tree, data = pipodf))
+AIC(lme(relgrdia ~ pre_growth_diameter*pre_growth_height + relgrvert, data = pipodf, random = ~ 1|tree))
+AIC(lme(relgrdia ~ pre_growth_diameter + pre_growth_height + relgrvert, data = pipodf, random = ~ 1|tree))
+AIC(lme(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height ,data = pipodf, random = ~ 1|tree))
+AIC(lme(relgrdia ~ pre_growth_diameter + relgrvert*pre_growth_height, data = pipodf, random = ~ 1|tree))
+```
+
+##### 1. Look at best model
+```{r}
+lmepipo <- lme(relgrdia ~ pre_growth_diameter + pre_growth_height + relgrvert, data = pipodf, random = ~ 1|tree, method = "ML")
+summary(lmepipo)
+drop1(lmepipo, test = "Chisq")
+r.squaredGLMM(lmepipo)
+```
+
+#### log of dia growth
+```{r}
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height*ht_growth,  random = ~ 1|tree, data = pipodf))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter*ht_growth + pre_growth_height ,data = pipodf, random = ~ 1|tree))
+AIC(lme(log(relgrdia) ~ pre_growth_diameter + ht_growth*pre_growth_height, data = pipodf, random = ~ 1|tree))
+```
+
+##### 2. Look at best model
+```{r}
+lmepipo2 <- lme(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + ht_growth, data = pipodf, random = ~ 1|tree, method = "ML")
+summary(lmepipo)
+drop1(lmepipo, test = "Chisq")
+r.squaredGLMM(lmepipo)
+```
+
+
+### Model without random effect
+
+#### Do AIC model selection with log transformation
+```{r}
+AIC(lm(log(relgrdia) ~ pre_growth_diameter*pre_growth_height*relgrvert,  data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter*pre_growth_height + relgrvert, data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + relgrvert, data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter*relgrvert + pre_growth_height ,data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter*log(relgrvert) + pre_growth_height ,data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter + relgrvert*pre_growth_height, data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter + pre_growth_height + log(relgrvert), data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter + pre_growth_height * log(relgrvert), data = pipodf))
+AIC(lm(log(relgrdia) ~ pre_growth_diameter + pre_growth_height * relgrvert, data = pipodf))
+```
+
+
+##### 3. Look at best model WITH transformation
+```{r}
+lmpipo <- lm(log(relgrdia) ~ pre_growth_diameter*relgrvert + pre_growth_height, data = pipodf)
+summary(lmpipo)
+AIC(lmpipo)
+drop1(lmpipo, test = "F")
+plot(lmpipo)
+plot(predictorEffect("relgrvert", lmpipo))
+plot(predictorEffect("pre_growth_diameter", lmpipo))
+plot(predictorEffect("pre_growth_height", lmpipo))
+```
+
+#### Do AIC model selection WITHOUT log transformation
+```{r}
+AIC(lmpipo)
+AIC(lm(relgrdia ~ pre_growth_diameter*pre_growth_height*relgrvert,  data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter*pre_growth_height +relgrvert, data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter + pre_growth_height + relgrvert, data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height ,data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter + relgrvert*pre_growth_height, data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter + pre_growth_height + log(relgrvert), data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter + pre_growth_height * log(relgrvert), data = pipodf))
+AIC(lm(relgrdia ~ pre_growth_diameter + pre_growth_height * relgrvert, data = pipodf))
+```
+
+##### 4. Look at best model without transformation
+```{r}
+lmpipo <- lm(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height,data = pipodf)
+summary(lmpipo)
+AIC(lmpipo)
+drop1(lmpipo, test = "F")
+plot(predictorEffect("relgrvert", lmpipo))
+plot(predictorEffect("pre_growth_diameter", lmpipo))
+plot(predictorEffect("pre_growth_height", lmpipo))
+```
+
+##### Same structure, lme
+```{r}
+lmepipo <- lm(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height,data = pipodf)
+summary(lmpipo)
+AIC(lmpipo)
+
+```
+
+
+# BEST PIPO MODEL OVERALL
+```{r}
+LMPIPO_final <- lm(relgrdia ~ pre_growth_diameter*relgrvert + pre_growth_height + year,data = pipodf)
+summary(LMPIPO_final)
+```
+
+
 
 ### Plot predictor effects
 ```{r}
-plot(predictorEffect("pre_growth_diameter", lmepipo))
-plot(predictorEffect("pre_growth_height", lmepipo))
-plot(predictorEffect("ht_growth", lmepipo))
+plot(predictorEffect("pre_growth_diameter", LMPIPO_final))
+plot(predictorEffect("pre_growth_height", LMPIPO_final))
+plot(predictorEffect("relgrvert", LMPIPO_final))
 ```
+
 
 # Save
 ```{r}
-save(lmeabco, file ="../../results/coefficients/LM_dia_abco_dendro.Rdata")
-save(lmepipo, file ="../../results/coefficients/LM_dia_pipo_dendro.Rdata")
+save(LMPIPO_final_abco, file ="../../results/coefficients/LM_dia_abco_dendro.Rdata")
+save(LMPIPO_final, file ="../../results/coefficients/LM_dia_pipo_dendro.Rdata")
 ```
 

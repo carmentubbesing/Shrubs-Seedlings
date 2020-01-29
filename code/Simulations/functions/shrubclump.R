@@ -10,6 +10,10 @@ shrubclump <- function(){
     distinct() %>%
     droplevels()
   
+  ggplot(df, aes(BasDia2016.cm))+
+    geom_histogram(aes(fill = Species), bins = 20, position = "dodge")+
+    theme_minimal()
+  
   raster_df <<- df %>%
     dplyr::select(Sdlg, Cov1.3, Ht1.3, ShrubSpp03, heatload, incidrad, Slope.Deg, Elevation, Fire) %>%
     mutate(sqrt_shrubarea3 = sqrt(Cov1.3*Ht1.3)) %>%
