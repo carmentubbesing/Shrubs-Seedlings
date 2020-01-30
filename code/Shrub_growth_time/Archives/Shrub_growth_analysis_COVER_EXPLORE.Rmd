@@ -1,0 +1,441 @@
+---
+title: "Shrub_growth_analysis_COVER_EXPLORE"
+author: "Carmen"
+date: "1/30/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+
+# Load data
+```{r, include = F}
+require(tidyverse)
+require(effects)
+require(mgcv)
+require(gridExtra)
+load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
+me <- ht_by_spp
+remove(ht_by_spp)
+load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_COVER_LUMPED.Rdata")
+```
+
+```{r}
+df <- df %>% ungroup()
+```
+
+
+# Model for each shrub species
+
+## CECO
+```{r}
+dfCECO <- df %>% filter(Shrub_species == "CECO")
+```
+
+### Quadratic
+```{r}
+ggplot(dfCECO, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "lm", formula = y ~ x + poly(x, 3))+
+  theme_bw()
+```
+
+```{r}
+lmCECO <- lm(Shrub_cover ~ poly(years_since_fire, 2), data = dfCECO)
+summary(lmCECO)
+dfCECO$pred <- predict(lmCECO)
+```
+
+### Take out the one data point in the oldest year
+```{r}
+dfCECO <- dfCECO %>% 
+  filter(years_since_fire < 12.5)
+```
+
+### GAM
+```{r}
+gamCECO <- gam(Shrub_cover ~ s(years_since_fire, k = 3, bs = "cr"), data = dfCECO)
+summary(gamCECO)
+predCECO <- predict.gam(gamCECO, se =T, type = "response")
+
+dfCECO <- dfCECO %>% 
+  mutate(predGAM = predCECO$fit) %>% 
+  mutate(predGAMseL = predGAM - predCECO$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predCECO$se.fit)
+```
+
+```{r}
+ggplot(dfCECO)+
+  geom_point(aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(x = years_since_fire, y = predGAM), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseL), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseU), col = "purple")
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(min(dfCECO$years_since_fire), max(dfCECO$years_since_fire), .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamCECO, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+ceco_plot <- ggplot()+
+  geom_point(data = dfCECO, aes(x = years_since_fire, y = Shrub_cover), alpha = .3)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "royal blue",   alpha = .2)+
+  theme_minimal()+
+  ggtitle("CECO")
+ceco_plot
+```
+
+## ARPA/ARVI (Manzanita)
+```{r}
+dfARPA <- df %>% filter(Shrub_species == "ARPA6_ARVI")
+```
+
+```{r}
+ggplot(dfARPA, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "lm", formula = y ~ x + poly(x, 3))+
+  theme_bw()
+```
+
+```{r}
+lmARPA <- lm(Shrub_cover ~ poly(years_since_fire, 2), data = dfARPA)
+summary(lmARPA)
+dfARPA$pred <- predict(lmARPA)
+```
+
+```{r}
+gamARPA <- gam(Shrub_cover ~ s(years_since_fire, k = 3, bs = "cr"), data = dfARPA)
+summary(gamARPA)
+predARPA <- predict.gam(gamARPA, se =T, type = "response")
+dfARPA <- dfARPA %>% 
+  mutate(predGAM = predARPA$fit) %>% 
+  mutate(predGAMseL = predGAM - predARPA$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predARPA$se.fit)
+```
+
+```{r}
+ggplot(dfARPA)+
+  geom_point(aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(x = years_since_fire, y = predGAM), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseL), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseU), col = "purple")
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(min(dfARPA$years_since_fire), max(dfARPA$years_since_fire), .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamARPA, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+arpa_plot <- ggplot()+
+  geom_point(data = dfARPA, aes(x = years_since_fire, y = Shrub_cover), alpha = .2)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "purple",   alpha = .3)+
+  theme_minimal()+
+  ggtitle("ARPA and ARVI")
+arpa_plot
+```
+
+
+## CEIN
+```{r}
+dfCEIN <- df %>% filter(Shrub_species == "CEIN3")
+```
+
+### Plot using polynomial formula in ggplot
+
+```{r}
+ggplot(dfCEIN, aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(shape = df_source))+
+  geom_smooth(method = "lm", formula = y ~ x + poly(x, 3))+
+  theme_bw()
+```
+
+```{r}
+lmCEIN <- lm(Shrub_cover ~ poly(years_since_fire, 2), data = dfCEIN)
+summary(lmCEIN)
+dfCEIN$pred <- predict(lmCEIN)
+```
+
+```{r}
+gamCEIN <- gam(Shrub_cover ~ s(years_since_fire, k = 3, bs = "cr"), data = dfCEIN)
+summary(gamCEIN)
+predCEIN <- predict.gam(gamCEIN, se =T, type = "response")
+dfCEIN <- dfCEIN %>% 
+  mutate(predGAM = predCEIN$fit) %>% 
+  mutate(predGAMseL = predGAM - predCEIN$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predCEIN$se.fit)
+```
+
+```{r}
+ggplot(dfCEIN)+
+  geom_point(aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(x = years_since_fire, y = predGAM), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseL), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseU), col = "purple")
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(min(dfCEIN$years_since_fire), max(dfCEIN$years_since_fire), .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamCEIN, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+cein_plot <- ggplot()+
+  geom_point(data = dfCEIN, aes(x = years_since_fire, y = Shrub_cover), alpha = .2)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = 2,   alpha = .3)+
+  theme_minimal()+
+  ggtitle("CEIN")
+cein_plot  
+```
+
+
+## OTHER
+
+### Filter to just shrub species that are not one of the species above
+```{r}
+dfOTHER <- df %>% 
+   filter(!Shrub_species %in% c("ARPA6_ARVI", "CECO", "CEIN"))
+```
+
+```{r}
+gamOTHER <- gam(Shrub_cover ~ s(years_since_fire, k = 3, bs = "cr"), data = dfOTHER)
+summary(gamOTHER)
+predOTHER <- predict.gam(gamOTHER, se =T, type = "response")
+dfOTHER <- dfOTHER %>% 
+  mutate(predGAM = predOTHER$fit) %>% 
+  mutate(predGAMseL = predGAM - predOTHER$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predOTHER$se.fit)
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(min(dfOTHER$years_since_fire), max(dfOTHER$years_since_fire), .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamOTHER, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+OTHER_plot <- ggplot()+
+  geom_point(data = dfOTHER, aes(x = years_since_fire, y = Shrub_cover), alpha = .2)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill =11,   alpha = .3)+
+  theme_minimal()+
+  ggtitle("OTHER")
+OTHER_plot
+```
+
+# Model for everything together
+
+## GAM
+```{r}
+gamALL <- gam(Shrub_cover ~ s(years_since_fire, k = 3, bs = "cr"), data = df)
+summary(gamALL)
+predALL <- predict.gam(gamALL, se =T, type = "response")
+
+df <- df %>% 
+  ungroup() %>% 
+  mutate(predGAM = predALL$fit) %>% 
+  mutate(predGAMseL = predGAM - predALL$se.fit) %>% 
+  mutate(predGAMseU = predGAM + predALL$se.fit)
+```
+
+```{r}
+ggplot(df)+
+  geom_point(aes(x = years_since_fire, y = Shrub_cover))+
+  geom_point(aes(x = years_since_fire, y = predGAM), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseL), col = "purple")+
+  geom_line(aes(x = years_since_fire, y = predGAMseU), col = "purple")
+```
+
+### Make fake data to make the plot lines smoother
+```{r}
+x <- seq(min(df$years_since_fire), max(df$years_since_fire), .5)
+fake <- data.frame(years_since_fire = x)
+preddf = predict.gam(gamALL, newdata = fake, se =T)
+fake <- fake %>% 
+  mutate(pred = preddf$fit) %>% 
+  mutate(predseL = pred - preddf$se.fit) %>% 
+  mutate(predseU = pred + preddf$se.fit)
+```
+
+### Pretty plot
+```{r}
+ALL_plot <- ggplot()+
+  geom_point(data = df, aes(x = years_since_fire, y = Shrub_cover), alpha = .3)+
+  geom_line(data = fake, aes(x = years_since_fire, y = pred))+
+  geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "royal blue",   alpha = .2)+
+  theme_minimal()+
+  ggtitle("ALL SPECIES")
+ALL_plot
+```
+
+# Plot the 4 species together
+```{r}
+grid.arrange(ceco_plot, arpa_plot, cein_plot, OTHER_plot, ALL_plot)
+final_plot <- arrangeGrob(ceco_plot, arpa_plot, cein_plot, OTHER_plot, ALL_plot, ncol = 3, nrow = 2)
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_COVER_LUMPED.png", final_plot, width = 10, height = 6)
+```
+
+
+# Changes in shrub cover for MY fire footprints
+
+## Join ARPA and ARVI
+```{r}
+me <- me %>% 
+  mutate(Shrub_species = as.character(Shrub_species)) %>% 
+  mutate(Shrub_species = case_when(
+    Shrub_species == "ARPA" ~ "ARPA-ARVI",
+    Shrub_species == "ARVI" ~ "ARPA-ARVI",
+    TRUE ~ Shrub_species
+  ))
+```
+
+## Plot summed cover by plot 
+
+### Summarize
+```{r}
+me_totals <- me %>% 
+  group_by(Sdlg, Fire, Year_meas, years_since_fire) %>% 
+  summarize(cover_sum = sum(cover), ht_wt_mean_cm = weighted.mean(modal_ht_cm, cover))
+```
+
+### Plot
+```{r}
+ggplot(me_totals, aes(x = years_since_fire, y = cover_sum))+
+  geom_point()+
+  geom_smooth(method = "gam", formula = y ~ s(x, k = 4, bs = "cr"))
+```
+
+## Plot summed cover by plot grouped by dominant shrub species
+
+### Summarize
+```{r}
+spp <- me %>% 
+  group_by(Sdlg) %>% 
+  filter(cover == max(cover)) %>% 
+  dplyr::select(Sdlg, Shrub_species)
+```
+
+```{r}
+me_totals <- full_join(me_totals, spp)
+```
+
+```{r}
+me_totals <- me_totals %>% 
+  mutate(cover_percent = cover_sum/(300*4)*100)
+```
+
+### Remove the one data point for ARPA-ARVI in year 11-12
+```{r}
+me_totals %>% 
+  filter(Shrub_species == "ARPA-ARVI") %>% 
+  group_by(years_since_fire) %>% 
+  count()
+```
+
+```{r}
+me_totals <- me_totals %>% 
+  filter(!(Shrub_species == "ARPA-ARVI" & years_since_fire == 12))
+```
+
+### Plot
+```{r}
+CEINplot <- ggplot(me_totals %>% filter(Shrub_species == "CEIN"), aes(x = years_since_fire, y = cover_percent))+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "gam", formula = y ~ s(x, k = 3, bs = "cr"), fill = 2, alpha = .2, col = "black")+
+  theme_minimal()+
+  ggtitle("CEIN")+
+  xlim(8, 44)+
+  ylim(0, 120)
+CEINplot
+```
+
+```{r}
+CECOplot <- ggplot(me_totals %>% filter(Shrub_species == "CECO"), aes(x = years_since_fire, y = cover_percent))+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "gam", formula = y ~ s(x, k = 3, bs = "cr"), fill = "royal blue", alpha = .2, col = "black")+
+  theme_minimal()+
+  ggtitle("CECO")+
+  xlim(8, 44)+
+  ylim(0, 120)
+
+CECOplot
+```
+
+
+```{r}
+ARPAplot <- ggplot(me_totals %>% filter(Shrub_species == "ARPA-ARVI"), aes(x = years_since_fire, y = cover_percent))+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "loess", fill = "purple", alpha = .2, col = "black")+
+  theme_minimal()+
+  ggtitle("ARPA")+
+  xlim(8, 44)+
+  ylim(0, 120)
+
+ARPAplot
+```
+
+```{r}
+OTHERplot <- ggplot(me_totals %>% filter(!Shrub_species %in% c("CECO", "CEIN", "ARPA-ARVI")), 
+                   aes(x = years_since_fire, y = cover_percent))+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "gam", formula = y ~ s(x, k = 3, bs = "cr"), fill = 11, alpha = .2, col = "black")+
+  theme_minimal()+
+  ggtitle("OTHER")+
+  xlim(8, 44)+
+  ylim(0, 120)
+
+OTHERplot
+```
+
+
+```{r}
+ALLplot <- ggplot(me_totals,   aes(x = years_since_fire, y = cover_percent))+
+  geom_point(alpha = .3)+
+  geom_smooth(method = "gam", formula = y ~ s(x, k = 3, bs = "cr"), fill = "grey", alpha = .5, col = "black")+
+  theme_minimal()+
+  ggtitle("ALL")+
+  xlim(8, 44)+
+  ylim(0, 120)
+
+ALLplot
+```
+
+
+# Plot the species together
+```{r}
+grid.arrange(CECOplot, ARPAplot, CEINplot, OTHERplot, ALLplot, ncol = 2)
+final_plot <- arrangeGrob(CECOplot, ARPAplot, CEINplot, OTHERplot, ALLplot, ncol = 3, nrow = 2)
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/cover_mydata_grid.png", final_plot, width = 10, height = 6)
+```

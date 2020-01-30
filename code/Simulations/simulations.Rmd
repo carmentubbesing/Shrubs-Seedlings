@@ -29,7 +29,7 @@ strt <- Sys.time()
 fire <- "AMRC"
 year <- "2016"
 years <- 20
-iterations <- 15
+iterations <- 100
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -144,6 +144,12 @@ ggplot(dfsimall %>% filter(Species == "ABCO"))+
 ```{r}
 ggplot(dfsimall %>% filter(Species == "PIPO"))+
   geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
+
+```{r}
+ggplot(dfsimall)+
+  geom_line(aes(x = Years, y = Cov1.3, col = ShrubSpp03, linetype = Species, group = Sdlg))+
   theme_bw()
 ```
 
