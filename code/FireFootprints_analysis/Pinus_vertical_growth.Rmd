@@ -168,14 +168,6 @@ LM <- lme(f, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
 
 # Check collinearity
 
-<!-- ## Make collinearity plot using Zuur code -->
-<!-- ```{r} -->
-<!-- source("~/../Documents/HighstatLibV10.R.txt") -->
-<!-- z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Ht_cm1, df$BasDia2016.cm, df$sqrt_shrubarea3, df$Elevation, df$Year) -->
-<!-- colnames(z) <- c("Growth", "Years", "heatload", "Ht_cm1", "BasDia", "shrubs", "Elevation", "Year") -->
-<!-- pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist) -->
-<!-- ``` -->
-
 ## Calculate vif function from car package
 ```{r}
 # source("~/../Documents/HighstatLibV10.R.txt") # from Zuur https://highstat.com/index.php/mixed-effects-models-and-extensions-in-ecology-with-r

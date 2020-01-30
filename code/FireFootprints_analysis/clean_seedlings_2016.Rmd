@@ -27,6 +27,13 @@ sdlt <- sdlt %>%
   dplyr::rename(Ht2015.meas2016 = Ht2015)
 ```
 
+## Rename dia2015 and dia2016
+```{r}
+sdlt <- sdlt %>% 
+  rename(Dia_at_2015_growth = Dia2015, Dia_at_2016_growth = Dia2016)
+```
+
+
 ## Take out blank columns after making sure they're blank
 ```{r}
 names(sdlt)
@@ -149,7 +156,7 @@ df <- df %>%
   mutate(Date2 = ifelse(is.na(Date2), "9/9/9999", paste(Date2))) 
 
 df %>% 
-  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+  dplyr::select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
 ```
 
 ## Clean up time columns
@@ -170,7 +177,7 @@ df <- df %>%
 df <- df %>%   mutate(Time1 = hms::hms(Time1), Time2 = hms::hms(Time2)) 
 
 df %>% 
-  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+  dplyr::select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
 ```
 
 
@@ -185,7 +192,7 @@ df <- df %>%
   mutate(Date2 = min(Date2)) 
 
 df %>% 
-  select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
+  dplyr::select(Sdlg, FirePatch, Date1, Date2, Time1, Time2) %>% head()
 
 ```
 
@@ -256,8 +263,8 @@ df <- df %>%
   mutate(BasDia.cm = max(BasDia.cm)) %>% 
   mutate(LastYearGrth.cm = max(LastYearGrth.cm)) %>% 
   mutate(HTLCB = max(HTLCB)) %>% 
-  mutate(Dia2016 = max(Dia2016)) %>% 
-  mutate(Dia2015 = max(Dia2015)) %>% 
+  mutate(Dia_at_2016_growth = max(Dia_at_2016_growth)) %>% 
+  mutate(Dia_at_2015_growth = max(Dia_at_2015_growth)) %>% 
   mutate(Ht2015.meas2016 = max(Ht2015.meas2016)) %>% 
   mutate(Light_File = max(Light_File)) %>% 
   mutate(Ht.cm = max(Ht.cm)) %>% 

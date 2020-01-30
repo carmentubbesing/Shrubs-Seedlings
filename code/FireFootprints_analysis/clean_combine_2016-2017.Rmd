@@ -130,8 +130,8 @@ df <- df %>%
   rename(Fire = Fire.x) %>% 
   dplyr::select(-Fire.y)
 ```
-
-## Rename basal diametercolumns
+ 
+## Rename basal diameter columns
 ```{r}
 df <- df %>% 
   rename(BasDia2016.cm = BasDia.cm) %>% 
@@ -178,7 +178,7 @@ df <- df %>%
 ```{r}
 df %>% 
   filter(is.na(DataSheet2017)) %>% 
-  select(Sdlg, Species, FirePatch, Date2017, Status)
+  dplyr::select(Sdlg, Species, FirePatch, Date2017, Status)
 ```
 
 # Save

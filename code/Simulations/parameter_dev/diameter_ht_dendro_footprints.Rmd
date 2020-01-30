@@ -1,0 +1,297 @@
+---
+title: "Diameter ~ Height for fire footprints"
+author: "Carmen"
+date: "November 1, 2019"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+# This code creates linear models for diameter in relation to height for ABCO and PIPO based on dendro data
+
+```{r}
+require(tidyverse)
+require(readxl)
+require(effects)
+require(nlme)
+require(MuMIn)
+```
+#-
+# PIPO ONLY
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/")
+load(file="../../../compiled_data/fire_footprints/pine_vert.Rdata")
+```
+
+
+#- 
+# CLEAN
+
+# Filter to 2017
+```{r}
+df <- df %>% 
+  filter(Year ==2017)
+```
+
+
+# Calculate average 2017 diameter
+
+## Make numeric
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.mm.1 = as.numeric(paste(BasDia2017.mm.1))) %>% 
+  mutate(BasDia2017.mm.2 = as.numeric(paste(BasDia2017.mm.2))) 
+```
+
+## Look at NA dia
+```{r}
+df %>% 
+  filter(is.na(BasDia2017.mm.1)) %>% 
+  dplyr::select(Sdlg, Species, BasDia2016.cm, BasDia2017.mm.1, BasDia2017.mm.2, return, Years, Year)
+```
+
+## Take out rows that don't have 2017 data, AKA no 2017 diameter
+```{r}
+df <- df %>% 
+  filter(!is.na(BasDia2017.mm.1))
+```
+
+## Calculate average 2017 dia in cm
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.cm = ((BasDia2017.mm.1 + BasDia2017.mm.2)/2)/10)
+```
+
+## Check
+```{r}
+df %>% 
+  dplyr::select(BasDia2016.cm, BasDia2017.cm, BasDia2017.mm.1, BasDia2017.mm.2)
+```
+
+# Look at ht:dia relationships
+```{r}
+ggplot(df, aes(x = Ht_cm1, y = BasDia2017.cm, col = Species))+
+  geom_point()+
+  geom_smooth()
+```
+
+# Look at trees whose ht:dia ratio seems off
+```{r}
+df %>% 
+  filter(BasDia2017.cm<2 & Ht_cm1>100) %>% 
+  dplyr::select(Sdlg, Ht_cm1, return, Species, BasDia2016.cm, BasDia2017.cm, BasDia2017.mm.1, BasDia2017.mm.2, Year)
+```
+
+# Fix -- clearly it's 8.7 cm, not mm
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.cm = ifelse(Sdlg == 290, 8.7, BasDia2017.cm))
+```
+
+# _
+# Plot range of dia and ht in these data
+
+## diameter
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(BasDia2017.cm,stat(density)))+
+  theme_minimal()+
+  xlab("Diameter (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## height
+
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(Ht_cm1, stat(density)))+
+  theme_minimal()+
+  xlab("Height (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## Ratio
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(BasDia2017.cm, stat(density)))+
+  theme_minimal()+
+  xlab("Diameter:Height (cm:cm)")+
+  theme(text = element_text(size = 20))
+```
+
+# _
+
+# Model dia growth in relation to previous dia and height, both species together
+```{r}
+PIPO1 <- lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df)
+summary(PIPO1)
+plot(predictorEffect("sqrt_shrubarea3", PIPO1))
+```
+
+# Do AIC model selection
+```{r}
+AIC(PIPO1)
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_Rel, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + VertGrowth_Rel, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_cm, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 + VertGrowth_cm, data = df))
+```
+
+# Select best model
+```{r}
+PIPO_final <- lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df)
+summary(PIPO1)
+```
+
+
+# Plot predictor effects
+```{r}
+plot(predictorEffect("sqrt_shrubarea3", PIPO_final))
+plot(predictorEffect("Ht_cm1", PIPO_final))
+```
+
+
+# _
+
+# Save
+```{r}
+save(PIPO_final, file ="../../../results/coefficients/LM_dia_PIPO_footprints.Rdata")
+```
+
+#-
+# ABCO ONLY
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/")
+load(file="../../../compiled_data/fire_footprints/fir_vert.Rdata")
+```
+
+
+#- 
+# CLEAN
+
+# Filter to 2017
+```{r}
+df <- df %>% 
+  filter(Year ==2017)
+```
+
+
+# Calculate average 2017 diameter
+
+## Make numeric
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.mm.1 = as.numeric(paste(BasDia2017.mm.1))) %>% 
+  mutate(BasDia2017.mm.2 = as.numeric(paste(BasDia2017.mm.2))) 
+```
+
+## Look at NA dia
+```{r}
+df %>% 
+  filter(is.na(BasDia2017.mm.1)) %>% 
+  dplyr::select(Sdlg, Species, BasDia2016.cm, BasDia2017.mm.1, BasDia2017.mm.2, return, Years, Year)
+```
+
+## Calculate average 2017 dia in cm
+```{r}
+df <- df %>% 
+  mutate(BasDia2017.cm = ((BasDia2017.mm.1 + BasDia2017.mm.2)/2)/10)
+```
+
+## Check
+```{r}
+df %>% 
+  dplyr::select(BasDia2016.cm, BasDia2017.cm, BasDia2017.mm.1, BasDia2017.mm.2)
+```
+
+# Look at ht:dia relationships
+```{r}
+ggplot(df, aes(x = Ht_cm1, y = BasDia2017.cm, col = Species))+
+  geom_point()+
+  geom_smooth()
+```
+
+# _
+# Plot range of dia and ht in these data
+
+## diameter
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(BasDia2017.cm,stat(density)))+
+  theme_minimal()+
+  xlab("Diameter (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## height
+
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(Ht_cm1, stat(density)))+
+  theme_minimal()+
+  xlab("Height (cm)")+
+  theme(text = element_text(size = 20))
+```
+
+## Ratio
+```{r}
+ggplot(df)+
+  geom_freqpoly(aes(BasDia2017.cm, stat(density)))+
+  theme_minimal()+
+  xlab("Diameter:Height (cm:cm)")+
+  theme(text = element_text(size = 20))
+```
+
+# _
+
+# Model dia growth in relation to previous dia and height, both species together
+```{r}
+ABCO1 <- lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df)
+summary(ABCO1)
+plot(predictorEffect("sqrt_shrubarea3", ABCO1))
+```
+
+# Do AIC model selection
+```{r}
+AIC(ABCO1)
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_Rel, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + VertGrowth_Rel, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_cm, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* sqrt_shrubarea3, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* Ht_cm1, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 + VertGrowth_cm, data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 * ShrubSpp03 , data = df))
+AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 , data = df))
+```
+
+# Select best model
+```{r}
+ABCO_final <- lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df)
+summary(ABCO1)
+drop1(ABCO_final, test = "F")
+```
+
+NOTE: I didn't select the model with the lowest AIC for the same of keeping things simple and the same as the PIPO model. 
+
+# Plot predictor effects
+```{r}
+plot(predictorEffect("sqrt_shrubarea3", ABCO_final))
+plot(predictorEffect("Ht_cm1", ABCO_final))
+```
+
+
+# _
+
+# Save
+```{r}
+save(ABCO_final, file ="../../../results/coefficients/LM_dia_ABCO_footprints.Rdata")
+```
+

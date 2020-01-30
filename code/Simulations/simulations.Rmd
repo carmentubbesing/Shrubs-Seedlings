@@ -28,8 +28,8 @@ strt <- Sys.time()
 ```{r}
 fire <- "AMRC"
 year <- "2016"
-years <- 19
-iterations <- 5
+years <- 20
+iterations <- 15
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -59,8 +59,8 @@ source("functions/pipogrowth.R")
 
 #### Diameter growth functions
 ```{r}
-source("functions/abcodia.R")
-source("functions/pipodia.R")
+source("functions/abcodia_footprints.R")
+source("functions/pipodia_footprints.R")
 ```
 
 #### Mortality functions
@@ -366,8 +366,7 @@ ggplot(dfsimallreps_summary)+
   xlab("Years")+
   ylab("Diameter (cm)")+
   theme(text = element_text(size = 20))+
-  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))+
-  ylim(c(0,100))
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
 ```
 
 ```{r}
@@ -453,7 +452,6 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
 
 1.  Use Kristen's data or Hugh's data for initial conditions
 2.  Improve dispersal kernel based on Kristen/Hugh's data 
-3.  Improve shrub growth based on data - DONE
 4.  Include residual surviving trees and their seed dispersal
 5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
 6.  Add customization of patch size and shape
@@ -464,11 +462,8 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
 For next week:
 
 1.  Update display of shrub competition after simulation years
-2. See if there's a way to increase R2 of the dendro diameter growth equations
-3. double check the math on the dendro diameter data wrangling
 6.  Add 0/1 for "emergent year" = when 50% of trees are above shrub canopy
 7.  apply to King, American River Complex, rest of the fires I measured
-8.  Add diameter equation for larger seedlings -- make it so that the diameter equation being used is different for smaller seedlings vs. larger seedlings
 
 Other notes:
 

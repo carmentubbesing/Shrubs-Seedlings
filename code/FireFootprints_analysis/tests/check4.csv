@@ -21,8 +21,8 @@
 "BasDia2016.cm","3.5"
 "LastYearGrth.cm","11.12"
 "HTLCB","0"
-"Dia2016","0"
-"Dia2015","0"
+"Dia_at_2016_growth",NA
+"Dia_at_2015_growth",NA
 "Ht2015.meas2016",NA
 "Note3_Light",""
 "DIFN","0.369"
@@ -73,4 +73,4 @@
 "Ht_cm2","90.4"
 "VertGrowth_Rel","-1.491956"
 "sqrt_shrubarea3","192.873"
-"E","-0.2321782"
+"E","-0.2321783"
