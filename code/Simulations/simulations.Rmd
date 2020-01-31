@@ -27,8 +27,10 @@ strt <- Sys.time()
 # Define parameters
 ```{r}
 fire <- "AMRC"
-year <- "2016"
 years <- 20
+cumsum_2015 <- 1
+cumsum_2016 <- 1.1
+cumsum_2017 <- 1.1
 iterations <- 100
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
@@ -134,6 +136,36 @@ print(paste("One simulation run took", Sys.time()-time, "seconds"))
 
 ## Tests
 
+### New emergents each year
+```{r}
+test <- dfsimall %>% 
+  group_by(Years, Species) %>% 
+  mutate(emerged = ifelse(
+    Ht_cm1>Ht1.3, 1, 0
+  )) %>% 
+  select(Sdlg, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) 
+
+
+test2 <- test %>% 
+  group_by(Species, ID_withinrep) %>% 
+  arrange(Years) %>% 
+  mutate(cumsum_emerge = cumsum(emerged)) %>% 
+  mutate(new_emerge = ifelse(cumsum_emerge ==1, 1, 0)) %>% 
+  ungroup() %>% 
+  group_by(Years, Species) %>% 
+  summarize(new_emergents = sum(new_emerge)) %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  arrange(Years) %>% 
+  mutate(total_emergents = cumsum(new_emergents))
+
+test2 %>% 
+  ggplot(aes(x = Years, y = total_emergents, col = Species))+
+  geom_point()+
+  geom_line()
+```
+
+
 ### Shrub growth patterns
 ```{r}
 ggplot(dfsimall %>% filter(Species == "ABCO"))+
@@ -190,8 +222,7 @@ ggplot(dfsimall)+
   theme_minimal()+
   xlab("Years")+
   ylab("Diameter (cm)")+
-  theme(text = element_text(size = 20))+
-  ylim(c(0,100))+
+  theme(text = element_text(size = 20))
   ggtitle("Diameter distribution after first simulation year")
 ```
 
@@ -204,8 +235,6 @@ ggplot(dfsimall %>% filter(Years<11))+
   ylab("Diameter (cm)")+
   theme(text = element_text(size = 20))
 ```
-
-Note: use 3 cm as the diameter cutoff for where I switch to a different equation
 
 ```{r}
 ggplot(dfsimall)+
@@ -275,7 +304,7 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill =
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
-ggsave(file = "../../results/figures/Simulations/sim_1000_hts.png", width = 6, height =4, dpi = 400)
+ggsave(file = "../../results/figures/Simulations/sim_100_hts.png", width = 6, height =4, dpi = 400)
 ```
 
 ## Height by year and species
@@ -435,7 +464,7 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp0
 print(Sys.time() - strt)
 ```
 
-# Seedling height by shrub species and year
+## Seedling height by shrub species and year
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>% 
@@ -453,6 +482,129 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
   theme_bw()
 ```
 
+## Growth by climate year
+```{r}
+ggplot(dfsimallreps %>% filter(Species == "PIPO"))+
+  geom_boxplot(aes(x = as.factor(Year), y = pred_exp))
+```
+
+```{r}
+dfsimallreps %>% 
+  group_by(Year) %>% 
+  summarize(n(), mean(pred_exp))
+```
+
+# Plot how many trees emerge above the shrub canopy each year
+```{r}
+dfsimallreps <- dfsimallreps %>% 
+  mutate(emerged = ifelse(
+    Ht_cm1>Ht1.3, 1, 0
+  ))
+```
+
+
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  dplyr::select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged, rep)  %>% 
+  group_by(Species, ID_withinrep, rep) %>% 
+  arrange(Years) %>% 
+  mutate(cumsum_emerge = cumsum(emerged)) %>% 
+  mutate(new_emerge = ifelse(cumsum_emerge ==1, 1, 0)) %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(new_emergents = sum(new_emerge), total= n()) %>% 
+  ungroup() %>% 
+  group_by(Species, rep) %>% 
+  arrange(Years) %>% 
+  mutate(total_emergents = sum(new_emergents))
+```
+
+```{r}
+ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = total, fill = Species), col = "black", alpha = .2)+
+  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
+  ylab("Total seedlings (light) and emerged trees (dark)")+
+  xlab("Years since fire")
+```
+
+```{r}
+summary_emerge_prop <- summary_emerge %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_total = total/initial_n, prop_emerged = total_emergents/initial_n)
+  
+summary_emerge_prop %>% View()
+```
+
+```{r}
+ggplot(summary_emerge_prop)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = prop_total, fill = Species), col = "black", alpha = .2)+
+  geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8)+
+  ylab("Proportion of initial seedlings that have emerged")+
+  xlab("Years since fire")
+```
+
+
+## Check
+```{r}
+dfsimallreps %>% 
+  filter(Species=="PIPO") %>% 
+  filter(rep==1 & Years==9) %>% 
+  select(Sdlg, Ht1.3, Ht_cm1) %>% 
+  mutate(emerge = ifelse(Ht_cm1>Ht1.3, 1, 9)) %>% 
+  group_by(emerge) %>% 
+  count()
+```
+
+## Calculate how many surviving trees are left at last year both emerged and non-emerged
+```{r}
+summary_count <- dfsimallreps %>% 
+  group_by(rep, Species) %>% 
+  filter(Years == max(Years)) %>% 
+  summarize(total = n(), emerged = sum(emerged)) 
+
+summary_count <- pivot_longer(summary_count, cols = c(3,4), names_to = "stat")
+
+summary_count
+
+ggplot(summary_count)+
+  geom_boxplot(aes(x = Species, y = value, col = stat))+
+  theme_minimal()+
+  ylab("Number of trees")+
+  ggtitle("Simulation results at 29 years post-fire")
+```
+
+## Same graph but for proportion of original seedlings
+```{r}
+summary_prop <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) 
+
+summary_prop <- summary_prop %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(total = n(), emerged = sum(emerged)) %>% 
+  mutate(prop_total = total/initial_n, prop_emerged = emerged/initial_n) 
+
+summary_prop <- pivot_longer(summary_prop, cols = c(4:7), names_to = "stat")
+summary_prop
+
+ggplot(summary_prop %>% filter(stat %in% c("prop_total", "prop_emerged")))+
+  geom_boxplot(aes(x = Species, y = value, col = stat))+
+  theme_minimal()+
+  ylab("Number of trees")+
+  ggtitle("Simulation results at 29 years post-fire")
+ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png", width = 6, height =4, dpi = 400)
+```
 
 # Next steps to improve the model
 
@@ -461,14 +613,11 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col 
 4.  Include residual surviving trees and their seed dispersal
 5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
 6.  Add customization of patch size and shape
-7.  Add customization of whether the weather conditions reflect those of 2015, 2016, or 2017
 8.  Change sapling growth equations once they emerge from the shrub canopy
-
 
 For next week:
 
 1.  Update display of shrub competition after simulation years
-6.  Add 0/1 for "emergent year" = when 50% of trees are above shrub canopy
 7.  apply to King, American River Complex, rest of the fires I measured
 
 Other notes:
