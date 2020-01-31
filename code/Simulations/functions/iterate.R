@@ -6,6 +6,7 @@ iterate <- function(n){
     if(i_tenth %in% seq(1,100)){
       print(paste("Done with", i, "iterations in", round(Sys.time()-time.start, 1), "minutes"))
     }
+    suppressMessages(shrubclump())
     suppressMessages(initialize())
     suppressMessages(sim(years))
     

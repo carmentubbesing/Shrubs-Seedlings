@@ -3,6 +3,20 @@ sim <- function(years){
   dfsimall <- data.frame()
   i <- 1
   for(i in 1:years){
+    
+    random <<- runif(1,0,1)
+    climate_year <<- case_when(
+      random < cumsum_2015 ~ 2015,
+      random > cumsum_2015 & random < cumsum_2016 ~ 2016,
+      random > cumsum_2016 ~ 2017
+    ) 
+    
+    pts.sf.abco <<- pts.sf.abco %>% 
+      mutate(Year = climate_year) 
+    
+    pts.sf.pipo <<- pts.sf.pipo %>% 
+      mutate(Year = climate_year) 
+      
     abcogrowth()
     pipogrowth()
     abcomort()

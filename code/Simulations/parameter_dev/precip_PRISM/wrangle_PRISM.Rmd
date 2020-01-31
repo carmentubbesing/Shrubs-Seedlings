@@ -1,0 +1,105 @@
+---
+title: "wrangle_PRISM"
+author: "Carmen"
+date: "1/30/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include = T}
+require(tidyverse)
+require(lubridate)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/precip_PRISM/")
+df <- read_csv("../../../../data/PRISM/PRISM_ppt_stable_4km_198501_201901_39.2267_-120.6117.csv", skip = 10, col_types = cols(Date = col_date(format = "%Y-%m"), `ppt (mm)` = col_double()))
+head(df)
+```
+
+# Rename columns
+```{r}
+df <- df %>% 
+  rename(ppt_mm = `ppt (mm)`)
+```
+
+# Summarize Sep-Aug years, since growth concludes in AUg
+```{r}
+df <- df %>% 
+  mutate(Month = month(Date), Year = year(Date)) %>% 
+  mutate(water_year = case_when(
+    Month %in% c(1:8) ~ paste(Year-1, Year, sep = "-"),
+    Month %in% c(9:12) ~ paste(Year, Year+1, sep = "-")
+  )) %>% 
+  group_by(water_year) %>% 
+  summarize(ppt_mm = sum(ppt_mm)) %>% 
+  ungroup()
+df
+```
+
+# Take out 2019 since it's incomplete
+```{r}
+df <- df %>% 
+  filter(water_year != "2018-2019")
+```
+
+# Plot
+```{r}
+ggplot(df, aes(x = water_year, y= ppt_mm))+
+  geom_point()+
+  scale_x_discrete(breaks = c("1985-1986", "1995-1996", "2005-2006", "2015-2016"))+
+  theme_minimal()
+```
+
+# Group in relation to 2015, 2016, and 2017
+```{r}
+study_years <- c("2014-2015", "2015-2016", "2016-2017")
+```
+
+
+```{r}
+ggplot(df)+
+  geom_histogram(aes(ppt_mm), bins = 20)+
+  theme_minimal()+
+  geom_point(data = df %>% filter(water_year %in% study_years), aes(x = ppt_mm, y = 0), col = "red")
+```
+
+```{r}
+study_year_ppt <- df %>% 
+  filter(water_year %in% study_years) 
+study_year_ppt
+
+df <- df %>% 
+  mutate(dist2015 = (abs(unlist(study_year_ppt[1,2])-ppt_mm))) %>% 
+  mutate(dist2016 = (abs(unlist(study_year_ppt[2,2])-ppt_mm))) %>% 
+  mutate(dist2017 = (abs(unlist(study_year_ppt[3,2])-ppt_mm)))
+
+df <- df %>% 
+  group_by(water_year) %>% 
+  mutate(mindist = min(dist2015, dist2016, dist2017)) %>% 
+  mutate(min_year = case_when(
+    mindist == dist2015 ~ "2014-2015",
+    mindist == dist2016 ~ "2015-2016",
+    mindist == dist2017 ~ "2016-2017"
+  )) 
+
+df %>% 
+  filter(min_year == "2016-2017")
+df %>% 
+  filter(water_year == "2016-2017")
+
+```
+
+# View the proportion
+```{r}
+df %>% 
+  group_by(min_year) %>% 
+  summarize(n = n()) %>% 
+  mutate(proportion = n/sum(n)) %>% 
+  mutate(cumsum = cumsum(proportion))
+
+```
+
+

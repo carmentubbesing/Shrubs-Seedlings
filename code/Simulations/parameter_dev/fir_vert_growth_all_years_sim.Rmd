@@ -1,0 +1,407 @@
+---
+title: "fir vertical growth - fire footprints"
+author: "Carmen"
+date: "November 13, 2017"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+list.of.packages <- c("nlme", "randomForest", "tree", "knitr", "tidyverse", "ggplot2", "VSURF", "effects", "sjstats", "car")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+```
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(effects)
+require(sjstats)
+require(MuMIn)
+require(car)
+```
+
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+# Load VSURF results
+```{r}
+load("../../results/VSURF_abco_vars.Rdata")
+vars
+```
+
+# Before filtering to just ABCO, save min and max shrub cover for growth estiamtes at the end. Use min and max that have BOTH SPECIES
+```{r}
+df_summary <- df %>% 
+  group_by(Species) %>% 
+  mutate(shrubarea3 = sqrt(shrubarea3)) %>% 
+  summarize(min= min(shrubarea3), max = max(shrubarea3), median = median(shrubarea3))
+
+min <- df_summary %>% 
+  filter(min == max(min)) %>% 
+  dplyr::select(min) %>% 
+  unlist()
+min
+
+max <- df_summary %>% 
+  filter(max == min(max)) %>% 
+  dplyr::select(max) %>% 
+  unlist()
+max
+
+median <- df %>% 
+  mutate(shrubarea3 = sqrt(shrubarea3)) %>%
+  summarize(median = median(shrubarea3)) %>% 
+  unlist
+median
+
+
+summary <- summary(sqrt(df$shrubarea3))
+summary
+quart1 <- summary[2]
+quart3 <- summary[5]
+mean <- mean(sqrt(df$shrubarea3))
+```
+
+# Filter to just white firs
+```{r}
+df %>% 
+  group_by(Fire,Species) %>% 
+  summarize(n())
+```
+
+```{r}
+df <- df %>% 
+  filter(Species == "ABCO")
+```
+
+## Change species and Sdlg to factor
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species)) %>% 
+  mutate(Sdlg = as.factor(Sdlg))
+```
+
+# Convert shrub area to square root
+```{r}
+df <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
+```
+
+# Count totals and by fire
+```{r}
+nrow(df)
+```
+
+```{r}
+df %>% 
+  group_by(Sdlg, Fire) %>%
+  dplyr::select(Sdlg, Fire) %>%
+  distinct() %>% 
+  ungroup() %>% 
+  group_by(Fire) %>% 
+  summarize(n = n()) %>% 
+  mutate(total = sum(n))
+```
+
+# Find average growth rate
+```{r}
+mean(df$VertGrowth_Rel)
+sd(df$VertGrowth_Rel)
+sd(df$VertGrowth_Rel)/sqrt(nrow(df))
+ggplot(df)+
+  geom_boxplot(aes(y = VertGrowth_Rel))
+```
+
+
+# Look at a linear model using the variables that were identified by VSURF, plus interactions that seem biologically meaningful
+
+## Structure data for LM
+
+### Normalize function
+```{r}
+normalize <- function(x) {
+    return ((x - mean(x)) / sd(x))
+  }
+```
+
+### Filter and normalize
+```{r}
+LMdf <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  mutate(log_shrubarea3 = log(shrubarea3)) %>% 
+  dplyr::select(Fire, FirePatch, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad) %>% 
+  mutate_if(is.numeric, normalize) %>% 
+  mutate(VertGrowth_Rel = df$VertGrowth_Rel)
+LMdf <- droplevels(LMdf)
+```
+
+# LME model using VSURF var results
+
+## Convert vars to formula structure
+```{r}
+vars_one <- paste(vars, collapse = " + ")
+vars_one
+f <- formula(paste("VertGrowth_Rel ~ ",vars_one))
+f
+```
+
+## Run lme model
+```{r}
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+## Compare to model with FirePatch as random effect
+```{r}
+LM <- lme(f, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+# Check collinearity 
+
+<!-- ## Make collinearity plot using Zuur code -->
+<!-- ```{r} -->
+<!-- source("~/../Documents/HighstatLibV10.R.txt") -->
+<!-- z <- cbind(df$VertGrowth_Rel, df$Years, df$heatload, df$Aspect.rad.fold.NESW, df$incidrad, df$Ht_cm1, df$BasDia2016.cm, df$Slope.Deg, df$sqrt_shrubarea3, df$Elevation, df$Year) -->
+<!-- colnames(z) <- c("Growth", "Years", "heatload", "Aspect", "incidrad", "Ht_cm1", "BasDia", "Slope", "shrubs", "Elevation", "Year") -->
+<!-- pairs(z, lower.panel = panel.smooth2, upper.panel = panel.cor, diag.panel = panel.hist) -->
+<!-- ``` -->
+
+## use vif from car pkg because in pines it was the same as the Zuur code
+```{r}
+vif(LM)
+```
+
+# See whether model with or without interaction is better
+```{r}
+vars_int <- paste(vars_one, "+ Ht_cm1:sqrt_shrubarea3")
+f_int <- formula(paste("VertGrowth_Rel ~ ",vars_int))
+LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+AICcmodavg::AICc(LM)
+AICcmodavg::AICc(LM_int)
+if(
+  AICcmodavg::AICc(LM) > AICcmodavg::AICc(LM_int)
+) print(paste("WITH INTERACTION WINS BY", round(AICcmodavg::AICc(LM)-AICcmodavg::AICc(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AICcmodavg::AICc(LM_int)-AICcmodavg::AICc(LM), digits = 2)))
+```
+
+No difference, so I'll leave out the interaction
+
+## Look at summary and drop1 results
+```{r}
+summary(LM)
+```
+
+```{r}
+drop <- drop1(LM, test = "Chisq")
+drop
+drop$var <- row.names(drop)
+drop <- tbl_df(drop)
+drop %>% 
+  arrange( `Pr(>Chi)`) %>% 
+  mutate( `Pr(>Chi)` = paste( `Pr(>Chi)`))
+```
+
+### Look at individual effects
+
+```{r}
+plot(predictorEffect("sqrt_shrubarea3", LM))
+```
+
+## Calculate Nakagawa's pseudo R2
+```{r}
+r.squaredGLMM(LM)
+r.squaredGLMM(LM_int)
+```
+
+# Re-create effects plots using predictorEffects() and ggplot
+
+## Create df for effects 
+```{r}
+eff_shrubarea <- predictorEffect("sqrt_shrubarea3", LM)
+effects_df <- as.data.frame(eff_shrubarea)
+head(effects_df)
+```
+
+## Transform variables back to original units
+```{r}
+effects_df <- effects_df %>% 
+  mutate(sqrt_shrubarea3 = sqrt_shrubarea3*sd(sqrt(df$shrubarea3))+mean(sqrt(df$shrubarea3)) )
+```
+
+### test
+```{r}
+hist(effects_df$sqrt_shrubarea3)
+hist(sqrt(df$shrubarea3))
+```
+
+# Summarize range of shrub cover and height
+```{r}
+summary(df$Cov1.3)
+summary(df$Ht1.3)
+summary(df$shrubarea3)
+```
+
+# Summarize cover as percent
+```{r}
+summary(df$Cov1.3/(300*4))
+```
+
+# Find the shrubarea values associated with each quartile, and the mean growth for each of those
+```{r}
+fit_quart1 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart1)),]$fit
+fit_quart1
+fit_quart3 <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - quart3)),]$fit
+fit_median <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - median)),]$fit
+
+fit_min <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - min)),]$fit
+fit_max <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - max)),]$fit
+fit_mean <- effects_df[which.min(abs(effects_df$sqrt_shrubarea3 - mean)),]$fit
+
+print(paste("fit_quart1 = ", exp(fit_quart1)))
+print(paste("fit_quart3 = ", exp(fit_quart3)))
+print(paste("fit_median = ", exp(fit_median)))
+print(paste("fit_mean = ", exp(fit_mean)))
+
+print(paste("fit_min = ", exp(fit_min)))
+print(paste("fit_max = ", exp(fit_max)))
+
+
+print(paste("fit_quart1_log = ", fit_quart1))
+print(paste("fit_quart3_log = ", fit_quart3))
+print(paste("fit_median_log = ", fit_median))
+print(paste("fit_min_log = ", fit_min))
+print(paste("fit_max_log = ", fit_max))
+print(paste("fit_mean_log = ", fit_mean))
+
+gr_minshrub_abco <- exp(fit_min)
+gr_maxshrub_abco <- exp(fit_max)
+gr_medshrub_abco <- exp(fit_median)
+```
+
+## Save them
+```{r}
+save(gr_minshrub_abco, file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
+save(gr_maxshrub_abco, file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
+save(gr_medshrub_abco, file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
+```
+
+## Plot effects of shrubarea
+
+### Load colors from PIPO graph
+```{r}
+load("../../results/figures/FireFootprints/plot_min.Rdata")
+load("../../results/figures/FireFootprints/plot_max.Rdata")
+```
+
+```{r}
+ggplot(effects_df)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = ("#899DA4"))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#8da0cb")+
+  theme_bw()+
+  xlab(bquote(
+    (sqrt(`cover (cm)`%*%`height (cm)`))            
+    ))+
+  ylab("Relative growth rate")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
+  ylim(c(plot_min, plot_max))+
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    text = element_text(size = 11))
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
+```
+
+
+
+```{r}
+ggplot(effects_df)+
+  geom_line(aes(x = sqrt_shrubarea3, y = exp(fit)), col = ("#899DA4"))+
+  geom_ribbon(aes(x = sqrt_shrubarea3, ymin = exp(lower), ymax = exp(upper)), alpha = .5, fill = "#899DA4")+
+  theme_bw()+
+  xlab(bquote(
+    (sqrt(`cover (cm)`%*%`height (cm)`))            
+    ))+
+  ylab("Relative growth rate")+
+  geom_rug(data = df, aes(x = sqrt(shrubarea3), y = exp(VertGrowth_Rel)), alpha = .7, position = "jitter", sides = "b")+
+  ylim(c(plot_min, plot_max))+
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    text = element_text(size = 16))
+ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
+```
+
+
+# Save LM
+```{r}
+save(LM, file = "../../results/data/FireFootprints/LM_abco.Rdata")
+```
+
+# Look at relationship between years and shrubarea
+```{r}
+ggplot(df)+
+  geom_boxplot(aes(x = as.factor(Years), y = shrubarea3))
+ggplot(df)+
+  geom_boxplot(aes(x = Fire, y = shrubarea3))
+```
+
+# Residuals
+```{r}
+E <- resid(LM, type = "normalized")
+df$E <- E
+pred <- predict(LM)
+plot(LM)
+plot(df$shrubarea3, E)
+plot(df$Ht_cm1, E)
+plot(df$Years, E)
+
+ggplot(df, aes(x = shrubarea3, y = E))+
+  geom_point()+
+  geom_smooth()
+```
+
+# Count how many trees have estimated 2015 heights
+```{r}
+df %>% 
+  filter(Year==2015) %>% 
+  filter(is.na(Ht2017.cm.fall) & is.na(Ht2015.meas2016)) %>% 
+  nrow()
+```
+
+
+## Save final data
+```{r}
+save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
+```
+
+# Save LM with non-normalized data
+```{r}
+LMdf_nonnorm <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
+  mutate(log_shrubarea3 = log(shrubarea3)) %>% 
+  dplyr::select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad, VertGrowth_Rel) 
+LMdf_nonnorm <- droplevels(LMdf_nonnorm)
+```
+
+```{r}
+LM_abco_nonnorm <- lme(f, data = LMdf_nonnorm, random = ~ 1| Fire/Sdlg, method = "ML")
+```
+
+```{r}
+save(LM_abco_nonnorm, file = "../../results/coefficients/LM_abco_nonnorm.Rdata")
+```
+
+

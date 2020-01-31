@@ -5,7 +5,7 @@ pipogrowth <- function(){
   LMpipo <- LM_pine_nonnorm_sim
   remove(LM_pine_nonnorm_sim)
   coefpipo <<- LMpipo$coefficients$fixed
-  
+   
   pts.sf.pipo <<- pts.sf.pipo %>% 
     mutate(pred = coefpipo["(Intercept)"] +
              coefpipo["Ht_cm1"]*Ht_cm1+

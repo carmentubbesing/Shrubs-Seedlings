@@ -3,7 +3,7 @@ shrubclump <- function(){
   dffull <<- df
   df <- df %>%
     dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
-    filter(Year==year) %>%
+    filter(Year==2016) %>%
     filter(Fire == fire) %>%
     filter(!is.na(Ht2016.cm_spring)) %>%
     mutate(Cov_prop = Cov1.3/1200) %>%
@@ -49,8 +49,6 @@ shrubclump <- function(){
     values(focalr) <- values(focalr)+smallnums
     
     xg <- split(sort(getValues(focalr)), sort(shrub_ID))
-    xg
-    summary(xg)
     
     values(focalr) <- ifelse(values(focalr) %in% xg$`1`, 1, values(focalr))
     values(focalr) <- ifelse(values(focalr) %in% xg$`2`, 2, values(focalr))
