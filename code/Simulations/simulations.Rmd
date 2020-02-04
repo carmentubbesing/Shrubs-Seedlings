@@ -21,24 +21,8 @@ require(sp)
 require(tmaptools)
 require(knitr)
 require(mgcv)
+require(gridExtra)
 strt <- Sys.time()
-```
-
-# Define parameters
-```{r}
-fire <- "AMRC"
-years <- 20
-cumsum_2015 <- 1
-cumsum_2016 <- 1.1
-cumsum_2017 <- 1.1
-iterations <- 100
-max_shrub_ht_cm <- 250
-max_shrub_ht_years <- 15
-n_seedlings <- 100
-length_m <- 40
-height_m <- 40
-lambda <- 4
-shrub_clumpiness <- 7
 ```
 
 # Load functions
@@ -87,12 +71,28 @@ source("functions/sim.R")
 source("functions/iterate.R")
 ```
 
+# Define parameters
+```{r}
+fire <- "AMRC"
+years <- 20
+cumsum_2015 <- 0.441
+cumsum_2016 <- 0.912
+cumsum_2017 <- 1
+iterations <- 100
+max_shrub_ht_cm <- 250
+max_shrub_ht_years <- 15
+n_seedlings <- 100
+length_m <- 40
+height_m <- 40
+lambda <- 4
+shrub_clumpiness <- 7
+```
+
 # Initialize
 
 ## Create clumped shrub pattern
 ```{r}
 shrubclump()
-plot(r)
 ```
 
 ## Randomly select seedlings from data and place them on the shrub patch
@@ -101,11 +101,6 @@ initialize()
 ```
 
 ## Plot patch with seedlings
-```{r}
-max_shrub <- max(r@data@attributes[[1]]$sqrt_shrubarea3)
-r@data@attributes[[1]]$shrub_rel <- r@data@attributes[[1]]$sqrt_shrubarea3/max_shrub
-```
-
 ```{r}
 pts.sf.pipo.graph <- pts.sf.pipo %>% 
   rename("Pine height" = Ht_cm1)
@@ -134,19 +129,16 @@ suppressMessages(sim(years))
 print(paste("One simulation run took", Sys.time()-time, "seconds"))
 ```
 
-## Tests
+# Tests
 
-### New emergents each year
+### Plot # of new emergents each year
 ```{r}
-test <- dfsimall %>% 
+dfsimall %>% 
   group_by(Years, Species) %>% 
   mutate(emerged = ifelse(
     Ht_cm1>Ht1.3, 1, 0
   )) %>% 
-  select(Sdlg, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) 
-
-
-test2 <- test %>% 
+  select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) %>% 
   group_by(Species, ID_withinrep) %>% 
   arrange(Years) %>% 
   mutate(cumsum_emerge = cumsum(emerged)) %>% 
@@ -157,93 +149,98 @@ test2 <- test %>%
   ungroup() %>% 
   group_by(Species) %>% 
   arrange(Years) %>% 
-  mutate(total_emergents = cumsum(new_emergents))
-
-test2 %>% 
+  mutate(total_emergents = cumsum(new_emergents)) %>% 
   ggplot(aes(x = Years, y = total_emergents, col = Species))+
   geom_point()+
-  geom_line()
+  geom_line()+
+  theme_minimal()
 ```
 
 
 ### Shrub growth patterns
 ```{r}
-ggplot(dfsimall %>% filter(Species == "ABCO"))+
-  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+ht <- ggplot(dfsimall)+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, linetype = Species, group = Sdlg))+
   theme_bw()
 ```
 
 ```{r}
-ggplot(dfsimall %>% filter(Species == "PIPO"))+
-  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
-  theme_bw()
-```
-
-```{r}
-ggplot(dfsimall)+
+cov <- ggplot(dfsimall)+
   geom_line(aes(x = Years, y = Cov1.3, col = ShrubSpp03, linetype = Species, group = Sdlg))+
   theme_bw()
 ```
 
-### Diameter growth patterns
 ```{r}
-ggplot(dfsimall, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
+grid.arrange(ht, cov, ncol = 2)
+```
+
+### Focal tree dia and ht growth patterns
+```{r}
+dia <- ggplot(dfsimall, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
   geom_line(alpha = .3)+
   theme_bw()+
   geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
 ```
 
-### Height growth patterns
 ```{r}
-ggplot(dfsimall, aes(x = Years, y = Ht_cm1, col = Species, group = Sdlg))+
+ht <- ggplot(dfsimall, aes(x = Years, y = Ht_cm1, col = Species, group = Sdlg))+
   geom_line(alpha = .3)+
   theme_bw()+
   geom_smooth(aes(x = Years, y = Ht_cm1, col = Species, group = Species))
 ```
 
-### Diameter::Height growth patterns
 ```{r}
-ggplot(dfsimall, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Sdlg))+
+ratio <- ggplot(dfsimall, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Sdlg))+
   geom_line(alpha = .3)+
   theme_bw()+
   geom_smooth(aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Species))
 ```
 
-### Diameter:height
 ```{r}
-ggplot(dfsimall %>% filter(Years==10))+
-  geom_histogram(aes(dia.cm/Ht_cm1, bins = 5))
+grid.arrange(dia, ht, ratio, ncol = 2)
 ```
 
 ### Diameter and height boxplots
 ```{r}
-ggplot(dfsimall)+
+all_dia <- ggplot(dfsimall)+
   geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
   theme_minimal()+
   xlab("Years")+
   ylab("Diameter (cm)")+
-  theme(text = element_text(size = 20))
-  ggtitle("Diameter distribution after first simulation year")
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))+
+  theme(legend.position="none")
 ```
 
-#### Just for first 2 years of the simulation
 ```{r}
-ggplot(dfsimall %>% filter(Years<11))+
+strt_dia <- ggplot(dfsimall %>% filter(Years<11))+
   geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
   theme_minimal()+
   xlab("Years")+
   ylab("Diameter (cm)")+
-  theme(text = element_text(size = 20))
+  ggtitle("Diameter distribution after\nfirst simulation year")
 ```
 
 ```{r}
-ggplot(dfsimall)+
+all_ht <- ggplot(dfsimall)+
   geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species))+
   theme_minimal()+
   xlab("Years")+
   ylab("Height (cm)")+
-  theme(text = element_text(size = 20))
+  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))+
+  theme(legend.position="none")
+```
 
+```{r}
+strt_ht <- ggplot(dfsimall %>% filter(Years<11))+
+  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species))+
+  theme_minimal()+
+  xlab("Years")+
+  ylab("Diameter (cm)")+
+  ggtitle("Diameter distribution after\nfirst simulation year")
+```
+
+```{r}
+grid.arrange(strt_dia, all_dia, strt_ht, all_ht)
 ```
 
 ## Plot shrub patch spatially
@@ -273,9 +270,6 @@ tm_shape(pts.sf.abco.graph)+
 time <- Sys.time()
 iterate(iterations)
 print(paste("That took", round(Sys.time()-time, 1), "minutes"))
-dfsimallreps %>% 
-  group_by(rep) %>% 
-  summarize(mean(Ht_cm1))
 ```
 
 # Summarize
@@ -287,14 +281,12 @@ dfsimallreps_summary <- dfsimallreps %>%
   mutate(rep = as.factor(paste(rep))) %>% 
   group_by(rep, Years, Species) %>% 
   mutate(mean_ht_years = mean(Ht_cm1))
-dfsimallreps_summary %>% dplyr::select(rep, Years, mean_ht_years) %>% summary()
 ```
 
 ```{r}
-ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
+ht <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
   geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
-  ggtitle("Results for 1000 simulations")+
   xlab("Years since fire")+
   ylab("Average tree ht (cm) by simulation")+
   theme_bw()+
@@ -304,28 +296,21 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill =
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
+ht
 ggsave(file = "../../results/figures/Simulations/sim_100_hts.png", width = 6, height =4, dpi = 400)
 ```
 
-## Height by year and species
+#### Shrub growth patterns
+```{r}
+ggplot(dfsimallreps_summary)+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
+  theme_bw()
+```
 
-### Shrub growth patterns
+### Diameter growth patterns - FIX THIS FOR PIPO
 ```{r}
 ggplot(dfsimallreps_summary %>% filter(Species == "ABCO"))+
-  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
-  theme_bw()
-```
-
-```{r}
-ggplot(dfsimallreps_summary %>% filter(Species == "PIPO"))+
-  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, group = Sdlg))+
-  theme_bw()
-```
-
-### Diameter growth patterns
-```{r}
-ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
-  geom_line(alpha = .3)+
+  geom_line(aes(x = Years, y = dia.cm, col = Species, group = Sdlg), alpha = .3)+
   theme_bw()+
   geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
 ```
@@ -429,7 +414,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
   geom_boxplot(alpha = .2, outlier.alpha = .02)+
   geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
-  ggtitle("Results for 1000 simulations")+
+  ggtitle("Results for 100 simulations")+
   xlab("Years since fire")+
   ylab("Tree count")+
   theme_bw()+
@@ -439,22 +424,22 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
-ggsave(file = "../../results/figures/Simulations/sim_1000_count.png", width = 6, height = 4, dpi = 400)
+ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>% 
-  group_by(rep, Years, Ht1.3, ShrubSpp03) %>% 
-  mutate(mean_shrub_ht = mean(Ht1.3))
+  group_by(rep, Years, Ht1.3, Cov1.3, ShrubSpp03) %>% 
+  mutate(mean_shrub_ht = mean(Ht1.3), mean_shrub_cov = mean(Cov1.3))
 ```
 
 ```{r}
 ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp03, col = ShrubSpp03))+
   geom_line(aes(group = Sdlg), alpha = .2)+
   geom_smooth()+
-  ggtitle("Results for 1000 simulations")+
+  ggtitle("Results for 100 simulations")+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
@@ -463,6 +448,22 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp0
 ```{r}
 print(Sys.time() - strt)
 ```
+
+## Shrub cover by year
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_cov, group = ShrubSpp03, col = ShrubSpp03))+
+  geom_line(aes(group = Sdlg), alpha = .2)+
+  geom_smooth()+
+  ggtitle("Results for 100 simulations")+
+  xlab("Years since fire")+
+  ylab("Shrub cover")+
+  theme_bw()
+```
+
+```{r}
+print(Sys.time() - strt)
+```
+
 
 ## Seedling height by shrub species and year
 ```{r}
@@ -476,7 +477,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 ggplot(dfsimallreps_summary, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col = ShrubSpp03, symbol = Species))+
   geom_line(aes(group = Sdlg), alpha = .2)+
   geom_smooth()+
-  ggtitle("Results for 1000 simulations")+
+  ggtitle("Results for 100 simulations")+
   xlab("Years since fire")+
   ylab("Focal tree height")+
   theme_bw()
@@ -495,6 +496,8 @@ dfsimallreps %>%
 ```
 
 # Plot how many trees emerge above the shrub canopy each year
+
+## Add column for whether the tree has emerged 
 ```{r}
 dfsimallreps <- dfsimallreps %>% 
   mutate(emerged = ifelse(
@@ -502,7 +505,12 @@ dfsimallreps <- dfsimallreps %>%
   ))
 ```
 
+### Check
+```{r}
+dfsimallreps %>% group_by(emerged) %>% count()
+```
 
+## Count total emergents per year
 ```{r}
 summary_emerge <- dfsimallreps %>% 
   dplyr::select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged, rep)  %>% 
@@ -516,9 +524,10 @@ summary_emerge <- dfsimallreps %>%
   ungroup() %>% 
   group_by(Species, rep) %>% 
   arrange(Years) %>% 
-  mutate(total_emergents = sum(new_emergents))
+  mutate(total_emergents = cumsum(new_emergents))
 ```
 
+## Plot emergents per year - this is misleading because some of the cumulatively emerged trees have died
 ```{r}
 ggplot(summary_emerge)+
   theme_minimal()+
@@ -536,7 +545,7 @@ summary_emerge_prop <- summary_emerge %>%
   ungroup() %>% 
   mutate(prop_total = total/initial_n, prop_emerged = total_emergents/initial_n)
   
-summary_emerge_prop %>% View()
+summary_emerge_prop 
 ```
 
 ```{r}
@@ -547,7 +556,6 @@ ggplot(summary_emerge_prop)+
   ylab("Proportion of initial seedlings that have emerged")+
   xlab("Years since fire")
 ```
-
 
 ## Check
 ```{r}
@@ -571,11 +579,12 @@ summary_count <- pivot_longer(summary_count, cols = c(3,4), names_to = "stat")
 
 summary_count
 
-ggplot(summary_count)+
+boxplot_trees <- ggplot(summary_count)+
   geom_boxplot(aes(x = Species, y = value, col = stat))+
   theme_minimal()+
   ylab("Number of trees")+
   ggtitle("Simulation results at 29 years post-fire")
+boxplot_trees
 ```
 
 ## Same graph but for proportion of original seedlings
@@ -598,12 +607,17 @@ summary_prop <- summary_prop %>%
 summary_prop <- pivot_longer(summary_prop, cols = c(4:7), names_to = "stat")
 summary_prop
 
-ggplot(summary_prop %>% filter(stat %in% c("prop_total", "prop_emerged")))+
+boxplot_prop <- ggplot(summary_prop %>% filter(stat %in% c("prop_total", "prop_emerged")))+
   geom_boxplot(aes(x = Species, y = value, col = stat))+
   theme_minimal()+
-  ylab("Number of trees")+
-  ggtitle("Simulation results at 29 years post-fire")
+  ylab("Proportion of initial trees")
+boxplot_prop
+
 ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png", width = 6, height =4, dpi = 400)
+```
+
+```{r}
+grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
 ```
 
 # Next steps to improve the model

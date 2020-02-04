@@ -7,7 +7,7 @@ output:
     toc: TRUE
 ---
 
-```{r, include = T}
+```{r, include = F}
 require(tidyverse)
 require(lubridate)
 ```
@@ -25,7 +25,7 @@ df <- df %>%
   rename(ppt_mm = `ppt (mm)`)
 ```
 
-# Summarize Sep-Aug years, since growth concludes in AUg
+# Summarize Sep-Aug years, since growth concludes in Aug
 ```{r}
 df <- df %>% 
   mutate(Month = month(Date), Year = year(Date)) %>% 
@@ -60,10 +60,15 @@ study_years <- c("2014-2015", "2015-2016", "2016-2017")
 
 
 ```{r}
+study_ppt <- df %>% filter(water_year %in% study_years) %>% dplyr::select(ppt_mm) %>% unlist()
+
 ggplot(df)+
   geom_histogram(aes(ppt_mm), bins = 20)+
   theme_minimal()+
-  geom_point(data = df %>% filter(water_year %in% study_years), aes(x = ppt_mm, y = 0), col = "red")
+  geom_point(data = df %>% filter(water_year %in% study_years), aes(x = ppt_mm, y = 0), col = "red")+
+  geom_vline(xintercept = study_ppt, color = "red")
+
+df %>% filter(water_year %in% study_years) %>% dplyr::select(water_year, ppt_mm)
 ```
 
 ```{r}
