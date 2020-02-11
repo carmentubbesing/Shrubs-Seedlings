@@ -1,0 +1,244 @@
+---
+title: "simulations"
+author: "Carmen"
+date: "May 16, 2019"
+output: 
+    html_document:
+        toc: TRUE
+---
+
+```{r, include = F}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(effects)
+require(MASS)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+```
+
+#  Make dead a factor
+```{r}
+df <- df %>% 
+  mutate(DEAD_ALIVE = as.factor(DEAD_ALIVE))
+```
+
+# Make separate df for each species
+```{r}
+dfa <- df %>% filter(SPECIES == "ABCO")
+dfp <- df %>% filter(SPECIES == "PIPO")
+```
+
+
+#  _
+# ABCO SIMULATIONS
+
+## Visually compare distributions
+```{r}
+means <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfa %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(sd = sd(log_gr_rel_ave))
+means
+sd
+```
+
+### Create smooth PDF for live and dead
+
+#### Dead
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+```
+
+#### Live
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+#### Plot PDF with histogram of growth values
+```{r}
+ggplot()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfa %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+```
+
+# Actual simulations for ABCO
+
+## Count abco n in the POPULATION for live and dead
+```{r}
+n_dead_pop <- unlist(dfa %>% 
+                   filter(DEAD_ALIVE=="DEAD") %>% 
+                   summarize(n()))
+n_dead_pop
+```
+
+## Come up with # of live seedlings in simulated population by multiplying the dead ones by the ratio of live:dead from surveys
+```{r}
+n_alive_pop <- round(n_dead_pop*(1103/25))
+```
+
+## Count abco n in MEASURED TREES for live and dead
+```{r}
+n_alive <- nrow(dfa %>% filter(DEAD_ALIVE == "ALIVE"))
+n_dead <- nrow(dfa %>% filter(DEAD_ALIVE == "DEAD"))
+```
+
+## Find the sets of live and dead growth rates to draw from
+```{r}
+gr_set_dead <- dfa %>% 
+    filter(DEAD_ALIVE=="DEAD") %>% 
+    dplyr::select(log_gr_rel_ave)
+gr_set_dead <- gr_set_dead[[1]]
+
+gr_set_alive <- dfa %>% 
+  filter(DEAD_ALIVE=="ALIVE") %>%
+  dplyr::select(log_gr_rel_ave)
+gr_set_alive <- gr_set_alive[[1]]
+```
+
+## Loop the simulation 1000 times
+```{r}
+coefficient_gr <- c()
+coefficient_int <- c()
+for(i in 1:1000){
+  dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
+  alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
+  live_df <- data.frame(gr = c(alive_sample))
+  live_df$dead <- 0
+  dead_df <- data.frame(gr = c(dead_sample))
+  dead_df$dead <- 1
+  df <- bind_rows(dead_df, live_df)
+  glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
+  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+}
+mean_coef_gr <- mean(coefficient_gr)
+mean_coef_int <- mean(coefficient_int)
+```
+
+i## Save
+```{r}
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_abco.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_abco.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_abco.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_abco.Rdata")
+```
+
+# _
+# PIPO SIMULATIONS
+
+## Visually compare distributions
+```{r}
+means <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(mean = mean(log_gr_rel_ave))
+sd <- dfp %>% 
+  group_by(DEAD_ALIVE) %>% 
+  summarize(sd = sd(log_gr_rel_ave))
+means
+sd
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[2,2]], sd=sd[[2,2]])
+pdf_dead <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+x <- seq(-4, 0, length=1000)
+y <- dnorm(x, mean=means[[1,2]], sd=sd[[1,2]])
+pdf_live <- as.data.frame(cbind(x, y))
+```
+
+```{r}
+ggplot()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="DEAD"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "red", fill = "red")+
+  theme_bw()+
+  geom_histogram(data = dfp %>% filter(DEAD_ALIVE=="ALIVE"), aes(log_gr_rel_ave, stat(density)), bins = 20, alpha = .2, col = "dark green", fill = "dark green")+
+  geom_vline(data = means, aes(xintercept = mean, col = DEAD_ALIVE))+
+  scale_color_manual(values = c("dark green", "red"))+
+  geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
+  geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
+  
+ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+```
+
+# Actual simulations for PIPO
+
+## Count pipo n for live and dead
+```{r}
+n_dead_pop <- unlist(dfp %>% 
+                   filter(DEAD_ALIVE=="DEAD") %>% 
+                   summarize(n()))
+```
+
+```{r}
+n_alive_pop <- n_dead_pop*(524/6)
+```
+    
+## Count pipo n in MEASURED TREES for live and dead
+```{r}
+n_alive <- nrow(dfp %>% filter(DEAD_ALIVE == "ALIVE"))
+n_dead <- nrow(dfp %>% filter(DEAD_ALIVE == "DEAD"))
+```
+
+## Find the sets of live and dead growth rates to draw from
+```{r}
+gr_set_dead <- dfp %>% 
+    filter(DEAD_ALIVE=="DEAD") %>% 
+    dplyr::select(log_gr_rel_ave)
+gr_set_dead <- gr_set_dead[[1]]
+
+gr_set_alive <- dfp %>% 
+  filter(DEAD_ALIVE=="ALIVE") %>%
+  dplyr::select(log_gr_rel_ave)
+gr_set_alive <- gr_set_alive[[1]]
+```
+
+## Loop it 
+```{r}
+coefficient_gr <- c()
+coefficient_int <- c()
+for(i in 1:1000){
+  dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
+  alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
+  live_df <- data.frame(gr = c(alive_sample))
+  live_df$dead <- 0
+  dead_df <- data.frame(gr = c(dead_sample))
+  dead_df$dead <- 1
+  df <- bind_rows(dead_df, live_df)
+  glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
+  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
+  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+}
+mean_coef_gr <- mean(coefficient_gr)
+mean_coef_int <- mean(coefficient_int)
+```
+
+
+## Save
+```{r}
+save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_pipo.Rdata")
+save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_pipo.Rdata")
+save(coefficient_gr, file = "../../results/coefficients/coef_gr_pipo.Rdata")
+save(coefficient_int, file = "../../results/coefficients/coef_int_pipo.Rdata")
+```

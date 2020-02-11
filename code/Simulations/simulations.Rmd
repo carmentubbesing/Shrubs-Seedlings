@@ -78,7 +78,7 @@ years <- 20
 cumsum_2015 <- 0.441
 cumsum_2016 <- 0.912
 cumsum_2017 <- 1
-iterations <- 100
+iterations <- 9
 max_shrub_ht_cm <- 250
 max_shrub_ht_years <- 15
 n_seedlings <- 100
@@ -136,7 +136,7 @@ print(paste("One simulation run took", Sys.time()-time, "seconds"))
 dfsimall %>% 
   group_by(Years, Species) %>% 
   mutate(emerged = ifelse(
-    Ht_cm1>Ht1.3, 1, 0
+    Ht_cm1*.75>Ht1.3, 1, 0
   )) %>% 
   select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) %>% 
   group_by(Species, ID_withinrep) %>% 
@@ -155,7 +155,6 @@ dfsimall %>%
   geom_line()+
   theme_minimal()
 ```
-
 
 ### Shrub growth patterns
 ```{r}
@@ -270,6 +269,11 @@ tm_shape(pts.sf.abco.graph)+
 time <- Sys.time()
 iterate(iterations)
 print(paste("That took", round(Sys.time()-time, 1), "minutes"))
+```
+
+# Save results
+```{r}
+save(dfsimallreps, file = paste("../../results/data/Simulations",  Sys.Date(), iterations, ".Rdata", sep = "_"))
 ```
 
 # Summarize
@@ -501,7 +505,7 @@ dfsimallreps %>%
 ```{r}
 dfsimallreps <- dfsimallreps %>% 
   mutate(emerged = ifelse(
-    Ht_cm1>Ht1.3, 1, 0
+    (Ht_cm1*0.75)>Ht1.3, 1, 0
   ))
 ```
 
@@ -527,7 +531,23 @@ summary_emerge <- dfsimallreps %>%
   mutate(total_emergents = cumsum(new_emergents))
 ```
 
+## How many trees are neither emerged nor dead at the end?
+```{r}
+dfsimallreps %>% 
+  filter(Years == max(Years)) %>% 
+  group_by(emerged, Species) %>% 
+  count()
+```
+
 ## Plot emergents per year - this is misleading because some of the cumulatively emerged trees have died
+```{r}
+ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
+  ylab("Total seedlings (light) and emerged trees (dark)")+
+  xlab("Years since fire")
+```
+
 ```{r}
 ggplot(summary_emerge)+
   theme_minimal()+
@@ -536,6 +556,7 @@ ggplot(summary_emerge)+
   ylab("Total seedlings (light) and emerged trees (dark)")+
   xlab("Years since fire")
 ```
+
 
 ```{r}
 summary_emerge_prop <- summary_emerge %>% 
@@ -551,7 +572,6 @@ summary_emerge_prop
 ```{r}
 ggplot(summary_emerge_prop)+
   theme_minimal()+
-  geom_boxplot(aes(x = as.factor(Years), y = prop_total, fill = Species), col = "black", alpha = .2)+
   geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8)+
   ylab("Proportion of initial seedlings that have emerged")+
   xlab("Years since fire")

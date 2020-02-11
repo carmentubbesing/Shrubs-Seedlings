@@ -1,5 +1,5 @@
 pipomort <- function(){
-  load("../../results/coefficients/mean_coef_gr_pipo.Rdata")
+  load("../../results/coefficients/mean_coef_gr_pipo.Rdata") # these coefficients use log(growth) in the odel
   load("../../results/coefficients/mean_coef_int_pipo.Rdata")
   pts.sf.pipo <<- pts.sf.pipo %>% 
     mutate(prob_mort = exp(mean_coef_int + mean_coef_gr*pred)/(1+exp(mean_coef_int + mean_coef_gr*pred))) %>% 
