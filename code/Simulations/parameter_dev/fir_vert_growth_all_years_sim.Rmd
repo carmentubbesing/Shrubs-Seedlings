@@ -30,13 +30,13 @@ require(car)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
-load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/")
+load(file="../../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
 # Load VSURF results
 ```{r}
-load("../../results/VSURF_abco_vars.Rdata")
+load("../../../results/VSURF_abco_vars.Rdata")
 vars
 ```
 
@@ -158,17 +158,11 @@ f
 
 ## Run lme model
 ```{r}
-LM <- lme(f, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
-summary(LM)
-drop1(LM, test = "Chisq")
-```
-
-## Compare to model with FirePatch as random effect
-```{r}
 LM <- lme(f, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
 summary(LM)
 drop1(LM, test = "Chisq")
 ```
+
 
 # Check collinearity 
 
@@ -189,7 +183,7 @@ vif(LM)
 ```{r}
 vars_int <- paste(vars_one, "+ Ht_cm1:sqrt_shrubarea3")
 f_int <- formula(paste("VertGrowth_Rel ~ ",vars_int))
-LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/Sdlg, method = "ML")
+LM_int <- lme(f_int, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
 AICcmodavg::AICc(LM)
 AICcmodavg::AICc(LM_int)
 if(
@@ -197,7 +191,10 @@ if(
 ) print(paste("WITH INTERACTION WINS BY", round(AICcmodavg::AICc(LM)-AICcmodavg::AICc(LM_int), digits = 2), "AIC")) else print(paste("WITHOUT INTERACTION WINS BY", round(AICcmodavg::AICc(LM_int)-AICcmodavg::AICc(LM), digits = 2)))
 ```
 
-No difference, so I'll leave out the interaction
+## Include interaction
+```{r}
+LM <- LM_int 
+```
 
 ## Look at summary and drop1 results
 ```{r}
@@ -223,7 +220,6 @@ plot(predictorEffect("sqrt_shrubarea3", LM))
 ## Calculate Nakagawa's pseudo R2
 ```{r}
 r.squaredGLMM(LM)
-r.squaredGLMM(LM_int)
 ```
 
 # Re-create effects plots using predictorEffects() and ggplot
@@ -293,17 +289,17 @@ gr_medshrub_abco <- exp(fit_median)
 
 ## Save them
 ```{r}
-save(gr_minshrub_abco, file = "../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
-save(gr_maxshrub_abco, file = "../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
-save(gr_medshrub_abco, file = "../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
+save(gr_minshrub_abco, file = "../../../results/data/FireFootprints/gr_minshrub_abco.Rdata")
+save(gr_maxshrub_abco, file = "../../../results/data/FireFootprints/gr_maxshrub_abco.Rdata")
+save(gr_medshrub_abco, file = "../../../results/data/FireFootprints/gr_medshrub_abco.Rdata")
 ```
 
 ## Plot effects of shrubarea
 
 ### Load colors from PIPO graph
 ```{r}
-load("../../results/figures/FireFootprints/plot_min.Rdata")
-load("../../results/figures/FireFootprints/plot_max.Rdata")
+load("../../../results/figures/FireFootprints/plot_min.Rdata")
+load("../../../results/figures/FireFootprints/plot_max.Rdata")
 ```
 
 ```{r}
@@ -321,7 +317,7 @@ ggplot(effects_df)+
     panel.grid.minor = element_blank(),
     panel.grid.major.x = element_blank(),
     text = element_text(size = 11))
-ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
+ggsave(file = "../../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
 
 
@@ -341,13 +337,13 @@ ggplot(effects_df)+
     panel.grid.minor = element_blank(),
     panel.grid.major.x = element_blank(),
     text = element_text(size = 16))
-ggsave(file = "../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
+ggsave(file = "../../../results/figures/FireFootprints/FirVertRel.png", width = 3, height = 3, dpi = 400)
 ```
 
 
 # Save LM
 ```{r}
-save(LM, file = "../../results/data/FireFootprints/LM_abco.Rdata")
+save(LM, file = "../../../results/data/FireFootprints/LM_abco.Rdata")
 ```
 
 # Look at relationship between years and shrubarea
@@ -384,7 +380,7 @@ df %>%
 
 ## Save final data
 ```{r}
-save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
+save(df, file ="../../../compiled_data/fire_footprints/fir_vert.Rdata")
 ```
 
 # Save LM with non-normalized data
@@ -392,16 +388,20 @@ save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
 LMdf_nonnorm <- df %>% 
   mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
   mutate(log_shrubarea3 = log(shrubarea3)) %>% 
-  dplyr::select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad, VertGrowth_Rel) 
+  dplyr::select(Fire, Sdlg, heatload, Years, BasDia2016.cm, shrubarea3, sqrt_shrubarea3, log_shrubarea3, Elevation, Ht_cm1, Slope.Deg, Year, Aspect.rad.fold.NESW, incidrad, VertGrowth_Rel, FirePatch) 
 LMdf_nonnorm <- droplevels(LMdf_nonnorm)
 ```
 
 ```{r}
-LM_abco_nonnorm <- lme(f, data = LMdf_nonnorm, random = ~ 1| Fire/Sdlg, method = "ML")
+LM_abco_nonnorm <- lme(f_int, data = LMdf_nonnorm, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
 ```
 
 ```{r}
-save(LM_abco_nonnorm, file = "../../results/coefficients/LM_abco_nonnorm.Rdata")
+summary(LM_abco_nonnorm)
+```
+
+```{r}
+save(LM_abco_nonnorm, file = "../../../results/coefficients/LM_abco_nonnorm.Rdata")
 ```
 
 

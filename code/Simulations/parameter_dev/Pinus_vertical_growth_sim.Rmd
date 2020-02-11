@@ -147,6 +147,12 @@ Do include an interaction because it's better for simulation purposes and AICc a
 LM <- LM_int
 ```
 
+## Summary
+```{r}
+summary(LM)
+```
+
+
 # See whether residuals are better for log transformed or not
 ```{r}
 plot(LM)
@@ -317,6 +323,10 @@ LM_pine_nonnorm_sim <- lme(f_int, data = LMdf_nonnorm, random = ~ 1| Fire/FirePa
 
 ```{r}
 plot(predictorEffect("Years", LM_pine_nonnorm_sim))
+```
+
+```{r}
+summary(LM_pine_nonnorm_sim)
 ```
 
 ```{r}

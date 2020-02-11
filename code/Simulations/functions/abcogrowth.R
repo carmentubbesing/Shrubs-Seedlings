@@ -8,13 +8,15 @@ abcogrowth <- function(){
   
   pts.sf.abco <<- pts.sf.abco %>% 
     mutate(pred = coefabco["(Intercept)"] +
-             coefabco["Ht_cm1"]*Ht_cm1+
              coefabco["Years"]*Years+
-             coefabco["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefabco["heatload"]*heatload+
              coefabco["incidrad"]*incidrad+
+             coefabco["Ht_cm1"]*Ht_cm1+
+             coefabco["sqrt_shrubarea3"]*sqrt_shrubarea3+
              coefabco["Slope.Deg"]*Slope.Deg+
-             coefabco["Elevation"]*Elevation) %>%
+             coefabco["Elevation"]*Elevation+
+             coefabco["Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
+             ) %>%
     mutate(pred_exp = exp(pred)) %>% 
     mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth
   
