@@ -99,21 +99,6 @@ summary(lmALL.ME)
 drop1(lmALL.ME, test = "F")
 ```
 
-### Compare AIC for some models
-```{r}
-AIC(lmALL.ME)
-AIC(lm(cover_sum ~ years_since_fire * Shrub_species +ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species*ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire + Shrub_species + ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire * Shrub_species * ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire  + Shrub_species*ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm), data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire *sqrt(ht_wt_mean_cm), data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire *ht_wt_mean_cm, data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire + sqrt(ht_wt_mean_cm), data = me_totals))
-AIC(lm(cover_sum ~ years_since_fire + ht_wt_mean_cm, data = me_totals))
-```
-
 ### Look at most extreme residual and take it out 
 ```{r}
 me_totals[resid(lmALL.ME)< (-1000),]
@@ -121,10 +106,26 @@ me_totals <- me_totals %>%
   filter(!Sdlg ==294)
 ```
 
-### Rerun model
+### Compare AIC for some models
+```{r}
+AICcmodavg::AICc(lmALL.ME)
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire * Shrub_species +ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species*ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire + Shrub_species + ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire * Shrub_species * ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire  + Shrub_species*ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm), data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire *sqrt(ht_wt_mean_cm), data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire *ht_wt_mean_cm, data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire + sqrt(ht_wt_mean_cm), data = me_totals))
+AICcmodavg::AICc(lm(cover_sum ~ years_since_fire + ht_wt_mean_cm, data = me_totals))
+```
+
+
+### Rerun model using the one with the lowest AICc
 
 ```{r}
-lmALL.ME <- lm(cover_sum ~ years_since_fire + sqrt(ht_wt_mean_cm), data = me_totals)
+lmALL.ME <- lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm), data = me_totals)
 summary(lmALL.ME)
 drop1(lmALL.ME, test = "F")
 ```
@@ -155,10 +156,12 @@ me_totals <- me_totals %>%
 ```
 
 
-### Rerun model
+### Rerun model with new column names
+
+ years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm)
 
 ```{r}
-lmALL.ME <- lm(cover_sum ~ Years + sqrt(Ht1.3), data = me_totals)
+lmALL.ME <- lm(cover_sum ~ Years*ShrubSpp03 + ShrubSpp03*sqrt(Ht1.3), data = me_totals)
 summary(lmALL.ME)
 drop1(lmALL.ME, test = "F")
 ```

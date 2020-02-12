@@ -99,7 +99,9 @@ nrow(latimer) + nrow(welch) + nrow(young) == nrow(df)
 summary(as.factor(df$df_source))
 ```
 
-# Sync shrub species names
+# Clean
+
+## Sync shrub species names
 ```{r}
 df <- df %>% 
   mutate(Shrub_species = 
@@ -122,7 +124,7 @@ df <- df %>%
 summary(as.factor(df$Shrub_species))
 ```
 
-# Check for same plot, same year
+## Check for same plot, same year
 ```{r}
 summary(as.factor(latimer$years_since_fire))
 summary(as.factor(young$years_since_fire))
@@ -147,7 +149,7 @@ ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_smooth(method = "loess", span = 1)
 ```
 
-# Sooo I should take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
+## Sooo I should take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
 ```{r}
 df <- df %>% 
   filter(years_since_fire<24)
@@ -306,7 +308,6 @@ ggplot(df_plot %>% filter(Shrub_species == "CHSE11"), aes(x = years_since_fire, 
   theme_bw()
 ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_chse.png", width = 10)
 ```
-
 
 # Save combined data
 ```{r}

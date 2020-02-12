@@ -17,6 +17,7 @@ require(nlme)
 require(MuMIn)
 ```
 #-
+
 # PIPO ONLY
 
 # Load data
@@ -90,7 +91,6 @@ df <- df %>%
   mutate(BasDia2017.cm = ifelse(Sdlg == 290, 8.7, BasDia2017.cm))
 ```
 
-# _
 # Plot range of dia and ht in these data
 
 ## diameter
@@ -121,41 +121,32 @@ ggplot(df)+
   theme(text = element_text(size = 20))
 ```
 
-# _
-
-# Model dia growth in relation to previous dia and height, both species together
+# MODEL dia growth in relation to previous dia and height
 ```{r}
 PIPO1 <- lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df)
 summary(PIPO1)
-plot(predictorEffect("sqrt_shrubarea3", PIPO1))
 ```
 
-# Do AIC model selection
+# Do AICc model selection
 ```{r}
-AIC(PIPO1)
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_Rel, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + VertGrowth_Rel, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_cm, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 + VertGrowth_cm, data = df))
+AICcmodavg::AICc(PIPO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 + VertGrowth_cm, data = df))
 ```
 
 # Select best model
 ```{r}
 PIPO_final <- lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df)
-summary(PIPO1)
+summary(PIPO_final)
 ```
-
 
 # Plot predictor effects
 ```{r}
 plot(predictorEffect("sqrt_shrubarea3", PIPO_final))
 plot(predictorEffect("Ht_cm1", PIPO_final))
 ```
-
-
-# _
 
 # Save
 ```{r}
@@ -217,8 +208,8 @@ ggplot(df, aes(x = Ht_cm1, y = BasDia2017.cm, col = Species))+
   geom_smooth()
 ```
 
-# _
-# Plot range of dia and ht in these data
+
+# PLOT range of dia and ht in these data
 
 ## diameter
 ```{r}
@@ -248,9 +239,8 @@ ggplot(df)+
   theme(text = element_text(size = 20))
 ```
 
-# _
 
-# Model dia growth in relation to previous dia and height, both species together
+# MODEL dia growth in relation to previous dia and height for abco
 ```{r}
 ABCO1 <- lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df)
 summary(ABCO1)
@@ -259,17 +249,13 @@ plot(predictorEffect("sqrt_shrubarea3", ABCO1))
 
 # Do AIC model selection
 ```{r}
-AIC(ABCO1)
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_Rel, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + VertGrowth_Rel, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + Ht_cm1*VertGrowth_cm, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* sqrt_shrubarea3, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* Ht_cm1, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 + VertGrowth_cm, data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 * ShrubSpp03 , data = df))
-AIC(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03 , data = df))
+AICcmodavg::AICc(ABCO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03*sqrt_shrubarea3, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* sqrt_shrubarea3, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03* Ht_cm1, data = df))
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 * ShrubSpp03 , data = df))
 ```
 
 # Select best model
@@ -286,9 +272,6 @@ NOTE: I didn't select the model with the lowest AIC for the same of keeping thin
 plot(predictorEffect("sqrt_shrubarea3", ABCO_final))
 plot(predictorEffect("Ht_cm1", ABCO_final))
 ```
-
-
-# _
 
 # Save
 ```{r}

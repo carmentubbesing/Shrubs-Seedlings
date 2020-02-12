@@ -62,7 +62,7 @@ pipo_shrubgrowth <- function(){
     mutate(Ht1.3 = mean_shrub_ht_by_spp_T2 + diff_shr_ht)
   
   
-  # Change shrub cover based on linear model from my data
+  # Change shrub COVER based on linear model from my data
   load("~/Shrubs-Seedlings/results/coefficients/LM_shrubcover.Rdata")
   
   # Add a column for predicted shrub cover for the present year, predicted by the LM
