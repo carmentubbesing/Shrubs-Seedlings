@@ -1,13 +1,14 @@
 
 
 iterate <- function(n){
-  time.start <<- Sys.time()
   
   no_cores <- detectCores() - 1 # Use all but one core on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   
   dfsimallreps <<- foreach(i=1:n, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv')) %dopar% {
+    time.start <<- Sys.time()
+    
     source("functions/shrubclump.R")
     source("functions/initialize.R")
     source("functions/sim.R")
@@ -20,7 +21,7 @@ iterate <- function(n){
     source("functions/abcogrowth.R")
     source("functions/pipogrowth.R")
     
-    years <<- 20
+    years_max <<- 30
     max_shrub_ht_cm <<- 250
     max_shrub_ht_years <<- 15
     n_seedlings <<- 100
@@ -38,7 +39,7 @@ iterate <- function(n){
     fire <<- "AMRC"
     suppressMessages(shrubclump())
     suppressMessages(initialize())
-    suppressMessages(sim(years))
+    suppressMessages(sim(years_max))
     dfsimall <<-  dfsimall %>% 
       mutate(rep = i)
   }
