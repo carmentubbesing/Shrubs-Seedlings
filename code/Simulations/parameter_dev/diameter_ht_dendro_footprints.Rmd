@@ -148,6 +148,18 @@ plot(predictorEffect("sqrt_shrubarea3", PIPO_final))
 plot(predictorEffect("Ht_cm1", PIPO_final))
 ```
 
+# Test residual standard error meaning to make sure it's the same as root mean square error = root mean square deviation
+```{r}
+df$predict_pipo_final <- predict(PIPO_final)
+df %>% 
+  mutate(residual = BasDia2017.cm - predict_pipo_final) %>% 
+  mutate(square_resid = residual^2) %>% 
+  summarize(sum_resid = sum(square_resid)) %>% 
+  mutate(mean_resid = sum_resid/nrow(df)) %>% 
+  mutate(RMSE = sqrt(mean_resid))
+```
+
+
 # Save
 ```{r}
 save(PIPO_final, file ="../../../results/coefficients/LM_dia_PIPO_footprints.Rdata")
@@ -266,6 +278,19 @@ drop1(ABCO_final, test = "F")
 ```
 
 NOTE: I didn't select the model with the lowest AIC for the same of keeping things simple and the same as the PIPO model. 
+
+# Test residual standard error meaning to make sure it's the same as root mean square error = root mean square deviation
+```{r}
+df$predict_ABCO_final <- predict(ABCO_final)
+df %>% 
+  mutate(residual = BasDia2017.cm - predict_ABCO_final) %>% 
+  mutate(square_resid = residual^2) %>% 
+  summarize(sum_resid = sum(square_resid)) %>% 
+  mutate(mean_resid = sum_resid/(nrow(df)-4)) %>% 
+  mutate(RMSE = sqrt(mean_resid))
+summary(ABCO_final)
+sigma(ABCO_final)
+```
 
 # Plot predictor effects
 ```{r}

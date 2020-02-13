@@ -4,6 +4,9 @@ pipogrowth <- function(){
   remove(LM_pine_nonnorm_sim)
   coefpipo <<- LMpipo$coefficients$fixed
    
+  load("../../results/coefficients/RMSE_pine_growth.Rdata")
+  error_iteration <- rnorm(1, 0, unlist(RMSE_pine_growth))
+  
   pts.sf.pipo <<- pts.sf.pipo %>% 
     mutate(pred = coefpipo["(Intercept)"] +
              coefpipo["Years"]*Years+
@@ -23,6 +26,7 @@ pipogrowth <- function(){
       Year == "2016" ~ pred + coefpipo["Year2016"],
       Year == "2017" ~ pred + coefpipo["Year2017"],
       TRUE ~ as.numeric(pred)) ) %>% 
+    mutate(pred = pred + error_iteration) %>% 
     mutate(pred_exp = exp(pred)) %>% 
     mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  
   

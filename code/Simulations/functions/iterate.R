@@ -14,17 +14,16 @@ iterate <- function(n){
     source("functions/sim.R")
     source("functions/abco_shrubgrowth.R")
     source("functions/pipo_shrubgrowth.R")
-    source("functions/abcomort.R")
-    source("functions/pipomort.R")
-    source("functions/abcodia_footprints.R")
-    source("functions/pipodia_footprints.R")
-    source("functions/abcogrowth.R")
-    source("functions/pipogrowth.R")
+    source("functions/abcomort.R") #needs uncertainty!
+    source("functions/pipomort.R") #needs uncertainty!
+    source("functions/abcodia_footprints.R") #uncertainty done
+    source("functions/pipodia_footprints.R") #uncertainty done
+    source("functions/abcogrowth.R") #uncertainty done
+    source("functions/pipogrowth.R") #uncertainty done
     
-    years_max <<- 30
-    max_shrub_ht_cm <<- 250
+    years_max <<- 40
     max_shrub_ht_years <<- 15
-    n_seedlings <<- 100
+    n_seedlings <<- 200
     length_m <<- 40
     height_m <<- 40
     lambda <<- 4

@@ -24,12 +24,12 @@ source("functions/iterate.R")
 
 # Define iterations
 ```{r}
-iterations <- 5
+iterations <- 10
 ```
 
 # Define length of simulation
 ```{r}
-years_max <<- 30
+years_max <<- 40
 ```
 
 # Iterate 
@@ -399,7 +399,7 @@ print(paste("The whole thing took", round(Sys.time()-strt, 1), "minutes"))
 print(Sys.time())
 ```
 
-# Next steps to improve the model
+# Long-term goals
 
 1.  Use Kristen's data or Hugh's data for initial conditions
 2.  Improve dispersal kernel based on Kristen/Hugh's data 
@@ -407,16 +407,7 @@ print(Sys.time())
 5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
 6.  Add customization of patch size and shape
 8.  Change sapling growth equations once they emerge from the shrub canopy
-
-For next week:
-
-1.  Update display of shrub competition after simulation years
+9.  Update display of shrub competition after simulation years
 7.  apply to King, American River Complex, rest of the fires I measured
-
-Other notes:
-
-1.  maybe submit to American Naturalist
-2.  Global Change Biology - mixing up the years
-3.  no overstory reproduction for now 
 5.  what does shrub competition mean for new recruitment?
 

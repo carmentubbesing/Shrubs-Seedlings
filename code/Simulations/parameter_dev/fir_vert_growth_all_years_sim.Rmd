@@ -400,6 +400,53 @@ LM_abco_nonnorm <- lme(f_int, data = LMdf_nonnorm, random = ~ 1| Fire/FirePatch/
 summary(LM_abco_nonnorm)
 ```
 
+# Calculatel residual standard error NOT within-group, since I don't include grouping in the simulation
+```{r}
+coefabco <<- LM_abco_nonnorm$coefficients$fixed
+
+LMdf_nonnorm <- LMdf_nonnorm %>% 
+  mutate(pred = coefabco["(Intercept)"] +
+         coefabco["Years"]*Years+
+         coefabco["heatload"]*heatload+
+         coefabco["incidrad"]*incidrad+
+         coefabco["Ht_cm1"]*Ht_cm1+
+         coefabco["sqrt_shrubarea3"]*sqrt_shrubarea3+
+         coefabco["Slope.Deg"]*Slope.Deg+
+         coefabco["Elevation"]*Elevation+
+         coefabco["Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
+         ) 
+
+ggplot(LMdf_nonnorm, aes(x = VertGrowth_Rel, y = pred, col = heatload))+
+  geom_point()+
+  geom_abline(aes(intercept = 0, slope = 1))+
+  theme_minimal()
+
+  
+```
+
+```{r}
+k <- 8
+```
+
+
+```{r}
+RMSE_fir_growth <- LMdf_nonnorm %>% 
+  mutate(residual = VertGrowth_Rel - pred) %>% 
+  mutate(square_resid = residual^2) %>% 
+  summarize(sum_resid = sum(square_resid)) %>% 
+  mutate(mean_resid = sum_resid/(nrow(LMdf_nonnorm)-(k+1))) %>% 
+  mutate(RMSE = sqrt(mean_resid)) %>% 
+  dplyr::select(RMSE)
+RMSE_fir_growth
+sigma(LM_abco_nonnorm)
+```
+
+# Save RMSE
+```{r}
+save(RMSE_fir_growth, file = "../../../results/coefficients/RMSE_fir_growth.Rdata")
+```
+
+
 ```{r}
 save(LM_abco_nonnorm, file = "../../../results/coefficients/LM_abco_nonnorm.Rdata")
 ```

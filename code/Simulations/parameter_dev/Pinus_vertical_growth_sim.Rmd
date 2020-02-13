@@ -329,6 +329,61 @@ plot(predictorEffect("Years", LM_pine_nonnorm_sim))
 summary(LM_pine_nonnorm_sim)
 ```
 
+
+# Calculatel residual standard error NOT within-group, since I don't include grouping in the simulation
+```{r}
+coefpipo <<- LM_pine_nonnorm_sim$coefficients$fixed
+
+LMdf_nonnorm <- LMdf_nonnorm %>% 
+  mutate(pred = coefpipo["(Intercept)"] +
+             coefpipo["Years"]*Years+
+             coefpipo["Ht_cm1"]*Ht_cm1+
+             coefpipo["sqrt_shrubarea3"]*sqrt_shrubarea3+
+             coefpipo["heatload"]*heatload+
+             coefpipo["Elevation"]*Elevation+
+             coefpipo["Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1) %>%
+    mutate(pred = case_when(
+      ShrubSpp03 == "CECO" ~ pred + coefpipo["ShrubSpp03CECO"],
+      ShrubSpp03 == "CEIN" ~ pred + coefpipo["ShrubSpp03CEIN"],
+      ShrubSpp03 == "CHFO" ~ pred + coefpipo["ShrubSpp03CHFO"],
+      ShrubSpp03 == "LIDE" ~ pred + coefpipo["ShrubSpp03LIDE"],
+      ShrubSpp03 == "Other" ~ pred + coefpipo["ShrubSpp03Other"],
+      TRUE ~ as.numeric(pred)) ) %>% 
+    mutate(pred = case_when(
+      Year == "2016" ~ pred + coefpipo["Year2016"],
+      Year == "2017" ~ pred + coefpipo["Year2017"],
+      TRUE ~ as.numeric(pred)) )
+
+ggplot(LMdf_nonnorm, aes(x = VertGrowth_Rel, y = pred, col = heatload))+
+  geom_point()+
+  geom_abline(aes(intercept = 0, slope = 1))+
+  theme_minimal()
+```
+
+```{r}
+k <- length(LM_pine_nonnorm_sim$coefficients$fixed)-1 #Subtract one to ignore intercept
+```
+
+
+```{r}
+RMSE_pine_growth <- LMdf_nonnorm %>% 
+  mutate(residual = VertGrowth_Rel - pred) %>% 
+  mutate(square_resid = residual^2) %>% 
+  summarize(sum_resid = sum(square_resid)) %>% 
+  mutate(mean_resid = sum_resid/(nrow(LMdf_nonnorm)-(k+1))) %>% 
+  mutate(RMSE = sqrt(mean_resid)) %>% 
+  dplyr::select(RMSE)
+RMSE_pine_growth
+sigma(LM_pine_nonnorm_sim)
+```
+
+# Save RMSE
+```{r}
+save(RMSE_pine_growth, file = "../../../results/coefficients/RMSE_pine_growth.Rdata")
+```
+
+
+# Save final model
 ```{r}
 save(LM_pine_nonnorm_sim, file = "../../../results/coefficients/LM_pine_nonnorm_sim.Rdata")
 ```
