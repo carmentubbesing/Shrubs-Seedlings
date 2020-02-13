@@ -18,8 +18,8 @@ require(MASS)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
-load(file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/")
+load(file = "../../../compiled_data/growth_mortality/df_vert.Rdata")
 ```
 
 #  Make dead a factor
@@ -76,8 +76,7 @@ ggplot()+
   scale_color_manual(values = c("dark green", "red"))+
   geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
   geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
-  
-ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+
 ```
 
 # Actual simulations for ABCO
@@ -116,8 +115,10 @@ gr_set_alive <- gr_set_alive[[1]]
 
 ## Loop the simulation 1000 times
 ```{r}
-coefficient_gr <- c()
-coefficient_int <- c()
+gr_coef  <- c()
+int_coef  <- c()
+gr_se <- c()
+
 for(i in 1:1000){
   dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
   alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
@@ -127,19 +128,21 @@ for(i in 1:1000){
   dead_df$dead <- 1
   df <- bind_rows(dead_df, live_df)
   glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
-  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
-  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+  gr_coef <- c(gr_coef , glm$coefficient[2])
+  int_coef <- c(int_coef , glm$coefficient[1])
+  gr_se <- c(gr_se, summary(glm)$coefficients["gr","Std. Error"])
+  all_coefficients <- data.frame(gr_coef, int_coef, gr_se)
 }
-mean_coef_gr <- mean(coefficient_gr)
-mean_coef_int <- mean(coefficient_int)
+mean_coef_gr <- mean(gr_coef)
+mean_coef_int <- mean(int_coef)
+head(all_coefficients)
 ```
 
-i## Save
+## Save
 ```{r}
-save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_abco.Rdata")
-save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_abco.Rdata")
-save(coefficient_gr, file = "../../results/coefficients/coef_gr_abco.Rdata")
-save(coefficient_int, file = "../../results/coefficients/coef_int_abco.Rdata")
+save(mean_coef_gr, file = "../../../results/coefficients/mean_coef_gr_abco.Rdata")
+save(mean_coef_int, file = "../../../results/coefficients/mean_coef_int_abco.Rdata")
+save(all_coefficients, file = "../../../results/coefficients/gr_mort_all_coefficients_abco.Rdata")
 ```
 
 # _
@@ -179,7 +182,7 @@ ggplot()+
   geom_line(data = pdf_dead, aes(x = x, y = y), col = "red")+
   geom_line(data = pdf_live, aes(x = x, y = y), col = "dark green")
   
-ggsave("../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
+ggsave("../../../results/figures/GrowthMortality/histogram_dead_alive_pipo.png")
 ```
 
 # Actual simulations for PIPO
@@ -216,8 +219,10 @@ gr_set_alive <- gr_set_alive[[1]]
 
 ## Loop it 
 ```{r}
-coefficient_gr <- c()
-coefficient_int <- c()
+gr_coef  <- c()
+int_coef  <- c()
+gr_se <- c()
+
 for(i in 1:1000){
   dead_sample <- sample(gr_set_dead, size = n_dead_pop, replace = TRUE) 
   alive_sample <- sample(gr_set_alive, size = n_alive_pop, replace = TRUE)
@@ -227,18 +232,45 @@ for(i in 1:1000){
   dead_df$dead <- 1
   df <- bind_rows(dead_df, live_df)
   glm <- glm(dead ~ gr, family = binomial(link = "logit"), data = df)
-  coefficient_gr <- c(coefficient_gr, glm$coefficient[2])
-  coefficient_int <- c(coefficient_int, glm$coefficient[1])
+  gr_coef <- c(gr_coef , glm$coefficient[2])
+  int_coef <- c(int_coef , glm$coefficient[1])
+  gr_se <- c(gr_se, summary(glm)$coefficients["gr","Std. Error"])
+  all_coefficients <- data.frame(gr_coef, int_coef, gr_se)
 }
-mean_coef_gr <- mean(coefficient_gr)
-mean_coef_int <- mean(coefficient_int)
+mean_coef_gr <- mean(gr_coef)
+mean_coef_int <- mean(int_coef)
+head(all_coefficients)
 ```
 
+```{r}
+se_list <- tbl_df(gr_se) 
+
+for(i in 1:nrow(se_list)){
+  se_list$rand_obvs[i] <- rnorm(1, mean(gr_coef), se_list$value[i])
+}
+  
+se_list
+```
+
+# Find distribution of the coefficient for growth
+```{r}
+sd(gr_coef)
+hist(rnorm(1000,mean(gr_coef), sd(gr_coef)), breaks = 20)
+ggplot()+
+  geom_histogram(aes(x = gr_coef), alpha = .2, fill = "green", bins =20)+
+  theme_minimal()+
+  geom_histogram(aes(x = rnorm(1000,mean(gr_coef), sd(gr_coef))), alpha = .2, fill = "pink", bins =20)+
+  geom_histogram(aes(x = rnorm(1000, mean(gr_coef), mean(gr_se))), alpha = .2, fill = "blue", bins =20)+
+  geom_histogram(aes(x = se_list$rand_obvs), alpha = .2, fill = "orange", bins =20)
+```
+
+THIS HISTOGRAM SHOWS: the coefficient estimate varies with a normal distribution with a standard deviation equal to the standard deviation of the list of coefficients from the simulations, which is also equal to the mean standard error or randomly sampled standard error split out by the glm models.
+
+Therefore, to account for uncertainty in my model, I can take the standard deviation of the list of 1000 coefficients from the simulation runs and draw from that distribution, or just randomly draw from the simulation runs, which would also allow me to link the growth coefficient with the intercept coefficient.
 
 ## Save
 ```{r}
-save(mean_coef_gr, file = "../../results/coefficients/mean_coef_gr_pipo.Rdata")
-save(mean_coef_int, file = "../../results/coefficients/mean_coef_int_pipo.Rdata")
-save(coefficient_gr, file = "../../results/coefficients/coef_gr_pipo.Rdata")
-save(coefficient_int, file = "../../results/coefficients/coef_int_pipo.Rdata")
+save(mean_coef_gr, file = "../../../results/coefficients/mean_coef_gr_pipo.Rdata")
+save(mean_coef_int, file = "../../../results/coefficients/mean_coef_int_pipo.Rdata")
+save(all_coefficients, file = "../../../results/coefficients/gr_mort_all_coefficients_pipo.Rdata")
 ```
