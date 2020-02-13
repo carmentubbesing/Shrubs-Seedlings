@@ -24,7 +24,7 @@ source("functions/iterate.R")
 
 # Define iterations
 ```{r}
-iterations <- 10
+iterations <- 50
 ```
 
 # Define length of simulation
@@ -37,6 +37,27 @@ years_max <<- 40
 time <- Sys.time()
 iterate(iterations)
 print(paste("That took", round(Sys.time()-time, 1), "minutes"))
+```
+
+# Test years
+```{r}
+dfsimallreps %>% group_by(rep, Species) %>% filter(Years == max(Years)) %>% group_by(rep,Years,Species) %>% count()
+```
+
+# Filter out years in which nothing happens
+```{r}
+max_year <- dfsimallreps %>% 
+  group_by(Years, emerged) %>% 
+  summarize(sum_emerged = sum(emerged)) %>% 
+  filter(emerged ==0) %>% 
+  ungroup() %>% 
+  summarize(max_year = max(Years)) %>% 
+  unlist()
+```
+
+```{r}
+dfsimallreps <- dfsimallreps %>% 
+  filter(Years < max_year+2)
 ```
 
 # Save results
@@ -285,7 +306,7 @@ dfsimallreps <- dfsimallreps %>%
 dfsimallreps %>% filter(Years == 28) %>% group_by(Species, emerged) %>% count()
 ```
 
-## How many trees are neither emerged nor dead at the end?
+## How many trees are neither emerged nor dead at the end? Should be none.
 ```{r}
 dfsimallreps %>% 
   filter(Years == max(Years)) %>% 
@@ -343,23 +364,7 @@ dfsimallreps %>%
   count()
 ```
 
-## Calculate how many surviving trees are left at last year both emerged and non-emerged
-```{r}
-summary_count <- dfsimallreps %>% 
-  group_by(rep, Species) %>% 
-  filter(Years == max(Years)) %>% 
-  summarize(emerged = sum(emerged)) 
-```
-
-```{r}
-boxplot_trees <- ggplot(summary_count)+
-  geom_boxplot(aes(x = Species, y = emerged))+
-  theme_minimal()+
-  ylab("Number of emerged trees")+
-  ggtitle(paste("Results for", iterations, "simulations at", years_max+9,"years after fire", sep = " "))
-```
-
-## Same graph but for proportion of original seedlings
+## Plot proportion of original seedlings left at the end
 ```{r}
 summary_prop <- dfsimallreps %>% 
   ungroup() %>% 
@@ -382,7 +387,7 @@ boxplot_prop <- ggplot(summary_prop)+
   geom_boxplot(aes(x = Species, y = prop_emerged))+
   theme_minimal()+
   ylab("Proportion of initial trees")+
-   ggtitle(paste("Results for", iterations, "simulations at", years_max+9,"years after fire", sep = " "))
+   ggtitle(paste("Results for", iterations, "simulations at", max(dfsimallreps$Years),"years after fire", sep = " "))
 
 ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png", width = 6, height =4, dpi = 400)
 ```
