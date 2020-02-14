@@ -126,6 +126,28 @@ AICcmodavg::AICc(lm(cover_sum ~ years_since_fire + ht_wt_mean_cm, data = me_tota
 
 ```{r}
 lmALL.ME <- lm(cover_sum ~ years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm), data = me_totals)
+```
+
+#### Test for rank deficiency
+```{r}
+lmALL.ME$rank
+length(lmALL.ME$coefficients)
+```
+
+Not gonna work! Pick the next best model
+```{r}
+lm <- lm(cover_sum ~ years_since_fire * Shrub_species * ht_wt_mean_cm, data = me_totals)
+lm$rank
+```
+
+And again:
+```{r}
+lmALL.ME <- lm(cover_sum ~ years_since_fire + sqrt(ht_wt_mean_cm), data = me_totals)
+lm$rank
+```
+
+
+```{r}
 summary(lmALL.ME)
 drop1(lmALL.ME, test = "F")
 ```
@@ -140,7 +162,7 @@ ggplot(me_totals)+
 ```{r}
 ggplot(me_totals, aes(x = years_since_fire, y = resid(lmALL.ME)))+
   geom_point()+
-  geom_smooth(span = .5)
+  geom_smooth(method = "gam")
 hist(resid(lmALL.ME), breaks = 20)
 ```
 
@@ -161,15 +183,16 @@ me_totals <- me_totals %>%
  years_since_fire * Shrub_species + Shrub_species *sqrt(ht_wt_mean_cm)
 
 ```{r}
-lmALL.ME <- lm(cover_sum ~ Years*ShrubSpp03 + ShrubSpp03*sqrt(Ht1.3), data = me_totals)
+lmALL.ME <- lm(cover_sum ~ Years + sqrt(Ht1.3), data = me_totals)
 summary(lmALL.ME)
 drop1(lmALL.ME, test = "F")
 ```
 
 
 ```{r}
-plot(predictorEffect("Years", lmALL.ME))
-plot(predictorEffect("Ht1.3", lmALL.ME))
+plot1 <- plot(predictorEffect("Years", lmALL.ME))
+plot2 <- plot(predictorEffect("Ht1.3", lmALL.ME))
+grid.arrange(plot1, plot2, ncol = 2)
 ```
 
 # Save final model

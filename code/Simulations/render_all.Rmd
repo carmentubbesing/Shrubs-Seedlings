@@ -1,0 +1,31 @@
+---
+title: "render all"
+author: "Carmen"
+date: "2/13/2020"
+output: html_document
+---
+
+# 100 iterations
+
+```{r prep}
+library(knitr)
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+strt_renderall <- Sys.time()
+```
+
+```{r simulate, message = F, warning = F}
+strt_simulate <- Sys.time()
+rmarkdown::render("simulations.Rmd", "html_document", quiet = T)
+print(Sys.time()-strt_simulate)
+```
+
+```{r plot}
+strt_plot <- Sys.time()
+rmarkdown::render("simulations_plot.Rmd", "html_document", quiet = T)
+print(Sys.time()-strt_plot)
+```
+
+```{r time}
+print(Sys.time()-strt_renderall)
+```
+

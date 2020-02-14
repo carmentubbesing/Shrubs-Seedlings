@@ -8,13 +8,20 @@ output:
 ---
 
 ```{r}
-load("~/Simulations_2020-02-12_1000_.Rdata")
+load("~/Simulations2020-02-14_100.Rdata")
 strt <- Sys.time()
 ```
 
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
+```
+
+# Check for reps that got dropped as errors -- should be TRUE
+```{r}
+length(unique(dfsimallreps$rep)) == max(dfsimallreps$rep)
+length(unique(dfsimallreps$rep))
+max(dfsimallreps$rep)
 ```
 
 # Summarize
@@ -43,25 +50,10 @@ ht <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, 
         axis.text.x = element_text(size = 8))
 ht
 filename <- paste("../../results/figures/Simulations/hts_sim", max(dfsimallreps$Years), Sys.Date(), ".png", sep = "_")
-ggsave(file = filename, width = 6, height =4, dpi = 400)
+#ggsave(file = filename, width = 6, height =4, dpi = 400)
 ```
 
-## Shrub height growth patterns
-```{r}
-dfsimallreps_summary <- dfsimallreps %>% 
-  ungroup() %>%
-  mutate(rep = as.factor(paste(rep))) %>% 
-  group_by(rep, Years, ShrubSpp03) %>% 
-  mutate(mean_shrub_ht = mean(Ht1.3))
-```
-
-```{r}
-ggplot(dfsimallreps_summary)+
-  geom_smooth(aes(x = Years, y = mean_shrub_ht, col = ShrubSpp03, group = interaction(rep, ShrubSpp03)))+
-  theme_bw()
-```
-
-### Diameter growth patterns 
+## Diameter growth patterns 
 ```{r}
 ggplot(dfsimallreps)+
   #geom_line(aes(x = Years, y = dia.cm, col = Species, group = interaction(rep, ID_withinrep)), alpha = .1)+
@@ -69,7 +61,29 @@ ggplot(dfsimallreps)+
   geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
 ```
 
-#### For a single tree
+## Height by error term
+```{r}
+summary <- dfsimallreps %>% 
+  filter(rep %in% c(1:20)) %>% 
+  group_by(rep, Species, Years, error_pipo_gr, error_abco_gr) %>% 
+  summarize(mean_ht = mean(Ht_cm1))
+```
+
+```{r}
+ggplot(summary %>% filter(Species == "PIPO"))+
+  geom_line(aes(x = Years, y = mean_ht, col = error_pipo_gr, group = interaction(Species, rep)))+
+  scale_color_continuous(low = "red", high = "blue")+
+  theme_bw()
+```
+
+```{r}
+ggplot(summary %>% filter(Species == "ABCO"))+
+  geom_line(aes(x = Years, y = mean_ht, col = error_abco_gr, group = interaction(Species, rep)))+
+  scale_color_continuous(low = "red", high = "blue")+
+  theme_bw()
+```
+
+## Ht and dia for a single tree
 ```{r}
 tree244dia <- ggplot(dfsimallreps %>% filter(Sdlg == 244 & rep == 1))+
   geom_line(aes(x = Years, y = dia.cm))+
@@ -96,13 +110,13 @@ test <- dfsimallreps %>%
 test <- test %>% 
   mutate(ID = paste(Sdlg, rep, ID_withinrep, sep = "-"))
 
-test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = "ID")
+test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID"))
 
 test2 <- test2 %>% 
   rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
 
 ggplot(test2)+
-  geom_point(aes(x = dia.cmYear19, y = dia.cmYear20))+
+  geom_point(aes(x = dia.cmYear19, y = dia.cmYear20, col = as.factor(rep)))+
   geom_abline(aes(slope = 1, intercept = 0))+
   theme_minimal()+
   ylim(0,20)+
@@ -206,7 +220,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp03, col = ShrubSpp03))+
   #geom_line(aes(group = Sdlg), alpha = .2)+
   geom_smooth()+
-  ggtitle(paste("Results for", max(dfsimallreps$Years), "simulations", sep = " "))+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Shrub height")+
   theme_bw()
@@ -217,7 +231,7 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp0
 ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_cov, group = ShrubSpp03, col = ShrubSpp03))+
   #geom_line(aes(group = Sdlg), alpha = .2)+
   geom_smooth()+
-  ggtitle(paste("Results for", max(dfsimallreps$Years), "simulations", sep = " "))+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Shrub cover")+
   theme_bw()
@@ -235,7 +249,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 ggplot(dfsimallreps, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col = ShrubSpp03, symbol = Species))+
   #geom_line(aes(group = interaction(rep, ID_withinrep)), alpha = .05)+
   geom_smooth()+
-  ggtitle(paste("Results for", max(dfsimallreps$Years), "simulations", sep = " "))+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Focal tree height")+
   theme_bw()
@@ -256,17 +270,15 @@ dfsimallreps %>%
 
 # Plot how many trees emerge above the shrub canopy each year
 
-## Add column for whether the tree has emerged 
+### Check that all have emerged by the last year
 ```{r}
-dfsimallreps <- dfsimallreps %>% 
-  mutate(emerged = ifelse(
-    (Ht_cm1*0.75)>Ht1.3, 1, 0
-  ))
-```
-
-### Check
-```{r}
-dfsimallreps %>% filter(Years == 28) %>% group_by(Species, emerged) %>% count()
+dfsimallreps %>% 
+  group_by(rep) %>% 
+  filter(Years == max(Years)) %>% 
+  group_by(Species, emerged, Years) %>% 
+  filter(emerged ==0) %>% 
+  group_by(rep, Sdlg) %>% 
+  count()
 ```
 
 ## How many trees are neither emerged nor dead at the end? Should be none.
@@ -299,7 +311,7 @@ plot_emerge_count <- ggplot(summary_emerge)+
   geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
   ylab("Number of emerged trees")+
   xlab("Years since fire")+
-  ggtitle(paste("Results for", max(dfsimallreps$Years), "simulations", sep = " "))
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
 ```
 
 ### Proportions
@@ -310,7 +322,7 @@ plot_emerge_prop <- ggplot(summary_emerge)+
   geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8)+
   ylab("Proportion of initial\nseedlings that have emerged")+
   xlab("Years since fire")+
-  ggtitle(paste("Results for", max(dfsimallreps$Years), "simulations", sep = " "))
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
 ```
 
 ```{r}
@@ -327,7 +339,7 @@ dfsimallreps %>%
   count()
 ```
 
-## Plot number proportion of original seedlings left at the end
+## Plot number and proportion of original seedlings left at the end
 
 ```{r}
 title <- paste("Results for", max(dfsimallreps$rep), "simulations at\n", max(dfsimallreps$Years),"years after fire", sep = " ")
@@ -377,13 +389,122 @@ ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png
 grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
 ```
 
-```{r}
-print(paste("The whole thing took", round(Sys.time()-strt, 1), "minutes"))
+```{r, echo = F}
+print("The whole thing took")
+Sys.time()-strt
 ```
 
+# Are ending proportions significantly different between pine and fir?
 ```{r}
-print(Sys.time()) - strt
+ggplot(summary_prop)+
+  geom_histogram(aes(x = prop_emerged, fill = Species), bins =20)+
+  theme_minimal()
+glm <- glm(prop_emerged ~ Species, family = binomial, data = summary_prop, weights = initial_n)
+summary(glm)
 ```
+
+
+# What's different about the iterations where 100% of trees emerge?
+```{r}
+hundoP <- summary_prop %>% 
+  ungroup() %>% 
+  filter(prop_emerged==1) %>% 
+  dplyr::select(rep) %>% 
+  unlist()
+hundoP
+```
+
+## What do the hundoP reps look like?
+```{r}
+ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
+  geom_smooth(aes(x = Years, y = Ht_cm1, group = rep))+
+  geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")
+```
+
+## Sensitivity to error in growth model
+```{r}
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, error_pipo_gr) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "PIPO") %>% 
+  ggplot(aes(x = error_pipo_gr, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("PIPO")
+
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, error_abco_gr) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "ABCO") %>% 
+  ggplot(aes(x = error_abco_gr, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("ABCO")
+```
+
+## Sensitivity to error in mortality model
+```{r}
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_mort_pipo) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "PIPO") %>% 
+  ggplot(aes(x = coef_gr_mort_pipo, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("PIPO")
+
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_mort_abco) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "ABCO") %>% 
+  ggplot(aes(x = coef_gr_mort_abco, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("ABCO")
+```
+
+
+# Take home: the growth error terms super strongly affect the results! 
 
 # Long-term goals
 

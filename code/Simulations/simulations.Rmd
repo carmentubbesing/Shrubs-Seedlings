@@ -24,12 +24,12 @@ source("functions/iterate.R")
 
 # Define iterations
 ```{r}
-iterations <- 10
+iterations <- 100
 ```
 
 # Define length of simulation
 ```{r}
-years_max <<- 40
+years_max <<- 50
 ```
 
 # Iterate 

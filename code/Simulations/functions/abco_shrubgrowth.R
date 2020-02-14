@@ -61,13 +61,13 @@ abco_shrubgrowth <- function(){
   pts.sf.abco <<- pts.sf.abco %>% 
     mutate(Ht1.3 = mean_shrub_ht_by_spp_T2 + diff_shr_ht)
   
-  # Change shrub cover based on linear model from my data
+  # Change shrub COVER based on linear model from my data
+  #*******************************************************
   load("~/Shrubs-Seedlings/results/coefficients/LM_shrubcover.Rdata")
   
   # Add a column for predicted shrub cover for the present year, predicted by the LM
   pts.sf.abco <<- pts.sf.abco %>% 
-    mutate(predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.abco)) %>% 
-    mutate(se_predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.abco, se= T)$se.fit)
+    mutate(predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.abco)) 
   
   # Add a column for difference between current cover and expected cover
   pts.sf.abco <<- pts.sf.abco %>% 
@@ -76,19 +76,20 @@ abco_shrubgrowth <- function(){
   x2 <- pts.sf.abco %>% 
     mutate(Years = Years + 1)
   
-  # Repeat the mean height calculations for the next year
+  # Repeat the mean cover calculations for the next year
   pts.sf.abco <<- pts.sf.abco %>% 
-    mutate(predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2)) %>% 
-    mutate(se_predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2, se= T)$se.fit)
+    mutate(predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2)) 
   
   # Check
   ggplot(pts.sf.abco)+
     geom_point(aes(x = predicted_shrub_cov, y = predicted_shrub_cov_T2))+
     geom_abline(aes(intercept = 0, slope = 1))
   
-  # Now make height this new height plus the difference between predicted height and actual height for the present year
+  # Now make cover this new cover plus the difference between predicted cover and actual cover for the present year
   pts.sf.abco <<- pts.sf.abco %>% 
     mutate(Cov1.3 = predicted_shrub_cov_T2 + diff_shr_cov)
+  
+  summary(pts.sf.abco$Cov1.3)
   
   # Re-calculate shrub indices
   pts.sf.abco <<- pts.sf.abco %>% 
