@@ -32,11 +32,17 @@ iterations <- 100
 years_max <<- 50
 ```
 
+# Define fire
+```{r}
+fire <- "AMRC"
+```
+
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
 iterate(iterations)
-print(paste("That took", round(Sys.time()-time, 1), "minutes"))
+print(paste("That took"))
+Sys.time()-time
 ```
 
 # Filter out years in which nothing happens
@@ -57,11 +63,13 @@ dfsimallreps <- dfsimallreps %>%
 
 # Save results
 ```{r}
-save(dfsimallreps, file = paste("~/Simulations",  Sys.Date(), "_", iterations, ".Rdata", sep = ""))
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
+save(dfsimallreps, file =filename)
 ```
 
-
 ```{r}
-print(paste("The whole thing took", round(Sys.time()-strt, 1), "minutes"))
+print(paste("The whole thing took"))
+round(Sys.time()-strt)
+Sys.time()
 ```
 

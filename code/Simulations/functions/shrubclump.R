@@ -19,14 +19,29 @@ shrubclump <- function(){
     mutate(sqrt_shrubarea3 = sqrt(Cov1.3*Ht1.3)) %>%
     mutate(ID = Sdlg) %>%
     mutate(ID = as.numeric(paste(ID))) %>%
-    dplyr::select(ID, everything()) %>%
-    mutate(ShrubSppID = case_when(
-      ShrubSpp03 == "ARPA" ~ 1,
-      ShrubSpp03 == "CECO" ~ 2,
-      ShrubSpp03 == "CHSE" ~ 3,
-      ShrubSpp03 == "LIDE" ~ 4,
-      ShrubSpp03 == "Other" ~ 5
-    ))
+    dplyr::select(ID, everything())
+  
+  if(fire=="AMRC"){
+    raster_df <<- raster_df %>% 
+      mutate(ShrubSppID = case_when(
+        ShrubSpp03 == "ARPA" ~ 1,
+        ShrubSpp03 == "CECO" ~ 2,
+        ShrubSpp03 == "CHSE" ~ 3,
+        ShrubSpp03 == "LIDE" ~ 4,
+        ShrubSpp03 == "Other" ~ 5
+      ))
+  }
+  
+  if(fire=="STAR"){
+    raster_df <<- raster_df %>% 
+      mutate(ShrubSppID = case_when(
+        ShrubSpp03 == "CEIN" ~ 1,
+        ShrubSpp03 == "CECO" ~ 2,
+        ShrubSpp03 == "PREM" ~ 3,
+        ShrubSpp03 == "Other" ~ 4
+      ))
+  }
+
   
     shrub_ID <- (sample(df$ShrubSpp03, length_m*height_m, replace = T))
     summary(as.factor(shrub_ID))

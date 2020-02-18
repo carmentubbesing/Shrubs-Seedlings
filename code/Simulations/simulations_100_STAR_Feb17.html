@@ -374,6 +374,7 @@ summary {
 <li><a href="#this-script-runs-simulations-with-the-most-up-to-date-functions">This script runs simulations with the most up-to-date functions</a></li>
 <li><a href="#define-iterations">Define iterations</a></li>
 <li><a href="#define-length-of-simulation">Define length of simulation</a></li>
+<li><a href="#define-fire">Define fire</a></li>
 <li><a href="#iterate">Iterate</a></li>
 <li><a href="#filter-out-years-in-which-nothing-happens">Filter out years in which nothing happens</a></li>
 <li><a href="#save-results">Save results</a></li>
@@ -385,7 +386,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-02-14 15:35:27 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-02-17 22:56:19 PST&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -397,12 +398,18 @@ summary {
 <h1>Define length of simulation</h1>
 <pre class="r"><code>years_max &lt;&lt;- 50</code></pre>
 </div>
+<div id="define-fire" class="section level1">
+<h1>Define fire</h1>
+<pre class="r"><code>fire &lt;- &quot;STAR&quot;</code></pre>
+</div>
 <div id="iterate" class="section level1">
 <h1>Iterate</h1>
 <pre class="r"><code>time &lt;- Sys.time()
 iterate(iterations)
-print(paste(&quot;That took&quot;, round(Sys.time()-time, 1), &quot;minutes&quot;))</code></pre>
-<pre><code>## [1] &quot;That took 13.7 minutes&quot;</code></pre>
+print(paste(&quot;That took&quot;))</code></pre>
+<pre><code>## [1] &quot;That took&quot;</code></pre>
+<pre class="r"><code>Sys.time()-time</code></pre>
+<pre><code>## Time difference of 8.269231 mins</code></pre>
 </div>
 <div id="filter-out-years-in-which-nothing-happens" class="section level1">
 <h1>Filter out years in which nothing happens</h1>
@@ -418,9 +425,14 @@ print(paste(&quot;That took&quot;, round(Sys.time()-time, 1), &quot;minutes&quot
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
-<pre class="r"><code>save(dfsimallreps, file = paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;.Rdata&quot;, sep = &quot;&quot;))</code></pre>
-<pre class="r"><code>print(paste(&quot;The whole thing took&quot;, round(Sys.time()-strt, 1), &quot;minutes&quot;))</code></pre>
-<pre><code>## [1] &quot;The whole thing took 13.9 minutes&quot;</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire,&quot;.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+<pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
+<pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
+<pre class="r"><code>round(Sys.time()-strt)</code></pre>
+<pre><code>## Time difference of 8 mins</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2020-02-17 23:04:43 PST&quot;</code></pre>
 </div>
 
 

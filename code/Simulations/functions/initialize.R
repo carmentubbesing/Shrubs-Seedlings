@@ -9,24 +9,16 @@ initialize <- function(){
   
   # Create a raster using just Sdlg ID numbers from the data
   
-  for(i in 1:length(r@data@values)){
-   if(r@data@values[i] == 1){
-     r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==1) %>% dplyr::select(ID)), 1))
-   }
-    if(r@data@values[i] == 2){
-      r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==2) %>% dplyr::select(ID)), 1))
+  for(j in 1:length(unique(r@data@values))){
+    for(i in 1:length(r@data@values)){
+       if(r@data@values[i] == j){
+         vals <- raster_df %>% filter(ShrubSppID==j) %>% dplyr::select(ID) %>% unlist()
+         val_sample <- sample(vals, 1)
+         r@data@values[i] <- as.numeric(val_sample)
+       }
     }
-    if(r@data@values[i] == 3){
-      r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==3) %>% dplyr::select(ID)), 1))
-    }
-    if(r@data@values[i] == 4){
-      r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==4) %>% dplyr::select(ID)), 1))
-    }
-    if(r@data@values[i] == 5){
-      r@data@values[i] <- as.numeric(sample(unlist(raster_df %>% filter(ShrubSppID==5) %>% dplyr::select(ID)), 1))
-    }
-
   }
+
 
   # Add a raster attribute table (RAT) using data from raster_df
   r <- ratify(r)

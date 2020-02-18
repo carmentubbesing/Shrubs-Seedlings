@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-14_100.Rdata")
+load("~/Simulations2020-02-17_100AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -141,15 +141,15 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, gr
 
 ### Diameter:height at years 10 and 20
 ```{r}
-yr10 <- ggplot(dfsimallreps_summary %>% filter(Years==10))+
-  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
-  theme_minimal()+
-  ggtitle("Year 10")
-yr20 <- ggplot(dfsimallreps_summary %>% filter(Years==20))+
-  geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
-  theme_minimal()+
-  ggtitle("Year 20")
-grid.arrange(yr10, yr20, ncol = 2)
+# yr10 <- ggplot(dfsimallreps_summary %>% filter(Years==10))+
+#   geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
+#   theme_minimal()+
+#   ggtitle("Year 10")
+# yr20 <- ggplot(dfsimallreps_summary %>% filter(Years==20))+
+#   geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
+#   theme_minimal()+
+#   ggtitle("Year 20")
+# grid.arrange(yr10, yr20, ncol = 2)
 ```
 
 ### Diameter and height boxplots

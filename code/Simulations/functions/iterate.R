@@ -23,7 +23,7 @@ iterate <- function(n){
     source("functions/pipo_emerge.R")
     source("functions/abco_emerge.R")
     
-    years_max <<- 40
+    years_max <<- 50
     max_shrub_ht_years <<- 15
     n_seedlings <<- 300
     length_m <<- 40
