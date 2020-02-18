@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-17_100AMRC.Rdata")
+load("~/Simulations2020-02-18_100AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -65,15 +65,8 @@ ggplot(dfsimallreps)+
 ```{r}
 summary <- dfsimallreps %>% 
   filter(rep %in% c(1:20)) %>% 
-  group_by(rep, Species, Years, error_pipo_gr, error_abco_gr) %>% 
+  group_by(rep, Species, Years, error_abco_gr) %>% 
   summarize(mean_ht = mean(Ht_cm1))
-```
-
-```{r}
-ggplot(summary %>% filter(Species == "PIPO"))+
-  geom_line(aes(x = Years, y = mean_ht, col = error_pipo_gr, group = interaction(Species, rep)))+
-  scale_color_continuous(low = "red", high = "blue")+
-  theme_bw()
 ```
 
 ```{r}
@@ -423,25 +416,6 @@ ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
 
 ## Sensitivity to error in growth model
 ```{r}
-dfsimallreps %>% 
-  ungroup() %>% 
-  group_by(Years, Species, rep) %>% 
-  mutate(total= n()) %>% 
-  ungroup() %>% 
-  group_by(rep, Species) %>% 
-  mutate(initial_n = max(total)) %>% 
-  ungroup() %>% 
-  group_by(rep, initial_n, Species, error_pipo_gr) %>% 
-  filter(Years== max(Years)) %>% 
-  summarize(emerged = sum(emerged)) %>% 
-  mutate(prop_emerged = emerged/initial_n) %>% 
-  filter(Species == "PIPO") %>% 
-  ggplot(aes(x = error_pipo_gr, y = prop_emerged))+
-  geom_point()+
-  geom_smooth()+
-  theme_minimal()+
-  ggtitle("PIPO")
-
 dfsimallreps %>% 
   ungroup() %>% 
   group_by(Years, Species, rep) %>% 

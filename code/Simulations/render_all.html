@@ -369,21 +369,21 @@ summary {
 </div>
 
 
-<div id="iterations-star-fire" class="section level1">
-<h1>100 iterations, STAR fire</h1>
+<div id="iterations-amrc-fire" class="section level1">
+<h1>10 iterations, AMRC fire</h1>
 <pre class="r"><code>library(knitr)
 setwd(&quot;~/Shrubs-Seedlings/code/Simulations/&quot;)
 strt_renderall &lt;- Sys.time()</code></pre>
 <pre class="r"><code>strt_simulate &lt;- Sys.time()
 rmarkdown::render(&quot;simulations.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_simulate)</code></pre>
-<pre><code>## Time difference of 11.41972 mins</code></pre>
+<pre><code>## Time difference of 1.570543 mins</code></pre>
 <pre class="r"><code>strt_plot &lt;- Sys.time()
 rmarkdown::render(&quot;simulations_plot.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_plot)</code></pre>
-<pre><code>## Time difference of 4.095875 mins</code></pre>
+<pre><code>## Time difference of 39.70844 secs</code></pre>
 <pre class="r"><code>print(Sys.time()-strt_renderall)</code></pre>
-<pre><code>## Time difference of 15.51956 mins</code></pre>
+<pre><code>## Time difference of 2.23878 mins</code></pre>
 </div>
 
 

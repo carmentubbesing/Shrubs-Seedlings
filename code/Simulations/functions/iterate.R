@@ -6,7 +6,8 @@ iterate <- function(n){
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   
-  dfsimallreps <<- foreach(i=1:n, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'), .errorhandling="remove") %dopar% {
+  dfsimallreps <<- foreach(k= 1:n, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'), .errorhandling="remove") %dopar% {
+
     time.start <<- Sys.time()
     
     source("functions/shrubclump.R")
@@ -23,8 +24,8 @@ iterate <- function(n){
     source("functions/pipo_emerge.R")
     source("functions/abco_emerge.R")
     
-    years_max <<- 50
-    max_shrub_ht_years <<- 15
+    iterations <<- n
+    years_max <<- 40
     n_seedlings <<- 300
     length_m <<- 40
     height_m <<- 40
@@ -48,8 +49,6 @@ iterate <- function(n){
     ## Vertical tree growth
     load("../../results/coefficients/RMSE_fir_growth.Rdata")
     error_abco_gr <<- rnorm(1, 0, unlist(RMSE_fir_growth))
-    load("../../results/coefficients/RMSE_pine_growth.Rdata")
-    error_pipo_gr <<- rnorm(1, 0, unlist(RMSE_pine_growth))
     
     ## Mortality
     load("../../results/coefficients/gr_mort_all_coefficients_abco.Rdata")
@@ -64,25 +63,18 @@ iterate <- function(n){
     coef_int_mort_pipo <<- unlist(coef_mort_pipo[2])
     coef_gr_mort_pipo <<- unlist(coef_mort_pipo[1])
     
-    
-    # Print progress
-    i_tenth <- i/10
-    if(i_tenth %in% seq(1,100)){
-      print(paste("Done with", i, "iterations in", round(Sys.time()-time.start, 1), "minutes"))
-    }
-    
     # Execute
     suppressMessages(shrubclump())
     suppressMessages(initialize())
     suppressMessages(sim(years_max))
-    dfsimall <<-  dfsimall %>% 
+    dfsimall <-  dfsimall %>% 
       mutate(error_abco_gr = error_abco_gr) %>% 
-      mutate(error_pipo_gr = error_pipo_gr) %>% 
       mutate(error_dia_abco = error_dia_abco) %>% 
       mutate(error_dia_pipo = error_dia_pipo) %>% 
       mutate(coef_gr_mort_abco = coef_gr_mort_abco) %>% 
       mutate(coef_gr_mort_pipo = coef_gr_mort_pipo) %>% 
-      mutate(rep = i)
+      mutate(rep = k)
+    return(dfsimall)
   }
 }
 

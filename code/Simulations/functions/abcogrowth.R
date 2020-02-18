@@ -1,23 +1,20 @@
 abcogrowth <- function(){
-  hts <- pts.sf.abco %>% dplyr::select(Ht_cm1) %>% st_drop_geometry() %>% unlist()
-
-  load("../../results/coefficients/LM_abco_nonnorm.Rdata")
-
-  LMabco <- LM_abco_nonnorm
-  remove(LM_abco_nonnorm)
-  coefabco <<- LMabco$coefficients$fixed
+  load("../../results/coefficients/LM_fir_bootstrap_coef.Rdata")
+  coefabco <- coef_all %>% filter(i == sample(iterations, 1)) %>% dplyr::select(-i) %>% t() %>% as.data.frame()
+  names(coefabco) <- unlist(coefabco[2,])
+  coefabco <- coefabco[1,] %>% mutate_all(paste) %>% mutate_all(as.numeric)
+  coefabco
   
   pts.sf.abco <<- pts.sf.abco %>% 
-    mutate(pred = coefabco["(Intercept)"] +
-             coefabco["Years"]*Years+
-             coefabco["heatload"]*heatload+
-             coefabco["incidrad"]*incidrad+
-             coefabco["Ht_cm1"]*Ht_cm1+
-             coefabco["sqrt_shrubarea3"]*sqrt_shrubarea3+
-             coefabco["Slope.Deg"]*Slope.Deg+
-             coefabco["Elevation"]*Elevation+
-             coefabco["Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
-             + error_abco_gr
+    mutate(pred = coefabco[1,"(Intercept)"] +
+             coefabco[1,"Years"]*Years+
+             coefabco[1, "heatload"]*heatload+
+             coefabco[1, "incidrad"]*incidrad+
+             coefabco[1, "Ht_cm1"]*Ht_cm1+
+             coefabco[1, "sqrt_shrubarea3"]*sqrt_shrubarea3+
+             coefabco[1, "Slope.Deg"]*Slope.Deg+
+             coefabco[1, "Elevation"]*Elevation+
+             coefabco[1, "Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
              ) %>%
     mutate(pred_exp = exp(pred)) %>% 
     mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth

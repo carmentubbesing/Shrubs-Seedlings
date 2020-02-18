@@ -389,3 +389,30 @@ save(LM_pine_nonnorm_sim, file = "../../../results/coefficients/LM_pine_nonnorm_
 ```
 
 
+# Bootstrap the model, drawing same number of observations each time with replacement
+```{r}
+coef_all <- data.frame()
+model <- lme(f_int, data = LMdf_nonnorm, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
+for(i in 1:1000){
+  bootdata <- LMdf_nonnorm[sample(nrow(LMdf_nonnorm), nrow(LMdf_nonnorm), replace=TRUE), ]
+  bootmodel <- try(update(model, data = bootdata), TRUE)
+  if(isTRUE(class(bootmodel)=="try-error")) { next } 
+  coef <- as.data.frame(bootmodel$coefficients$fixed) %>% 
+    mutate(coef = row.names(as.data.frame(bootmodel$coefficients$fixed) )) %>% 
+    mutate(i = i)
+  coef_all <- rbind(coef, coef_all)
+}
+coef_all <- coef_all %>% 
+  rename(value = `bootmodel$coefficients$fixed`)
+head(coef_all)
+coef_all %>% 
+  group_by(i) %>% 
+  count()
+hist(coef_all$value[coef_all$coef=="sqrt_shrubarea3"])
+```
+
+## Save
+```{r}
+save(coef_all, file = "../../../results/coefficients/LM_pine_bootstrap_coef.Rdata")
+```
+
