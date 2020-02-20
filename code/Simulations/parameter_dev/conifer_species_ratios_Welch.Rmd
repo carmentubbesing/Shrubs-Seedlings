@@ -1,0 +1,18 @@
+---
+title: "Conifer species ratios from welch data"
+author: "Carmen"
+date: "2/18/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r, include=FALSE}
+require(tidyverse)
+
+```
+
+```{r}
+load( "~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+```
+

@@ -1,11 +1,11 @@
-abcogrowth <- function(){
+abcogrowth <- function(pts.sf.abco, sample_gr){
   load("../../results/coefficients/LM_fir_bootstrap_coef.Rdata")
-  coefabco <- coef_all %>% filter(i == sample(iterations, 1)) %>% dplyr::select(-i) %>% t() %>% as.data.frame()
+  coefabco <- coef_all %>% filter(i == sample_gr) %>% dplyr::select(-i) %>% t() %>% as.data.frame()
   names(coefabco) <- unlist(coefabco[2,])
   coefabco <- coefabco[1,] %>% mutate_all(paste) %>% mutate_all(as.numeric)
   coefabco
   
-  pts.sf.abco <<- pts.sf.abco %>% 
+  pts.sf.abco <- pts.sf.abco %>% 
     mutate(pred = coefabco[1,"(Intercept)"] +
              coefabco[1,"Years"]*Years+
              coefabco[1, "heatload"]*heatload+
@@ -17,6 +17,8 @@ abcogrowth <- function(){
              coefabco[1, "Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
              ) %>%
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)   # calculate new ht after growth
+    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1) %>%   # calculate new ht after growth
+    mutate(coef_gr_shrubarea =coefabco[1, "sqrt_shrubarea3"] )
+  return(pts.sf.abco)
   
 }

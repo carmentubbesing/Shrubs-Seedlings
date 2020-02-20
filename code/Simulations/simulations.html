@@ -386,17 +386,17 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-02-18 15:48:01 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-02-19 16:13:12 PST&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
 <div id="define-iterations" class="section level1">
 <h1>Define iterations</h1>
-<pre class="r"><code>iterations &lt;- 5</code></pre>
+<pre class="r"><code>iterations &lt;- 20</code></pre>
 </div>
 <div id="define-length-of-simulation" class="section level1">
 <h1>Define length of simulation</h1>
-<pre class="r"><code>years_max &lt;&lt;- 49</code></pre>
+<pre class="r"><code>years_max &lt;- 40</code></pre>
 </div>
 <div id="define-fire" class="section level1">
 <h1>Define fire</h1>
@@ -405,11 +405,11 @@ summary {
 <div id="iterate" class="section level1">
 <h1>Iterate</h1>
 <pre class="r"><code>time &lt;- Sys.time()
-iterate(iterations)
+dfsimallreps &lt;- iterate(iterations, fire, years_max)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 1.119127 mins</code></pre>
+<pre><code>## Time difference of 3.116254 mins</code></pre>
 </div>
 <div id="filter-out-years-in-which-nothing-happens" class="section level1">
 <h1>Filter out years in which nothing happens</h1>
@@ -430,9 +430,9 @@ save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 1 mins</code></pre>
+<pre><code>## Time difference of 3 mins</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-02-18 15:49:09 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-02-19 16:16:22 PST&quot;</code></pre>
 </div>
 
 

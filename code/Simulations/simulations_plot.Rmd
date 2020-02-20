@@ -8,20 +8,13 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-18_100AMRC.Rdata")
+load("~/Simulations2020-02-19_20AMRC.Rdata")
 strt <- Sys.time()
 ```
 
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
-```
-
-# Check for reps that got dropped as errors -- should be TRUE
-```{r}
-length(unique(dfsimallreps$rep)) == max(dfsimallreps$rep)
-length(unique(dfsimallreps$rep))
-max(dfsimallreps$rep)
 ```
 
 # Summarize
@@ -59,38 +52,6 @@ ggplot(dfsimallreps)+
   #geom_line(aes(x = Years, y = dia.cm, col = Species, group = interaction(rep, ID_withinrep)), alpha = .1)+
   theme_bw()+
   geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
-```
-
-## Height by error term
-```{r}
-summary <- dfsimallreps %>% 
-  filter(rep %in% c(1:20)) %>% 
-  group_by(rep, Species, Years, error_abco_gr) %>% 
-  summarize(mean_ht = mean(Ht_cm1))
-```
-
-```{r}
-ggplot(summary %>% filter(Species == "ABCO"))+
-  geom_line(aes(x = Years, y = mean_ht, col = error_abco_gr, group = interaction(Species, rep)))+
-  scale_color_continuous(low = "red", high = "blue")+
-  theme_bw()
-```
-
-## Ht and dia for a single tree
-```{r}
-tree244dia <- ggplot(dfsimallreps %>% filter(Sdlg == 244 & rep == 1))+
-  geom_line(aes(x = Years, y = dia.cm))+
-  theme_minimal()
-```
-
-```{r}
-tree244ht <- ggplot(dfsimallreps %>% filter(Sdlg == 244 & rep ==1))+
-  geom_line(aes(x = Years, y = Ht_cm1))+
-  theme_minimal()
-```
-
-```{r}
-grid.arrange(tree244dia, tree244ht, ncol = 2)
 ```
 
 #### Plot the relationships between variables inputting the diameter growth equations to compare them to what I saw in the dendro analysis
@@ -414,29 +375,9 @@ ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
   geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")
 ```
 
-## Sensitivity to error in growth model
-```{r}
-dfsimallreps %>% 
-  ungroup() %>% 
-  group_by(Years, Species, rep) %>% 
-  mutate(total= n()) %>% 
-  ungroup() %>% 
-  group_by(rep, Species) %>% 
-  mutate(initial_n = max(total)) %>% 
-  ungroup() %>% 
-  group_by(rep, initial_n, Species, error_abco_gr) %>% 
-  filter(Years== max(Years)) %>% 
-  summarize(emerged = sum(emerged)) %>% 
-  mutate(prop_emerged = emerged/initial_n) %>% 
-  filter(Species == "ABCO") %>% 
-  ggplot(aes(x = error_abco_gr, y = prop_emerged))+
-  geom_point()+
-  geom_smooth()+
-  theme_minimal()+
-  ggtitle("ABCO")
-```
+# Sensitivity to error 
 
-## Sensitivity to error in mortality model
+## mortality
 ```{r}
 dfsimallreps %>% 
   ungroup() %>% 
@@ -477,8 +418,28 @@ dfsimallreps %>%
   ggtitle("ABCO")
 ```
 
+## Growth
+```{r}
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_shrubarea) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "PIPO") %>% 
+  ggplot(aes(x = coef_gr_shrubarea, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("PIPO")
+```
 
-# Take home: the growth error terms super strongly affect the results! 
 
 # Long-term goals
 

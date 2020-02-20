@@ -11,7 +11,7 @@ output:
 
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/")
-pkgs <- c("raster", "tidyverse", "tmap", "sf", "sp", "tmaptools", "knitr", "mgcv", "gridExtra", "doParallel")
+pkgs <- c("raster", "tidyverse", "tmap", "sf", "sp", "tmaptools", "knitr", "mgcv", "gridExtra", "doParallel", "doRNG")
 lapply(pkgs, require, character.only = T)
 strt <- Sys.time()
 ```
@@ -24,12 +24,12 @@ source("functions/iterate.R")
 
 # Define iterations
 ```{r}
-iterations <- 100
+iterations <- 50
 ```
 
 # Define length of simulation
 ```{r}
-years_max <<- 49
+years_max <- 40
 ```
 
 # Define fire
@@ -40,7 +40,7 @@ fire <- "AMRC"
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
-iterate(iterations)
+dfsimallreps <- iterate(iterations, fire, years_max)
 print(paste("That took"))
 Sys.time()-time
 ```
@@ -72,4 +72,5 @@ print(paste("The whole thing took"))
 round(Sys.time()-strt)
 Sys.time()
 ```
+
 

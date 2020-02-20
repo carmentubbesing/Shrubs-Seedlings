@@ -5,34 +5,12 @@ require(sp)
 require(knitr)
 
 
-initialize <- function(){
-  
-  # Create a raster using just Sdlg ID numbers from the data
-  
-  for(j in 1:length(unique(r@data@values))){
-    for(i in 1:length(r@data@values)){
-       if(r@data@values[i] == j){
-         vals <- raster_df %>% filter(ShrubSppID==j) %>% dplyr::select(ID) %>% unlist()
-         val_sample <- sample(vals, 1)
-         r@data@values[i] <- as.numeric(val_sample)
-       }
-    }
-  }
-
-
-  # Add a raster attribute table (RAT) using data from raster_df
-  r <- ratify(r)
-
-  rat <- levels(r)[[1]]
-  rat <- left_join(rat, raster_df)
-  levels(r) <- rat
-  r <<- r
-  
+initialize <- function(df, r, n_seedlings, lambda, length_m, height_m){
+ 
   # Create a square polygon surrounding the raster 
   p <- as(extent(r), "SpatialPolygons")
   crs(p) <- crs(r)
-  p <<- p
-  
+
   # Disperse seedlings inside that polygon using a poisson dispersal kernel
   x.left <- 0.5 + rpois(n_seedlings/2, lambda)
   x.right <- length_m-.5 - rpois(n_seedlings/2, lambda)
@@ -67,7 +45,7 @@ initialize <- function(){
     mutate(Sdlg = as.factor(Sdlg))
   
   # Join points with seedling data
-  pts.sf <- left_join(pts.sf, df_new) 
+  pts.sf <- left_join(pts.sf, df) 
   pts.sf.lm <- pts.sf %>%
     rename("Ht_cm1" = Ht2016.cm_spring) %>%
     mutate(Years = as.factor(Years)) %>%
@@ -87,14 +65,14 @@ initialize <- function(){
   pts.sf.abco <- pts.sf.lm %>% filter(Species == "ABCO")
   pts.sf.pipo <- pts.sf.lm %>% filter(Species == "PIPO")
 
-  pts.sf.abco <<- pts.sf.abco %>%
+  pts.sf.abco <- pts.sf.abco %>%
     mutate(Years = as.numeric(paste(Years))) %>%
     mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03)))
 
-  pts.sf.pipo <<- pts.sf.pipo %>%
+  pts.sf.pipo <- pts.sf.pipo %>%
     mutate(Years = as.numeric(paste(Years))) %>%
     mutate(ShrubSpp03 = as.factor(paste(ShrubSpp03)))
   
-  
-
+  pts <- list(pts.sf.abco, pts.sf.pipo)
+  return(pts)
 }

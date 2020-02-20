@@ -1,9 +1,8 @@
-pipogrowth <- function(){
+pipogrowth <- function(pts.sf.pipo, sample_gr){
   load("../../results/coefficients/LM_pine_bootstrap_coef.Rdata")
-  sample <- sample(iterations, 1)
-  coefpipo <- coef_all %>% filter(i == sample)
+  coefpipo <- coef_all %>% filter(i == sample_gr)
   
-  pts.sf.pipo <<- pts.sf.pipo %>% 
+  pts.sf.pipo <- pts.sf.pipo %>% 
     mutate(pred = coefpipo[coefpipo$coef =="(Intercept)", "value"] +
              coefpipo[coefpipo$coef =="Years", "value"]*Years+
              coefpipo[coefpipo$coef =="Ht_cm1", "value"]*Ht_cm1+
@@ -23,6 +22,8 @@ pipogrowth <- function(){
       Year == "2017" ~ pred + coefpipo[coefpipo$coef =="Year2017", "value"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  
+    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  %>% 
+    mutate(coef_gr_shrubarea = coefpipo[coefpipo$coef =="sqrt_shrubarea3", "value"])
+  return(pts.sf.pipo)
   
 }

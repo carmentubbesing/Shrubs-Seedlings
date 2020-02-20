@@ -1,0 +1,81 @@
+---
+title: "tests"
+author: "Carmen"
+date: "2/19/2020"
+output: html_document
+---
+
+
+```{r}
+load("~/Simulations2020-02-19_20AMRC.Rdata")
+strt <- Sys.time()
+```
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+```
+
+# Check for reps that got dropped as errors -- should be TRUE
+```{r}
+length(unique(dfsimallreps$rep)) == max(dfsimallreps$rep)
+length(unique(dfsimallreps$rep))
+max(dfsimallreps$rep)
+```
+
+# Check random independence
+```{r}
+test <-dfsimallreps %>% tbl_df() %>% group_by(rep, Sdlg) %>% count() %>% group_by(Sdlg) %>% count() %>% filter(n<5)
+test
+nrow(test)==0
+remove(test)
+```
+
+# Check different values of error terms
+
+## Diameter
+
+### Abco
+```{r}
+test <- dfsimallreps %>% 
+  group_by(rep, error_dia_abco) %>% 
+  summarize(test =min(error_dia_abco)-max(error_dia_abco)) 
+all(test$test==0)
+```
+
+```{r}
+length(unique(test$error_dia_abco)) >10
+```
+
+### Pipo
+```{r}
+test <- dfsimallreps %>% 
+  group_by(rep, error_dia_pipo) %>% 
+  summarize(test =min(error_dia_pipo)-max(error_dia_pipo)) 
+all(test$test==0)
+```
+
+```{r}
+length(unique(test$error_dia_pipo)) >10
+```
+
+## Growth
+```{r}
+test <- dfsimallreps %>% 
+  group_by(rep, coef_gr_shrubarea, Species) %>% 
+  filter(Species =="PIPO") %>% 
+  summarize(test =min(coef_gr_shrubarea)-max(coef_gr_shrubarea)) 
+all(test$test==0)
+length(unique(test$coef_gr_shrubarea)) >10
+remove(test)
+```
+
+## Mortality
+```{r}
+test <- dfsimallreps %>% 
+  group_by(rep, coef_gr_mort_abco) %>% 
+  summarize(test =min(coef_gr_mort_abco)-max(coef_gr_mort_abco)) 
+all(test$test==0)
+length(unique(test$coef_gr_mort_abco))>10
+```
+
