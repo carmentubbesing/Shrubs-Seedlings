@@ -369,24 +369,25 @@ summary {
 </div>
 
 
-<pre class="r"><code>load(&quot;~/Simulations2020-02-19_20AMRC.Rdata&quot;)
+<pre class="r"><code>load(&quot;~/Simulations2020-02-27_10AMRC.Rdata&quot;)
 strt &lt;- Sys.time()</code></pre>
 <div id="check-for-reps-that-got-dropped-as-errors-should-be-true" class="section level1">
 <h1>Check for reps that got dropped as errors – should be TRUE</h1>
 <pre class="r"><code>length(unique(dfsimallreps$rep)) == max(dfsimallreps$rep)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>length(unique(dfsimallreps$rep))</code></pre>
-<pre><code>## [1] 20</code></pre>
+<pre><code>## [1] 10</code></pre>
 <pre class="r"><code>max(dfsimallreps$rep)</code></pre>
-<pre><code>## [1] 20</code></pre>
+<pre><code>## [1] 10</code></pre>
 </div>
 <div id="check-random-independence" class="section level1">
 <h1>Check random independence</h1>
 <pre class="r"><code>test &lt;-dfsimallreps %&gt;% tbl_df() %&gt;% group_by(rep, Sdlg) %&gt;% count() %&gt;% group_by(Sdlg) %&gt;% count() %&gt;% filter(n&lt;5)
 test</code></pre>
+<pre><code>## Warning: Factor `Sdlg` contains implicit NA, consider using `forcats::fct_explicit_na`</code></pre>
 <pre><code>## # A tibble: 0 x 2
-## # Groups:   Sdlg [0]
-## # ... with 2 variables: Sdlg &lt;chr&gt;, n &lt;int&gt;</code></pre>
+## # Groups:   Sdlg [1]
+## # ... with 2 variables: Sdlg &lt;fct&gt;, n &lt;int&gt;</code></pre>
 <pre class="r"><code>nrow(test)==0</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>remove(test)</code></pre>
@@ -403,7 +404,7 @@ test</code></pre>
 all(test$test==0)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>length(unique(test$error_dia_abco)) &gt;10</code></pre>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 <div id="pipo" class="section level3">
 <h3>Pipo</h3>
@@ -413,14 +414,14 @@ all(test$test==0)</code></pre>
 all(test$test==0)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>length(unique(test$error_dia_pipo)) &gt;10</code></pre>
-<pre><code>## [1] TRUE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
 </div>
 <div id="growth" class="section level2">
 <h2>Growth</h2>
 <pre class="r"><code>test &lt;- dfsimallreps %&gt;% 
   group_by(rep, coef_gr_shrubarea, Species) %&gt;% 
-  filter(Species ==&quot;PIPO&quot;) %&gt;% 
+  #filter(Species ==&quot;PIPO&quot;) %&gt;% 
   summarize(test =min(coef_gr_shrubarea)-max(coef_gr_shrubarea)) 
 all(test$test==0)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
@@ -436,8 +437,30 @@ all(test$test==0)</code></pre>
 all(test$test==0)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>length(unique(test$coef_gr_mort_abco))&gt;10</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>test &lt;- dfsimallreps %&gt;% 
+  group_by(rep, coef_gr_mort_pipo) %&gt;% 
+  summarize(test =min(coef_gr_mort_pipo)-max(coef_gr_mort_pipo)) 
+all(test$test==0)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>length(unique(test$coef_gr_mort_pipo))&gt;10</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 </div>
+</div>
+<div id="test-climate-years" class="section level1">
+<h1>Test climate years</h1>
+<pre class="r"><code>dfsimallreps %&gt;% 
+  dplyr::select(Years, Year, historic_year) %&gt;% 
+  distinct() %&gt;% 
+  arrange(Years)</code></pre>
+<pre><code>## # A tibble: 5 x 3
+##   Years Year  historic_year
+##   &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;        
+## 1     9 2015  1976-1977    
+## 2    10 2016  1977-1978    
+## 3    11 2016  1978-1979    
+## 4    12 2016  1979-1980    
+## 5    13 2015  1980-1981</code></pre>
 </div>
 
 

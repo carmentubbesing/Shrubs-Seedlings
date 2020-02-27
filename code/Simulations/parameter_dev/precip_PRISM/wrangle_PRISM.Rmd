@@ -15,7 +15,7 @@ require(lubridate)
 # Load data
 ```{r}
 setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/precip_PRISM/")
-df <- read_csv("../../../../data/PRISM/PRISM_ppt_stable_4km_198501_201901_39.2267_-120.6117.csv", skip = 10, col_types = cols(Date = col_date(format = "%Y-%m"), `ppt (mm)` = col_double()))
+df <- read_csv("../../../../data/PRISM/PRISM_ppt_stable_4km_197001_201901_39.2267_-120.6117.csv", skip = 10, col_types = cols(Date = col_date(format = "%Y-%m"), `ppt (mm)` = col_double()))
 head(df)
 ```
 
@@ -49,7 +49,7 @@ df <- df %>%
 ```{r}
 ggplot(df, aes(x = water_year, y= ppt_mm))+
   geom_point()+
-  scale_x_discrete(breaks = c("1985-1986", "1995-1996", "2005-2006", "2015-2016"))+
+  scale_x_discrete(breaks = c("1975-1976", "1985-1986", "1995-1996", "2005-2006", "2015-2016"))+
   theme_minimal()
 ```
 
@@ -57,7 +57,6 @@ ggplot(df, aes(x = water_year, y= ppt_mm))+
 ```{r}
 study_years <- c("2014-2015", "2015-2016", "2016-2017")
 ```
-
 
 ```{r}
 study_ppt <- df %>% filter(water_year %in% study_years) %>% dplyr::select(ppt_mm) %>% unlist()
@@ -104,7 +103,18 @@ df %>%
   summarize(n = n()) %>% 
   mutate(proportion = n/sum(n)) %>% 
   mutate(cumsum = cumsum(proportion))
-
 ```
 
+# Restructure df for historic runs
+```{r}
+df <- df %>% 
+  dplyr::select(water_year, min_year) %>% 
+  mutate(min_year = substr(min_year, 6, 9))
+df
+```
+
+# Save df
+```{r}
+save(df, file = "~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+```
 

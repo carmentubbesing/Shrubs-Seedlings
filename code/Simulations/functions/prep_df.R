@@ -10,9 +10,5 @@ prep_df <- function(fire){
     distinct() %>%
     droplevels()
   
-  ggplot(df, aes(BasDia2016.cm))+
-    geom_histogram(aes(fill = Species), bins = 20, position = "dodge")+
-    theme_minimal()
-  
   return(df)
 }

@@ -1,8 +1,8 @@
 
 
-iterate <- function(iterations, fire, years_max){
+iterate <- function(iterations, fire, years_max, climate_method){
 
-  no_cores <- detectCores() - 1 # Use all but one core on your computer
+  no_cores <- detectCores() - 2 # Use all but one core on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   
@@ -12,13 +12,9 @@ iterate <- function(iterations, fire, years_max){
     time.start <- Sys.time()
     
     source("functions/prep_df.R")
-    source("functions/prep_raster_df.R")
     df <- prep_df(fire)
-    raster_df <- prep_raster_df(fire, df)
     
-    source("functions/shrubclump.R")
-    source("functions/ratify_r.R")
-    source("functions/initialize.R")
+    source("functions/initialize_nonspatial.R")
     source("functions/sim.R")
     source("functions/abco_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
     source("functions/pipo_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
@@ -31,7 +27,7 @@ iterate <- function(iterations, fire, years_max){
     source("functions/pipo_emerge.R")
     source("functions/abco_emerge.R")
     
-    n_seedlings <- 300
+    n_seedlings <- 200
     length_m <- 40
     height_m <- 40
     lambda <- 4
@@ -45,12 +41,11 @@ iterate <- function(iterations, fire, years_max){
 
     # Execute
 
-    r <- shrubclump(df, length_m, height_m, shrub_clumpiness)
-    r <- ratify_r(r, raster_df)
     pts <- initialize(df, r, n_seedlings, lambda, length_m, height_m)
     pts.sf.abco <- pts[[1]]
     pts.sf.pipo <- pts[[2]]
-    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations)
+    
+    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method)
     dfsimall <-  dfsimall %>%
       mutate(rep = i)
     return(dfsimall)

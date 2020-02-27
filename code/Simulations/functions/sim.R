@@ -1,4 +1,7 @@
-sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations){
+sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method){
+  load("~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+  prism <- df
+  remove(df)
   dfsim <- data.frame()
   dfsimall <- data.frame()
   
@@ -38,16 +41,17 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   ## Vert Growth
   sample_gr <- sample(iterations, 1)
   
-  
   for(i in 1:years_max){
     
     # If everything is already emerged, just add a year but don't do anything else
     if(max(pts.sf.abco$Years)>10 & all(pts.sf.abco$emerged==1) & all(pts.sf.pipo$emerged==1)){
+      climate_year <- prism[years,2] %>% unlist()
+      historic_year_i <- prism[years,1] %>% unlist()
       pts.sf.abco <- pts.sf.abco %>% 
         mutate(Years = Years + 1)
       pts.sf.pipo <- pts.sf.pipo %>% 
         mutate(Years = Years + 1)
-      dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
+      dfsim <- full_join(pts.sf.pipo, pts.sf.abco)
       
       if(nrow(dfsimall) == 0){
         dfsimall <- dfsim
@@ -57,13 +61,26 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
       next()
     }
     
-    # Assign a climate year 
-    random <- runif(1,0,1)
-    climate_year <- case_when(
-      random < cumsum_2015 ~ 2015,
-      random > cumsum_2015 & random < cumsum_2016 ~ 2016,
-      random > cumsum_2016 ~ 2017
-    ) 
+    # Assign a climate year depending on the method for this run
+    
+    if(climate_method == "random"){
+      random <- runif(1,0,1)
+      climate_year <- case_when(
+        random < cumsum_2015 ~ 2015,
+        random > cumsum_2015 & random < cumsum_2016 ~ 2016,
+        random > cumsum_2016 ~ 2017
+      ) 
+    } else if(climate_method == "historic"){
+      years <- unlist(max(pts.sf.abco$Years))
+      climate_year <- prism[years,2] %>% unlist()
+      historic_year_i <- prism[years,1] %>% unlist()
+      pts.sf.abco <- pts.sf.abco %>% 
+        mutate(historic_year = historic_year_i)
+      pts.sf.pipo <- pts.sf.pipo %>% 
+        mutate(historic_year = historic_year_i)
+      
+    }
+    
     
     # Apply all functions to abco if any of the abco haven't emerged yet, else just add a year 
     if(any(pts.sf.abco$emerged==0) ){
@@ -97,8 +114,9 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         mutate(Years = Years + 1)
     }
     
-    dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
-    
+    #dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
+    dfsim <- full_join(pts.sf.pipo, pts.sf.abco)
+      
     if(nrow(dfsimall) == 0){
       dfsimall <- dfsim
     } else{

@@ -7,7 +7,7 @@ output:
     toc: TRUE
 ---
 
-# This script runs simulations with the most up-to-date functions
+# This script runs simulations without being spatially explicit. Thus, the functions `shrubclump` and `ratify_r` were removed.
 
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/")
@@ -44,13 +44,18 @@ fire <- "AMRC"
 climate_method <- "historic"
 ```
 
-
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
-dfsimallreps <- iterate(iterations, fire, years_max)
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method)
 print(paste("That took"))
 Sys.time()-time
+```
+
+```{r}
+if(nrow(dfsimallreps)==iterations){
+  print("ALERT! Something went wrong.")
+}
 ```
 
 # Filter out years in which nothing happens

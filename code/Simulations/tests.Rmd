@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-load("~/Simulations2020-02-19_20AMRC.Rdata")
+load("~/Simulations2020-02-27_20AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -63,7 +63,7 @@ length(unique(test$error_dia_pipo)) >10
 ```{r}
 test <- dfsimallreps %>% 
   group_by(rep, coef_gr_shrubarea, Species) %>% 
-  filter(Species =="PIPO") %>% 
+  #filter(Species =="PIPO") %>% 
   summarize(test =min(coef_gr_shrubarea)-max(coef_gr_shrubarea)) 
 all(test$test==0)
 length(unique(test$coef_gr_shrubarea)) >10
@@ -79,3 +79,59 @@ all(test$test==0)
 length(unique(test$coef_gr_mort_abco))>10
 ```
 
+```{r}
+test <- dfsimallreps %>% 
+  group_by(rep, coef_gr_mort_pipo) %>% 
+  summarize(test =min(coef_gr_mort_pipo)-max(coef_gr_mort_pipo)) 
+all(test$test==0)
+length(unique(test$coef_gr_mort_pipo))>10
+```
+
+# Test climate years
+```{r}
+test <- dfsimallreps %>% 
+  group_by(Years, rep) %>% 
+  mutate(sum_emerged_dead  = sum(emerged) + sum(dead), sum_emerged = sum(emerged), sum_dead = sum(dead)) %>% 
+  ungroup() %>% 
+  dplyr::select(rep, Years, Year, historic_year, sum_emerged_dead, sum_emerged, sum_dead) %>% 
+  distinct() %>% 
+  arrange(Years)
+test %>% tail()
+```
+
+```{r}
+load("~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+df <- df %>% ungroup()
+slice(df, 8:20)
+```
+
+```{r}
+left_join(test, df, by = c("historic_year" = "water_year")) %>% 
+  filter(Year != min_year) %>% 
+  arrange(Years) %>% 
+  tail()
+```
+
+
+#### Plot the relationships between variables inputting the diameter growth equations to compare them to what I saw in the dendro analysis
+```{r}
+test <- dfsimallreps %>% 
+  filter(Years %in% c(19,20)) %>% 
+  dplyr::select(Sdlg, Species, Ht_cm1, dia.cm, Years, pred_exp, rep, ID_withinrep) %>% 
+  tbl_df() %>% 
+  arrange(Sdlg)
+test <- test %>% 
+  mutate(ID = paste(Sdlg, rep, ID_withinrep, sep = "-"))
+
+test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID"))
+
+test2 <- test2 %>% 
+  rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
+
+ggplot(test2)+
+  geom_point(aes(x = dia.cmYear19, y = dia.cmYear20, col = as.factor(rep)))+
+  geom_abline(aes(slope = 1, intercept = 0))+
+  theme_minimal()+
+  ylim(0,20)+
+  xlim(0,20)
+```
