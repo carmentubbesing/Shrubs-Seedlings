@@ -1,5 +1,5 @@
 prep_df <- function(fire){
-  load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+  load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
   dffull <- df
   df <- df %>%
     dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%

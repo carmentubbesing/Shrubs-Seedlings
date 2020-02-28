@@ -1,11 +1,11 @@
 pipo_shrubgrowth <- function(pts.sf.pipo){
   
   # Load gam models from `Shrub_growth_analysis.Rmd`
-  load("~/Shrubs-Seedlings/results/coefficients/gamCECO.Rdata")
-  load("~/Shrubs-Seedlings/results/coefficients/gamARPA.Rdata")
-  load("~/Shrubs-Seedlings/results/coefficients/gamCEIN.Rdata")
-  load("~/Shrubs-Seedlings/results/coefficients/gamCHSE.Rdata")
-  load("~/Shrubs-Seedlings/results/coefficients/gamOTHER.Rdata")
+  load("../../results/coefficients/gamCECO.Rdata")
+  load("../../results/coefficients/gamARPA.Rdata")
+  load("../../results/coefficients/gamCEIN.Rdata")
+  load("../../results/coefficients/gamCHSE.Rdata")
+  load("../../results/coefficients/gamOTHER.Rdata")
   
   # Add a column for mean predicted shrub height for the present year, predicted by the GAM for each species
   x <- data.frame(years_since_fire = unique(pts.sf.pipo$Years))
@@ -63,7 +63,7 @@ pipo_shrubgrowth <- function(pts.sf.pipo){
   
   
   # Change shrub COVER based on linear model from my data
-  load("~/Shrubs-Seedlings/results/coefficients/LM_shrubcover.Rdata")
+  load("../../results/coefficients/LM_shrubcover.Rdata")
   
   # Add a column for predicted shrub cover for the present year, predicted by the LM
   pts.sf.pipo <- pts.sf.pipo %>% 

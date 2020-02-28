@@ -1,5 +1,5 @@
 sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method){
-  load("~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+  load("../../data/PRISM/clean_1970-present.Rdata")
   prism <- df
   remove(df)
   prism <- prism[12:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
@@ -18,21 +18,21 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   
   # Set error terms
   ## Mortality
-  load("~/Shrubs-Seedlings/results/coefficients/gr_mort_all_coefficients_abco.Rdata")
+  load("../../results/coefficients/gr_mort_all_coefficients_abco.Rdata")
   random_row <- sample(1:nrow(all_coefficients),1)
   coef_mort_abco <- all_coefficients[random_row,]
   coef_int_mort_abco <- unlist(coef_mort_abco[2])
   coef_gr_mort_abco <- unlist(coef_mort_abco[1])
   
-  load("~/Shrubs-Seedlings/results/coefficients/gr_mort_all_coefficients_pipo.Rdata") # these coefficients use log(growth) in the model
+  load("../../results/coefficients/gr_mort_all_coefficients_pipo.Rdata") # these coefficients use log(growth) in the model
   random_row <- sample(1:nrow(all_coefficients),1)
   coef_mort_pipo <- all_coefficients[random_row,]
   coef_int_mort_pipo <- unlist(coef_mort_pipo[2])
   coef_gr_mort_pipo <- unlist(coef_mort_pipo[1])
   
   ## Diameter
-  load("~/Shrubs-Seedlings/results/coefficients/LM_dia_ABCO_footprints.Rdata")
-  load("~/Shrubs-Seedlings/results/coefficients/LM_dia_PIPO_footprints.Rdata")
+  load("../../results/coefficients/LM_dia_ABCO_footprints.Rdata")
+  load("../../results/coefficients/LM_dia_PIPO_footprints.Rdata")
   sigma_dia_abco <- sigma(ABCO_final)
   error_dia_abco <- rnorm(1, 0, sigma_dia_abco)
   sigma_dia_pipo <- sigma(PIPO_final)
