@@ -26,7 +26,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 100
+iterations <- 200
 ```
 
 ## Define length of simulation
@@ -52,7 +52,13 @@ print(paste("That took"))
 Sys.time()-time
 ```
 
+# Save results
 ```{r}
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+```{r, echo = F}
 if(nrow(dfsimallreps)==iterations){
   print("ALERT! Something went wrong.")
 }
@@ -74,11 +80,6 @@ dfsimallreps <- dfsimallreps %>%
   filter(Years < max_year+2)
 ```
 
-# Save results
-```{r}
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
-save(dfsimallreps, file =filename)
-```
 
 ```{r}
 print(paste("The whole thing took"))

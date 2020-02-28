@@ -2,13 +2,11 @@
 
 iterate <- function(iterations, fire, years_max, climate_method){
 
-  no_cores <- detectCores() - 2 # Use all but one core on your computer
+  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
-  
-  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "pass") %dopar% {
-    # , .errorhandling="remove"
-    
+  set.seed(123)
+  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "remove") %dopar% {
     time.start <- Sys.time()
     
     source("functions/prep_df.R")

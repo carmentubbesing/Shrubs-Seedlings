@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-load("~/Simulations2020-02-27_20AMRC.Rdata")
+load("~/Simulations2020-02-27_10AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -90,25 +90,25 @@ length(unique(test$coef_gr_mort_pipo))>10
 # Test climate years
 ```{r}
 test <- dfsimallreps %>% 
-  group_by(Years, rep) %>% 
-  mutate(sum_emerged_dead  = sum(emerged) + sum(dead), sum_emerged = sum(emerged), sum_dead = sum(dead)) %>% 
+  group_by(Years, rep, Species) %>% 
+  mutate(sum_emerged = sum(emerged)) %>% 
   ungroup() %>% 
-  dplyr::select(rep, Years, Year, historic_year, sum_emerged_dead, sum_emerged, sum_dead) %>% 
+  dplyr::select(rep, Years, Year, Species, historic_year, sum_emerged) %>% 
   distinct() %>% 
-  arrange(Years)
-test %>% tail()
+  arrange(rep, Years)
+test
 ```
 
 ```{r}
 load("~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
 df <- df %>% ungroup()
-slice(df, 8:20)
 ```
 
 ```{r}
-left_join(test, df, by = c("historic_year" = "water_year")) %>% 
+join_test <- left_join(test, df, by = c("historic_year" = "water_year")) %>% 
   filter(Year != min_year) %>% 
-  arrange(Years) %>% 
+  arrange(Years) 
+join_test %>% 
   tail()
 ```
 

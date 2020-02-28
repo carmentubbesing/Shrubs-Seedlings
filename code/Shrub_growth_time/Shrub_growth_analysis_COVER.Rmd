@@ -195,8 +195,25 @@ plot2 <- plot(predictorEffect("Ht1.3", lmALL.ME))
 grid.arrange(plot1, plot2, ncol = 2)
 ```
 
+```{r}
+effects <- as.data.frame(predictorEffect("Years", lmALL.ME))
+```
+
+```{r}
+ggplot(effects)+
+   geom_line(aes(x = Years, y = fit/1200*100), col = "#9A8822")+
+  geom_ribbon(aes(x = Years, ymin = (lower/1200*100), ymax = (upper/1200*100)), fill = "#9A8822",   alpha = .4)+
+  theme_minimal()+
+  xlab("Years since fire")+
+  ylab("Shrub cover (%)")+
+  geom_jitter(data = me_totals, aes(x = Years, y = cover_percent), alpha = .4, width = .4)+
+  theme(text = element_text(size = 12))
+  
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cover_supplement.png")
+```
+
 # Save final model
 ```{r}
-save(lmALL.ME, file = "~/Shrubs-Seedlings/results/coefficients/LM_shrubcover.Rdata")
+save(lmALL.ME, file = "~/Shrubs-Seedlings/results/coefficients/LM_shrubcover_.Rdata")
 ```
 

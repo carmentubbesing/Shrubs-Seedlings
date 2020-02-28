@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-27_1000AMRC.Rdata")
+load("~/Simulations2020-02-28_200AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -318,6 +318,23 @@ ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png
 
 ```{r}
 grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
+```
+
+# What's different about the iterations where 100% of trees emerge?
+```{r}
+hundoP <- summary_prop %>% 
+  ungroup() %>% 
+  filter(prop_emerged==1) %>% 
+  dplyr::select(rep) %>% 
+  unlist()
+hundoP
+```
+
+## What do the hundoP reps look like?
+```{r}
+ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
+  geom_smooth(aes(x = Years, y = Ht_cm1, group = rep))+
+  geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")
 ```
 
 ```{r, echo = F}

@@ -72,7 +72,13 @@ ceco_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "royal blue",   alpha = .2)+
   theme_minimal()+
-  ggtitle("CECO")
+  ggtitle("Ceanothus cordulatus")+
+  xlab("Years since fire")+
+  ylab("Shrub height (cm)")+
+  theme(
+    plot.title = element_text(face = "italic")
+  )
+
 ceco_plot
 ```
 
@@ -130,7 +136,13 @@ arpa_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "purple",   alpha = .3)+
   theme_minimal()+
-  ggtitle("ARPA and ARVI")
+  ggtitle("Arctostaphylos patula & A. viscida")+
+    xlab("Years since fire")+
+  ylab("Shrub height (cm)")+
+  theme(
+    plot.title = element_text(face = "italic")
+  )
+
 arpa_plot
 ```
 
@@ -192,7 +204,13 @@ cein_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = 2,   alpha = .3)+
   theme_minimal()+
-  ggtitle("CEIN")
+  ggtitle("Ceanothus integerrimus")+
+    xlab("Years since fire")+
+  ylab("Shrub height (cm)")+
+  theme(
+    plot.title = element_text(face = "italic")
+  )
+
 cein_plot  
 ```
 
@@ -257,7 +275,12 @@ chse_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill =11,   alpha = .3)+
   theme_minimal()+
-  ggtitle("CHSE")
+  ggtitle("Chamaebatia foliolosa")+
+  xlab("Years since fire")+
+  ylab("Shrub height (cm)")+
+  theme(
+    plot.title = element_text(face = "italic")
+  )
 chse_plot
 ```
 
@@ -321,7 +344,9 @@ OTHER_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill = "grey",   alpha = .5)+
   theme_minimal()+
-  ggtitle("OTHER")
+  ggtitle("Other")+
+      xlab("Years since fire")+
+  ylab("Shrub height (cm)")
 OTHER_plot
 ```
 
@@ -329,7 +354,7 @@ OTHER_plot
 ```{r}
 grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot)
 final_plot <- arrangeGrob(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot, nrow = 2, ncol = 3)
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_HEIGHT.png", final_plot, width = 10)
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_HEIGHT_Feb27.png", final_plot, width = 10)
 ```
 
 # Save the models to use in the simulation

@@ -379,8 +379,8 @@ summary {
 <li><a href="#climate-method">Climate method</a></li>
 </ul></li>
 <li><a href="#iterate">Iterate</a></li>
-<li><a href="#filter-out-years-in-which-nothing-happens">Filter out years in which nothing happens</a></li>
 <li><a href="#save-results">Save results</a></li>
+<li><a href="#filter-out-years-in-which-nothing-happens">Filter out years in which nothing happens</a></li>
 </ul>
 </div>
 
@@ -389,7 +389,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-02-27 14:58:19 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-02-28 13:11:31 PST&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -397,7 +397,7 @@ summary {
 <h1>Define stuff</h1>
 <div id="define-iterations" class="section level2">
 <h2>Define iterations</h2>
-<pre class="r"><code>iterations &lt;- 100</code></pre>
+<pre class="r"><code>iterations &lt;- 20</code></pre>
 </div>
 <div id="define-length-of-simulation" class="section level2">
 <h2>Define length of simulation</h2>
@@ -419,10 +419,12 @@ dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 6.129251 mins</code></pre>
-<pre class="r"><code>if(nrow(dfsimallreps)==iterations){
-  print(&quot;ALERT! Something went wrong.&quot;)
-}</code></pre>
+<pre><code>## Time difference of 4.54875 mins</code></pre>
+</div>
+<div id="save-results" class="section level1">
+<h1>Save results</h1>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire,&quot;.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="filter-out-years-in-which-nothing-happens" class="section level1">
 <h1>Filter out years in which nothing happens</h1>
@@ -435,17 +437,12 @@ print(paste(&quot;That took&quot;))</code></pre>
   unlist()</code></pre>
 <pre class="r"><code>dfsimallreps &lt;- dfsimallreps %&gt;% 
   filter(Years &lt; max_year+2)</code></pre>
-</div>
-<div id="save-results" class="section level1">
-<h1>Save results</h1>
-<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire,&quot;.Rdata&quot;, sep = &quot;&quot;)
-save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 6 mins</code></pre>
+<pre><code>## Time difference of 5 mins</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-02-27 15:04:32 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-02-28 13:16:08 PST&quot;</code></pre>
 </div>
 
 
