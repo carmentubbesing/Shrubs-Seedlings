@@ -2,7 +2,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   load("../../data/PRISM/clean_1970-present.Rdata")
   prism <- df
   remove(df)
-  prism <- prism[12:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
+  prism <- prism[7:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
   dfsim <- data.frame()
   dfsimall <- data.frame()
   

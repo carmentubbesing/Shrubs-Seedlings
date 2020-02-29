@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-28_200AMRC.Rdata")
+load("~/Simulations2020-02-28_50AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -30,7 +30,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 
 ```{r}
 ht <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
-  geom_boxplot(alpha = .2, outlier.alpha = .02)+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
   geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
   xlab("Years since fire")+
   ylab("Average tree ht (cm) by simulation")+
@@ -86,7 +86,7 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, gr
 ### Diameter and height boxplots
 ```{r}
 diabox <- ggplot(dfsimallreps_summary)+
-  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species))+
+  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species), outlier.shape = NA)+
   theme_minimal()+
   xlab("Years")+
   ylab("Diameter (cm)")+
@@ -96,7 +96,7 @@ diabox <- ggplot(dfsimallreps_summary)+
 
 ```{r}
 htbox <- ggplot(dfsimallreps)+
-  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species))+
+  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species), outlier.shape = NA)+
   theme_minimal()+
   xlab("Years")+
   ylab("Height (cm)")+
@@ -123,7 +123,7 @@ title <- paste("Results for", max(dfsimallreps$Years), "years across", max(dfsim
 title
 
 ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
-  geom_boxplot(alpha = .2, outlier.alpha = .02)+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
   geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
   ggtitle(title)+
   xlab("Years since fire")+
@@ -189,7 +189,7 @@ ggplot(dfsimallreps, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col = ShrubS
 ## Growth by climate year
 ```{r}
 ggplot(dfsimallreps %>% filter(Species == "PIPO"))+
-  geom_boxplot(aes(x = as.factor(Year), y = pred_exp))+
+  geom_boxplot(aes(x = as.factor(Year), y = pred_exp), outlier.shape = NA)+
   theme_minimal()
 ```
 
@@ -237,12 +237,12 @@ summary_emerge <- dfsimallreps %>%
 ### Counts
 
 ```{r}
-plot_emerge_count <- ggplot(summary_emerge)+
-  theme_minimal()+
-  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
-  ylab("Number of emerged trees")+
-  xlab("Years since fire")+
-  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
+# plot_emerge_count <- ggplot(summary_emerge)+
+#   theme_minimal()+
+#   geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
+#   ylab("Number of emerged trees")+
+#   xlab("Years since fire")+
+#   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
 ```
 
 ### Proportions
@@ -250,14 +250,15 @@ plot_emerge_count <- ggplot(summary_emerge)+
 ```{r}
 plot_emerge_prop <- ggplot(summary_emerge)+
   theme_minimal()+
-  geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8)+
+  geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8, outlier.shape = NA)+
   ylab("Proportion of initial\nseedlings that have emerged")+
   xlab("Years since fire")+
   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
+plot_emerge_prop
 ```
 
 ```{r}
-grid.arrange(plot_emerge_count, plot_emerge_prop, ncol = 1)
+#grid.arrange(plot_emerge_count, plot_emerge_prop, ncol = 1)
 ```
 
 ## Check to make sure there are in fact trees that emerged before the simulation started
@@ -296,16 +297,12 @@ summary_prop <- dfsimallreps %>%
   mutate(total= n()) %>% 
   ungroup() %>% 
   group_by(rep, Species) %>% 
-  mutate(initial_n = max(total)) 
-
-summary_prop <- summary_prop %>% 
+  mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
   group_by(rep, initial_n, Species) %>% 
   filter(Years== max(Years)) %>% 
   summarize(emerged = sum(emerged)) %>% 
   mutate(prop_emerged = emerged/initial_n) 
-
-summary_prop
 
 boxplot_prop <- ggplot(summary_prop)+
   geom_boxplot(aes(x = Species, y = prop_emerged))+
@@ -313,11 +310,12 @@ boxplot_prop <- ggplot(summary_prop)+
   ylab("Proportion of initial trees")+
    ggtitle(title)
 
-ggsave(file = "../../results/figures/Simulations/sim_100_emerge_prop_all2015.png", width = 6, height =4, dpi = 400)
+boxplot_prop
+ggsave(file = "../../results/figures/Simulations/sim_1000_emerge_prop_all.png", width = 6, height =4, dpi = 400)
 ```
 
 ```{r}
-grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
+#grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
 ```
 
 # What's different about the iterations where 100% of trees emerge?

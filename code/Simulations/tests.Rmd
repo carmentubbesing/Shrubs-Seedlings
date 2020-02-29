@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-load("~/Simulations2020-02-27_10AMRC.Rdata")
+load("~/Simulations2020-02-28_1000AMRC.Rdata")
 strt <- Sys.time()
 ```
 

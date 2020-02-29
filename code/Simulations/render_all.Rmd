@@ -5,7 +5,7 @@ date: "2/13/2020"
 output: html_document
 ---
 
-# 20 iterations, AMRC fire
+# 40 iterations, AMRC fire
 
 ```{r prep}
 library(knitr)
