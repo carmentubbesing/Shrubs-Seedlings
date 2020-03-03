@@ -390,7 +390,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-02-28 17:18:26 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-02 17:59:35 PST&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -420,7 +420,7 @@ dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 3.298641 mins</code></pre>
+<pre><code>## Time difference of 1.262772 mins</code></pre>
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
@@ -441,9 +441,9 @@ save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 3 mins</code></pre>
+<pre><code>## Time difference of 1 mins</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-02-28 17:21:49 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-02 18:00:54 PST&quot;</code></pre>
 </div>
 <div id="save-results-1" class="section level1">
 <h1>Save results</h1>

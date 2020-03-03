@@ -11,7 +11,7 @@ output:
 
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/") # change this if needed
-pkgs <- c("raster", "tidyverse", "tmap", "sf", "sp", "tmaptools", "knitr", "mgcv", "gridExtra", "doParallel", "doRNG")
+pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)
 strt <- Sys.time()
 ```
@@ -26,7 +26,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 50
+iterations <- 100
 ```
 
 ## Define length of simulation
