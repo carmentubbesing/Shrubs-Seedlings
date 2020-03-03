@@ -19,6 +19,20 @@ require(tidyverse)
 require(gridExtra)
 ```
 
+# Take out trees with non-finite or NA pred because they had already emerged and things got wacky
+```{r}
+dfsimallreps %>% 
+  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
+  group_by(emerged) %>% 
+  count()
+```
+
+```{r}
+dfsimallreps <- dfsimallreps %>% 
+  filter(is.finite(pred_exp) & !is.na(pred_exp))
+```
+
+
 # Summarize
 
 ## Focal tree height by year for trees that haven't yet emerged
@@ -151,6 +165,7 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_cov, group = ShrubSpp
   theme_bw()
 ```
 
+## Focal tree height by shrub species and year
 ```{r}
 ggplot(dfsimallreps_summary, aes(x = Years, y = mean_ht, group = ShrubSpp03, col = ShrubSpp03))+
   #geom_line(aes(group = interaction(rep, ID_withinrep)), alpha = .05)+
@@ -158,35 +173,25 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_ht, group = ShrubSpp03, col
   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Focal tree height")+
-  ylim(0,2000)+
+  ylim(0,350)+
   theme_minimal()
 ```
 
 ## Growth by climate year
 ```{r}
-ggplot(dfsimallreps %>% filter(Species == "PIPO"))+
+ggplot(dfsimallreps %>% filter(Species == "PIPO") %>% filter(emerged == 0))+
   geom_boxplot(aes(x = as.factor(Year), y = pred_exp), outlier.shape = NA)+
   theme_minimal()
 ```
 
 ```{r}
 dfsimallreps %>% 
+   filter(Species == "PIPO") %>% filter(emerged == 0) %>% 
   group_by(Year) %>% 
   summarize(n(), mean(pred_exp))
 ```
 
 # Plot how many trees emerge above the shrub canopy each year
-
-### Check that all have emerged by the last year
-```{r}
-dfsimallreps %>% 
-  group_by(rep) %>% 
-  filter(Years == max(Years)) %>% 
-  group_by(Species, emerged, Years) %>% 
-  filter(emerged ==0) %>% 
-  group_by(rep, Sdlg) %>% 
-  count()
-```
 
 ## How many trees are neither emerged nor dead at the end? Should be none.
 ```{r}
@@ -240,7 +245,7 @@ plot_emerge_prop
 ## Check to make sure there are in fact trees that emerged before the simulation started
 ```{r}
 dfsimallreps %>% 
-  filter(rep==1 & Years==9) %>% 
+  filter(rep %in% c(1:10) & Years==9) %>% 
   dplyr::select(Species, Sdlg, Ht1.3, Ht_cm1) %>% 
   mutate(emerge = ifelse(Ht_cm1*.75>Ht1.3, 1, 0)) %>% 
   group_by(Species, emerge) %>% 
@@ -254,16 +259,16 @@ title <- paste("Results for", max(dfsimallreps$rep), "simulations at\n", max(dfs
 ```
 
 ```{r}
-summary_count <- dfsimallreps %>% 
-  group_by(rep, Species) %>% 
-  filter(Years == max(Years)) %>% 
-  summarize(emerged = sum(emerged)) 
-
-boxplot_trees <- ggplot(summary_count)+
-  geom_boxplot(aes(x = Species, y = emerged))+
-  theme_minimal()+
-  ylab("Number of emerged trees")+
-  ggtitle(title)
+# summary_count <- dfsimallreps %>% 
+#   group_by(rep, Species) %>% 
+#   filter(Years == max(Years)) %>% 
+#   summarize(emerged = sum(emerged)) 
+# 
+# boxplot_trees <- ggplot(summary_count)+
+#   geom_boxplot(aes(x = Species, y = emerged))+
+#   theme_minimal()+
+#   ylab("Number of emerged trees")+
+#   ggtitle(title)
 ```
 
 ```{r}
@@ -308,7 +313,8 @@ hundoP
 ```{r}
 ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
   geom_smooth(aes(x = Years, y = Ht_cm1, group = rep))+
-  geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")
+  geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")+
+  theme_minimal()
 ```
 
 ```{r, echo = F}
