@@ -31,6 +31,40 @@ nrow(test)==0
 remove(test)
 ```
 
+# Check for NA and inf values
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>%
+  mutate(rep = as.factor(paste(rep))) %>% 
+  group_by(rep, Years, Species) %>% 
+  summarize(mean_ht_years = mean(Ht_cm1))
+```
+
+```{r}
+summary(dfsimallreps_summary$mean_ht_years)
+reps_with_na <- dfsimallreps_summary %>% 
+  filter(is.na(mean_ht_years))
+dfsimallreps %>% 
+  filter(rep %in% reps_with_na$rep) %>% 
+  select(Ht_cm1) %>% 
+  summary()
+```
+
+```{r}
+dfsimallreps %>% filter(rep ==309 & Sdlg == 36) %>% 
+  ggplot(aes(x = Years, y = Ht_cm1))+
+  geom_line()+
+  ylim(c(0,4000))
+```
+
+```{r}
+ggplot(dfsimallreps_summary %>% filter(rep %in% reps_with_na$rep))+
+  geom_line(aes(x = Years, y = mean_ht_years, group = interaction(rep, Species), color = interaction(rep, Species)))+
+  theme_minimal()+
+  ylim(0,2000)
+```
+
+
 # Check different values of error terms
 
 ## Diameter

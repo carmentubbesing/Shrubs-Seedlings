@@ -26,7 +26,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 50
+iterations <- 1000
 ```
 
 ## Define length of simulation

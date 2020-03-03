@@ -8,7 +8,9 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-28_50AMRC.Rdata")
+name <- "2020-02-28_1000AMRC"
+df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
+load(df_filename)
 strt <- Sys.time()
 ```
 
@@ -19,13 +21,14 @@ require(gridExtra)
 
 # Summarize
 
-## Focal tree height by year
+## Focal tree height by year for trees that haven't yet emerged
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>%
   mutate(rep = as.factor(paste(rep))) %>% 
   group_by(rep, Years, Species) %>% 
-  mutate(mean_ht_years = mean(Ht_cm1))
+  filter(emerged==0) %>% 
+  summarize(mean_ht_years = mean(Ht_cm1), mean_dia_years = mean(dia.cm)) 
 ```
 
 ```{r}
@@ -40,72 +43,52 @@ ht <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, 
   theme(text = element_text(size = 16), 
         panel.grid.minor.x = element_blank(),
         panel.grid.major.x = element_blank(),
-        axis.text.x = element_text(size = 8))
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
 ht
 filename <- paste("../../results/figures/Simulations/hts_sim", max(dfsimallreps$Years), Sys.Date(), ".png", sep = "_")
-#ggsave(file = filename, width = 6, height =4, dpi = 400)
+ggsave(file = filename, width = 6, height =4, dpi = 400)
 ```
 
 ## Diameter growth patterns 
 ```{r}
-ggplot(dfsimallreps)+
-  #geom_line(aes(x = Years, y = dia.cm, col = Species, group = interaction(rep, ID_withinrep)), alpha = .1)+
+dia <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_dia_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_dia_years, group = Species, col = Species), size = 1)+
+  xlab("Years since fire")+
+  ylab("Average tree dia (cm) by simulation")+
   theme_bw()+
-  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
-```
-
-### Height growth patterns
-```{r}
-ggplot(dfsimallreps, aes(x = Years, y = Ht_cm1, col = Species, group = interaction(rep, ID_withinrep)))+
-  #geom_line(alpha = .1)+
-  theme_bw()+
-  geom_smooth(aes(x = Years, y = Ht_cm1, col = Species, group = Species))
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
+dia
+filename <- paste("../../results/figures/Simulations/dia_sim", max(dfsimallreps$Years), Sys.Date(), ".png", sep = "_")
+ggsave(file = filename, width = 6, height =4, dpi = 400)
 ```
 
 ### Diameter::Height growth patterns
 ```{r}
-ggplot(dfsimallreps_summary, aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = interaction(rep, ID_withinrep)))+
-  #geom_line(alpha = .1)+
+ratio <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_dia_years/mean_ht_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_dia_years/mean_ht_years, group = Species, col = Species), size = 1)+
+  xlab("Years since fire")+
+  ylab("Average tree dia (cm) by simulation")+
   theme_bw()+
-  geom_smooth(aes(x = Years, y = dia.cm/Ht_cm1, col = Species, group = Species))
-```
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
+ratio
+filename <- paste("../../results/figures/Simulations/dia_ht_ratio_sim", max(dfsimallreps$Years), Sys.Date(), ".png", sep = "_")
+ggsave(file = filename, width = 6, height =4, dpi = 400)
 
-### Diameter:height at years 10 and 20
-```{r}
-# yr10 <- ggplot(dfsimallreps_summary %>% filter(Years==10))+
-#   geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
-#   theme_minimal()+
-#   ggtitle("Year 10")
-# yr20 <- ggplot(dfsimallreps_summary %>% filter(Years==20))+
-#   geom_histogram(aes(dia.cm/Ht_cm1, bins = 20))+
-#   theme_minimal()+
-#   ggtitle("Year 20")
-# grid.arrange(yr10, yr20, ncol = 2)
-```
-
-### Diameter and height boxplots
-```{r}
-diabox <- ggplot(dfsimallreps_summary)+
-  geom_boxplot(aes(x = as.factor(Years), y = dia.cm, fill = Species), outlier.shape = NA)+
-  theme_minimal()+
-  xlab("Years")+
-  ylab("Diameter (cm)")+
-  theme(text = element_text(size = 20))+
-  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
-```
-
-```{r}
-htbox <- ggplot(dfsimallreps)+
-  geom_boxplot(aes(x = as.factor(Years), y = Ht_cm1, fill = Species), outlier.shape = NA)+
-  theme_minimal()+
-  xlab("Years")+
-  ylab("Height (cm)")+
-  theme(text = element_text(size = 20))+
-  scale_x_discrete(name = "Years since fire", breaks = c("10", "15", "20", "25"))
-```
-
-```{r}
-grid.arrange(diabox, htbox)
 ```
 
 ## Counts by year
@@ -113,18 +96,16 @@ grid.arrange(diabox, htbox)
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>% 
   group_by(rep, Years, Species) %>% 
-  mutate(count = n()) %>% 
+  summarize(count = n()) %>% 
   mutate(count = as.numeric(count))
 ```
 
 ```{r}
 title <- paste("Results for", max(dfsimallreps$Years), "years across", max(dfsimallreps$rep), "iterations", sep = " ")
 
-title
-
-ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species, col = Species))+
-  geom_boxplot(alpha = .2, outlier.shape = NA)+
+ggplot(dfsimallreps_summary)+
   geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
+  geom_boxplot(aes(x = as.factor(Years), y = count, fill = Species, col = Species), alpha = .2, outlier.shape = NA)+
   ggtitle(title)+
   xlab("Years since fire")+
   ylab("Tree count")+
@@ -136,15 +117,17 @@ ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = count, fill = Species
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
 
+filename <- paste("../../results/figures/Simulations/count_plot_", name, ".png", sep = "")
 ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
+  filter(!is.na(Ht_cm1)) %>% 
   ungroup() %>% 
   group_by(rep, Years, Ht1.3, Cov1.3, ShrubSpp03) %>% 
-  mutate(mean_shrub_ht = mean(Ht1.3), mean_shrub_cov = mean(Cov1.3))
+  summarize(mean_shrub_ht = mean(Ht1.3), mean_shrub_cov = mean(Cov1.3), mean_ht = mean(Ht_cm1))
 ```
 
 ```{r}
@@ -154,7 +137,7 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp0
   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Shrub height")+
-  theme_bw()
+  theme_minimal()
 ```
 
 ## Shrub cover by year
@@ -168,22 +151,15 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_cov, group = ShrubSpp
   theme_bw()
 ```
 
-## Seedling height by shrub species and year
 ```{r}
-dfsimallreps_summary <- dfsimallreps %>% 
-  ungroup() %>% 
-  group_by(Species, rep, Years, Ht_cm1, ShrubSpp03) %>% 
-  summarize(mean_ht = mean(Ht_cm1))
-```
-
-```{r}
-ggplot(dfsimallreps, aes(x = Years, y = Ht_cm1, group = ShrubSpp03, col = ShrubSpp03, symbol = Species))+
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_ht, group = ShrubSpp03, col = ShrubSpp03))+
   #geom_line(aes(group = interaction(rep, ID_withinrep)), alpha = .05)+
   geom_smooth()+
   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   xlab("Years since fire")+
   ylab("Focal tree height")+
-  theme_bw()
+  ylim(0,2000)+
+  theme_minimal()
 ```
 
 ## Growth by climate year
