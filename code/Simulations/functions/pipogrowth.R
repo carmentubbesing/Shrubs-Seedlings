@@ -22,7 +22,7 @@ pipogrowth <- function(pts.sf.pipo, sample_gr){
       Year == "2017" ~ pred + coefpipo[coefpipo$coef =="Year2017", "value"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  %>% 
+    mutate(Ht_cm1 = ifelse(emerged == 1, HT_cm1, Ht_cm1 + pred_exp*Ht_cm1))  %>% 
     mutate(coef_gr_shrubarea = coefpipo[coefpipo$coef =="sqrt_shrubarea3", "value"])
   return(pts.sf.pipo)
   
