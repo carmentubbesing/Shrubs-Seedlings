@@ -26,9 +26,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-
-iterations <- 100
-
+iterations <- 500
 ```
 
 ## Define length of simulation
@@ -82,13 +80,11 @@ dfsimallreps <- dfsimallreps %>%
   filter(Years < max_year+2)
 ```
 
-
 ```{r}
 print(paste("The whole thing took"))
 round(Sys.time()-strt)
 Sys.time()
 ```
-
 
 # Save results
 ```{r}

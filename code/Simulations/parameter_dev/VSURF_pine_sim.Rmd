@@ -44,7 +44,7 @@ xdf <- df %>%
          siteclass,
          Year,
          Years,
-         #BasDia2016.cm, 
+         BasDia2016.cm, 
          Ht_cm1,
          sqrt_shrubarea3,
          ShrubSpp03) 

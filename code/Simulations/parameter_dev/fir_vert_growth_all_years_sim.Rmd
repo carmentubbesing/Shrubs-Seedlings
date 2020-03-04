@@ -478,3 +478,45 @@ hist(coef_all$value[coef_all$coef=="sqrt_shrubarea3"])
 save(coef_all, file = "../../../results/coefficients/LM_fir_bootstrap_coef.Rdata")
 ```
 
+# Repeat bootstrapping with standardized coefficients for figure
+```{r}
+coef_all_norm <- data.frame()
+model <- lme(f_int, data = LMdf, random = ~ 1| Fire/FirePatch/Sdlg, method = "ML")
+for(i in 1:1000){
+  bootdata <- LMdf[sample(nrow(LMdf), nrow(LMdf), replace=TRUE), ]
+  bootmodel <- try(update(model, data = bootdata), TRUE)
+  if(isTRUE(class(bootmodel)=="try-error")) { next } 
+  coef <- as.data.frame(bootmodel$coefficients$fixed) %>% 
+    mutate(coef = row.names(as.data.frame(bootmodel$coefficients$fixed) )) %>% 
+    mutate(i = i)
+  coef_all_norm <- rbind(coef, coef_all_norm)
+}
+coef_all_norm <- coef_all_norm %>% 
+  rename(value = `bootmodel$coefficients$fixed`)
+head(coef_all_norm)
+coef_all_norm %>% 
+  group_by(i) %>% 
+  count()
+```
+
+```{r}
+coef_all_norm %>% 
+  filter(coef != "(Intercept)") %>% 
+  group_by(coef) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  mutate(coef = fct_reorder(coef, desc(mean))) %>% 
+  ggplot()+
+  geom_point(aes(x = mean, y = coef))+
+  theme_minimal()+
+  xlab("Mixed effects model coefficient")+
+  ylab(element_blank())+
+  geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
+  geom_vline(aes(xintercept = 0), linetype = 2)+
+  scale_y_discrete(labels = c("Elevation", "Shrub competition", "Height/shrub interaction", "Heat load", "Slope", "Juvenile tree height", "Years since fire", "Potential incident radiation"))+
+  theme(panel.grid = element_blank(),
+        text = element_text(size = 12))
+
+ggsave(file = "../../../results/figures/FireFootprints/Fir_coefficients_Supp.png", width = 5, height = 3, dpi = 400)
+```
+
+
