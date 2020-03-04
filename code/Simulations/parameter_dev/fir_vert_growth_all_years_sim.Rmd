@@ -511,8 +511,31 @@ coef_all_norm %>%
   xlab("Mixed effects model coefficient")+
   ylab(element_blank())+
   geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
+  geom_vline(aes(xintercept = 0), linetype = 2)
+
+```
+
+```{r}
+coef_all_norm %>% 
+  filter(coef != "(Intercept)") %>% 
+  group_by(coef) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  mutate(coef = fct_reorder(coef, desc(mean))) %>% 
+  ggplot()+
+  geom_point(aes(x = mean, y = coef))+
+  theme_minimal()+
+  xlab("Mixed effects model coefficient")+
+  ylab(element_blank())+
+  geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
   geom_vline(aes(xintercept = 0), linetype = 2)+
-  scale_y_discrete(labels = c("Elevation", "Shrub competition", "Height/shrub interaction", "Heat load", "Slope", "Juvenile tree height", "Years since fire", "Potential incident radiation"))+
+  scale_y_discrete(labels = c("Elevation", 
+                              "Shrub competition", 
+                              "Height/shrub interaction", 
+                              "Heat load", 
+                              "Slope", 
+                              "Juvenile tree height", 
+                              "Years since fire", 
+                              "Potential incident radiation"))+
   theme(panel.grid = element_blank(),
         text = element_text(size = 12))
 

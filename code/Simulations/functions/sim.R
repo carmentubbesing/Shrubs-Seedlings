@@ -30,17 +30,9 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   coef_int_mort_pipo <- unlist(coef_mort_pipo[2])
   coef_gr_mort_pipo <- unlist(coef_mort_pipo[1])
   
-  ## Diameter
-  load("../../results/coefficients/LM_dia_ABCO_footprints.Rdata")
-  load("../../results/coefficients/LM_dia_PIPO_footprints.Rdata")
-  sigma_dia_abco <- sigma(ABCO_final)
-  error_dia_abco <- rnorm(1, 0, sigma_dia_abco)
-  sigma_dia_pipo <- sigma(PIPO_final)
-  error_dia_pipo <- rnorm(1, 0, sigma_dia_pipo)
-  
   ## Vertical growth
   ## Vert Growth
-  sample_gr <- sample(iterations, 1)
+  sample_gr <- sample(1000, 1)
   
   for(i in 1:years_max){
     
@@ -86,7 +78,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         mutate(Year = climate_year) 
       pts.sf.abco <- abcogrowth(pts.sf.abco, sample_gr)
       pts.sf.abco <- abcomort(pts.sf.abco, coef_int_mort_abco, coef_gr_mort_abco)
-      pts.sf.abco <- abcodia(pts.sf.abco, error_dia_abco)
+      pts.sf.abco <- abcodia(pts.sf.abco, sample_gr)
       pts.sf.abco <- abco_shrubgrowth(pts.sf.abco)
       pts.sf.abco <- abco_emerge(pts.sf.abco)
       pts.sf.abco <- pts.sf.abco %>% 
@@ -102,7 +94,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         mutate(Year = climate_year) 
       pts.sf.pipo <- pipogrowth(pts.sf.pipo, sample_gr)
       pts.sf.pipo <- pipomort(pts.sf.pipo, coef_int_mort_pipo, coef_gr_mort_pipo)
-      pts.sf.pipo <- pipodia(pts.sf.pipo, error_dia_pipo)
+      pts.sf.pipo <- pipodia(pts.sf.pipo, sample_gr)
       pts.sf.pipo <- pipo_shrubgrowth(pts.sf.pipo)
       pts.sf.pipo <- pipo_emerge(pts.sf.pipo)
       pts.sf.pipo <- pts.sf.pipo %>% 
@@ -122,8 +114,6 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     }
   }
   dfsimall <-  dfsimall %>%
-    mutate(error_dia_abco = error_dia_abco) %>%
-    mutate(error_dia_pipo = error_dia_pipo) %>%
     mutate(coef_gr_mort_abco = coef_gr_mort_abco) %>%
     mutate(coef_gr_mort_pipo = coef_gr_mort_pipo)
   return(dfsimall)

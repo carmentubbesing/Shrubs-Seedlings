@@ -380,13 +380,10 @@ sigma(LM_pine_nonnorm_sim)
 save(RMSE_pine_growth, file = "../../../results/coefficients/RMSE_pine_growth.Rdata")
 ```
 
-
 # Save final model
 ```{r}
 save(LM_pine_nonnorm_sim, file = "../../../results/coefficients/LM_pine_nonnorm_sim.Rdata")
 ```
-
-
 
 # Bootstrap the model, drawing same number of observations each time with replacement
 ```{r}
@@ -449,8 +446,38 @@ coef_all_norm %>%
   xlab("Mixed effects model coefficient")+
   ylab(element_blank())+
   geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
+  geom_vline(aes(xintercept = 0), linetype = 2)
+
+```
+
+Make sure labels match the figure below:
+
+```{r}
+coef_all_norm %>% 
+  filter(coef != "(Intercept)") %>% 
+  group_by(coef) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  mutate(coef = fct_reorder(coef, desc(mean))) %>% 
+  ggplot()+
+  geom_point(aes(x = mean, y = coef))+
+  theme_minimal()+
+  xlab("Mixed effects model coefficient")+
+  ylab(element_blank())+
+  geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
   geom_vline(aes(xintercept = 0), linetype = 2)+
-  scale_y_discrete(labels = c("Shrub species: deerbrush", "Basal diameter", "Shrub species: other", "Shrub species: whitethorn", "Year 2016", "Shrub species: bearclover", "Height/shrub interaction","Year 2017", "Shrub species: tanoak", "Heat load", "Shrub competition","Years since fire",  "Juvenile tree height"))+
+  scale_y_discrete(labels = c("Basal diameter", 
+                              "Shrub species: deerbrush", 
+                              "Shrub species: other", 
+                              "Shrub species: whitethorn", 
+                              "Year 2016", 
+                              "Shrub species: bearclover", 
+                              "Height/shrub interaction",
+                              "Year 2017", 
+                              "Heat load", 
+                              "Shrub species: tanoak", 
+                              "Shrub competition",
+                              "Years since fire",  
+                              "Juvenile tree height"))+
   theme(panel.grid = element_blank(),
         text = element_text(size = 12))
 

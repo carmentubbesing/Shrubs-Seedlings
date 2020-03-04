@@ -35,7 +35,7 @@ iterate <- function(iterations, fire, years_max, climate_method){
     cumsum_2017 <- 1
 
     # Remove old objects
-    remove(pts.sf.abco, pts.sf.pipo, r, p)
+    remove(pts.sf.abco, pts.sf.pipo)
 
     # Execute
 

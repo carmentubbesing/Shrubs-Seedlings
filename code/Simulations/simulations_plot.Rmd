@@ -8,10 +8,10 @@ output:
 ---
 
 ```{r}
-# name <- "2020-03-03_500AMRC"
-# df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
-# load(df_filename)
-# strt <- Sys.time()
+name <- "2020-03-04_10AMRC"
+df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
+load(df_filename)
+strt <- Sys.time()
 ```
 
 ```{r}
@@ -323,18 +323,20 @@ summary_prop <- dfsimallreps %>%
   filter(Years== max(Years)) %>% 
   summarize(emerged = sum(emerged)) %>% 
   mutate(prop_emerged = emerged/initial_n) 
+```
 
+```{r}
 boxplot_prop <- ggplot(summary_prop)+
   geom_boxplot(aes(x = Species, y = prop_emerged))+
   theme_minimal()+
   ylab("Proportion of initial trees")+
   xlab(element_blank())+
   scale_x_discrete(labels = c("White fir", "Ponderosa pine"))+
-  theme(text = element_text(size = 14),
-         theme(legend.text=element_text(size=14)))
-
+  theme(text = element_text(size = 14))
 boxplot_prop
+```
 
+```{r}
 filename <- paste("../../results/figures/Simulations/boxplot", name, ".png", sep = "")
 ggsave(file = filename, width = 4, height =4, dpi = 400)
 ```
