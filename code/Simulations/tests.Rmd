@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-load("~/Simulations2020-02-28_1000AMRC.Rdata")
+load("~/Simulations2020-03-04_1000AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -66,32 +66,6 @@ ggplot(dfsimallreps_summary %>% filter(rep %in% reps_with_na$rep))+
 
 
 # Check different values of error terms
-
-## Diameter
-
-### Abco
-```{r}
-test <- dfsimallreps %>% 
-  group_by(rep, error_dia_abco) %>% 
-  summarize(test =min(error_dia_abco)-max(error_dia_abco)) 
-all(test$test==0)
-```
-
-```{r}
-length(unique(test$error_dia_abco)) >10
-```
-
-### Pipo
-```{r}
-test <- dfsimallreps %>% 
-  group_by(rep, error_dia_pipo) %>% 
-  summarize(test =min(error_dia_pipo)-max(error_dia_pipo)) 
-all(test$test==0)
-```
-
-```{r}
-length(unique(test$error_dia_pipo)) >10
-```
 
 ## Growth
 ```{r}
@@ -165,7 +139,23 @@ test2 <- test2 %>%
 ggplot(test2)+
   geom_point(aes(x = dia.cmYear19, y = dia.cmYear20, col = as.factor(rep)))+
   geom_abline(aes(slope = 1, intercept = 0))+
-  theme_minimal()+
-  ylim(0,20)+
-  xlim(0,20)
+  theme_minimal()
 ```
+
+# Plot dia over time for individual trees
+```{r}
+sdlgs <- dfsimallreps %>% 
+  filter(rep ==4) %>% 
+  dplyr::select(Sdlg) %>% 
+  slice(1:30) %>% 
+  unlist()
+
+dfsimallreps %>% 
+  filter(rep == 4) %>% 
+  filter(emerged ==0) %>% 
+  filter(Sdlg %in% sdlgs) %>% 
+  ggplot()+
+  geom_line(aes(x = Years, y = dia.cm, group = Sdlg, col = Sdlg))+
+  theme_minimal()
+```
+
