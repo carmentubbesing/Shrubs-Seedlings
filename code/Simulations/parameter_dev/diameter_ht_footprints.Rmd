@@ -7,7 +7,7 @@ output:
     toc: TRUE
 ---
 
-# This code creates linear models for diameter in relation to height for ABCO and PIPO based on dendro data
+# This code creates linear models for diameter in relation to height for ABCO and PIPO based on fire footprint data
 
 ```{r}
 require(tidyverse)
@@ -130,6 +130,7 @@ summary(PIPO1)
 # Do AICc model selection
 ```{r}
 AICcmodavg::AICc(PIPO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
@@ -159,10 +160,33 @@ df %>%
   mutate(RMSE = sqrt(mean_resid))
 ```
 
+# Bootstrap 
+```{r}
+coef_all <- data.frame()
+models_all <- list()
+model <- PIPO_final
+for(i in 1:1000){
+  bootdata <- df[sample(nrow(df), nrow(df), replace=TRUE), ]
+  bootmodel <- try(update(model, data = bootdata), TRUE)
+  if(isTRUE(class(bootmodel)=="try-error")) { next } 
+  coef <- as.data.frame(bootmodel$coefficients) %>% 
+    mutate(coef = row.names(as.data.frame(bootmodel$coefficients) )) %>% 
+    mutate(i = i)
+  coef_all <- rbind(coef, coef_all)
+  models_all <- c(models_all, list(bootmodel))
+
+}
+coef_all <- coef_all %>% 
+  rename(value = `bootmodel$coefficients`)
+head(coef_all)
+head(models_all)
+```
 
 # Save
 ```{r}
 save(PIPO_final, file ="../../../results/coefficients/LM_dia_PIPO_footprints.Rdata")
+save(coef_all, file = "../../../results/coefficients/LM_dia_PIPO_coef_all.Rdata")
+save(models_all, file = "../../../results/coefficients/LM_dia_PIPO_models_all.Rdata")
 ```
 
 #-
@@ -262,6 +286,7 @@ plot(predictorEffect("sqrt_shrubarea3", ABCO1))
 # Do AIC model selection
 ```{r}
 AICcmodavg::AICc(ABCO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03*sqrt_shrubarea3, data = df))
@@ -277,7 +302,7 @@ summary(ABCO1)
 drop1(ABCO_final, test = "F")
 ```
 
-NOTE: I didn't select the model with the lowest AIC for the same of keeping things simple and the same as the PIPO model. 
+NOTE: I didn't select the model with the lowest AIC for the sake of keeping things simple and the same as the PIPO model. 
 
 # Test residual standard error meaning to make sure it's the same as root mean square error = root mean square deviation
 ```{r}
@@ -298,8 +323,33 @@ plot(predictorEffect("sqrt_shrubarea3", ABCO_final))
 plot(predictorEffect("Ht_cm1", ABCO_final))
 ```
 
+# Bootstrap 
+```{r}
+remove(coef_all)
+coef_all <- data.frame()
+models_all <- list()
+model <- ABCO_final
+for(i in 1:1000){
+  bootdata <- df[sample(nrow(df), nrow(df), replace=TRUE), ]
+  bootmodel <- try(update(model, data = bootdata), TRUE)
+  if(isTRUE(class(bootmodel)=="try-error")) { next } 
+  coef <- as.data.frame(bootmodel$coefficients) %>% 
+    mutate(coef = row.names(as.data.frame(bootmodel$coefficients) )) %>% 
+    mutate(i = i)
+  coef_all <- rbind(coef, coef_all)
+  models_all <- c(models_all, list(bootmodel))
+}
+coef_all <- coef_all %>% 
+  rename(value = `bootmodel$coefficients`)
+head(coef_all)
+head(models_all)
+```
+
+
 # Save
 ```{r}
 save(ABCO_final, file ="../../../results/coefficients/LM_dia_ABCO_footprints.Rdata")
+save(coef_all, file = "../../../results/coefficients/LM_dia_ABCO_coef_all.Rdata")
+save(models_all, file = "../../../results/coefficients/LM_dia_ABCO_models_all.Rdata")
 ```
 

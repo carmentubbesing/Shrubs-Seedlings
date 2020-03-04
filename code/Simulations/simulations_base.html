@@ -196,6 +196,7 @@ summary {
 <li><a href="#iterate">Iterate</a></li>
 <li><a href="#save-results">Save results</a></li>
 <li><a href="#filter-out-years-in-which-nothing-happens">Filter out years in which nothing happens</a></li>
+<li><a href="#save-results-1">Save results</a></li>
 </ul>
 </div>
 
@@ -204,7 +205,11 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
+<<<<<<< HEAD
 <pre><code>## [1] &quot;2020-02-28 16:03:26 PST&quot;</code></pre>
+=======
+<pre><code>## [1] &quot;2020-03-03 14:48:17 PST&quot;</code></pre>
+>>>>>>> 119c89f676132439f7603384602638d9b8012a44
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -212,7 +217,11 @@ summary {
 <h1>Define stuff</h1>
 <div id="define-iterations" class="section level2">
 <h2>Define iterations</h2>
+<<<<<<< HEAD
 <pre class="r"><code>iterations &lt;- 10</code></pre>
+=======
+<pre class="r"><code>iterations &lt;- 500</code></pre>
+>>>>>>> 119c89f676132439f7603384602638d9b8012a44
 </div>
 <div id="define-length-of-simulation" class="section level2">
 <h2>Define length of simulation</h2>
@@ -234,7 +243,11 @@ dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
+<<<<<<< HEAD
 <pre><code>## Time difference of 16.13692 secs</code></pre>
+=======
+<pre><code>## Time difference of 41.44746 mins</code></pre>
+>>>>>>> 119c89f676132439f7603384602638d9b8012a44
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
@@ -255,9 +268,20 @@ save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
+<<<<<<< HEAD
 <pre><code>## Time difference of 17 secs</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
 <pre><code>## [1] &quot;2020-02-28 16:03:43 PST&quot;</code></pre>
+=======
+<pre><code>## Time difference of 42 mins</code></pre>
+<pre class="r"><code>Sys.time()</code></pre>
+<pre><code>## [1] &quot;2020-03-03 15:30:16 PST&quot;</code></pre>
+</div>
+<div id="save-results-1" class="section level1">
+<h1>Save results</h1>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire,&quot;.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+>>>>>>> 119c89f676132439f7603384602638d9b8012a44
 </div>
 
 

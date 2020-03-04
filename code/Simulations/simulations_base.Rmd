@@ -11,7 +11,8 @@ output:
 
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/") # change this if needed
-pkgs <- c( "tidyverse", "knitr", "mgcv", "gridExtra", "doParallel")
+
+pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)
 strt <- Sys.time()
 ```
@@ -80,11 +81,15 @@ dfsimallreps <- dfsimallreps %>%
   filter(Years < max_year+2)
 ```
 
-
 ```{r}
 print(paste("The whole thing took"))
 round(Sys.time()-strt)
 Sys.time()
 ```
 
+# Save results
+```{r}
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
 

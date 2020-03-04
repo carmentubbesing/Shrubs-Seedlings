@@ -8,7 +8,8 @@ pipogrowth <- function(pts.sf.pipo, sample_gr){
              coefpipo[coefpipo$coef =="Ht_cm1", "value"]*Ht_cm1+
              coefpipo[coefpipo$coef =="sqrt_shrubarea3", "value"]*sqrt_shrubarea3+
              coefpipo[coefpipo$coef =="heatload", "value"]*heatload+
-             coefpipo[coefpipo$coef =="Elevation", "value"]*Elevation+
+             #coefpipo[coefpipo$coef =="Elevation", "value"]*Elevation+
+             coefpipo[coefpipo$coef =="BasDia2016.cm", "value"]*dia.cm+
              coefpipo[coefpipo$coef =="Ht_cm1:sqrt_shrubarea3", "value"]*sqrt_shrubarea3*Ht_cm1) %>%
     mutate(pred = case_when(
       ShrubSpp03 == "CECO" ~ pred + coefpipo[coefpipo$coef =="ShrubSpp03CECO", "value"],
@@ -22,7 +23,7 @@ pipogrowth <- function(pts.sf.pipo, sample_gr){
       Year == "2017" ~ pred + coefpipo[coefpipo$coef =="Year2017", "value"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1)  %>% 
+    mutate(Ht_cm1 = ifelse(emerged == 1, Ht_cm1, Ht_cm1 + pred_exp*Ht_cm1))  %>% 
     mutate(coef_gr_shrubarea = coefpipo[coefpipo$coef =="sqrt_shrubarea3", "value"])
   return(pts.sf.pipo)
   

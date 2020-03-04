@@ -17,7 +17,7 @@ abcogrowth <- function(pts.sf.abco, sample_gr){
              coefabco[1, "Ht_cm1:sqrt_shrubarea3"]*sqrt_shrubarea3*Ht_cm1
              ) %>%
     mutate(pred_exp = exp(pred)) %>% 
-    mutate(Ht_cm1 = Ht_cm1 + pred_exp*Ht_cm1) %>%   # calculate new ht after growth
+    mutate(Ht_cm1 = ifelse(emerged == 1, Ht_cm1, Ht_cm1 + pred_exp*Ht_cm1))  %>% 
     mutate(coef_gr_shrubarea =coefabco[1, "sqrt_shrubarea3"] )
   return(pts.sf.abco)
   

@@ -2,7 +2,7 @@
 
 iterate <- function(iterations, fire, years_max, climate_method){
 
-  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
+  no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
@@ -35,7 +35,7 @@ iterate <- function(iterations, fire, years_max, climate_method){
     cumsum_2017 <- 1
 
     # Remove old objects
-    remove(pts.sf.abco, pts.sf.pipo, r, p)
+    remove(pts.sf.abco, pts.sf.pipo)
 
     # Execute
 
