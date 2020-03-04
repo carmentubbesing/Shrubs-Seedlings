@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-load("~/Simulations2020-02-28_200AMRC.Rdata")
+load("~/Simulations2020-02-28_10STAR.Rdata")
 strt <- Sys.time()
 ```
 
