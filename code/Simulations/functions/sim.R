@@ -36,8 +36,6 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   
   for(i in 1:years_max){
     
-    # Assign a climate year depending on the method for this run
-    
     if(climate_method == "random"){
       random <- runif(1,0,1)
       climate_year <- case_when(
@@ -54,6 +52,12 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
       pts.sf.pipo <- pts.sf.pipo %>% 
         mutate(historic_year = historic_year_i)
       
+    } else if(climate_method == "uniform_2015"){
+      climate_year <- 2015
+    } else if(climate_method == "uniform_2016"){
+      climate_year <- 2015
+    } else if(climate_method == "uniform_2017"){
+      climate_year <- 2015
     }
     
     # If everything is already emerged, just add a year but don't do anything else

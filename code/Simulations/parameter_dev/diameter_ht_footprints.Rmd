@@ -130,6 +130,7 @@ summary(PIPO1)
 # Do AICc model selection
 ```{r}
 AICcmodavg::AICc(PIPO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3, data = df))
@@ -180,6 +181,30 @@ coef_all <- coef_all %>%
   rename(value = `bootmodel$coefficients`)
 head(coef_all)
 head(models_all)
+```
+
+# Plot bootstrap results
+```{r}
+coef_all %>% 
+  filter(coef != "(Intercept)") %>% 
+  group_by(coef) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  mutate(coef = fct_reorder(coef, desc(mean))) %>% 
+  ggplot()+
+  geom_point(aes(x = mean, y = coef))+
+  theme_minimal()+
+  xlab("Mixed effects model coefficient")+
+  ylab(element_blank())+
+  geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
+  geom_vline(aes(xintercept = 0), linetype = 2)+
+  xlim(c(-.03, 0.06))+
+  scale_y_discrete(labels = c("Juvenile tree height", 
+                              "Height/shrub interaction", 
+                              "Shrub competition"))+
+  theme(panel.grid = element_blank(),
+        text = element_text(size = 12))
+
+ggsave(file = "../../../results/figures/Simulations/Pine_dia_coefficients_Supp.png", width = 6, height = 2, dpi = 400)
 ```
 
 # Save
@@ -286,6 +311,7 @@ plot(predictorEffect("sqrt_shrubarea3", ABCO1))
 # Do AIC model selection
 ```{r}
 AICcmodavg::AICc(ABCO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3 + ShrubSpp03, data = df))
@@ -343,6 +369,30 @@ coef_all <- coef_all %>%
   rename(value = `bootmodel$coefficients`)
 head(coef_all)
 head(models_all)
+```
+
+# Plot bootstrap results
+```{r}
+coef_all %>% 
+  filter(coef != "(Intercept)") %>% 
+  group_by(coef) %>% 
+  summarize(mean = mean(value), sd = sd(value)) %>% 
+  mutate(coef = fct_reorder(coef, desc(mean))) %>% 
+  ggplot()+
+  geom_point(aes(x = mean, y = coef))+
+  theme_minimal()+
+  xlab("Mixed effects model coefficient")+
+  ylab(element_blank())+
+  geom_errorbarh(aes(y = coef, xmin = mean-sd, xmax = mean+sd), height = .2)+
+  geom_vline(aes(xintercept = 0), linetype = 2)+
+  xlim(c(-.03, 0.06))+
+  scale_y_discrete(labels = c("Juvenile tree height", 
+                              "Height/shrub interaction", 
+                              "Shrub competition"))+
+  theme(panel.grid = element_blank(),
+        text = element_text(size = 12))
+
+ggsave(file = "../../../results/figures/Simulations/Abco_dia_coefficients_Supp.png", width = 6, height = 2, dpi = 400)
 ```
 
 

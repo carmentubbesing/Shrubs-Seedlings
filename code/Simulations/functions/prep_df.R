@@ -1,4 +1,4 @@
-prep_df <- function(fire){
+prep_df <- function(fire, conifer_species_method){
   load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
   dffull <- df
   df <- df %>%
@@ -10,5 +10,16 @@ prep_df <- function(fire){
     distinct() %>%
     droplevels()
   
+  if(conifer_species_method == "random"){
+    df <- df %>% 
+      mutate(Species = sample(df$Species, nrow(df)))
+  }
+  
   return(df)
 }
+
+
+ggplot(df)+
+  geom_histogram(aes(x = shrubarea3, fill = Species))
+
+anova(lm(shrubarea3 ~ Species, data = df))

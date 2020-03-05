@@ -515,6 +515,7 @@ coef_all_norm %>%
 
 ```
 
+# Plot bootstrap results
 ```{r}
 coef_all_norm %>% 
   filter(coef != "(Intercept)") %>% 

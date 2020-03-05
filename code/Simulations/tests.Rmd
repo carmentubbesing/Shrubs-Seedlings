@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-load("~/Simulations2020-03-04_1000AMRC.Rdata")
+load("~/Simulations2020-03-04_50AMRC.Rdata")
 strt <- Sys.time()
 ```
 
@@ -43,24 +43,7 @@ dfsimallreps_summary <- dfsimallreps %>%
 summary(dfsimallreps_summary$mean_ht_years)
 reps_with_na <- dfsimallreps_summary %>% 
   filter(is.na(mean_ht_years))
-dfsimallreps %>% 
-  filter(rep %in% reps_with_na$rep) %>% 
-  select(Ht_cm1) %>% 
-  summary()
-```
-
-```{r}
-dfsimallreps %>% filter(rep ==309 & Sdlg == 36) %>% 
-  ggplot(aes(x = Years, y = Ht_cm1))+
-  geom_line()+
-  ylim(c(0,4000))
-```
-
-```{r}
-ggplot(dfsimallreps_summary %>% filter(rep %in% reps_with_na$rep))+
-  geom_line(aes(x = Years, y = mean_ht_years, group = interaction(rep, Species), color = interaction(rep, Species)))+
-  theme_minimal()+
-  ylim(0,2000)
+nrow(reps_with_na)==0
 ```
 
 
@@ -103,7 +86,7 @@ test <- dfsimallreps %>%
   dplyr::select(rep, Years, Year, Species, historic_year, sum_emerged) %>% 
   distinct() %>% 
   arrange(rep, Years)
-test
+
 ```
 
 ```{r}
@@ -113,10 +96,45 @@ df <- df %>% ungroup()
 
 ```{r}
 join_test <- left_join(test, df, by = c("historic_year" = "water_year")) %>% 
-  filter(Year != min_year) %>% 
-  arrange(Years) 
-join_test %>% 
-  tail()
+  filter(Year != min_year)
+
+```
+
+## Plot climate year over time
+
+```{r}
+correct <- join_test %>% 
+  dplyr::select(rep, Years, historic_year, min_year) %>% 
+  distinct() %>% 
+  ggplot()+
+  geom_point(aes(x = Years, y = min_year))+
+  theme_minimal()
+
+abco <- dfsimallreps %>% 
+  filter(emerged ==0) %>% 
+  filter(Species == "ABCO") %>% 
+  dplyr::select(rep, Years, Year) %>% 
+  distinct() %>% 
+  group_by(Years, Year) %>% 
+  mutate(count = n()) %>% 
+  ggplot()+
+  geom_point(aes(x = Years, y = Year, size = count))+
+  theme_minimal()+
+  ggtitle("ABCO")
+
+pipo <- dfsimallreps %>% 
+  filter(emerged ==0) %>% 
+  filter(Species == "PIPO") %>% 
+  dplyr::select(rep, Years, Year) %>% 
+  distinct() %>% 
+  group_by(Years, Year) %>% 
+  mutate(count = n()) %>% 
+  ggplot()+
+  geom_point(aes(x = Years, y = Year, size = count))+
+  theme_minimal()+
+  ggtitle("PIPO")
+
+grid.arrange(correct, abco, pipo)
 ```
 
 
@@ -133,6 +151,7 @@ test <- test %>%
 test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID"))
 
 test2 <- test2 %>% 
+  filter(rep %in% c(1:20)) %>% 
   rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
 
 ggplot(test2)+
