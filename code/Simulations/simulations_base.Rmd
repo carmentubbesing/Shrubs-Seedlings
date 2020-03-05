@@ -27,7 +27,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 1000
+iterations <- 10
 ```
 
 ## Define length of simulation
@@ -40,16 +40,17 @@ years_max <- 40
 fire <- "AMRC"
 ```
 
-## Climate method and conifer species method
+## Sensitivity methods
 ```{r}
 climate_method <- "historic" #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method <- "random"
+shrub_method <- "CECO" #emprical, CECO, ARPA, CHSE, LIDA, OTHER
 ```
 
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
-dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method)
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method)
 print(paste("That took"))
 Sys.time()-time
 ```

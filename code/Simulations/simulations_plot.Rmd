@@ -257,7 +257,7 @@ dfsimallreps %>%
 
 
 ```{r}
-plot_emerge_prop <- ggplot(summary_emerge %>% filter(Years <44))+
+plot_emerge_prop <- ggplot(summary_emerge)+
   theme_minimal()+
   geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8, outlier.shape = NA)+
   ylab("Proportion of initial juvenile trees that have emerged")+

@@ -1,6 +1,6 @@
 
 
-iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method){
+iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method){
 
   no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
@@ -10,7 +10,7 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
     time.start <- Sys.time()
     
     source("functions/prep_df.R")
-    df <- prep_df(fire, conifer_species_method)
+    df <- prep_df(fire, conifer_species_method, shrub_method)
     
     source("functions/initialize_nonspatial.R")
     source("functions/sim.R")
