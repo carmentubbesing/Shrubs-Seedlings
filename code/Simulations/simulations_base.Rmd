@@ -27,7 +27,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 10
+iterations <- 1000
 ```
 
 ## Define length of simulation
@@ -37,12 +37,12 @@ years_max <- 40
 
 ## Define fire
 ```{r}
-fire <- "STAR"
+fire <- "AMRC"
 ```
 
 ## Climate method and conifer species method
 ```{r}
-climate_method <- "uniform_2015"
+climate_method <- "historic" #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method <- "random"
 ```
 

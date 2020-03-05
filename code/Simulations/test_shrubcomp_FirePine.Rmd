@@ -47,3 +47,19 @@ anova(lm(shrubarea3 ~ Species, data = df))
 ```
 
 
+```{r}
+ggplot(df)+
+  geom_boxplot(aes( x = Species, y = shrubarea3))
+```
+
+# Differences in shrub species
+```{r}
+df %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(n = n()) %>% 
+  mutate(prop = n/sum(n)) %>% 
+  ggplot()+
+  geom_col(aes(x = ShrubSpp03, y = prop, fill = Species), position = "dodge")+
+  theme_minimal()
+```
+

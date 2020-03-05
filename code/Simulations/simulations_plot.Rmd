@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2020-03-04_10AMRC_random"
+name <- "2020-03-04_1000AMRC_random"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -35,7 +35,6 @@ dfsimallreps %>%
 dfsimallreps <- dfsimallreps %>% 
   filter(is.finite(pred_exp) & !is.na(pred_exp))
 ```
-
 
 # Summarize
 

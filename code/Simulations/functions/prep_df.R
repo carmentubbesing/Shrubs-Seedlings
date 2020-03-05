@@ -11,15 +11,13 @@ prep_df <- function(fire, conifer_species_method){
     droplevels()
   
   if(conifer_species_method == "random"){
+    sample <- sample(nrow(df), nrow(df), replace = T)
     df <- df %>% 
-      mutate(Species = sample(df$Species, nrow(df)))
+      mutate(Species = unlist(df[sample, "Species"])) %>% 
+      mutate(BasDia2016.cm = unlist(df[sample, "BasDia2016.cm"])) %>% 
+      mutate(Ht2016.cm_spring = unlist(df[sample, "Ht2016.cm_spring"]))
   }
   
   return(df)
 }
 
-
-ggplot(df)+
-  geom_histogram(aes(x = shrubarea3, fill = Species))
-
-anova(lm(shrubarea3 ~ Species, data = df))
