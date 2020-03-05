@@ -6,14 +6,51 @@ output: html_document
 ---
 
 ```{r}
-load("~/Simulations2020-03-04_50AMRC.Rdata")
+load("~/Simulations2020-03-04_1000AMRC.Rdata")
 strt <- Sys.time()
+dfbase <- dfsimallreps
 ```
 
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
 ```
+
+# Look at shrub comp differences between species
+```{r}
+plot_base <- dfbase %>% 
+  group_by(Species, Years) %>% 
+  filter(emerged ==0) %>% 
+  summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>% 
+  ggplot()+
+  geom_line(aes(x = Years, y = ht, group = Species, col = Species)) +
+  theme_minimal()+
+  ggtitle("Random species assignments")
+```
+
+# repeat for random assignments
+```{r}
+load("~/Simulations2020-03-04_1000AMRC_random.Rdata")
+dfrandom <- dfsimallreps
+plot_random <- dfrandom %>% 
+  group_by(Species, Years) %>% 
+  filter(emerged ==0) %>% 
+  summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>% 
+  ggplot()+
+  geom_line(aes(x = Years, y = ht, group = Species, col = Species)) +
+  theme_minimal()+
+  ggtitle("Base model")
+```
+
+```{r}
+grid.arrange(plot_base, plot_random)
+```
+
+
+```{r}
+dfsimallreps <- dfbase
+```
+
 
 # Check for reps that got dropped as errors -- should be TRUE
 ```{r}

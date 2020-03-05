@@ -1,4 +1,4 @@
-prep_df <- function(fire, conifer_species_method){
+prep_df <- function(fire, conifer_species_method, shrub_method){
   load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
   dffull <- df
   df <- df %>%
@@ -11,8 +11,17 @@ prep_df <- function(fire, conifer_species_method){
     droplevels()
   
   if(conifer_species_method == "random"){
+    sample <- sample(nrow(df), nrow(df), replace = T)
     df <- df %>% 
-      mutate(Species = sample(df$Species, nrow(df)))
+      mutate(Species = unlist(df[sample, "Species"])) %>% 
+      mutate(BasDia2016.cm = unlist(df[sample, "BasDia2016.cm"])) %>% 
+      mutate(Ht2016.cm_spring = unlist(df[sample, "Ht2016.cm_spring"]))
+  }
+  
+  if(shrub_method == "CECO"){
+    df <- df %>% 
+      mutate(ShrubSpp03 = "CECO") %>% 
+      mutate(ShrubSpp03 = as.factor(ShrubSpp03))
   }
   
   return(df)

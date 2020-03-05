@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2020-03-04_10AMRC_random"
+name <- "2020-03-04_1000AMRC_random"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -35,7 +35,6 @@ dfsimallreps %>%
 dfsimallreps <- dfsimallreps %>% 
   filter(is.finite(pred_exp) & !is.na(pred_exp))
 ```
-
 
 # Summarize
 
@@ -258,7 +257,7 @@ dfsimallreps %>%
 
 
 ```{r}
-plot_emerge_prop <- ggplot(summary_emerge %>% filter(Years <44))+
+plot_emerge_prop <- ggplot(summary_emerge)+
   theme_minimal()+
   geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8, outlier.shape = NA)+
   ylab("Proportion of initial juvenile trees that have emerged")+
