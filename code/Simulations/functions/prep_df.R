@@ -18,8 +18,3 @@ prep_df <- function(fire, conifer_species_method){
   return(df)
 }
 
-
-ggplot(df)+
-  geom_histogram(aes(x = shrubarea3, fill = Species))
-
-anova(lm(shrubarea3 ~ Species, data = df))
