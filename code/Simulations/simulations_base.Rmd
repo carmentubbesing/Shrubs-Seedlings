@@ -26,7 +26,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 1000
+iterations <- 10
 ```
 
 ## Define length of simulation
@@ -39,22 +39,23 @@ years_max <- 40
 fire <- "AMRC"
 ```
 
-## Climate method
+## Climate method and conifer species method
 ```{r}
-climate_method <- "historic"
+climate_method <- "uniform_2015"
+conifer_species_method <- "random"
 ```
 
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
-dfsimallreps <- iterate(iterations, fire, years_max, climate_method)
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method)
 print(paste("That took"))
 Sys.time()-time
 ```
 
 # Save results
 ```{r}
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,"_", conifer_species_method, ".Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 

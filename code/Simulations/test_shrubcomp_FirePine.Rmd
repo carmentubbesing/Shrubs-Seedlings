@@ -1,0 +1,49 @@
+---
+title: "test_shrubarea_FirPine_diff"
+author: "Carmen"
+date: "3/4/2020"
+output: html_document
+---
+
+```{r, include = F}
+require(tidyverse)
+```
+
+
+```{r}
+load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+dffull <- df
+df <- df %>%
+  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
+  filter(Year==2016) %>%
+  filter(!is.na(Ht2016.cm_spring)) %>%
+  mutate(Cov_prop = Cov1.3/1200) %>%
+  distinct() %>%
+  droplevels()
+```
+
+# Across all fires
+```{r}
+ggplot(df)+
+  geom_histogram(aes(x = shrubarea3, fill = Species))
+
+anova(lm(shrubarea3 ~ Species, data = df))
+
+```
+
+
+# In American River COmplex FIre
+```{r}
+df <- df %>% 
+  filter(Fire == "AMRC") 
+```
+
+```{r}
+ggplot(df)+
+  geom_histogram(aes(x = shrubarea3, fill = Species))
+
+anova(lm(shrubarea3 ~ Species, data = df))
+
+```
+
+
