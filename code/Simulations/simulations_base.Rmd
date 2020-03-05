@@ -11,6 +11,7 @@ output:
 
 ```{r, include = F}
 setwd("~/Shrubs-Seedlings/code/Simulations/") # change this if needed
+
 pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)
 strt <- Sys.time()
@@ -36,7 +37,7 @@ years_max <- 40
 
 ## Define fire
 ```{r}
-fire <- "AMRC"
+fire <- "STAR"
 ```
 
 ## Climate method and conifer species method
