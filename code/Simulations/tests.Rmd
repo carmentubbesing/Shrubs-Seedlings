@@ -5,7 +5,6 @@ date: "2/19/2020"
 output: html_document
 ---
 
-
 ```{r}
 load("~/Simulations2020-03-04_1000AMRC.Rdata")
 strt <- Sys.time()

@@ -27,7 +27,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 1000
+iterations <- 100
 ```
 
 ## Define length of simulation
@@ -37,7 +37,7 @@ years_max <- 40
 
 ## Define fire
 ```{r}
-fire <- "STAR"
+fire <- "AMRC"
 ```
 
 ## Climate method

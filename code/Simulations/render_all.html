@@ -370,24 +370,24 @@ summary {
 
 
 <div id="iterations-amrc-fire" class="section level1">
-<h1>40 iterations, AMRC fire</h1>
+<h1>1000 iterations, AMRC fire</h1>
 <pre class="r"><code>library(knitr)
 setwd(&quot;~/Shrubs-Seedlings/code/Simulations/&quot;)
 strt_renderall &lt;- Sys.time()</code></pre>
 <pre class="r"><code>strt_simulate &lt;- Sys.time()
 rmarkdown::render(&quot;simulations_base.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_simulate)</code></pre>
-<pre><code>## Time difference of 1.068422 hours</code></pre>
+<pre><code>## Time difference of 51.99667 mins</code></pre>
 <pre class="r"><code>strt_plot &lt;- Sys.time()
 rmarkdown::render(&quot;simulations_plot.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_plot)</code></pre>
-<pre><code>## Time difference of 17.78386 mins</code></pre>
+<pre><code>## Time difference of 2.783109 mins</code></pre>
 <pre class="r"><code>strt_plot &lt;- Sys.time()
 rmarkdown::render(&quot;tests.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_plot)</code></pre>
-<pre><code>## Time difference of 1.100952 mins</code></pre>
+<pre><code>## Time difference of 1.265922 mins</code></pre>
 <pre class="r"><code>print(Sys.time()-strt_renderall)</code></pre>
-<pre><code>## Time difference of 1.38324 hours</code></pre>
+<pre><code>## Time difference of 56.05116 mins</code></pre>
 </div>
 
 
