@@ -2,7 +2,7 @@
 
 iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method){
 
-  no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
+  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)

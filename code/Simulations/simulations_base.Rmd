@@ -27,7 +27,8 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 10
+iterations <- 100
+
 ```
 
 ## Define length of simulation
@@ -42,9 +43,9 @@ fire <- "AMRC"
 
 ## Sensitivity methods
 ```{r}
-climate_method <- "historic" #historic, random, uniform_2015, uniform_2016, uniform_2017
+climate_method <- "uniform_2017" #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method <- "random"
-shrub_method <- "CECO" #emprical, CECO, ARPA, CHSE, LIDA, OTHER
+shrub_method <- "empirical" #emprical, CECO, ARPA, CHSE, LIDE, OTHER
 ```
 
 # Iterate 
@@ -91,7 +92,7 @@ Sys.time()
 
 # Save results
 ```{r}
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,".Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire,"_", climate_method, ".Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 

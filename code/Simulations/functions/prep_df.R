@@ -24,6 +24,12 @@ prep_df <- function(fire, conifer_species_method, shrub_method){
       mutate(ShrubSpp03 = as.factor(ShrubSpp03))
   }
   
+  if(shrub_method == "CHSE"){
+    df <- df %>% 
+      mutate(ShrubSpp03 = "CHSE") %>% 
+      mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+  }
+  
   return(df)
 }
 
