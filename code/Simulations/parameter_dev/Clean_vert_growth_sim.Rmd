@@ -1,0 +1,557 @@
+---
+title: "Clean_vert_growth"
+author: "Carmen"
+date: "April 16, 2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(tidyverse)
+require(ggplot2)
+require(effects)
+```
+
+# Load data
+```{r}
+setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file="../../compiled_data/fire_footprints/master_seedlings2.Rdata")
+```
+
+# Take out species that aren't PIPO or ABCO
+```{r}
+df <- df %>% filter(Species %in% c("PIPO", "ABCO"))
+```
+
+# Calculate 2015 height values
+
+## Calculate 2015 and 2016 height by subtracting growth from 2017 height, unless there's no 2017 height value
+
+Calculate 2015 and 2016 height as the height BEFORE 2015 growth
+```{r}
+df <- df %>% 
+  mutate_at(c("Growth_15", "Growth_16","Growth_17"), as.numeric) %>%
+  rename(Ht2017.cm.fall = Ht2017.cm) %>% 
+  mutate(Ht2015.cm_spring_from2017 = Ht2017.cm.fall-Growth_16-Growth_17-Growth_15) %>% 
+  mutate(Ht2016.cm_spring_from2017 = Ht2017.cm.fall-Growth_16-Growth_17) %>% 
+  mutate(Ht2017.cm_spring_from2017 = Ht2017.cm.fall-Growth_17)
+```
+
+### Check: the following should be TRUE
+```{r}
+df %>% 
+  dplyr::select(Ht2017.cm.fall, Growth_17, Growth_16, Growth_15, Ht2015.cm_spring_from2017) %>% 
+  ungroup() %>% 
+  mutate(check = Ht2015.cm_spring_from2017 + Growth_15 + Growth_16 + Growth_17 - Ht2017.cm.fall) %>% 
+  filter(check > 0.0000001 | check < -0.0000001) %>% 
+  nrow() ==0
+```
+
+## Fill in 2015 height for seedling 6, which for some reason lost that value somewhere along the way
+```{r}
+df <- df %>% 
+  mutate(Ht2015.meas2016 = ifelse(Sdlg ==6, 9, Ht2015.meas2016))
+```
+
+### For those seedlings, find average 2016 growing season apical growth relative to 2015 growth 
+```{r}
+find_apical_growth <- df %>% 
+  filter(!is.na(Ht2015.meas2016)) %>% 
+  mutate(apical_growth_2016 = 
+           Ht16_meas2016.cm - LastYearGrth.cm - Ht2015.meas2016) %>% 
+  dplyr::select(Sdlg, Species, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, apical_growth_2016) %>% 
+  mutate(apical_ratio = apical_growth_2016/LastYearGrth.cm) %>% 
+  distinct()
+find_apical_growth
+```
+
+## For trees with measurements in both 2016 and 2017, see how apical growth compares to 2016 growth measured in 2017
+```{r}
+df_both_yrs <- df %>% 
+  filter(!is.na(Growth_16) & !is.na(Ht2015.meas2016)) %>% 
+  dplyr::select(Sdlg, Ht2016.cm_spring_from2017, Ht16_meas2016.cm, Ht2016.cm_spring_from2017, LastYearGrth.cm, Ht2015.meas2016, Ht2015.cm_spring_from2017, Growth_16, Date1_2016, Ht2017.cm.fall, Ht2017.cm_spring_from2017) %>% 
+  distinct()
+df_both_yrs <- left_join(df_both_yrs, find_apical_growth) %>% 
+  mutate(Ht16_minus_apical = Ht16_meas2016.cm-apical_growth_2016) %>% 
+  dplyr::select(Sdlg, Ht2016.cm_spring_from2017, Ht16_minus_apical, everything())
+names(df_both_yrs)
+```
+
+### Plot it 
+```{r}
+ggplot(df_both_yrs, aes(x = apical_growth_2016, Growth_16, col = as.factor(Date1_2016)))+
+  geom_point()+
+  geom_abline(intercept = 0,slope = 1)
+```
+
+### Histogram of differences
+```{r}
+ggplot(df_both_yrs)+
+  geom_histogram(aes(x = Growth_16 - apical_growth_2016))+
+  xlim(-20, 20)
+```
+
+### Count neg vs pos
+```{r}
+df_both_yrs %>% 
+  mutate(neg_growth = ifelse(Growth_16 - apical_growth_2016 < 0, 1, 0)) %>% 
+  group_by(neg_growth) %>% 
+  summarize(n())
+df_both_yrs %>% 
+  summarize(mean(Growth_16 - apical_growth_2016))
+```
+
+### Plot 2017 height as measured in 2017 against total height as measured in 2016, and check for a pattern with height
+```{r}
+ggplot(df_both_yrs, aes(x = Ht2017.cm_spring_from2017, y = Ht16_meas2016.cm, col = as.factor(Date1_2016)))+
+  geom_point()+
+  geom_abline(intercept = 0, slope = 1)+
+  geom_smooth()
+```
+
+# Save these data up until now
+```{r}
+save(df, file = "../../compiled_data/fire_footprints/df_vert_wide.Rdata")
+```
+
+## Add 2015 heights measured in 2016 for trees still missing 2015 height
+
+```{r}
+df <- df %>% 
+  mutate(Ht2015.cm_spring = ifelse(is.na(Ht2015.cm_spring_from2017), Ht2015.meas2016, Ht2015.cm_spring_from2017))
+```
+
+### Check
+```{r}
+df %>% 
+  dplyr::select(Ht2017.cm.fall, Growth_17, Growth_16, Growth_15, Ht2015.cm_spring_from2017, Ht2015.meas2016, Ht2015.cm_spring) %>% 
+  arrange(desc(Ht2015.meas2016))
+```
+
+### Count how many seedlings this applies to
+```{r}
+df %>% 
+  filter(is.na(Ht2015.cm_spring_from2017) & !is.na(Ht2015.meas2016)) %>% 
+  group_by(Species) %>% 
+  summarize(n())
+```
+
+### Find seedlings this didn't work for
+```{r}
+df %>% 
+  filter(is.na(Ht2015.cm_spring)) %>% 
+  dplyr::select(Sdlg, FirePatch, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, Ht2015.cm_spring)
+```
+
+### Count seedlings without 2017 height or 2015 height measured in 2016
+```{r}
+df %>% 
+  filter(is.na(Ht2017.cm.fall) & is.na(Ht2015.meas2016)) %>% 
+  group_by(Species) %>% 
+  summarize(n())
+```
+
+### List them
+```{r}
+df %>% 
+  filter(is.na(Ht2017.cm.fall) & is.na(Ht2015.meas2016)) %>% 
+  select(Sdlg, Species, FirePatch, Datasheet1_2016, Datasheet2_2016, Date1_2016, Date2_2016) %>% 
+  arrange(Date1_2016)
+```
+
+### For those seedlings, find 2015 growth by creating a regression model
+
+### Find average 2016 growing season apical growth for the seedlings with data on it
+```{r}
+find_apical_growth <- df %>%
+  filter(!is.na(Ht2015.meas2016)) %>%
+  mutate(apical_growth_2016 =
+           Ht16_meas2016.cm - LastYearGrth.cm - Ht2015.meas2016) %>%
+  dplyr::select(Sdlg, Species, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, apical_growth_2016, Date1_2016) %>%
+  mutate(apical_ratio = apical_growth_2016/LastYearGrth.cm) %>%
+  distinct()
+find_apical_growth
+```
+
+### Check whether that ratio changes with height or date, excluding the very high values that seem like mistakes
+
+#### Reformat data for LM
+
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species))
+test <- find_apical_growth %>% 
+  mutate(Date1_2016 = as.numeric(Date1_2016)) %>% 
+  mutate(Species = as.factor(Species))
+```
+
+#### Model growth based on species, date, and last year of growth
+```{r}
+lm <- lm(apical_growth_2016 ~ Date1_2016 + Species*LastYearGrth.cm, data = test)
+summary(lm)
+drop1(lm, test= "Chisq")
+plot(predictorEffect("Species", lm))
+plot(predictorEffect("LastYearGrth.cm", lm))
+plot(predictorEffect("Date1_2016", lm))
+```
+
+### Look at seedlings who have a weirdly high ratio
+```{r}
+find_apical_growth %>%
+  filter(apical_ratio>5)
+```
+
+### Find predicted growth for each seedling based on the linear model above
+```{r}
+df$apical_growth_pred <- predict(lm, newdata = df %>% mutate(Date1_2016 = as.numeric(Date1_2016)))
+```
+
+### Then use this value for the seedlings that don't have 2015 height recorded
+```{r}
+df <- df %>%
+   mutate(Ht2015.calc2016 =
+           ifelse(is.na(Ht2017.cm.fall) &
+                    is.na(Ht2015.meas2016),
+                  Ht16_meas2016.cm - LastYearGrth.cm - apical_growth_pred,
+                  Ht2015.meas2016)) 
+
+df %>%
+  filter(is.na(Ht2017.cm.fall)) %>%
+  dplyr::select(Sdlg, Ht16_meas2016.cm, LastYearGrth.cm, Ht2015.meas2016, Ht2015.calc2016)
+```
+
+## Assign 2015 spring height as Ht2015 calculated in 2016 if there's no 2017 value
+```{r}
+df <- df %>% 
+  mutate(Ht2015.cm_spring = ifelse(is.na(Ht2015.cm_spring), Ht2015.calc2016, Ht2015.cm_spring))
+```
+
+## Find seedlings STILL missing 2015 height
+```{r}
+df %>% 
+  filter(is.na(Ht2015.cm_spring)) %>% 
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, Note1_2016, Note2_2016, Notes2017)
+```
+
+## Add height for those special cases
+```{r}
+df <- df %>% 
+  mutate(Ht2015.cm_spring = ifelse(Sdlg == 6, Ht2017.cm.fall-Growth_15, Ht2015.cm_spring)) %>% 
+  mutate(Ht2015.cm_spring = ifelse(Sdlg == 72, Ht2017.cm.fall-Growth_17 - Growth_16, Ht2015.cm_spring)) %>% 
+  mutate(Ht2015.cm_spring = ifelse(Sdlg == 131, Ht2017.cm.fall-Growth_15, Ht2015.cm_spring)) %>% 
+  mutate(Ht2015.cm_spring = ifelse(Sdlg == 161, Ht2017.cm.fall-Growth_15 - Growth_16, Ht2015.cm_spring))
+```
+
+# Add columns for 2016 and 2017 spring heights
+```{r}
+df <- df %>% 
+  mutate(Ht2017.cm_spring = Ht2017.cm.fall - Growth_17) %>% 
+  mutate(Ht2016.cm_spring = Ht2017.cm.fall - Growth_17 - Growth_16)
+```
+
+# Look at odd seedlings
+```{r}
+df %>% 
+  filter(Sdlg %in% c(75, 161)) %>% 
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016, Growth_17, Growth_16, Growth_15, Note1_2016, Note2_2016, Notes2017, Ht2016.cm_spring, Ht2017.cm_spring, Ht2015.cm_spring)
+```
+
+## Fix them
+```{r}
+df <- df %>% 
+  mutate(Ht2016.cm_spring = ifelse(Sdlg == 75, Ht2017.cm.fall - Growth_16, Ht2016.cm_spring)) %>% 
+  mutate(Ht2015.cm_spring = ifelse(Sdlg == 75, Ht2017.cm.fall - Growth_16 - Growth_15, Ht2015.cm_spring)) %>% 
+  mutate(Ht2016.cm_spring = ifelse(Sdlg == 161, Ht2017.cm.fall - Growth_16, Ht2016.cm_spring))
+```
+
+
+# Create data frame with one row per growth measurement
+```{r}
+df <- tbl_df(df)
+df <- df %>% 
+  rename(`2017` = Growth_17, `2016` = Growth_16, `2015` = Growth_15)
+df <- gather(df, "Year", "VertGrowth_cm",c(`2017`, `2016`, `2015`))
+df$Year <- as.factor(df$Year)
+```
+
+## Check
+```{r}
+df %>% dplyr::select(Sdlg, Year, VertGrowth_cm)
+summary(df$Year)
+```
+
+# Remove bad rows
+
+## Take out 2017 vertical growth measurements for trees that died since last measure
+```{r}
+summary(as.factor(df$Status))
+df <- df %>% 
+  filter(!(Status %in% c("DEAD", "dead") & Year == "2017"))
+```
+
+## Take out 2016 and 2017 vertical growth measurements for trees that were not found
+```{r}
+df <- df %>% 
+  filter(!(Status %in% c("could not find","not found", "eaten", "herbicide","herbicided") & Year %in% c("2016", "2017")))
+```
+
+## Check out NA values and delete years that broke off
+```{r}
+df %>% 
+  filter(is.na(VertGrowth_cm)) %>% 
+  dplyr::select(Sdlg, Year, VertGrowth_cm, Status,  Note1_2016, Note2_2016, Notes2017) %>% 
+  arrange(Sdlg)
+df <- df %>% 
+  filter(!(Sdlg %in% c("6","185","131","226","6","74","98", "132") & Year %in% c("2017","2016"))) %>% 
+  filter(!(Sdlg %in% c(145, 195,78) & Year == "2016")) %>% 
+  filter(!(Sdlg == 75 & Year == 2017))  
+```
+
+## Use growth measured in 2016 (which was 2015 growth) if 2015 growth couldn't be measured in 2017
+```{r}
+df <- df %>% 
+  mutate(VertGrowth_cm = ifelse(is.na(VertGrowth_cm) & Year == "2015", LastYearGrth.cm, VertGrowth_cm))
+``` 
+
+## Look at odd vertical growth value
+```{r}
+df %>% 
+  filter(Sdlg == "195") %>% 
+  dplyr::select(Sdlg, Year, LastYearGrth.cm, VertGrowth_cm, Ht16_meas2016.cm, Ht2017.cm.fall, Ht2015.meas2016)
+```
+
+### Replace its 2015 growth with LastYearGrowth measured in 2016
+```{r}
+df <- df %>% 
+  mutate(VertGrowth_cm = ifelse(Sdlg == "195" & Year == "2015", LastYearGrth.cm, VertGrowth_cm))
+```
+
+# Make VertGrowth numeric
+```{r}
+df$VertGrowth_cm <- as.numeric(df$VertGrowth_cm)
+```
+
+# Add height column that changes depending on year that represents height BEFORE that year's growth
+
+```{r}
+df <- df %>% 
+  mutate(Ht_cm = ifelse(Year == "2017", Ht2017.cm_spring, 
+                        ifelse(Year == "2016", Ht2016.cm_spring, 
+                               ifelse(Year == "2015", Ht2015.cm_spring, 0))))
+```
+
+## Find missing heights
+```{r}
+df %>% 
+  filter(is.na(Ht_cm)) %>% 
+  dplyr::select(Sdlg, LastYearGrth.cm, Ht2016.cm_spring, Ht2017.cm.fall, Ht2015.meas2016, Year, VertGrowth_cm,  Note1_2016, Note2_2016, Notes2017)
+```
+
+# Change years since fire depending on year of growth
+```{r}
+df %>% 
+  group_by(Fire, Year, Years) %>% 
+  summarize(n())
+```
+
+```{r}
+df <- df %>% 
+  mutate(FireYear = ifelse(Fire == "AMRC", 2008, ifelse(Fire == "CLVD", 1992, ifelse(Fire == "FRDS", 2004, ifelse(Fire == "STAR", 2001, 1981))))) %>% 
+  mutate(Years = as.numeric(paste(Year))-FireYear)
+```
+
+## Check
+```{r}
+df %>% 
+  group_by(Fire, FireYear, Year, Years) %>% 
+  summarize(n())
+```
+
+# Calculate relative vertical growth 
+```{r}
+df %>% dplyr::select(Sdlg, Year, Ht_cm, VertGrowth_cm) %>% arrange(Sdlg)
+df <- df %>% 
+  rename(Ht_cm1 = Ht_cm) %>% 
+  mutate(Ht_cm2 = Ht_cm1+VertGrowth_cm) %>% 
+  #mutate(VertGrowth_Rel = log(Ht_cm2) - log(Ht_cm1))
+  mutate(VertGrowth_Rel = (Ht_cm2 - Ht_cm1)/Ht_cm1) %>% 
+  mutate(VertGrowth_Rel = log(VertGrowth_Rel))
+df %>% dplyr::select(Sdlg, Year, Ht_cm1, Ht_cm2, VertGrowth_cm, VertGrowth_Rel) %>% arrange(Sdlg)
+```
+
+## Find NAs
+```{r}
+df %>% 
+  filter(is.na(VertGrowth_cm) | is.na(VertGrowth_Rel))
+```
+
+# Look at which shrub species are in AMRC fire
+```{r}
+df %>% 
+  filter(Fire == "AMRC") %>% 
+  group_by(ShrubSpp03) %>% 
+```
+
+
+## Consolidate shrub species into fewer categories 
+```{r}
+df %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "ABCO") %>% 
+  ungroup() %>% 
+  mutate(percent = count/sum(count))
+```
+
+Pick the species with 5. For ABCO, the winning set is CECO, ARPA, CHSE, CEPR, PREM, and CEIN.
+
+```{r}
+df %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  filter(Species == "PIPO") %>% 
+  ungroup() %>% 
+  mutate(percent = count/sum(count))
+```
+
+For PIPO, the winning set is CECO, ARPA, CHFO, CEIN, LIDE
+
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp03 = ifelse(Species == "ABCO" & !ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CEPR", "PREM", "CEIN"), "Other", as.character(ShrubSpp03)))
+```
+
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp03 = ifelse(Species == "PIPO" & !ShrubSpp03 %in% c("CECO", "ARPA", "CHFO", "LIDE", "CEIN"), "Other", as.character(ShrubSpp03)))
+```
+
+## Make them factors
+```{r}
+df <- df %>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+```
+
+## plot shrub cover growth by shrub species
+```{r}
+df_shrubs <- df %>% 
+  mutate(Years = as.factor(Years)) %>% 
+  group_by(ShrubSpp03, Years) %>% 
+  summarize(shrub_cover = mean(Cov1.3))
+ggplot(df_shrubs)+
+  geom_line(aes(x = Years, y = shrub_cover, group=ShrubSpp03, col = ShrubSpp03))
+```
+
+## plot shrub cover growth overall
+```{r}
+df_shrubs <- df %>% 
+  group_by(Fire, Cov1.3, Ht1.3) %>% 
+  summarise(Years = mean(Years))
+ggplot(df_shrubs, aes(x = Years, y = Cov1.3))+
+  geom_point()+
+  stat_smooth(method = "loess", span = 1)
+```
+
+## plot shrub HEIGHT growth overall
+```{r}
+ggplot(df_shrubs, aes(x = Years, y = Ht1.3))+
+  geom_point()+
+  stat_smooth(method = "loess", span = 1)
+```
+
+# Summarize shrub cover and height
+```{r}
+perc <- function(x){x/1200}
+df %>% 
+  summarize(mincov = min(Cov1.3), medcov = median(Cov1.3), meancov = mean(Cov1.3),maxcov = max(Cov1.3)) %>% 
+  mutate_all(perc)
+
+df %>% 
+  summarize(min(Ht1.3), median(Ht1.3), mean(Ht1.3), max(Ht1.3))
+```
+
+
+# Drop extra levels
+```{r}
+df <- droplevels(df)
+```
+
+# Count by species
+```{r}
+df %>% 
+  dplyr::select(Species, Sdlg) %>% 
+  distinct() %>% 
+  group_by(Species) %>% 
+  summarize(n())
+```
+
+# Check for seedlings with too many years or repeat years
+```{r}
+repeats <- df %>% 
+  group_by(Sdlg) %>% 
+  summarize(n = n()) %>% 
+  filter(n >3)
+df_reps <- df %>% 
+  filter(Sdlg %in% repeats$Sdlg) 
+df %>% 
+  group_by(Sdlg, Species, Year) %>% 
+  filter(n()>1) %>% 
+  arrange(desc(Species))
+```
+
+```{r}
+boo <- (function(x) x[sapply(x, nrow)>0])(lapply(lapply(df_reps, function(x) tapply(x, df_reps$Sdlg, function(x) x[1]!=x[2])), function(x) subset(df_reps, Sdlg %in% names(which(x)))))
+print(boo)
+```
+
+# Change species and site class to factors
+```{r}
+df <- df %>% 
+  mutate(Species = as.factor(Species)) %>% 
+  mutate(Sdlg = as.factor(Sdlg), siteclass= as.factor(siteclass)) 
+df <- droplevels(df)
+```
+
+# Convert shrub area to sqrt
+```{r}
+df <- df %>% 
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
+```
+
+# Take out seedling/year combos with 0 growth
+```{r}
+df <- df %>% 
+  filter(VertGrowth_cm!=0)
+```
+
+# Save df
+```{r}
+save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+```
+
+# Print final seedlings 
+```{r}
+sort(df$Sdlg)
+```
+
+## By species
+```{r}
+sort(unique(df$Sdlg[df$Species=="ABCO"]))
+sort(unique(df$Sdlg[df$Species=="PIPO"]))
+
+length(unique(df$Sdlg[df$Species=="ABCO"]))
+length(unique(df$Sdlg[df$Species=="PIPO"]))
+length(df$Sdlg[df$Species=="ABCO"])
+length(df$Sdlg[df$Species=="PIPO"])
+
+```
+
+# Print all shrub patches
+```{r}
+sort(unique(as.factor(df$FirePatch)))
+```
+

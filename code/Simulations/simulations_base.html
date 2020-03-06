@@ -390,7 +390,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-03-05 12:58:04 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-06 14:15:37 PST&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -398,11 +398,11 @@ summary {
 <h1>Define stuff</h1>
 <div id="define-iterations" class="section level2">
 <h2>Define iterations</h2>
-<pre class="r"><code>iterations &lt;- 100</code></pre>
+<pre class="r"><code>iterations &lt;- 10</code></pre>
 </div>
 <div id="define-length-of-simulation" class="section level2">
 <h2>Define length of simulation</h2>
-<pre class="r"><code>years_max &lt;- 40</code></pre>
+<pre class="r"><code>years_max &lt;- 50</code></pre>
 </div>
 <div id="define-fire" class="section level2">
 <h2>Define fire</h2>
@@ -410,9 +410,9 @@ summary {
 </div>
 <div id="sensitivity-methods" class="section level2">
 <h2>Sensitivity methods</h2>
-<pre class="r"><code>climate_method &lt;- &quot;uniform_2017&quot; #historic, random, uniform_2015, uniform_2016, uniform_2017
+<pre class="r"><code>climate_method &lt;- &quot;historic&quot; #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method &lt;- &quot;random&quot;
-shrub_method &lt;- &quot;empirical&quot; #emprical, CECO, ARPA, CHSE, LIDE, OTHER</code></pre>
+shrub_method &lt;- &quot;welch&quot; #emprical, welch, CECO, ARPA, CHSE, LIDE, OTHER</code></pre>
 </div>
 </div>
 <div id="iterate" class="section level1">
@@ -422,7 +422,7 @@ dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 5.401142 mins</code></pre>
+<pre><code>## Time difference of 1.604749 mins</code></pre>
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
@@ -443,13 +443,13 @@ save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 5 mins</code></pre>
+<pre><code>## Time difference of 2 mins</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-03-05 13:03:33 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-06 14:17:14 PST&quot;</code></pre>
 </div>
 <div id="save-results-1" class="section level1">
 <h1>Save results</h1>
-<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire,&quot;_&quot;, climate_method, &quot;.Rdata&quot;, sep = &quot;&quot;)
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, shrub_method, &quot;.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 

@@ -40,7 +40,7 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
 
     # Execute
 
-    pts <- initialize(df, r, n_seedlings, lambda, length_m, height_m)
+    pts <- initialize(df, r, n_seedlings, lambda, length_m, height_m, shrub_method)
     pts.sf.abco <- pts[[1]]
     pts.sf.pipo <- pts[[2]]
     

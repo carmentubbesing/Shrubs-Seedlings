@@ -5,14 +5,38 @@ require(sp)
 require(knitr)
 
 
-initialize <- function(df, r, n_seedlings, lambda, length_m, height_m){
+initialize <- function(df, r, n_seedlings, lambda, length_m, height_m, shrub_method){
 
   # randomly select seedlings with replacement
-  df %>% group_by(Species) %>% count()
-  df_new <- df %>% 
-    sample_n(n_seedlings, replace = TRUE)
-  df_new %>% group_by(Species) %>% count()
-  
+  if(shrub_method=="welch"){
+    load("../../results/coefficients/welch_ratios.Rdata")
+    welch_shrspp <- welch_shrspp %>% 
+      dplyr::select(-sum, -total)
+    
+    df_new <- data.frame()
+    for(i in 1:nrow(welch_shrspp)){
+      welch_i <- welch_shrspp[i,]
+      welch_prop_i <- welch_shrspp[i,"prop"] %>% unlist()
+      df_i <- df %>% filter(Species == welch_i$Species & ShrubSpp03 == welch_i$Shrub_species)
+      sample_i <- sample_n(df_i, size = n_seedlings*welch_prop_i, replace = T)
+      
+      if(nrow(df_new)==0){
+        df_new <- sample_i
+      } else{
+        df_new <- full_join(df_new, sample_i)    
+      }
+      
+    }
+    
+    #check
+    df_new %>%
+      group_by(Species, ShrubSpp03) %>%
+      count() %>%
+      ungroup() %>%
+      mutate(prop = n/sum(n))
+    welch_shrspp
+
+  }
   pts.sf.lm <- df_new %>%
     rename("Ht_cm1" = Ht2016.cm_spring) %>%
     mutate(Years = as.factor(Years)) %>%
