@@ -55,9 +55,9 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     } else if(climate_method == "uniform_2015"){
       climate_year <- 2015
     } else if(climate_method == "uniform_2016"){
-      climate_year <- 2015
+      climate_year <- 2016
     } else if(climate_method == "uniform_2017"){
-      climate_year <- 2015
+      climate_year <- 2017
     }
     
     # If everything is already emerged, just add a year but don't do anything else

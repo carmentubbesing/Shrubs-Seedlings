@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2020-03-04_1000AMRC_random"
+name <- "2020-03-06_10AMRChistoric"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -269,7 +269,8 @@ plot_emerge_prop <- ggplot(summary_emerge)+
         legend.title = element_blank(),
         legend.text=element_text(size=13))+
   xlab(element_blank())+
-  scale_fill_discrete(labels = c("White fir", "Ponderosa pine"))
+  scale_fill_discrete(labels = c("White fir", "Ponderosa pine"))+
+  ggtitle("All 2016")
 
 plot_emerge_prop
 filename <- paste("../../results/figures/Simulations/prop_yearly_boxplot", name, ".png", sep = "")

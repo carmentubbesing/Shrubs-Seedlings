@@ -1,0 +1,194 @@
+---
+title: "Clean Welch regen data"
+author: "Carmen"
+date: "3/5/2020"
+output: html_document
+---
+
+
+```{r, include = F}
+setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+require(gridExtra)
+```
+
+# Load data
+
+## Welch data
+```{r}
+tree <- read_excel("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Welch_data/tree_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+```
+
+# Clean tree data 
+
+## Remove unnecessary columns
+```{r}
+tree <- tree %>% 
+  dplyr::select(ID, Regen_Plot, Count_total, Type, Species, num_dead, seed_veg_plant, tallest_age, tallest_ht_cm, tallest_lastyr_cm, Remarks, number_sprouts)
+```
+
+## Take out rows with NA tree counts -- I honestly don't know what's up with these
+```{r}
+tree <- tree %>% 
+  filter(!is.na(Count_total))
+```
+
+## Combine with previously cleaned Welch data with info on shrubs 
+```{r}
+df <- left_join(df, tree, by = "Regen_Plot") 
+```
+
+## Filter to American River Complex
+```{r}
+df <- df %>% 
+  filter(Fire == "AMERICAN RIVER")
+```
+
+## What's up with the NA plots?
+```{r}
+df %>% 
+  filter(is.na(Count_total))
+```
+
+
+```{r}
+welch <- df
+remove(df)
+```
+
+
+## My data
+
+```{r}
+load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+me <- df %>%
+  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
+  filter(Fire == "AMRC") %>% 
+  filter(Year==2016) %>%
+  mutate(Cov_prop = Cov1.3/1200) %>%
+  distinct() %>%
+  droplevels()
+```
+
+
+# Compare where the PIPO are to the ABCO
+```{r}
+welch_shrspp <- welch %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, Shrub_species) %>% 
+  summarize(sum = sum(Count_total)) %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  mutate(prop = sum/sum(sum)) %>% 
+  #filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11")) %>% 
+  ggplot()+
+  geom_col(aes(x = Species, y = prop, fill = Shrub_species), position = "dodge")+
+  theme_minimal()+
+  ylim(c(0, 0.65))+
+  ggtitle("Welch data")
+```
+
+## Compare that to my data
+```{r}
+me_shrspp <- me %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(sum = n()) %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  mutate(prop = sum/sum(sum)) %>% 
+  #filter(ShrubSpp03 %in% c("ARPA", "CECO", "CHSE")) %>% 
+  ggplot()+
+  geom_col(aes(x = Species, y = prop, fill = ShrubSpp03), position = "dodge")+
+  theme_minimal()+
+  ylim(c(0, 0.7))+
+  ggtitle("My data")
+```
+
+```{r}
+grid.arrange(welch_shrspp, me_shrspp, ncol = 2)
+```
+
+-  The species in common between me and welch are ARPA, CECO, CEIN, CEPR, CHSE
+
+# Calculate proportion within each shrub cover for each conifer species in Welch data, limiting to the species I found in AMRC
+```{r}
+welch_shrspp <- welch %>% 
+  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA")) %>% 
+  mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, Shrub_species) %>% 
+  summarize(sum = sum(Count_total)) %>% 
+  ungroup() %>% 
+  mutate(prop = sum/sum(sum)) %>% 
+  mutate(total = sum(prop)) 
+welch_shrspp
+```
+
+# Save thise proportions to use in simulation initialization
+```{r}
+save(welch_shrspp, file = "../../../../results/coefficients/welch_ratios.Rdata")
+```
+
+# Look at tallest trees 
+```{r}
+welch_tallest <- welch %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  ggplot()+
+  geom_boxplot(aes(x = Species, y = tallest_ht_cm, fill = Species))+
+  theme_minimal()+
+  ylim(c(0,100))+
+  ggtitle("Welch data at 5 years\nTALLEST TREE AT EACH PLOT")
+welch_tallest
+```
+
+# Compare that to my data
+
+# In American River COmplex FIre
+```{r}
+me <- me %>% 
+  filter(Fire == "AMRC") 
+```
+
+```{r}
+me_tallest <- ggplot(me)+
+  geom_boxplot(aes(x = Species, y = Ht2016.cm_spring, fill = Species))+
+  theme_minimal()+
+  ggtitle("My data at 8 years\nALL TREES")
+me_tallest
+```
+
+```{r}
+grid.arrange(welch_tallest, me_tallest, ncol = 2)
+```
+
+# Now compare shrub height between the two 
+```{r}
+welch_shr_ht <- ggplot(welch %>% filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11")))+
+  geom_boxplot(aes(x = Shrub_species, y = modal_ht_cm, fill = Shrub_species))+
+  theme_minimal()+
+  ylim(15, 125)+
+  ggtitle("Welch data at 5 years\nSHRUB HEIGHT")+
+  theme(legend.position = "none") 
+welch_shr_ht
+```
+
+```{r}
+me_shr_ht <- ggplot(me %>% filter(ShrubSpp03 %in% c("ARPA", "CECO", "CHSE")))+
+  geom_boxplot(aes(x = ShrubSpp03, y = Ht1.3, fill = ShrubSpp03))+
+  theme_minimal()+
+  ylim(15, 125)+
+  ggtitle("My data at 8 years\nSHRUB HEIGHT")+
+  theme(legend.position = "none") 
+me_shr_ht
+```
+
+```{r}
+grid.arrange(welch_shr_ht, me_shr_ht, ncol = 2)
+```
+
