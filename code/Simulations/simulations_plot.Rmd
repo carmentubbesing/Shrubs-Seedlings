@@ -8,6 +8,7 @@ output:
 ---
 
 ```{r}
+
 name <- "2020-03-09_1000AMRC_historic_empirical_CECO"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
