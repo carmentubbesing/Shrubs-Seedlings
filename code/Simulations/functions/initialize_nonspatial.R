@@ -1,14 +1,12 @@
-require(raster)
+
 require(tidyverse)
 require(sf)
-require(sp)
 require(knitr)
 
 
 initialize <- function(df, r, n_seedlings, lambda, length_m, height_m, shrub_method){
 
   # randomly select seedlings with replacement
-  if(shrub_method=="welch"){
     load("../../results/coefficients/welch_ratios.Rdata")
     welch_shrspp <- welch_shrspp %>% 
       dplyr::select(-sum, -total)
@@ -25,8 +23,6 @@ initialize <- function(df, r, n_seedlings, lambda, length_m, height_m, shrub_met
       } else{
         df_new <- full_join(df_new, sample_i)    
       }
-      
-    }
     
     #check
     df_new %>%
