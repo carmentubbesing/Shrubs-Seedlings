@@ -390,7 +390,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-03-06 14:15:37 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-09 14:25:48 PDT&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -411,18 +411,19 @@ summary {
 <div id="sensitivity-methods" class="section level2">
 <h2>Sensitivity methods</h2>
 <pre class="r"><code>climate_method &lt;- &quot;historic&quot; #historic, random, uniform_2015, uniform_2016, uniform_2017
-conifer_species_method &lt;- &quot;random&quot;
-shrub_method &lt;- &quot;welch&quot; #emprical, welch, CECO, ARPA, CHSE, LIDE, OTHER</code></pre>
+conifer_species_method &lt;- &quot;empirical&quot; #random, empirical
+shrub_method &lt;- &quot;CECO&quot; #emprical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+n_seedlings &lt;- 200</code></pre>
 </div>
 </div>
 <div id="iterate" class="section level1">
 <h1>Iterate</h1>
 <pre class="r"><code>time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 1.604749 mins</code></pre>
+<pre><code>## Time difference of 1.197392 mins</code></pre>
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
@@ -443,9 +444,9 @@ save(dfsimallreps, file =filename)</code></pre>
 <pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
 <pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
 <pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 2 mins</code></pre>
+<pre><code>## Time difference of 1 mins</code></pre>
 <pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-03-06 14:17:14 PST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-03-09 14:27:01 PDT&quot;</code></pre>
 </div>
 <div id="save-results-1" class="section level1">
 <h1>Save results</h1>

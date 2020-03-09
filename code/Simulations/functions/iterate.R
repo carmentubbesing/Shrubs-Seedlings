@@ -1,16 +1,16 @@
 
 
-iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method){
+iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings){
 
   no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
-  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "remove") %dopar% {
+  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "pass") %dopar% {
     time.start <- Sys.time()
     
     source("functions/prep_df.R")
-    df <- prep_df(fire, conifer_species_method, shrub_method)
+    df <- prep_df(fire, conifer_species_method, shrub_method, n_seedlings)
     
     source("functions/initialize_nonspatial.R")
     source("functions/sim.R")
@@ -26,7 +26,7 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
     source("functions/abco_emerge.R")
     source("functions/climate_year.R")
     
-    n_seedlings <- 200
+   
     length_m <- 40
     height_m <- 40
     lambda <- 4

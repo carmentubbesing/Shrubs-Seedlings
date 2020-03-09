@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-load("~/Simulations2020-03-09_1000AMRC_historic_empirical_ARPA.Rdata")
+load("~/Simulations2020-03-09_10AMRC_historic_empirical_CECO.Rdata")
 strt <- Sys.time()
 dfbase <- dfsimallreps
 ```
@@ -17,40 +17,39 @@ require(tidyverse)
 require(gridExtra)
 ```
 
-# Look at shrub comp differences between species
-```{r}
-plot_base <- dfbase %>% 
-  group_by(Species, Years) %>% 
-  filter(emerged ==0) %>% 
-  summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>% 
-  ggplot()+
-  geom_line(aes(x = Years, y = ht, group = Species, col = Species)) +
-  theme_minimal()+
-  ggtitle("Random species assignments")
-```
+<!-- # Look at shrub comp differences between species -->
+<!-- ```{r} -->
+<!-- plot_base <- dfbase %>%  -->
+<!--   group_by(Species, Years) %>%  -->
+<!--   filter(emerged ==0) %>%  -->
+<!--   summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>%  -->
+<!--   ggplot()+ -->
+<!--   geom_line(aes(x = Years, y = ht, group = Species, col = Species)) + -->
+<!--   theme_minimal()+ -->
+<!--   ggtitle("Random species assignments") -->
+<!-- ``` -->
 
-# repeat for random assignments
-```{r}
-load("~/Simulations2020-03-04_1000AMRC_random.Rdata")
-dfrandom <- dfsimallreps
-plot_random <- dfrandom %>% 
-  group_by(Species, Years) %>% 
-  filter(emerged ==0) %>% 
-  summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>% 
-  ggplot()+
-  geom_line(aes(x = Years, y = ht, group = Species, col = Species)) +
-  theme_minimal()+
-  ggtitle("Base model")
-```
+<!-- # repeat for random assignments -->
+<!-- ```{r} -->
+<!-- load("~/Simulations2020-03-04_1000AMRC_random.Rdata") -->
+<!-- dfrandom <- dfsimallreps -->
+<!-- plot_random <- dfrandom %>%  -->
+<!--   group_by(Species, Years) %>%  -->
+<!--   filter(emerged ==0) %>%  -->
+<!--   summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>%  -->
+<!--   ggplot()+ -->
+<!--   geom_line(aes(x = Years, y = ht, group = Species, col = Species)) + -->
+<!--   theme_minimal()+ -->
+<!--   ggtitle("Base model") -->
+<!-- ``` -->
 
-```{r}
-grid.arrange(plot_base, plot_random)
-```
+<!-- ```{r} -->
+<!-- grid.arrange(plot_base, plot_random) -->
+<!-- ``` -->
 
-
-```{r}
-dfsimallreps <- dfbase
-```
+<!-- ```{r} -->
+<!-- dfsimallreps <- dfbase -->
+<!-- ``` -->
 
 
 # Check for reps that got dropped as errors -- should be TRUE
@@ -58,14 +57,17 @@ dfsimallreps <- dfbase
 length(unique(dfsimallreps$rep)) == max(dfsimallreps$rep)
 length(unique(dfsimallreps$rep))
 max(dfsimallreps$rep)
+test1 <- length(unique(dfsimallreps$rep)) > max(dfsimallreps$rep)-5
+test1
 ```
 
 # Check random independence
 ```{r}
 test <-dfsimallreps %>% tbl_df() %>% group_by(rep, Sdlg) %>% count() %>% group_by(Sdlg) %>% count() %>% filter(n<5)
 test
-nrow(test)==0
+test2 <- nrow(test)==0
 remove(test)
+test2
 ```
 
 # Check for NA and inf values
@@ -81,7 +83,8 @@ dfsimallreps_summary <- dfsimallreps %>%
 summary(dfsimallreps_summary$mean_ht_years)
 reps_with_na <- dfsimallreps_summary %>% 
   filter(is.na(mean_ht_years))
-nrow(reps_with_na)==0
+test3 <- nrow(reps_with_na)==0
+test3
 ```
 
 
@@ -93,9 +96,11 @@ test <- dfsimallreps %>%
   group_by(rep, coef_gr_shrubarea, Species) %>% 
   #filter(Species =="PIPO") %>% 
   summarize(test =min(coef_gr_shrubarea)-max(coef_gr_shrubarea)) 
-all(test$test==0)
-length(unique(test$coef_gr_shrubarea)) >10
+test4 <- all(test$test==0)
+test5 <- length(unique(test$coef_gr_shrubarea)) >10
 remove(test)
+test4
+test5
 ```
 
 ## Mortality
@@ -103,16 +108,18 @@ remove(test)
 test <- dfsimallreps %>% 
   group_by(rep, coef_gr_mort_abco) %>% 
   summarize(test =min(coef_gr_mort_abco)-max(coef_gr_mort_abco)) 
-all(test$test==0)
-length(unique(test$coef_gr_mort_abco))>10
+test6 <- all(test$test==0)
+test7 <- length(unique(test$coef_gr_mort_abco))>5
+remove(test)
 ```
 
 ```{r}
 test <- dfsimallreps %>% 
   group_by(rep, coef_gr_mort_pipo) %>% 
   summarize(test =min(coef_gr_mort_pipo)-max(coef_gr_mort_pipo)) 
-all(test$test==0)
-length(unique(test$coef_gr_mort_pipo))>10
+test8 <- all(test$test==0)
+test9 <- length(unique(test$coef_gr_mort_pipo))>5
+remove(test)
 ```
 
 # Test climate years
@@ -124,7 +131,6 @@ test <- dfsimallreps %>%
   dplyr::select(rep, Years, Year, Species, historic_year, sum_emerged) %>% 
   distinct() %>% 
   arrange(rep, Years)
-
 ```
 
 ```{r}
@@ -133,9 +139,7 @@ df <- df %>% ungroup()
 ```
 
 ```{r}
-join_test <- left_join(test, df, by = c("historic_year" = "water_year")) %>% 
-  filter(Year != min_year)
-
+join_test <- full_join(test, df, by = c("historic_year" = "water_year"))
 ```
 
 ## Plot climate year over time
@@ -156,7 +160,7 @@ abco <- dfsimallreps %>%
   group_by(Years, Year) %>% 
   mutate(count = n()) %>% 
   ggplot()+
-  geom_point(aes(x = Years, y = Year, size = count))+
+  geom_point(aes(x = Years, y = Year))+
   theme_minimal()+
   ggtitle("ABCO")
 
@@ -168,11 +172,13 @@ pipo <- dfsimallreps %>%
   group_by(Years, Year) %>% 
   mutate(count = n()) %>% 
   ggplot()+
-  geom_point(aes(x = Years, y = Year, size = count))+
+  geom_point(aes(x = Years, y = Year))+
   theme_minimal()+
-  ggtitle("PIPO")
+  ggtitle("PIPO")+
+  xlim(c(8, max(join_test$Years)))
 
 grid.arrange(correct, abco, pipo)
+remove(test)
 ```
 
 
@@ -182,13 +188,10 @@ test <- dfsimallreps %>%
   filter(Years %in% c(19,20)) %>% 
   dplyr::select(Sdlg, Species, Ht_cm1, dia.cm, Years, pred_exp, rep, ID_withinrep) %>% 
   tbl_df() %>% 
-  arrange(Sdlg)
-test <- test %>% 
+  arrange(Sdlg) %>% 
   mutate(ID = paste(Sdlg, rep, ID_withinrep, sep = "-"))
 
-test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID"))
-
-test2 <- test2 %>% 
+test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID")) %>% 
   filter(rep %in% c(1:20)) %>% 
   rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
 
@@ -213,5 +216,18 @@ dfsimallreps %>%
   ggplot()+
   geom_line(aes(x = Years, y = dia.cm, group = Sdlg, col = Sdlg))+
   theme_minimal()
+```
+
+# ALL TESTS TOGETHER
+```{r}
+test1
+test2
+test3
+test4
+test5
+test6
+test7
+test8
+test9
 ```
 
