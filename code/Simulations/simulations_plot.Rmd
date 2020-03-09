@@ -9,7 +9,7 @@ output:
 
 ```{r}
 
-name <- "2020-03-09_1000AMRC_historic_empirical_CECO"
+name <- "2020-03-09_20AMRC_historic_empirical_CECO"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -128,8 +128,8 @@ ggplot(dfsimallreps_summary)+
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
 
-filename <- paste("../../results/figures/Simulations/count_plot_", name, ".png", sep = "")
-ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
+#filename <- paste("../../results/figures/Simulations/count_plot_", name, ".png", sep = "")
+#ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
@@ -337,8 +337,8 @@ boxplot_prop
 ```
 
 ```{r}
-filename <- paste("../../results/figures/Simulations/boxplot", name, ".png", sep = "")
-ggsave(file = filename, width = 4, height =4, dpi = 400)
+#filename <- paste("../../results/figures/Simulations/boxplot", name, ".png", sep = "")
+#ggsave(file = filename, width = 4, height =4, dpi = 400)
 ```
 
 ```{r}
