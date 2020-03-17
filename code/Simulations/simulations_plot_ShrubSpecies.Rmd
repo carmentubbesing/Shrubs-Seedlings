@@ -8,6 +8,7 @@ output: html_document
 
 ```{r}
 strt <- Sys.time()
+setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```
 
 
@@ -18,7 +19,7 @@ require(gridExtra)
 
 
 ```{r}
-date <- "2020-03-09"
+date <- "2020-03-12"
 namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_ARPA.Rdata", sep = "")
 namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_CECO.Rdata", sep = "")
 #namechfo <- paste("~/Simulations", date, "_200AMRC_CHFO.Rdata", sep = "")

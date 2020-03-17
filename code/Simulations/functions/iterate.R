@@ -1,6 +1,6 @@
 
 
-iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings){
+iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient){
 
   no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
@@ -40,11 +40,11 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
 
     # Execute
 
-    pts <- initialize(df, r, n_seedlings, lambda, length_m, height_m, shrub_method)
+    pts <- initialize(df, r, n_seedlings, lambda, length_m, height_m)
     pts.sf.abco <- pts[[1]]
     pts.sf.pipo <- pts[[2]]
     
-    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method)
+    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method, shrub_coefficient)
     dfsimall <-  dfsimall %>%
       mutate(rep = i)
     return(dfsimall)

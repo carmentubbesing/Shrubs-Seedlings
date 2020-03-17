@@ -5,7 +5,7 @@ require(sp)
 require(knitr)
 
 
-initialize <- function(df, r, n_seedlings, lambda, length_m, height_m, shrub_method){
+initialize <- function(df, r, n_seedlings, lambda, length_m, height_m){
 
    pts.sf.lm <- df %>%
     rename("Ht_cm1" = Ht2016.cm_spring) %>%

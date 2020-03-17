@@ -1,4 +1,4 @@
-sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method){
+sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method, shrub_coefficient){
   load("../../data/PRISM/clean_1970-present.Rdata")
   prism <- df
   remove(df)
@@ -96,7 +96,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     if(any(pts.sf.pipo$emerged==0) ){
       pts.sf.pipo <- pts.sf.pipo %>% 
         mutate(Year = climate_year) 
-      pts.sf.pipo <- pipogrowth(pts.sf.pipo, sample_gr)
+      pts.sf.pipo <- pipogrowth(pts.sf.pipo, sample_gr, shrub_coefficient)
       pts.sf.pipo <- pipomort(pts.sf.pipo, coef_int_mort_pipo, coef_gr_mort_pipo)
       pts.sf.pipo <- pipodia(pts.sf.pipo, sample_gr)
       pts.sf.pipo <- pipo_shrubgrowth(pts.sf.pipo)

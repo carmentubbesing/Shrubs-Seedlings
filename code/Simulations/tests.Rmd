@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-load("~/Simulations2020-03-09_10AMRC_historic_empirical_CECO.Rdata")
+load("~/Simulations2020-03-06_1000AMRC_historic_empirical_welch.Rdata")
 strt <- Sys.time()
 dfbase <- dfsimallreps
 ```
