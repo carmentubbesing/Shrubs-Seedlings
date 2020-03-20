@@ -45,14 +45,15 @@ fire <- "AMRC"
 climate_method <- "historic" #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method <- "empirical" #random, empirical
 shrub_method <- "welch" #emprical, welch, CECO, ARPA, CHSE, LIDE, OTHER
-shrub_coefficient <- "CEIN"
+shrub_coefficient <- "empirical"  #emprical, CECO, ARPA, CHSE, LIDE, Other
+shrub_heightgrowth <- "CECO"  #emprical, CECO, ARPA, CHSE
 n_seedlings <- 200
 ```
 
 # Iterate 
 ```{r, warning=FALSE}
 time <- Sys.time()
-dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient)
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
 print(paste("That took"))
 Sys.time()-time
 ```
@@ -90,7 +91,7 @@ print(paste("The whole thing took"))
 round(Sys.time()-strt)
 Sys.time()
 ```
-
+ 
 # Save results
 ```{r}
 filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef.Rdata", sep = "")

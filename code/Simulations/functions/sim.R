@@ -1,4 +1,4 @@
-sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method, shrub_coefficient){
+sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method, shrub_coefficient, shrub_heightgrowth){
   load("../../data/PRISM/clean_1970-present.Rdata")
   prism <- df
   remove(df)
@@ -83,7 +83,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
       pts.sf.abco <- abcogrowth(pts.sf.abco, sample_gr)
       pts.sf.abco <- abcomort(pts.sf.abco, coef_int_mort_abco, coef_gr_mort_abco)
       pts.sf.abco <- abcodia(pts.sf.abco, sample_gr)
-      pts.sf.abco <- abco_shrubgrowth(pts.sf.abco)
+      pts.sf.abco <- abco_shrubgrowth(pts.sf.abco, shrub_heightgrowth)
       pts.sf.abco <- abco_emerge(pts.sf.abco)
       pts.sf.abco <- pts.sf.abco %>% 
         mutate(Years = Years + 1)
@@ -99,7 +99,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
       pts.sf.pipo <- pipogrowth(pts.sf.pipo, sample_gr, shrub_coefficient)
       pts.sf.pipo <- pipomort(pts.sf.pipo, coef_int_mort_pipo, coef_gr_mort_pipo)
       pts.sf.pipo <- pipodia(pts.sf.pipo, sample_gr)
-      pts.sf.pipo <- pipo_shrubgrowth(pts.sf.pipo)
+      pts.sf.pipo <- pipo_shrubgrowth(pts.sf.pipo, shrub_heightgrowth)
       pts.sf.pipo <- pipo_emerge(pts.sf.pipo)
       pts.sf.pipo <- pts.sf.pipo %>% 
         mutate(Years = Years + 1)

@@ -1,4 +1,4 @@
-pipo_shrubgrowth <- function(pts.sf.pipo){
+pipo_shrubgrowth <- function(pts.sf.pipo, shrub_heightgrowth){
   
   # Load gam models from `Shrub_growth_analysis.Rmd`
   load("../../results/coefficients/gamCECO.Rdata")
@@ -8,54 +8,68 @@ pipo_shrubgrowth <- function(pts.sf.pipo){
   load("../../results/coefficients/gamOTHER.Rdata")
   
   # Add a column for mean predicted shrub height for the present year, predicted by the GAM for each species
-  x <- data.frame(years_since_fire = unique(pts.sf.pipo$Years))
+  x1 <- data.frame(years_since_fire = unique(pts.sf.pipo$Years))
   
-  pts.sf.pipo <- pts.sf.pipo %>% 
-    mutate(mean_shrub_ht_by_spp = case_when(
-      ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x, se= T)$fit,
-      ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x, se= T)$fit,
-      ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x, se= T)$fit,
-      ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x, se= T)$fit,
-      TRUE  ~ predict.gam(gamOTHER, x, se= T)$fit
-    )) %>% 
-    mutate(se_shrub_ht_by_spp = case_when(
-      ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x, se= T)$se.fit,
-      ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x, se= T)$se.fit,
-      ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x, se= T)$se.fit,
-      ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x, se= T)$se.fit,
-      TRUE  ~ predict.gam(gamOTHER, x, se= T)$se.fit
-    ))
+  
+  if(shrub_heightgrowth == "CECO"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp = predict.gam(gamCECO, x1, se= T)$fit)
+  } else if(shrub_heightgrowth == "CEIN"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp = predict.gam(gamCEIN, x1, se= T)$fit)
+  } else if(shrub_heightgrowth == "ARPA"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp = predict.gam(gamARPA, x1, se= T)$fit)
+  } else if(shrub_heightgrowth == "CHFO"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp = predict.gam(gamCHFO, x1, se= T)$fit)
+  } else if(shrub_heightgrowth == "empirical") {
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp = case_when(
+        ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x1, se= T)$fit,
+        ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x1, se= T)$fit,
+        ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x1, se= T)$fit,
+        ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x1, se= T)$fit,
+        TRUE  ~ predict.gam(gamOTHER, x1, se= T)$fit
+      ))     
+  }
   
   # Check
   pts.sf.pipo %>% group_by(ShrubSpp03, mean_shrub_ht_by_spp) %>% count()
-  pts.sf.pipo %>% group_by(ShrubSpp03, se_shrub_ht_by_spp) %>% count()
   
   # Add a column for difference between current height and expected height
   pts.sf.pipo <- pts.sf.pipo %>% 
     mutate(diff_shr_ht = Ht1.3 - mean_shrub_ht_by_spp)
   
   # Repeat the mean height calculations for the next year
-  x <- data.frame(years_since_fire = unique(pts.sf.pipo$Years+1))
+  x2 <- data.frame(years_since_fire = unique(pts.sf.pipo$Years+1))
   
-  pts.sf.pipo <- pts.sf.pipo %>% 
-    mutate(mean_shrub_ht_by_spp_T2 = case_when(
-      ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x, se= T)$fit,
-      ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x, se= T)$fit,
-      ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x, se= T)$fit,
-      ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x, se= T)$fit,
-      TRUE  ~ predict.gam(gamOTHER, x, se= T)$fit
-    )) %>% 
-    mutate(se_shrub_ht_by_spp_T2 = case_when(
-      ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x, se= T)$se.fit,
-      ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x, se= T)$se.fit,
-      ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x, se= T)$se.fit,
-      ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x, se= T)$se.fit,
-      TRUE  ~ predict.gam(gamOTHER, x, se= T)$se.fit
-    ))
+  
+  if(shrub_heightgrowth == "CECO"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCECO, x2, se= T)$fit)
+  } else if(shrub_heightgrowth == "CEIN"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCEIN, x2, se= T)$fit)
+  } else if(shrub_heightgrowth == "ARPA"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamARPA, x2, se= T)$fit)
+  } else if(shrub_heightgrowth == "CHFO"){
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCHFO, x2, se= T)$fit)
+  } else if(shrub_heightgrowth == "empirical") {
+    pts.sf.pipo <- pts.sf.pipo %>% 
+      mutate(mean_shrub_ht_by_spp_T2 = case_when(
+        ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x2, se= T)$fit,
+        ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x2, se= T)$fit,
+        ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x2, se= T)$fit,
+        ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x2, se= T)$fit,
+        TRUE  ~ predict.gam(gamOTHER, x2, se= T)$fit
+      ))     
+  }
   
   # Check
   pts.sf.pipo %>% group_by(ShrubSpp03, mean_shrub_ht_by_spp, mean_shrub_ht_by_spp_T2) %>% count()
-  pts.sf.pipo %>% group_by(ShrubSpp03, se_shrub_ht_by_spp, mean_shrub_ht_by_spp_T2) %>% count()
   
   # Now make height this new height plus the difference between predicted height and actual height for the present year
   pts.sf.pipo <- pts.sf.pipo %>% 
@@ -67,8 +81,7 @@ pipo_shrubgrowth <- function(pts.sf.pipo){
   
   # Add a column for predicted shrub cover for the present year, predicted by the LM
   pts.sf.pipo <- pts.sf.pipo %>% 
-    mutate(predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.pipo)) %>% 
-    mutate(se_predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.pipo, se= T)$se.fit)
+    mutate(predicted_shrub_cov = predict(lmALL.ME, newdata = pts.sf.pipo))
   
   # Add a column for difference between current cover and expected cover
   pts.sf.pipo <- pts.sf.pipo %>% 
@@ -79,8 +92,7 @@ pipo_shrubgrowth <- function(pts.sf.pipo){
   
   # Repeat the mean height calculations for the next year
   pts.sf.pipo <- pts.sf.pipo %>% 
-    mutate(predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2)) %>% 
-    mutate(se_predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2, se= T)$se.fit)
+    mutate(predicted_shrub_cov_T2 = predict(lmALL.ME, newdata = x2)) 
   
   # Check
   ggplot(pts.sf.pipo)+
