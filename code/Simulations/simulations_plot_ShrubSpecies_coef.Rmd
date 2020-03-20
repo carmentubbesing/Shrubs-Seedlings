@@ -21,9 +21,10 @@ require(gridExtra)
 ```{r}
 date <- "2020-03-17"
 namearpa <- paste("~/Simulations", date, "_100AMRC_historic_empirical_welch_ARPAcoef.Rdata", sep = "")
+date <- "2020-03-20"
 namececo <- paste("~/Simulations", date, "_100AMRC_historic_empirical_welch_CECOcoef.Rdata", sep = "")
 #namechfo <- paste("~/Simulations", date, "_200AMRC_CHFO.Rdata", sep = "")
-namecein <- paste("~/Simulations", date, "_100AMRC_historic_empirical_welch_CEINcoef.Rdata", sep = "")
+namecein <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_CEINcoef.Rdata", sep = "")
 ```
 
 ```{r}
@@ -46,17 +47,26 @@ remove(dfsimallreps)
 
 ```{r}
 arpa <- arpa %>% 
-  mutate(sim_spp = "ARPA")
+  mutate(simspp = ifelse(Species == "PIPO", "ARPA", "ABCO")) %>% 
+  mutate(source = "arpa")
 ceco <- ceco %>% 
-  mutate(sim_spp = "CECO")
+  mutate(simspp = ifelse(Species == "PIPO", "CECO", "ABCO")) %>% 
+  mutate(source = "ceco")
 cein <- cein %>% 
-  mutate(sim_spp = "CEIN")
+  mutate(simspp = ifelse(Species == "PIPO", "CEIN", "ABCO")) %>% 
+  mutate(source = "cein")
 ```
 
 ```{r}
 df <- full_join(arpa, ceco)
 df <- full_join(df, cein)
 ```
+
+# Check df nrows
+```{r}
+nrow(df) == nrow(cein) + nrow(ceco) + nrow(arpa)
+```
+
 
 # Take out trees with non-finite or NA pred because they had already emerged and things got wacky
 ```{r}
@@ -71,52 +81,75 @@ df <- df %>%
   filter(is.finite(pred_exp) & !is.na(pred_exp))
 ```
 
+# Check that abco all looks the same
 
-## Summarize
-
-### Mean
 ```{r}
 summary_emerge <- df %>% 
-  group_by(Years, Species, rep, sim_spp) %>% 
+  group_by(Years, rep, simspp, source, Species) %>% 
   summarize(total_emergents = sum(emerged), total = n()) %>% 
   ungroup() %>% 
-  group_by(rep, Species, sim_spp) %>% 
+  group_by(rep, simspp, Species) %>% 
   mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
-  group_by(Years, Species, sim_spp) %>% 
+  group_by(Years, simspp, source) %>% 
+  summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
+```
+
+```{r}
+ggplot(summary_emerge %>% filter(simspp == "ABCO"))+
+  theme_minimal()+
+  geom_line(aes(x = Years, y = mean, col = source, group = source), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = source, group = source), alpha = .5)+
+  xlim(8,38)+
+  ylab("Proportion of initial juvenile trees that have emerged")+
+  xlab("Years since fire")+
+  #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
+  theme(legend.position = c(0.7, 0.3))
+```
+
+## Summarize
+```{r}
+summary_emerge <- df %>% 
+  group_by(Years, rep, simspp, source, Species) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, simspp, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  group_by(Years, simspp) %>% 
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
 
 ## Plot 
 ```{r}
 plot_emerge_prop <- 
-  ggplot(summary_emerge)+
+  ggplot(summary_emerge )+
   theme_minimal()+
-  geom_line(aes(x = Years, y = mean, col = interaction(sim_spp, Species), group = interaction(sim_spp, Species)), size = 1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = interaction(sim_spp, Species), group = interaction(sim_spp, Species)), alpha = .5)+
+  geom_line(aes(x = Years, y = mean, col = simspp, group = simspp), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .5)+
+  xlim(8,38)+
   ylab("Proportion of initial juvenile trees that have emerged")+
   xlab("Years since fire")+
   #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
-  theme(legend.position = c(0.8, 0.3))+
-  scale_fill_manual(values = c("#80cdc1", "#018571", "#dfc27d", "#a6611a"), 
-                                         labels = c("White fir under manzanita", 
-                                "White fir under whitethorn", 
+  theme(legend.position = c(0.7, 0.3))+
+  scale_fill_discrete(labels = c("White fir under all shrub species", 
                                 "Ponderosa pine under manzanita", 
-                                "Ponderosa pine under whitethorn"))+
+                                "Ponderosa pine under whitethorn",
+                               "Ponderosa pine under deerbrush"))+
 
-  scale_color_manual(values = c("#80cdc1", "#018571", "#dfc27d", "#a6611a"),  
-                     labels = c("White fir under manzanita", 
-                                "White fir under whitethorn", 
+  scale_color_discrete(labels = c("White fir under all shrub species", 
                                 "Ponderosa pine under manzanita", 
-                                "Ponderosa pine under whitethorn"))+
+                                "Ponderosa pine under whitethorn",
+                               "Ponderosa pine under deerbrush"))+
   theme(text = element_text(size = 13), 
         legend.title = element_blank(),
         legend.text=element_text(size=13))+
   xlab("Years since fire")
 
 plot_emerge_prop
-filename <- paste("../../results/figures/Simulations/shrub_species_lines", Sys.Date(), ".png", sep = "")
+filename <- paste("../../results/figures/Simulations/shrub_species_coef", Sys.Date(), ".png", sep = "")
 ggsave(file = filename, width = 8, height =5, dpi = 400)
 ```
 
