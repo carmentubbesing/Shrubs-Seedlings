@@ -8,8 +8,7 @@ output:
 ---
 
 ```{r}
-
-name <- "2020-03-17_100AMRC_historic_empirical_welch_CEINcoef"
+name <- "2020-03-20_5AMRC_historic_empirical_welch_empiricalcoef_CECOgrowth"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()

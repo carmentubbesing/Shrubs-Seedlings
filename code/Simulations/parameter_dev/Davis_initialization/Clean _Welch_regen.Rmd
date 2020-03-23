@@ -74,7 +74,7 @@ me <- df %>%
 ```
 
 
-# Compare where the PIPO are to the ABCO
+# Compare where the PIPO are in relation to the ABCO
 ```{r}
 welch_shrspp <- welch %>% 
   filter(Species %in% c("PIPO", "ABCO")) %>% 
@@ -89,7 +89,31 @@ welch_shrspp <- welch %>%
   theme_minimal()+
   ylim(c(0, 0.65))+
   ggtitle("Welch data")
+welch_shrspp
 ```
+
+## Look at counts
+```{r}
+welch %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, Shrub_species) %>% 
+  summarize(sum = sum(Count_total)) %>% 
+  filter(Shrub_species %in% c("ARPA6", "CECO", "CEIN3")) %>% 
+  ungroup() %>% 
+  summarize(sum(sum))
+```
+
+## Count plots
+```{r}
+welch %>% 
+  filter(Species %in% c("ABCO", "PIPO")) %>% 
+  group_by(Regen_Plot, Species) %>% 
+  summarize(sum(Count_total)) %>% 
+  ungroup() %>% 
+  select(Regen_Plot) %>% 
+  distinct()
+```
+
 
 ## Compare that to my data
 ```{r}
@@ -107,6 +131,17 @@ me_shrspp <- me %>%
   ylim(c(0, 0.7))+
   ggtitle("My data")
 ```
+
+```{r}
+me %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(sum = n()) %>% 
+  filter(ShrubSpp03 %in% c("ARPA", "CECO", "CEIN")) %>% 
+  ungroup() %>% 
+  summarize(sum(sum))
+```
+
 
 ```{r}
 grid.arrange(welch_shrspp, me_shrspp, ncol = 2)

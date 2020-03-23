@@ -19,11 +19,9 @@ require(gridExtra)
 
 
 ```{r}
-date <- "2020-03-17"
-namearpa <- paste("~/Simulations", date, "_100AMRC_historic_empirical_welch_ARPAcoef.Rdata", sep = "")
 date <- "2020-03-20"
-namececo <- paste("~/Simulations", date, "_100AMRC_historic_empirical_welch_CECOcoef.Rdata", sep = "")
-#namechfo <- paste("~/Simulations", date, "_200AMRC_CHFO.Rdata", sep = "")
+namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_ARPAcoef.Rdata", sep = "")
+namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_CECOcoef.Rdata", sep = "")
 namecein <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_CEINcoef.Rdata", sep = "")
 ```
 
@@ -35,10 +33,6 @@ remove(dfsimallreps)
 load(namececo)
 ceco <- dfsimallreps
 remove(dfsimallreps)
-# 
-# load(namechfo)
-# chfo <- dfsimallreps
-# remove(dfsimallreps)
  
 load(namecein)
 cein <- dfsimallreps
@@ -118,7 +112,7 @@ summary_emerge <- df %>%
   mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
-  group_by(Years, simspp) %>% 
+  group_by(Years, simspp, Species) %>% 
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
 
@@ -127,22 +121,25 @@ summary_emerge <- df %>%
 plot_emerge_prop <- 
   ggplot(summary_emerge )+
   theme_minimal()+
-  geom_line(aes(x = Years, y = mean, col = simspp, group = simspp), size = 1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .5)+
+  geom_line(aes(x = Years, y = mean, col = simspp, group = simspp, linetype = Species), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .3)+
   xlim(8,38)+
   ylab("Proportion of initial juvenile trees that have emerged")+
   xlab("Years since fire")+
   #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   theme(legend.position = c(0.7, 0.3))+
-  scale_fill_discrete(labels = c("White fir under all shrub species", 
+  scale_fill_manual(values = c("#A9A9A9", "#d95f02", "#1b9e77", "#7570b3"),
+    labels = c("White fir under all shrub species", 
                                 "Ponderosa pine under manzanita", 
                                 "Ponderosa pine under whitethorn",
                                "Ponderosa pine under deerbrush"))+
 
-  scale_color_discrete(labels = c("White fir under all shrub species", 
+  scale_color_manual(values = c("#A9A9A9", "#d95f02", "#1b9e77", "#7570b3"),
+                       labels = c("White fir under all shrub species", 
                                 "Ponderosa pine under manzanita", 
                                 "Ponderosa pine under whitethorn",
                                "Ponderosa pine under deerbrush"))+
+  guides(linetype = FALSE)+
   theme(text = element_text(size = 13), 
         legend.title = element_blank(),
         legend.text=element_text(size=13))+
