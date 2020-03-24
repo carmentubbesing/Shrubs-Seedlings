@@ -1,5 +1,6 @@
 prep_df <- function(fire, conifer_species_method, shrub_method, n_seedlings){
   load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+  load(file = "../../data/welch_CEIN_hts.Rdata")
   dffull <- df
   
   # filter and clean df
@@ -64,18 +65,27 @@ prep_df <- function(fire, conifer_species_method, shrub_method, n_seedlings){
   } else if(shrub_method == "CECO"){
     df_new <- df %>% 
       filter(ShrubSpp03 == "CECO") %>% 
-      sample_n(size = n_seedlings, replace = T)
+      sample_n(size = n_seedlings, replace = T) 
+      
+  } else if(shrub_method == "CEIN"){
+    sample_hts <- sample_n(welch_CEIN_hts, size = n_seedlings, replace = T)
+    df_new <- df %>% 
+      filter(ShrubSpp03 == "CECO") %>% 
+      sample_n(size = n_seedlings, replace = T) %>% 
+      mutate(ShrubSpp03 = "CEIN") %>% 
+      mutate(Ht1.3 = sample_hts$modal_ht_cm) %>% 
+      mutate(shrubarea3 = Cov1.3*Ht1.3)
+      
   } 
-  
-    
-    #check
-    df_new %>%
-      group_by(Species, ShrubSpp03) %>%
-      count() %>%
-      ungroup() %>%
-      mutate(prop = n/sum(n))
-  
-    df <- df_new
+
+  #check
+  df_new %>%
+    group_by(Species, ShrubSpp03) %>%
+    count() %>%
+    ungroup() %>%
+    mutate(prop = n/sum(n))
+
+  df <- df_new
   
   return(df)
 }
