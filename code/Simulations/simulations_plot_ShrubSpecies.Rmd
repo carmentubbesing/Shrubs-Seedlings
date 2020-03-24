@@ -5,12 +5,10 @@ date: "3/6/2020"
 output: html_document
 ---
 
-
 ```{r}
 strt <- Sys.time()
 setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```
-
 
 ```{r, include = F}
 require(tidyverse)
@@ -21,8 +19,12 @@ require(gridExtra)
 ```{r}
 date <- "2020-03-12"
 namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_ARPA.Rdata", sep = "")
-namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_CECO.Rdata", sep = "")
-#namecein <- paste("~/Simulations", date, "_200AMRC_CEIN.Rdata", sep = "")
+
+date <- "2020-03-23"
+
+namececo <- paste("~/Simulations", date, "_1000AMRC_CECO_empiricalcoef_empiricalgrowth.Rdata", sep = "")
+
+namecein <- paste("~/Simulations", date, "_100AMRC_historic_empirical_CEIN_empiricalcoef_empiricalgrowth.Rdata", sep = "")
 ```
 
 ```{r}
@@ -33,14 +35,10 @@ remove(dfsimallreps)
 load(namececo)
 ceco <- dfsimallreps
 remove(dfsimallreps)
-# 
-# load(namechfo)
-# chfo <- dfsimallreps
-# remove(dfsimallreps)
-# 
-# load(namecein)
-# cein <- dfsimallreps
-# remove(dfsimallreps)
+
+load(namecein)
+cein <- dfsimallreps
+remove(dfsimallreps)
 ```
 
 ```{r}
@@ -48,10 +46,17 @@ arpa <- arpa %>%
   mutate(sim_spp = "ARPA")
 ceco <- ceco %>% 
   mutate(sim_spp = "CECO")
+cein <- cein %>% 
+  mutate(sim_spp = "CEIN")
 ```
 
 ```{r}
 df <- full_join(arpa, ceco)
+df <- full_join(df, cein)
+```
+
+```{r}
+nrow(df) == nrow(cein) + nrow(ceco) + nrow(arpa)
 ```
 
 # Take out trees with non-finite or NA pred because they had already emerged and things got wacky

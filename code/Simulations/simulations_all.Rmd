@@ -28,6 +28,7 @@ source("functions/iterate.R")
 ## Define iterations
 ```{r}
 iterations <- 1000
+
 ```
 
 ## Define length of simulation
@@ -50,7 +51,24 @@ shrub_heightgrowth <- "empirical"  #emprical, CECO, ARPA, CEIN
 n_seedlings <- 200
 ```
 
-# Iterate 
+# Define filter function
+```{r}
+filter_years <- function(){
+  max_year <- dfsimallreps %>% 
+    group_by(Years, emerged) %>% 
+    summarize(sum_emerged = sum(emerged)) %>% 
+    filter(emerged ==0) %>% 
+    ungroup() %>% 
+    summarize(max_year = max(Years)) %>% 
+    unlist()
+
+dfsimallreps <<- dfsimallreps %>% 
+  filter(Years < max_year+1)
+}
+```
+
+
+# Iterate for base model
 ```{r, warning=FALSE}
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
@@ -65,18 +83,6 @@ if(nrow(dfsimallreps)==iterations){
 
 # Filter out years in which nothing happens
 ```{r}
-filter_years <- function(){
-  max_year <- dfsimallreps %>% 
-    group_by(Years, emerged) %>% 
-    summarize(sum_emerged = sum(emerged)) %>% 
-    filter(emerged ==0) %>% 
-    ungroup() %>% 
-    summarize(max_year = max(Years)) %>% 
-    unlist()
-
-dfsimallreps <<- dfsimallreps %>% 
-  filter(Years < max_year+1)
-}
 filter_years()
 ```
  
@@ -112,6 +118,20 @@ filter_years()
 filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
+
+## CEIN 
+```{r}
+remove(dfsimallreps)
+shrub_method <- "CEIN" #empirical, welch, CECO, ARPA, CEIN
+time <- Sys.time()
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
+print(paste("That took"))
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
 
 # Repeat for single shrub COEFFICIENT models
 

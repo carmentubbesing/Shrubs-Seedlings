@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2020-03-20_5AMRC_historic_empirical_welch_empiricalcoef_CECOgrowth"
+name <- "2020-03-23_1000AMRC_empirical_empiricalcoef_empiricalgrowth"
 df_filename <- paste("~/Simulations", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -211,7 +211,8 @@ summary_emerge <- dfsimallreps %>%
   group_by(rep, Species) %>% 
   mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
-  mutate(prop_emerged = total_emergents/initial_n)
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
 ```
 
 ### Counts
@@ -227,35 +228,6 @@ summary_emerge <- dfsimallreps %>%
 
 ### Proportions
 
-#### Figure out what's up with abrupt growth of STAR ABCO
-```{r}
-summary_emerge %>% filter(Years %in% c(25,26)) %>% filter(Species == "ABCO") %>% arrange(desc(prop_emerged)) %>% 
-  ggplot()+
-  geom_histogram(aes(x = prop_emerged, fill = as.factor(Years)), alpha = 0.5)+
-  facet_grid(. ~ Years)+
-  theme_minimal()
-```
-
-```{r}
-summary_emerge %>% filter(Years %in% c(25,26)) %>% filter(Species == "ABCO") %>% 
-  group_by(Years) %>% 
-  count()
-```
-
-```{r}
-summary_emerge %>% filter(Years %in% c(25,26)) %>% filter(Species == "ABCO") %>% group_by(rep) %>% mutate(diff = diff(prop_emerged)) %>% arrange(desc(diff))
-```
-
-```{r}
-dfsimallreps %>% 
-  filter(rep == 114) %>% 
-  ggplot()+
-  geom_line(aes(x = Years, y = Ht_cm1, group = Sdlg), col = "red")+
-  theme_minimal()+
-  geom_line(aes(x = Years, y = Ht1.3, group = Sdlg), col = "blue")
-```
-
-
 ```{r}
 plot_emerge_prop <- ggplot(summary_emerge)+
   theme_minimal()+
@@ -269,7 +241,7 @@ plot_emerge_prop <- ggplot(summary_emerge)+
         legend.title = element_blank(),
         legend.text=element_text(size=13))+
   xlab(element_blank())+
-  scale_fill_discrete(labels = c("White fir", "Ponderosa pine"))
+  scale_fill_discrete(labels = c( "Ponderosa pine", "White fir"))
 
 plot_emerge_prop
 filename <- paste("../../results/figures/Simulations/prop_yearly_boxplot", name, ".png", sep = "")
