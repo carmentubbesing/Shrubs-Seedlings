@@ -114,8 +114,19 @@ welch %>%
   group_by(Regen_Plot, Species) %>% 
   summarize(sum(Count_total)) %>% 
   ungroup() %>% 
-  select(Regen_Plot) %>% 
+  dplyr::select(Regen_Plot) %>% 
   distinct()
+```
+
+
+```{r}
+welch %>% 
+  group_by(Regen_Plot, Species) %>% 
+  summarize(sum(Count_total))
+
+welch %>% 
+  group_by(Regen_Plot) %>% 
+  count()
 ```
 
 

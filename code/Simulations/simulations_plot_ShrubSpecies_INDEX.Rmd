@@ -20,11 +20,9 @@ require(RColorBrewer)
 
 
 ```{r}
-date <- "2020-03-20"
-namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_empiricalcoef_ARPAgrowth.Rdata", sep = "")
-namecein <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_empiricalcoef_CEINgrowth.Rdata", sep = "")
-date <- "2020-03-23"
-namececo <- paste("~/Simulations", date, "_1000AMRC_empirical_empiricalcoef_CECOgrowth.Rdata", sep = "")
+
+date <- "2020-03-24"
+namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_empirical_empiricalcoef_empiricalgrowthCECOindex.Rdata", sep = "")
 ```
 
 ```{r}
@@ -84,6 +82,7 @@ summary_emerge <- df %>%
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
 
+# Calculate Q50
 ```{r}
 summary_emerge %>% 
   group_by(Species, simspp) %>% 
@@ -91,6 +90,7 @@ summary_emerge %>%
   filter(distance_from_50>0) %>% 
   filter(distance_from_50 == min(distance_from_50))
 ```
+
 
 ```{r}
 RColorBrewer::display.brewer.pal(8,"BrBG")

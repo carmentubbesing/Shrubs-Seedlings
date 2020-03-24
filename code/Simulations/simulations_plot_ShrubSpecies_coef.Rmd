@@ -89,6 +89,15 @@ summary_emerge <- df %>%
 ```
 
 ```{r}
+summary_emerge %>% 
+  group_by(Species, simspp) %>% 
+  mutate(distance_from_50 = mean-.5) %>% 
+  filter(distance_from_50>0) %>% 
+  filter(distance_from_50 == min(distance_from_50))
+```
+
+
+```{r}
 ggplot(summary_emerge %>% filter(simspp == "ABCO"))+
   theme_minimal()+
   geom_line(aes(x = Years, y = mean, col = source, group = source), size = 1)+
