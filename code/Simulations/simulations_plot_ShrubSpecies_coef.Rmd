@@ -11,17 +11,15 @@ strt <- Sys.time()
 setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```
 
-
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
 ```
 
-
 ```{r}
-date <- "2020-03-20"
-namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_ARPAcoef.Rdata", sep = "")
-namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_CECOcoef.Rdata", sep = "")
+date <- "2020-03-23"
+namearpa <- paste("~/Simulations", date, "_1000AMRC_ARPAcoef_empiricalgrowth.Rdata", sep = "")
+namececo <- paste("~/Simulations", date, "_1000AMRC_CECOcoef_empiricalgrowth.Rdata", sep = "")
 namecein <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_CEINcoef.Rdata", sep = "")
 ```
 

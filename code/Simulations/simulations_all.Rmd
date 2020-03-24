@@ -47,10 +47,11 @@ conifer_species_method <- "empirical" #random, empirical
 shrub_method <- "empirical" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
 shrub_coefficient <- "empirical"  #emprical, CECO, ARPA, CHSE, LIDE, Other
 shrub_heightgrowth <- "empirical"  #emprical, CECO, ARPA, CEIN
+shrub_initial_index <- "CECO" # empirical, CECO, ARPA, CEIN
 n_seedlings <- 200
 ```
 
-# Define filter function
+## Define filter function
 ```{r}
 filter_years <- function(){
   max_year <- dfsimallreps %>% 
@@ -70,7 +71,7 @@ dfsimallreps <<- dfsimallreps %>%
 # Iterate for base model
 ```{r, warning=FALSE}
 time <- Sys.time()
-dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
 print(paste("That took"))
 Sys.time()-time
 ```
@@ -94,7 +95,7 @@ Sys.time()
  
 # Save results
 ```{r}
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth", shrub_initial_index, "index.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -228,5 +229,53 @@ print(paste("That took"))
 Sys.time()-time
 filter_years()
 filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+# Repeat for single shrub INITIAL INDEX models
+
+```{r}
+shrub_heightgrowth <- "empirical" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+```
+
+## CECO
+```{r}
+remove(dfsimallreps)
+shrub_initial_index <- "CECO"  #emprical, CECO, ARPA, CEIN
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+## CEIN
+```{r}
+remove(dfsimallreps)
+shrub_initial_index <- "CEIN"  #emprical, CECO, ARPA, CEIN
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+## ARPA
+```{r}
+remove(dfsimallreps)
+shrub_initial_index <- "ARPA"  #emprical, CECO, ARPA, CEIN
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```

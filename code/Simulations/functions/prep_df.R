@@ -1,4 +1,4 @@
-prep_df <- function(fire, conifer_species_method, shrub_method, n_seedlings){
+prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_index, n_seedlings){
   load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
   load(file = "../../data/welch_CEIN_hts.Rdata")
   dffull <- df
@@ -78,6 +78,34 @@ prep_df <- function(fire, conifer_species_method, shrub_method, n_seedlings){
       
   } 
 
+  # If shrub_initial_index is for a single shrub species, reassign shrub initial cover, ht, and index
+  if(shrub_initial_index == "ARPA") {
+    new_shrub_data <- df %>% 
+      filter(ShrubSpp03 == "ARPA") %>% 
+      dplyr::select(Ht1.3, Cov1.3, shrubarea3) %>% 
+      sample_n(size = n_seedlings, replace = T)
+    
+  } else if(shrub_initial_index == "CECO"){
+    new_shrub_data <- df %>% 
+      filter(ShrubSpp03 == "ARPA") %>% 
+      dplyr::select(Ht1.3, Cov1.3, shrubarea3) %>% 
+      sample_n(size = n_seedlings, replace = T)
+    
+  } else if(shrub_initial_index == "CEIN"){
+    sample_hts <- sample_n(welch_CEIN_hts, size = n_seedlings, replace = T)
+    new_shrub_data <- df %>% 
+      filter(ShrubSpp03 == "CECO") %>% 
+      sample_n(size = n_seedlings, replace = T) %>% 
+      mutate(ShrubSpp03 = "CEIN") %>% 
+      mutate(Ht1.3 = sample_hts$modal_ht_cm) %>% 
+      mutate(shrubarea3 = Cov1.3*Ht1.3)
+  } 
+  
+  df_new <- df_new %>% 
+    mutate(Cov1.3 = new_shrub_data$Cov1.3) %>% 
+    mutate(Ht1.3 = new_shrub_data$Ht1.3) %>% 
+    mutate(shrubarea3 = new_shrub_data$shrubarea3)
+  
   #check
   df_new %>%
     group_by(Species, ShrubSpp03) %>%

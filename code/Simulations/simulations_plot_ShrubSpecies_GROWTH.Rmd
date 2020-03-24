@@ -23,7 +23,8 @@ require(RColorBrewer)
 date <- "2020-03-20"
 namearpa <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_empiricalcoef_ARPAgrowth.Rdata", sep = "")
 namececo <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_empiricalcoef_CEINgrowth.Rdata", sep = "")
-namecein <- paste("~/Simulations", date, "_1000AMRC_historic_empirical_welch_empiricalcoef_CECOgrowth.Rdata", sep = "")
+date <- "2020-03-23"
+namecein <- paste("~/Simulations", date, "_1000AMRC_empirical_empiricalcoef_CECOgrowth.Rdata", sep = "")
 ```
 
 ```{r}
