@@ -101,10 +101,13 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
       mutate(shrubarea3 = Cov1.3*Ht1.3)
   } 
   
-  df_new <- df_new %>% 
-    mutate(Cov1.3 = new_shrub_data$Cov1.3) %>% 
-    mutate(Ht1.3 = new_shrub_data$Ht1.3) %>% 
-    mutate(shrubarea3 = new_shrub_data$shrubarea3)
+  if(shrub_initial_index %in% c("ARPA", "CECO", "CEIN")){
+    df_new <- df_new %>% 
+      mutate(Cov1.3 = new_shrub_data$Cov1.3) %>% 
+      mutate(Ht1.3 = new_shrub_data$Ht1.3) %>% 
+      mutate(shrubarea3 = new_shrub_data$shrubarea3)  
+  }
+  
   
   #check
   df_new %>%
