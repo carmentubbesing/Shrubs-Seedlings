@@ -48,10 +48,12 @@ pipo_shrubgrowth <- function(pts.sf.pipo, shrub_heightgrowth){
   if(shrub_heightgrowth == "CECO"){
     pts.sf.pipo <- pts.sf.pipo %>% 
       mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCECO, x2, se= T)$fit)
-  } else if(shrub_heightgrowth == "CEIN"){
+
+    } else if(shrub_heightgrowth == "CEIN"){
     pts.sf.pipo <- pts.sf.pipo %>% 
       mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCEIN, x2, se= T)$fit)
-  } else if(shrub_heightgrowth == "ARPA"){
+  
+    } else if(shrub_heightgrowth == "ARPA"){
     pts.sf.pipo <- pts.sf.pipo %>% 
       mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamARPA, x2, se= T)$fit)
   } else if(shrub_heightgrowth == "CHFO"){
