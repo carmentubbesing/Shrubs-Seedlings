@@ -27,7 +27,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 10
+iterations <- 20
 ```
 
 ## Define length of simulation
@@ -91,7 +91,7 @@ filter_years()
  
 # Save results
 ```{r}
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth", shrub_initial_index, "index.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth_", shrub_initial_index, "index.Rdata", sep = "")
 
 save(dfsimallreps, file =filename)
 ```
@@ -101,7 +101,7 @@ save(dfsimallreps, file =filename)
 conifer_species_method <- "random" #random, empirical
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
 
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth", shrub_initial_index, "index.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth_", shrub_initial_index, "index.Rdata", sep = "")
 
 save(dfsimallreps, file =filename)
 ```
@@ -116,8 +116,10 @@ shrub_method <- "CECO" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 Sys.time()-time
+
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -130,7 +132,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -143,7 +145,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 print(paste("That took"))
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -163,7 +165,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -176,7 +178,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -189,7 +191,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -209,7 +211,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -222,7 +224,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -235,7 +237,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_",  shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -246,7 +248,7 @@ shrub_heightgrowth <- "empirical" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTH
 ```
 
 
-# CECO
+## CECO
 ```{r}
 remove(dfsimallreps)
 shrub_initial_index <- "CECO"  #emprical, CECO, ARPA, CEIN
@@ -256,7 +258,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -270,7 +272,7 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations,  "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 
@@ -284,6 +286,6 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 
 Sys.time()-time
 filter_years()
-filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, fire, "_",climate_method,"_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+filename <-  paste("~/Simulations",  Sys.Date(), "_", iterations, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
