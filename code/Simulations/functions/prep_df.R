@@ -87,12 +87,12 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
     
   } else if(shrub_initial_index == "CECO"){
     new_shrub_data <- df %>% 
-      filter(ShrubSpp03 == "ARPA") %>% 
+      filter(ShrubSpp03 == "CECO") %>% 
       dplyr::select(Ht1.3, Cov1.3, shrubarea3) %>% 
       sample_n(size = nrow(df_new), replace = T)
     
   } else if(shrub_initial_index == "CEIN"){
-    sample_hts <- sample_n(welch_CEIN_hts, size = n_seedlings, replace = T)
+    sample_hts <- sample_n(welch_CEIN_hts, size = nrow(df_new), replace = T)
     new_shrub_data <- df %>% 
       filter(ShrubSpp03 == "CECO") %>% 
       sample_n(size = nrow(df_new), replace = T) %>% 

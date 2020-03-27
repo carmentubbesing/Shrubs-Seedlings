@@ -6,7 +6,7 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
-  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "pass") %dopar% {
+  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "remove") %dopar% {
     time.start <- Sys.time()
     
     source("functions/prep_df.R")
