@@ -265,7 +265,7 @@ ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()+
   guides(guide_legend(ncol = 3))
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp.png", width = 10)
+
 ```
 
 
@@ -282,7 +282,7 @@ focal_spp
 ```{r}
 df_plot <- df %>% 
   filter(Shrub_species %in% focal_spp$Shrub_species) %>% 
-  mutate(Shrub_species = ifelse(Shrub_species %in% c("CECO", "CEIN3", "ARPA6_ARVI", "CHFO"), Shrub_species, "Other"))
+  mutate(Shrub_species = ifelse(Shrub_species %in% c("CECO", "CEIN3", "ARPA6_ARVI", "CHSE11"), Shrub_species, "Other"))
 unique(df_plot$Shrub_species)
 df_plot <- droplevels(df_plot)
 ```
@@ -294,8 +294,6 @@ ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
   ylab("Shrub height (cm)")+
   xlab("Years since fire")+
   guides(color = guide_legend(ncol = 3))
-
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp_paper_Feb27.png", width = 10, height = 6)
 ```
 
 
@@ -308,7 +306,6 @@ ggplot(df_plot %>% filter(Shrub_species == "CECO"), aes(x = years_since_fire, y 
   geom_smooth(method = "loess", span = 1)+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_ceco.png", width = 10)
 ```
 
 ## ARPA
@@ -318,7 +315,6 @@ ggplot(df_plot %>% filter(Shrub_species == "ARPA6_ARVI"), aes(x = years_since_fi
   geom_smooth(method = "loess", span = 1)+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_arpa.png", width = 10)
 ```
 
 ## CEIN
@@ -328,7 +324,6 @@ ggplot(df_plot %>% filter(Shrub_species == "CEIN3"), aes(x = years_since_fire, y
   geom_smooth(method = "loess", span = 1)+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_cein.png", width = 10)
 ```
 
 ## CHSE
@@ -336,9 +331,7 @@ ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_cein.png",
 ggplot(df_plot %>% filter(Shrub_species == "CHSE11"), aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point(aes(shape = df_source, col = Fire))+
   geom_smooth(method = "loess", span = 1)+
-  facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_chse.png", width = 10)
 ```
 
 

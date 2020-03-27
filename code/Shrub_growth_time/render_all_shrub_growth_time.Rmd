@@ -18,81 +18,13 @@ rmarkdown::render("Clean_Welch_data.Rmd", "html_document", quiet = T)
 rmarkdown::render("Clean_Young_data.Rmd", "html_document", quiet = T)
 rmarkdown::render("Clean_Latimer_data.Rmd", "html_document", quiet = T)
 rmarkdown::render("Combine_shrub_data_HEIGHT.Rmd", "html_document", quiet = T)
+rmarkdown::render("Combine_shrub_data_COVER_LUMPED.Rmd", "html_document", quiet = T)
+
+
+rmarkdown::render("Shrub_growth_analysis_HEIGHT.Rmd", "html_document", quiet = T)
+rmarkdown::render("Shrub_growth_analysis_COVER.Rmd", "html_document", quiet = T)
+
+
 print(strt-Sys.time())
-```
-
-# Plot for all species that are in my data and have at least 5 years of data
-```{r filter_age5, include = F}
-over4years <- df %>% 
-  select(Shrub_species, years_since_fire) %>% 
-  distinct() %>% 
-  group_by(Shrub_species) %>% 
-  summarize(count = n()) %>% 
-  filter(count >4) %>% 
-  filter(Shrub_species != "none")
-over4years
-```
-
-```{r filter_spp5, include = F}
-focal_spp <- df %>% 
-  filter(df_source == "me") %>% 
-  dplyr::select(Shrub_species) %>% 
-  distinct()
-focal_spp
-```
-
-```{r plot5, echo = F, warning = F}
-ggplot(df %>% filter(Shrub_species %in% over4years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species),
-       aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point(aes(shape = df_source))+
-  geom_smooth(method = "loess", span = 1)+
-  facet_wrap(~Shrub_species)+
-  theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp_9spp.png", width = 10)
-```
-
-
-# Plot for all species that are in my data and have at least 8 years of data
-```{r filter7}
-over7years <- df %>% 
-  select(Shrub_species, years_since_fire) %>% 
-  distinct() %>% 
-  group_by(Shrub_species) %>% 
-  summarize(count = n()) %>% 
-  filter(count > 7) %>% 
-  filter(Shrub_species != "none")
-over7years
-```
-
-```{r filterfocal7}
-focal_spp <- df %>% 
-  filter(df_source == "me") %>% 
-  dplyr::select(Shrub_species) %>% 
-  distinct()
-focal_spp
-```
-
-```{r filterdf7}
-df_plot <- df %>% 
-  filter(Shrub_species %in% over7years$Shrub_species & Shrub_species %in% focal_spp$Shrub_species)
-unique(df_plot$Shrub_species)
-df_plot <- droplevels(df_plot)
-```
-
-
-```{r plot7}
-ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point(aes(shape = df_source, col = Fire), position = "jitter", size = rel(.75))+
-  geom_smooth(method = "loess", span = 1)+
-  facet_wrap(~Shrub_species, ncol = 2)+
-  theme_bw()+
-  theme(legend.text = element_text(size = rel(.7)))+
-  guides(col = guide_legend(ncol = 3))
-    
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp_4spp.png", width = 10)
-```
-
-```{r}
-rmarkdown::render("Combine_shrub_data_COVER.Rmd", "html_document", quiet = T)
 ```
 

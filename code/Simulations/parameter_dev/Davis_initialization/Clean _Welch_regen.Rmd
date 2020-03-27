@@ -30,12 +30,6 @@ tree <- tree %>%
   dplyr::select(ID, Regen_Plot, Count_total, Type, Species, num_dead, seed_veg_plant, tallest_age, tallest_ht_cm, tallest_lastyr_cm, Remarks, number_sprouts)
 ```
 
-## Take out rows with NA tree counts -- I honestly don't know what's up with these
-```{r}
-tree <- tree %>% 
-  filter(!is.na(Count_total))
-```
-
 ## Combine with previously cleaned Welch data with info on shrubs 
 ```{r}
 df <- left_join(df, tree, by = "Regen_Plot") 
@@ -51,30 +45,16 @@ df <- df %>%
   filter(Fire == "AMERICAN RIVER")
 ```
 
-## What's up with the NA plots?
-```{r}
-df %>% 
-  filter(is.na(Count_total))
-```
-
-
 ```{r}
 welch <- df
 remove(df)
 ```
 
-
-## My data
-
+# Look at the shrubs
 ```{r}
-load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
-me <- df %>%
-  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
-  filter(Fire == "AMRC") %>% 
-  filter(Year==2016) %>%
-  mutate(Cov_prop = Cov1.3/1200) %>%
-  distinct() %>%
-  droplevels()
+welch %>% 
+  group_by(Shrub_species) %>% 
+  count()
 ```
 
 
@@ -87,7 +67,7 @@ welch_shrspp <- welch %>%
   ungroup() %>% 
   group_by(Species) %>% 
   mutate(prop = sum/sum(sum)) %>% 
-  #filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11")) %>% 
+  filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11", "CEIN3")) %>% 
   ggplot()+
   geom_col(aes(x = Species, y = prop, fill = Shrub_species), position = "dodge")+
   theme_minimal()+
@@ -99,24 +79,21 @@ welch_shrspp
 ## Look at counts
 ```{r}
 welch %>% 
-  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  filter(Species %in% c("ABCO", "PIPO")) %>% 
   group_by(Species, Shrub_species) %>% 
-  summarize(sum = sum(Count_total)) %>% 
-  filter(Shrub_species %in% c("ARPA6", "CECO", "CEIN3")) %>% 
-  ungroup() %>% 
-  summarize(sum(sum))
+  summarize(sum = sum(Count_total)) 
 ```
 
 ## Count plots
 ```{r}
 welch %>% 
-  filter(Species %in% c("ABCO", "PIPO")) %>% 
   group_by(Regen_Plot, Species) %>% 
   summarize(sum(Count_total)) %>% 
   ungroup() %>% 
   dplyr::select(Regen_Plot) %>% 
   distinct()
 ```
+
 
 
 ```{r}
@@ -129,8 +106,23 @@ welch %>%
   count()
 ```
 
+# The other 
 
 ## Compare that to my data
+
+### Load my data
+
+```{r}
+load(file="~/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+me <- df %>%
+  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
+  filter(Fire == "AMRC") %>% 
+  filter(Year==2016) %>%
+  mutate(Cov_prop = Cov1.3/1200) %>%
+  distinct() %>%
+  droplevels()
+```
+
 ```{r}
 me_shrspp <- me %>% 
   filter(Species %in% c("PIPO", "ABCO")) %>% 
@@ -167,7 +159,7 @@ grid.arrange(welch_shrspp, me_shrspp, ncol = 2)
 # Calculate proportion within each shrub cover for each conifer species in Welch data, limiting to the species I found in AMRC
 ```{r}
 welch_shrspp <- welch %>% 
-  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA")) %>% 
+  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
   mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
   mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
   mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
@@ -305,5 +297,19 @@ me_shr_ht
 
 ```{r}
 grid.arrange(welch_shr_ht, me_shr_ht, ncol = 2)
+```
+
+# Calculate per area densities
+
+# Replace NAs with 0s because there were no trees found in the plots that say NA
+```{r}
+tree %>% filter(Regen_Plot == "AMR1300269")
+tree %>% filter(Regen_Plot == "AMR1300270")
+tree %>% filter(Regen_Plot == "AMR1300271")
+```
+
+```{r}
+welch <- welch %>% 
+  mutate()
 ```
 
