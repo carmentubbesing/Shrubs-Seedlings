@@ -1,0 +1,428 @@
+---
+title: "simulations_plot"
+author: "Carmen"
+date: "2/13/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r}
+name <- "1_2020-03-25_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
+load(df_filename)
+strt <- Sys.time()
+```
+
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+```
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+```
+
+# Take out trees with non-finite or NA pred because they had already emerged and things got wacky
+```{r}
+dfsimallreps %>% 
+  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
+  group_by(emerged) %>% 
+  count()
+```
+
+```{r}
+dfsimallreps <- dfsimallreps %>% 
+  filter(is.finite(pred_exp) & !is.na(pred_exp))
+```
+
+# Summarize
+
+## Focal tree height by year for trees that haven't yet emerged
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>%
+  mutate(rep = as.factor(paste(rep))) %>% 
+  group_by(rep, Years, Species) %>% 
+  filter(emerged==0) %>% 
+  summarize(mean_ht_years = mean(Ht_cm1), mean_dia_years = mean(dia.cm)) 
+```
+
+```{r}
+ht <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_ht_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_ht_years, group = Species, col = Species), size = 1)+
+  xlab("Years since fire")+
+  ylab("Average tree ht (cm) by simulation")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
+ht
+```
+
+## Diameter growth patterns 
+```{r}
+dia <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_dia_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_dia_years, group = Species, col = Species), size = 1)+
+  xlab("Years since fire")+
+  ylab("Average tree dia (cm) by simulation")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
+dia
+```
+
+### Diameter::Height growth patterns
+```{r}
+ratio <- ggplot(dfsimallreps_summary, aes(x = as.factor(Years), y = mean_dia_years/mean_ht_years, fill = Species, col = Species))+
+  geom_boxplot(alpha = .2, outlier.shape = NA)+
+  geom_smooth(aes(x = as.factor(Years), y = mean_dia_years/mean_ht_years, group = Species, col = Species), size = 1)+
+  xlab("Years since fire")+
+  ylab("Average tree dia:ht ratio by simulation")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))+
+  theme_minimal()
+ratio
+```
+
+## Counts by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(rep, Years, Species) %>% 
+  summarize(count = n()) %>% 
+  mutate(count = as.numeric(count))
+```
+
+```{r}
+title <- paste("Results for", max(dfsimallreps$Years), "years across", max(dfsimallreps$rep), "iterations", sep = " ")
+
+ggplot(dfsimallreps_summary)+
+  geom_smooth(aes(x = as.factor(Years), y = count, fill = Species, col = Species), size = 1)+
+  geom_boxplot(aes(x = as.factor(Years), y = count, fill = Species, col = Species), alpha = .2, outlier.shape = NA)+
+  ggtitle(title)+
+  xlab("Years since fire")+
+  ylab("Tree count")+
+  theme_bw()+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  scale_fill_manual(values = c("#899DA4", "#9A8822"), labels = c("Fir", "Pine"))+
+  theme(text = element_text(size = 16), 
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(size = 8))
+
+#filename <- paste("../../results/figures/Simulations/count_plot_", name, ".png", sep = "")
+#ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
+```
+
+## Shrub height by year
+```{r}
+dfsimallreps_summary <- dfsimallreps %>% 
+  filter(!is.na(Ht_cm1)) %>% 
+  ungroup() %>% 
+  group_by(rep, Years, Ht1.3, Cov1.3, ShrubSpp03) %>% 
+  summarize(mean_shrub_ht = mean(Ht1.3), mean_shrub_cov = mean(Cov1.3), mean_ht = mean(Ht_cm1))
+```
+
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_ht, group = ShrubSpp03, col = ShrubSpp03))+
+  #geom_line(aes(group = Sdlg), alpha = .2)+
+  geom_smooth()+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
+  xlab("Years since fire")+
+  ylab("Shrub height")+
+  theme_minimal()
+```
+
+## Shrub cover by year
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_shrub_cov, group = ShrubSpp03, col = ShrubSpp03))+
+  #geom_line(aes(group = Sdlg), alpha = .2)+
+  geom_smooth()+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
+  xlab("Years since fire")+
+  ylab("Shrub cover")+
+  theme_bw()
+```
+
+## Focal tree height by shrub species and year
+```{r}
+ggplot(dfsimallreps_summary, aes(x = Years, y = mean_ht, group = ShrubSpp03, col = ShrubSpp03))+
+  #geom_line(aes(group = interaction(rep, ID_withinrep)), alpha = .05)+
+  geom_smooth()+
+  ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
+  xlab("Years since fire")+
+  ylab("Focal tree height")+
+  ylim(0,350)+
+  theme_minimal()
+```
+
+## Growth by climate year
+```{r}
+ggplot(dfsimallreps %>% filter(Species == "PIPO") %>% filter(emerged == 0))+
+  geom_boxplot(aes(x = as.factor(Year), y = pred_exp), outlier.shape = NA)+
+  theme_minimal()+
+  ylim(0,0.5)+
+  xlab("")+
+  ylab("Predicted relative growth rate")
+```
+
+```{r}
+dfsimallreps %>% 
+   filter(Species == "PIPO") %>% filter(emerged == 0) %>% 
+  group_by(Year) %>% 
+  summarize(n(), mean(pred_exp))
+```
+
+# Plot how many trees emerge above the shrub canopy each year
+
+## How many trees are neither emerged nor dead at the end? Should be none.
+```{r}
+dfsimallreps %>% 
+  filter(Years == max(Years)) %>% 
+  group_by(emerged, Species) %>% 
+  count()
+```
+
+## Plot emergents per year 
+
+### Summarize
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
+```
+
+### Counts
+
+```{r}
+# plot_emerge_count <- ggplot(summary_emerge)+
+#   theme_minimal()+
+#   geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8)+
+#   ylab("Number of emerged trees")+
+#   xlab("Years since fire")+
+#   ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))
+```
+
+### Proportions
+
+```{r}
+plot_emerge_prop <- ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Proportion of initial juvenile trees that have emerged")+
+  xlab("Years since fire")+
+  #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
+  theme(legend.position = c(0.8, 0.2))+
+  scale_x_discrete(breaks =c("10","20","30", "40"))+
+  theme(text = element_text(size = 13), 
+        legend.title = element_blank(),
+        legend.text=element_text(size=13))+
+  xlab(element_blank())+
+  scale_fill_discrete(labels = c( "Ponderosa pine", "White fir"))
+
+plot_emerge_prop
+filename <- paste("../../results/figures/Simulations/prop_yearly_boxplot", name, ".png", sep = "")
+ggsave(file = filename, width = 8, height =5, dpi = 400)
+```
+
+```{r}
+#grid.arrange(plot_emerge_count, plot_emerge_prop, ncol = 1)
+```
+
+## Check to make sure there are in fact trees that emerged before the simulation started
+```{r}
+dfsimallreps %>% 
+  filter(rep %in% c(1:10) & Years==9) %>% 
+  dplyr::select(Species, Sdlg, Ht1.3, Ht_cm1) %>% 
+  mutate(emerge = ifelse(Ht_cm1*.75>Ht1.3, 1, 0)) %>% 
+  group_by(Species, emerge) %>% 
+  count()
+```
+
+## Plot number and proportion of original seedlings left at the end
+
+```{r}
+title <- paste("Results for", max(dfsimallreps$rep), "simulations at\n", max(dfsimallreps$Years),"years after fire", sep = " ")
+```
+
+```{r}
+# summary_count <- dfsimallreps %>% 
+#   group_by(rep, Species) %>% 
+#   filter(Years == max(Years)) %>% 
+#   summarize(emerged = sum(emerged)) 
+# 
+# boxplot_trees <- ggplot(summary_count)+
+#   geom_boxplot(aes(x = Species, y = emerged))+
+#   theme_minimal()+
+#   ylab("Number of emerged trees")+
+#   ggtitle(title)
+```
+
+```{r}
+summary_prop <- dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) 
+```
+
+```{r}
+boxplot_prop <- ggplot(summary_prop)+
+  geom_boxplot(aes(x = Species, y = prop_emerged))+
+  theme_minimal()+
+  ylab("Proportion of initial trees")+
+  xlab(element_blank())+
+  scale_x_discrete(labels = c("White fir", "Ponderosa pine"))+
+  theme(text = element_text(size = 14))
+boxplot_prop
+```
+
+```{r}
+#filename <- paste("../../results/figures/Simulations/boxplot", name, ".png", sep = "")
+#ggsave(file = filename, width = 4, height =4, dpi = 400)
+```
+
+```{r}
+#grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
+```
+
+# What's different about the iterations where 100% of trees emerge?
+```{r}
+hundoP <- summary_prop %>% 
+  ungroup() %>% 
+  filter(prop_emerged==1) %>% 
+  dplyr::select(rep) %>% 
+  unlist()
+hundoP
+```
+
+## What do the hundoP reps look like?
+```{r}
+ggplot(dfsimallreps %>% filter(rep %in% hundoP))+
+  geom_smooth(aes(x = Years, y = Ht_cm1, group = rep))+
+  geom_smooth(aes(x = Years, y = Ht1.3, group = rep), col = "red")+
+  theme_minimal()
+```
+
+```{r, echo = F}
+print("The whole thing took")
+Sys.time()-strt
+```
+
+# Are ending proportions significantly different between pine and fir?
+```{r}
+ggplot(summary_prop)+
+  geom_histogram(aes(x = prop_emerged, fill = Species), bins =20)+
+  theme_minimal()
+glm <- glm(prop_emerged ~ Species, family = binomial, data = summary_prop, weights = initial_n)
+summary(glm)
+```
+
+# Sensitivity to error 
+
+## mortality
+```{r}
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_mort_pipo) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "PIPO") %>% 
+  ggplot(aes(x = coef_gr_mort_pipo, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("PIPO")
+
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_mort_abco) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "ABCO") %>% 
+  ggplot(aes(x = coef_gr_mort_abco, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("ABCO")
+```
+
+## Growth
+```{r}
+dfsimallreps %>% 
+  ungroup() %>% 
+  group_by(Years, Species, rep) %>% 
+  mutate(total= n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  group_by(rep, initial_n, Species, coef_gr_shrubarea) %>% 
+  filter(Years== max(Years)) %>% 
+  summarize(emerged = sum(emerged)) %>% 
+  mutate(prop_emerged = emerged/initial_n) %>% 
+  filter(Species == "PIPO") %>% 
+  ggplot(aes(x = coef_gr_shrubarea, y = prop_emerged))+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  ggtitle("PIPO")
+```
+
+
+# Long-term goals
+
+1.  Use Kristen's data or Hugh's data for initial conditions
+2.  Improve dispersal kernel based on Kristen/Hugh's data 
+4.  Include residual surviving trees and their seed dispersal
+5.  Include seed dispersal of post-fire regen once it reaches reproductive age 
+6.  Add customization of patch size and shape
+8.  Change sapling growth equations once they emerge from the shrub canopy
+9.  Update display of shrub competition after simulation years
+7.  apply to King, American River Complex, rest of the fires I measured
+5.  what does shrub competition mean for new recruitment?
+

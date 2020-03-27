@@ -1,0 +1,249 @@
+---
+title: "simulations_plot"
+author: "Carmen"
+date: "2/13/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r}
+name <- "1_2020-03-25_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
+load(df_filename)
+strt <- Sys.time()
+```
+
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+```
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+```
+
+# Take out trees with non-finite or NA pred because they had already emerged and things got wacky
+```{r}
+dfsimallreps %>% 
+  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
+  group_by(emerged) %>% 
+  count()
+```
+
+```{r}
+dfsimallreps <- dfsimallreps %>% 
+  filter(is.finite(pred_exp) & !is.na(pred_exp))
+```
+
+
+# Plot how many trees emerge above the shrub canopy each year
+
+## How many trees are neither emerged nor dead at the end? Should be none.
+```{r}
+dfsimallreps %>% 
+  filter(Years == max(Years)) %>% 
+  group_by(emerged, Species) %>% 
+  count()
+```
+
+# Plot emergents per year 
+
+### Summarize
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
+```
+
+### Counts
+
+```{r}
+plot_emerge_count <- ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Number of emerged trees")+
+  xlab("Years since fire")+
+  scale_x_discrete(breaks =c("10","20","30", "40"))+
+  theme_bw()+
+    theme(text = element_text(size = 11), 
+        legend.title = element_blank(),
+        legend.text=element_text(size=11),
+        legend.position = "none")
+plot_emerge_count
+filename <- paste("../../results/figures/Simulations/base_count_boxplot", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+### Proportions
+
+```{r}
+plot_emerge_prop <- ggplot(summary_emerge)+
+  geom_boxplot(aes(x = as.factor(Years), y = prop_emerged, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Proportion of initial trees that have emerged")+
+  xlab("Years since fire")+
+  scale_x_discrete(breaks =c("10","20","30", "40"))+
+  theme_bw()+
+  theme(text = element_text(size = 11), 
+        legend.title = element_blank(),
+        legend.text=element_text(size=11),
+        legend.position = c(0.7, 0.2))+
+  scale_fill_discrete(labels = c( "Ponderosa pine", "White fir"))
+
+plot_emerge_prop
+filename <- paste("../../results/figures/Simulations/base_prop_boxplot", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+
+# Plot Q50 
+
+
+## Summarize with means
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  group_by(Years, Species) %>% 
+  summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
+```
+
+## Calculate bounds
+```{r}
+Q50 <- summary_emerge %>% 
+  mutate(dist50 = mean-.5) %>% 
+  filter(dist50>0) %>%
+  ungroup() %>% 
+  group_by(Species) %>% 
+  filter(dist50 == min(dist50)) %>% 
+  mutate(bound = "mean")
+
+Q50_ub <- summary_emerge %>% 
+  mutate(lowerdist50 = mean-sd-.5) %>% 
+  filter(lowerdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species) %>% 
+  filter(lowerdist50 == min(lowerdist50)) %>% 
+  mutate(bound = "upper")
+
+Q50_lb <- summary_emerge %>% 
+  mutate(upperdist50 = mean+sd-.5) %>% 
+  filter(upperdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species) %>% 
+  filter(upperdist50 == min(upperdist50)) %>% 
+  mutate(bound = "lower")
+```
+
+## Reformat table
+```{r}
+Q50 <- full_join(Q50, Q50_lb) 
+Q50 <- full_join(Q50, Q50_ub) 
+
+Q50 <- Q50 %>% 
+  dplyr::select(Years, Species, bound) 
+
+Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>% 
+  dplyr::select(Species, lower, mean, upper)
+
+Q50
+```
+
+# Plot on a per-area basis
+
+Each plot in Welch's data was 60 m^2. Across 9 plots, that's 540 square meters.
+
+```{r}
+load("../../results/coefficients/welch_ratios.Rdata")
+welch_shrspp %>% 
+  group_by(Species) %>% 
+  summarize(sum(sum))
+```
+
+He found 106 ABCO and 57 PIPO in those plots. On a per area basis, that's:
+```{r}
+106/540
+```
+
+0.20 abco/ square meter
+
+```{r}
+57/540
+```
+
+0.10 pipo per square meter 
+
+Modify the figure to reflect this:
+
+### Summarize but assign each iteration an initial area based on 5 x the # of abco 
+
+```{r}
+counts <- dfsimallreps %>% 
+    group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  filter(Years == min(Years)) %>% 
+  ungroup() %>% 
+  group_by(Species, total) %>% 
+  count() %>% 
+  ungroup() 
+
+counts %>% 
+  ggplot()+
+  geom_point(aes(x = total, y = n, col = Species))+
+  geom_line(aes(x = total, y = n, group = Species, col = Species))+
+  theme_bw()
+
+dfsimallreps %>% 
+    group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  filter(Years == min(Years)) %>% 
+  ungroup() %>% 
+  group_by(rep) %>% 
+  summarize(total = sum(total)) %>% 
+  ggplot()+
+  geom_histogram(aes(total))
+
+```
+
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  mutate(area_m2 = )
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
+```
+
+```{r}
+plot_emerge_count <- ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Number of emerged trees")+
+  xlab("Years since fire")+
+  scale_x_discrete(breaks =c("10","20","30", "40"))+
+  theme_bw()+
+    theme(text = element_text(size = 11), 
+        legend.title = element_blank(),
+        legend.text=element_text(size=11),
+        legend.position = "none")
+plot_emerge_count
+filename <- paste("../../results/figures/Simulations/base_count_boxplot", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```

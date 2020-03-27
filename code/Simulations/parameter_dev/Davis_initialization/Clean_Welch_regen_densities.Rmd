@@ -1,0 +1,164 @@
+---
+title: "Clean_Welch_regen_densities"
+author: "Carmen"
+date: "3/26/2020"
+output: html_document
+---
+
+
+```{r, include = F}
+setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+```
+
+# Load Welch data
+```{r}
+plot <- read_excel("../../data/Data_for_shrub_growth/Welch_data/plot_data_RegenDatabase_1_13_16_updatedDates.xlsx") 
+seed_tree <- read_excel("../../data/Data_for_shrub_growth/Welch_data/seed_tree_RegenDatabase_1_13_16_updatedDates.xlsx") 
+shrub <- read_excel("../../data/Data_for_shrub_growth/Welch_data/shrub_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+tree <- read_excel("~/Shrubs-Seedlings/data/Data_for_shrub_growth/Welch_data/tree_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+```
+
+# Are there plots without any tree regen?
+```{r}
+no_regen_plots <- anti_join(plot, tree, by = "Regen_Plot") %>% 
+  filter(Fire == "AMERICAN RIVER") %>% 
+  select(Regen_Plot, FIRE_SEV) %>% 
+  filter(FIRE_SEV %in% c(4,5))
+tree %>% filter(Regen_Plot == "AMR1300209")
+```
+
+There are 7 plots in the American River Complex Fire that don't have any regen. 4 of them are in high severity.
+
+```{r}
+seed_tree %>% 
+  filter(Regen_Plot %in% no_regen_plots$Regen_Plot)
+```
+
+The plots that have no tree regen in AMRC and are fire sev 4 or 5 have seed trees < 20 m. This means that the 9 plots with trees in the AMRC from the Welch data are the 9 I analyze. 
+
+# Take out unnecessary columns
+
+## Plot
+```{r}
+plot <- plot %>% 
+  dplyr::select(ID, Regen_Plot, Fire, Date, `Year of Fire`, FIRE_SEV)
+```
+
+## shrub
+```{r}
+shrub <- shrub %>% 
+  dplyr::select(-comments, Cover, -ID, -modal_ht_ft, -OldPLOTID)
+```
+
+# Join shrub data and plot data
+```{r}
+df <- left_join(shrub, plot, by = "Regen_Plot")
+```
+
+# Rename shrub column
+```{r}
+head(df)
+df <- df %>% 
+   rename(Shrub_species = Species) 
+head(df)
+```
+
+# Filter plots by fire severity
+```{r}
+df <- df %>% 
+  filter(FIRE_SEV > 3)
+```
+
+# Reshape seed tree table to join with df
+```{r}
+seed_tree <- seed_tree %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Dist_m == min(Dist_m)) %>% 
+  dplyr::select(Regen_Plot, Dist_m) %>% 
+  rename(seed_tree_dist_m = Dist_m) %>% 
+  distinct()
+```
+
+
+# Join seed tree table with df
+```{r}
+df <- left_join(df, seed_tree)
+```
+
+
+# If seed tree distance is NA, replace it with 999 based on March 27 email with Derek Young
+```{r}
+df <- df %>% 
+  mutate(seed_tree_dist_m = ifelse(is.na(seed_tree_dist_m), 999, seed_tree_dist_m))
+```
+
+# Filter df to plots with >20 m distance to seed tree
+```{r}
+distdf <- df %>% 
+  filter(Fire == "AMERICAN RIVER") %>% 
+  dplyr::select(Regen_Plot, seed_tree_dist_m) %>% 
+  distinct() %>% 
+  mutate(far = ifelse(seed_tree_dist_m>20, 1, 0)) 
+
+distdf %>% 
+  group_by(far) %>% 
+  count()
+
+
+df <- df %>% 
+  filter(seed_tree_dist_m>20)
+```
+
+# Filter to shrub species of interest
+```{r}
+summary(as.factor(df$Shrub_species))
+df <- df %>% 
+  filter(Shrub_species %in% c("ARNE", "ARPA", "ARPA6", "ARVI", "CECO", "CEIN","CEIN3", "CEPR", "CHFO", "CHSE11", "PREM", "QUVA", "RIBES", "RICE", "RIRO", "SYMO"))
+summary(as.factor(df$Shrub_species))
+```
+
+# Fix species name typos
+```{r}
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA" ~ "ARPA6",
+                     Shrub_species == "CEIN" ~ "CEIN3",
+                    Shrub_species == "RICE" ~ "RIBES",
+                     Shrub_species == "RIRO" ~ "RIBES",
+                     TRUE ~ Shrub_species))
+```
+
+# Check for NA modal shrub ht
+```{r}
+df %>% filter(is.na(modal_ht_cm))
+```
+
+# Look at column names
+```{r}
+names(df)
+```
+
+# Filter to American River Complex Fire
+```{r}
+df <- df %>% filter(Fire == "AMERICAN RIVER")
+```
+
+# Count plots
+```{r}
+df %>% 
+  group_by(Regen_Plot) %>% 
+  summarize(sum())
+  
+```
+
+# Compare to plot table
+```{r}
+plot %>% 
+  filter(Fire == "AMERICAN RIVER") %>% 
+  group_by(FIRE_SEV, seed_tree_dist_m) %>% 
+  count()
+```
+

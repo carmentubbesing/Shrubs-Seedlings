@@ -13,6 +13,7 @@ require(tidyverse)
 require(effects)
 require(mgcv)
 require(gridExtra)
+require(egg)
 load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
 ```
 
@@ -159,7 +160,6 @@ ggplot(dfCEIN, aes(x = years_since_fire, y = modal_ht_cm))+
   geom_point(aes(shape = df_source))+
   geom_smooth(method = "lm", formula = y ~ x + poly(x, 3))+
   theme_bw()
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_ht_spp.png", width = 10)
 ```
 
 ```{r}
@@ -275,7 +275,7 @@ chse_plot <- ggplot()+
   geom_line(data = fake, aes(x = years_since_fire, y = pred))+
   geom_ribbon(data = fake, aes(x = years_since_fire, ymin = predseL, ymax = predseU), fill =11,   alpha = .3)+
   theme_minimal()+
-  ggtitle("Chamaebatia foliolosa")+
+  ggtitle("Chrysolepis sempervirens")+
   xlab("Years since fire")+
   ylab("Shrub height (cm)")+
   theme(
@@ -353,8 +353,9 @@ OTHER_plot
 # Plot the 4 species together
 ```{r}
 grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot)
-final_plot <- arrangeGrob(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot, nrow = 2, ncol = 3)
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_4_spp_HEIGHT_Feb27.png", final_plot, width = 10)
+final_plot <- ggarrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot, nrow = 2, ncol = 3)
+final_plot
+ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_fig_final.png", final_plot, width = 10)
 ```
 
 # Save the models to use in the simulation

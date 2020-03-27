@@ -222,8 +222,6 @@ ggplot(df_plot, aes(x = years_since_fire, y = Shrub_cover))+
   facet_wrap(~Shrub_species, ncol = 2)+
   theme_bw()+
   ylim(0, 150)
-
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/shrub_cover_spp_top4_lumped.png", width = 10)
 ```
 
 

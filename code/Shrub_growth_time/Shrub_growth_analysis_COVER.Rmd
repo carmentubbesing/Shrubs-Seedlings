@@ -13,6 +13,7 @@ require(tidyverse)
 require(effects)
 require(mgcv)
 require(gridExtra)
+require(egg)
 load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
 me <- ht_by_spp
 remove(ht_by_spp)

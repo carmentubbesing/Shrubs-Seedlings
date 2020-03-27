@@ -84,6 +84,12 @@ seed_tree <- seed_tree %>%
 df <- left_join(df, seed_tree)
 ```
 
+# If seed tree distance is NA, replace it with 999 based on March 27 email with Derek Young
+```{r}
+df <- df %>% 
+  mutate(seed_tree_dist_m = ifelse(is.na(seed_tree_dist_m), 999, seed_tree_dist_m))
+```
+
 # Filter df to plots with >20 m distance to seed tree
 ```{r}
 df <- df %>% 
@@ -145,6 +151,7 @@ ggplot(df %>%
   geom_point()+
   geom_smooth(method = "loess", span = 1)
 ```
+
 # Look at column names
 ```{r}
 names(df)

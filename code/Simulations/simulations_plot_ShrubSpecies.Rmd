@@ -13,17 +13,23 @@ setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
+require(egg)
+require(grid)
 ```
 
 
 ```{r}
-date <- "2020-03-23"
+date <- "2020-03-24"
 
-namearpa <- paste("~/Simulations", date, "_1000AMRC_ARPA_empiricalcoef_empiricalgrowth.Rdata", sep = "")
 
-namececo <- paste("~/Simulations", date, "_1000AMRC_CECO_empiricalcoef_empiricalgrowth.Rdata", sep = "")
+namecein <- paste("~/Simulation5_", date, "_1000_CEIN.Rdata", sep = "")
 
-namecein <- paste("~/Simulations", date, "_100AMRC_CEIN_empiricalcoef_empiricalgrowth.Rdata", sep = "")
+date <- "2020-03-25"
+
+namearpa <- paste("~/Simulation4_", date, "_1000_ARPA.Rdata", sep = "")
+
+namececo <- paste("~/Simulation3_", date, "_1000_CECO.Rdata", sep = "")
+
 ```
 
 ```{r}
@@ -68,7 +74,7 @@ df %>%
 
 ```{r}
 df <- df %>% 
-  filter(is.finite(pred_exp) & !is.na(pred_exp))
+ mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))
 ```
 
 
@@ -88,59 +94,106 @@ summary_emerge <- df %>%
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
 
+# Plot
 ```{r}
 plot_emerge_prop <- 
   
   ggplot(summary_emerge)+
-  theme_minimal()+
+  theme_bw()+
   geom_line(aes(x = Years, y = mean, linetype = Species,  col = sim_spp, group = interaction(Species, sim_spp)), size = 1)+
   geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = sim_spp, group = interaction(Species, sim_spp)), alpha = .3)+
-  ylab("Proportion of initial juvenile trees that have emerged")+
+  ylab("Proportion of initial trees that have emerged")+
   xlab("Years since fire")+
   #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
   theme(legend.position = c(0.8, 0.3))+
-  scale_fill_manual(name = "Shrub species", 
-                    values = c("#d95f02", "#1b9e77", "#7570b3"), 
-                                labels = c("Manzanita", 
-                                "Whitethorn", 
-                                "Deerbrush"))+
+  scale_fill_manual(values = c("#d95f02", "#1b9e77", "#7570b3"))+
 
-  scale_color_manual(name = "Shrub species", 
-                    values = c("#d95f02","#1b9e77",  "#7570b3"), 
-                                labels = c("Manzanita", 
-                                "Whitethorn", 
-                                "Deerbrush"))+
-  scale_linetype_discrete(labels = c("White fir",
-                          "Ponderosa pine"))+
-    
-  theme(text = element_text(size = 13), 
-        legend.title = element_blank(),
-        legend.text=element_text(size=13))+
-  xlab("Years since fire")
+  scale_color_manual( values = c("#d95f02","#1b9e77",  "#7570b3"))+
+  
+  theme(text = element_text(size = 11),
+        legend.position = "none",
+        panel.grid.minor.y = element_blank())+
+  xlab(element_blank())+
+  xlim(c(9,max(summary_emerge$Years)))
 
 plot_emerge_prop
-filename <- paste("../../results/figures/Simulations/shrub_species_overall", Sys.Date(), ".png", sep = "")
-ggsave(file = filename, width = 8, height =5, dpi = 400)
 ```
 
-# Compare starting conditions between species
+# Plot Q50 
 ```{r}
-arpahist <- arpa %>% 
-  filter(Years ==9) %>% 
-  ggplot()+geom_histogram(aes(x = shrubarea3), bins = 20)+
-  theme_minimal()+
-  xlim(c(0,150000))
+Q50 <- summary_emerge %>% 
+  mutate(dist50 = mean-.5) %>% 
+  filter(dist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, sim_spp) %>% 
+  filter(dist50 == min(dist50)) %>% 
+  mutate(bound = "mean")
 
-cecohist <- ceco %>% 
-  filter(Years ==9) %>% ggplot()+
-  geom_histogram(aes(x = shrubarea3), bins = 20)+
-  theme_minimal()+
-  xlim(c(0,150000))
+Q50_ub <- summary_emerge %>% 
+  mutate(lowerdist50 = mean-sd-.5) %>% 
+  filter(lowerdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, sim_spp) %>% 
+  filter(lowerdist50 == min(lowerdist50)) %>% 
+  mutate(bound = "upper")
 
-grid.arrange(arpahist, cecohist, ncol = 1)
+Q50_lb <- summary_emerge %>% 
+  mutate(upperdist50 = mean+sd-.5) %>% 
+  filter(upperdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, sim_spp) %>% 
+  filter(upperdist50 == min(upperdist50)) %>% 
+  mutate(bound = "lower")
+
 ```
 
 ```{r}
-df %>% ggplot()+geom_histogram(aes(x = shrubarea3))+theme_minimal()+xlim(c(0,150000))
+Q50 <- full_join(Q50, Q50_lb) 
+Q50 <- full_join(Q50, Q50_ub) 
+
+Q50 <- Q50 %>% 
+  dplyr::select(Years, Species, sim_spp, bound)
+```
+
+## pivot wider
+```{r}
+Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>% 
+  dplyr::select(Species, sim_spp, lower, mean, upper)
+```
+
+## Replace NA with max
+```{r}
+Q50 <- Q50 %>% 
+  mutate(upper = ifelse(is.na(upper), max(summary_emerge$Years), upper))
+```
+
+
+```{r}
+Q50plot <- ggplot(Q50, aes(col = sim_spp))+
+  geom_point(aes(x = mean, y = interaction(Species, sim_spp), shape = Species), size = 2.5)+
+  theme_bw()+
+  geom_errorbarh(data = Q50 %>% filter(!(Species == "PIPO" & sim_spp == "ARPA")), aes(y = interaction(Species, sim_spp), xmin = lower, xmax = upper), size = 1)+
+  
+  geom_errorbarh(data = Q50 %>% filter((Species == "PIPO" & sim_spp == "ARPA")), aes(y = interaction(Species, sim_spp), xmin = lower, xmax = upper), size = 1, height = 0)+
+
+  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & sim_spp == "ARPA")), aes(x = lower, ymin = 1.6, ymax= 2.45), size = 1)+
+  xlab(element_blank())+
+  ylab(element_blank())+
+  scale_color_manual(values = c("#d95f02","#1b9e77",  "#7570b3"))+
+  theme(axis.text.y = element_blank(),
+        legend.position = "none", 
+        text = element_text(size = 11),
+        panel.grid.major.y  = element_blank(),
+        axis.ticks.y = element_blank())+
+  xlim(c(9,max(summary_emerge$Years)))+
+  xlab("Years since fire")
+Q50plot
+```
+
+```{r}
+filename <- paste("../../results/figures/Simulations/shrub_species_overall_withQ50", Sys.Date(), ".jpeg", sep = "")
+
+g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
+ggsave(filename, g, width = 4, height = 5)
 ```
 
