@@ -35,6 +35,19 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
       welch_i <- welch_shrspp[i,]
       welch_prop_i <- welch_shrspp[i,"prop"] %>% unlist()
       df_i <- df %>% filter(Species == welch_i$Species & ShrubSpp03 == welch_i$Shrub_species)
+      
+      if(welch_i$Shrub_species == "CEIN"){
+        df_i <- df %>% 
+          filter(Species == welch_i$Species & ShrubSpp03 == "CECO") %>% 
+          mutate(ShrubSpp03 = "CEIN") 
+        
+        sample_hts <- sample_n(welch_CEIN_hts, size = nrow(df_i), replace = T)
+        
+        df_i <- df_i %>% 
+          mutate(Ht1.3 = sample_hts$modal_ht_cm) %>% 
+          mutate(shrubarea3 = Cov1.3*Ht1.3)
+      }
+      
       sample_i <- sample_n(df_i, size = n_seedlings*welch_prop_i, replace = T)
       
       if(nrow(df_new)==0){

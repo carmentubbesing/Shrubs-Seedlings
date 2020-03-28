@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-03-25_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "1_2020-03-27_10_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -225,7 +225,6 @@ summary_emerge <- dfsimallreps %>%
   ungroup() %>% 
   group_by(rep, Species) %>% 
   mutate(initial_n = max(total)) %>% 
-  mutate(area_m2 = )
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
