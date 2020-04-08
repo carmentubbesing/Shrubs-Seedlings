@@ -1,0 +1,110 @@
+---
+title: "plot_base_final"
+author: "Carmen"
+date: "4/1/2020"
+output: html_document
+---
+
+
+```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+```
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+```
+
+# Load summary
+```{r}
+load(file = "../../results/data/summary_emerge_prop_base.Rdata")
+```
+
+```{r}
+load(file = "../../results/data/summary_emerge_density_base.Rdata")
+```
+
+
+## Plot 
+```{r}
+ggplot(summary_emerge_prop)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
+  ylab("Proportion of initial trees that have emerged")+
+  xlab("Years since fire")+
+  theme(legend.position = c(0.75, 0.3))+
+   scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
+                                labels = c("White fir", "Ponderosa pine"))+
+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), 
+                                   labels = c("White fir", "Ponderosa pine"))+
+
+  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
+
+  
+  theme(text = element_text(size = 11), 
+        
+        legend.title = element_blank(),
+        legend.spacing=unit(0, "cm"),
+        legend.text=element_text(size=10),
+        legend.margin = margin(0, 0, 0, 0)
+        )+
+  xlab(element_blank())+
+  xlim(9,max(summary_emerge_prop$Years))+
+  ylim(c(0,1))
+filename <- paste("../../results/figures/Simulations/base_prop_line.png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+
+```{r}
+ggplot(summary_emerge_density)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
+  
+  xlab("Years since fire")+
+  theme(legend.position = c(0.75, 0.3))+
+    ylab("Density of emerged trees per m^2")+
+  scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
+                                labels = c("White fir", "Ponderosa pine"))+
+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), 
+                                   labels = c("White fir", "Ponderosa pine"))+
+
+  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
+
+  
+  theme(text = element_text(size = 11), 
+        
+        legend.position = "none"
+        )
+
+filename <- paste("../../results/figures/Simulations/base_density_line.png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+
+# Are ending proportions significantly different between pine and fir?
+```{r}
+ggplot(summary_emerge_prop)+
+  geom_histogram(aes(x = mean, fill = Species), bins =20)+
+  theme_minimal()
+```
+
+
+# Find max prop emerged for each species (for Table 1)
+```{r}
+summary_emerge_prop %>% 
+  group_by(Species) %>% 
+  filter(mean == max(mean))
+```
+
+# Finding ending maximum density
+```{r}
+summary_emerge_density %>% 
+  group_by(Species) %>% 
+  filter(mean == max(mean))
+```
+

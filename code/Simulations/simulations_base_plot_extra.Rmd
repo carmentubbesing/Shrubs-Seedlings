@@ -8,9 +8,8 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-03-25_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
-df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
-load(df_filename)
+name <- "~/Simulation1_2020-03-27_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex.Rdata"
+load(name)
 strt <- Sys.time()
 ```
 
@@ -127,8 +126,6 @@ ggplot(dfsimallreps_summary)+
         panel.grid.major.x = element_blank(),
         axis.text.x = element_text(size = 8))
 
-#filename <- paste("../../results/figures/Simulations/count_plot_", name, ".png", sep = "")
-#ggsave(file = "../../results/figures/Simulations/sim_100_count.png", width = 6, height = 4, dpi = 400)
 ```
 
 ## Shrub height by year
@@ -244,8 +241,6 @@ plot_emerge_prop <- ggplot(summary_emerge)+
   scale_fill_discrete(labels = c( "Ponderosa pine", "White fir"))
 
 plot_emerge_prop
-filename <- paste("../../results/figures/Simulations/prop_yearly_boxplot", name, ".png", sep = "")
-ggsave(file = filename, width = 8, height =5, dpi = 400)
 ```
 
 ```{r}
@@ -307,14 +302,6 @@ boxplot_prop <- ggplot(summary_prop)+
 boxplot_prop
 ```
 
-```{r}
-#filename <- paste("../../results/figures/Simulations/boxplot", name, ".png", sep = "")
-#ggsave(file = filename, width = 4, height =4, dpi = 400)
-```
-
-```{r}
-#grid.arrange(boxplot_trees, boxplot_prop, ncol = 2)
-```
 
 # What's different about the iterations where 100% of trees emerge?
 ```{r}

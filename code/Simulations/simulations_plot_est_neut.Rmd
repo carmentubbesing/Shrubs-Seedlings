@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2_2020-03-25_1000_random_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "2_2020-03-27_1000_random_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -172,5 +172,63 @@ Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>%
   dplyr::select(Species, lower, mean, upper)
 
 Q50
+```
+
+
+### Summarize but assign each iteration an initial area based on 5 x the # of abco 
+
+```{r}
+counts <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  mutate() %>% 
+  filter(Years == min(Years)) %>% 
+  ungroup() %>% 
+  group_by(Species, total) %>% 
+  count() %>% 
+  ungroup() 
+
+counts %>% 
+  ggplot()+
+  geom_point(aes(x = total, y = n, col = Species))+
+  geom_line(aes(x = total, y = n, group = Species, col = Species))+
+  theme_bw()
+
+counts %>% 
+  group_by(Species) %>% 
+  filter(n == max(n))
+```
+
+Good, this shows that my ratios match Welch's ratios. It's a coincidence that he found 200 seedlings and I used 200 seedlings as my n_seedlings value. So my starting area will be the same as the total of the Welch plot area, which is 60 m^2 * 15 plots = 900 m^2.
+
+```{r}
+summary_emerge <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
+  mutate(density = total_emergents/900)
+```
+
+```{r}
+plot_emerge_count <- ggplot(summary_emerge)+
+  theme_minimal()+
+  geom_boxplot(aes(x = as.factor(Years), y = density, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Density of emerged trees per m^2")+
+  xlab("Years since fire")+
+  scale_x_discrete(breaks =c("10","20","30", "40"))+
+  theme_bw()+
+    theme(text = element_text(size = 11), 
+        legend.title = element_blank(),
+        legend.text=element_text(size=11),
+        legend.position = "none")
+plot_emerge_count
+filename <- paste("../../results/figures/Simulations/base_density_boxplot", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 

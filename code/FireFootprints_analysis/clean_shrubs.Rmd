@@ -72,6 +72,22 @@ if(shr$Segment[i] %in% c("0-1 m ","0 -1 m","0-1 m")){
 summary(as.factor(shr$Seg))
 ```
 
+# Merge fire with long shrub data to see how often CEIN was a minor component in AMCR
+```{r}
+fire <- df %>% 
+  dplyr::select(Fire, Sdlg)
+shr_fire <- left_join(shr, fire)
+```
+
+## Take a look at AMCR decomposed shrub data
+```{r}
+shr_fire %>% 
+  filter(Fire == "AMRC") %>% 
+  ggplot()+
+  geom_boxplot(aes(x = ShrubSpp, y = Cover.cm))
+```
+
+
 ## Cover
 
 ### Summarize shrub cover by segment

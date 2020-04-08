@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-03-27_10_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "1_2020-03-27_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -47,9 +47,7 @@ dfsimallreps %>%
   count()
 ```
 
-# Plot emergents per year 
-
-### Summarize
+# Summarize
 ```{r}
 summary_emerge <- dfsimallreps %>% 
   group_by(Years, Species, rep) %>% 
@@ -62,7 +60,11 @@ summary_emerge <- dfsimallreps %>%
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
 ```
 
-### Counts
+
+
+# Plot emergents per year 
+
+## Counts
 
 ```{r}
 plot_emerge_count <- ggplot(summary_emerge)+
@@ -81,7 +83,7 @@ filename <- paste("../../results/figures/Simulations/base_count_boxplot", name, 
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
-### Proportions
+## Proportions
 
 ```{r}
 plot_emerge_prop <- ggplot(summary_emerge)+
@@ -104,6 +106,7 @@ ggsave(file = filename, width = 5, height =4, dpi = 400)
 
 # Plot Q50 
 
+# 
 
 ## Summarize with means
 ```{r}
@@ -162,7 +165,7 @@ Q50
 
 # Plot on a per-area basis
 
-Each plot in Welch's data was 60 m^2. Across 9 plots, that's 540 square meters.
+Each plot in Welch's data was 60 m^2. Across 15 plots, that's 900 square meters.
 
 ```{r}
 load("../../results/coefficients/welch_ratios.Rdata")
@@ -171,18 +174,18 @@ welch_shrspp %>%
   summarize(sum(sum))
 ```
 
-He found 106 ABCO and 57 PIPO in those plots. On a per area basis, that's:
+He found 128 ABCO and 71 PIPO in those plots. On a per area basis, that's:
 ```{r}
-106/540
+128/900
 ```
 
-0.20 abco/ square meter
+0.1422 abco/ square meter
 
 ```{r}
-57/540
+71/900
 ```
 
-0.10 pipo per square meter 
+0.0789 pipo per square meter 
 
 Modify the figure to reflect this:
 
@@ -190,9 +193,10 @@ Modify the figure to reflect this:
 
 ```{r}
 counts <- dfsimallreps %>% 
-    group_by(Years, Species, rep) %>% 
+  group_by(Years, Species, rep) %>% 
   summarize(total_emergents = sum(emerged), total = n()) %>% 
   ungroup() %>% 
+  mutate() %>% 
   filter(Years == min(Years)) %>% 
   ungroup() %>% 
   group_by(Species, total) %>% 
@@ -205,18 +209,12 @@ counts %>%
   geom_line(aes(x = total, y = n, group = Species, col = Species))+
   theme_bw()
 
-dfsimallreps %>% 
-    group_by(Years, Species, rep) %>% 
-  summarize(total_emergents = sum(emerged), total = n()) %>% 
-  ungroup() %>% 
-  filter(Years == min(Years)) %>% 
-  ungroup() %>% 
-  group_by(rep) %>% 
-  summarize(total = sum(total)) %>% 
-  ggplot()+
-  geom_histogram(aes(total))
-
+counts %>% 
+  group_by(Species) %>% 
+  filter(n == max(n))
 ```
+
+Good, this shows that my ratios match Welch's ratios. It's a coincidence that he found 200 seedlings and I used 200 seedlings as my n_seedlings value. So my starting area will be the same as the total of the Welch plot area, which is 60 m^2 * 15 plots = 900 m^2.
 
 ```{r}
 summary_emerge <- dfsimallreps %>% 
@@ -227,14 +225,15 @@ summary_emerge <- dfsimallreps %>%
   mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
-  mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
+  mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
+  mutate(density = total_emergents/900)
 ```
 
 ```{r}
-plot_emerge_count <- ggplot(summary_emerge)+
+plot_emerge_density <- ggplot(summary_emerge)+
   theme_minimal()+
-  geom_boxplot(aes(x = as.factor(Years), y = total_emergents, fill = Species), alpha = .8, outlier.shape = NA)+
-  ylab("Number of emerged trees")+
+  geom_boxplot(aes(x = as.factor(Years), y = density, fill = Species), alpha = .8, outlier.shape = NA)+
+  ylab("Density of emerged trees per m^2")+
   xlab("Years since fire")+
   scale_x_discrete(breaks =c("10","20","30", "40"))+
   theme_bw()+
@@ -242,7 +241,140 @@ plot_emerge_count <- ggplot(summary_emerge)+
         legend.title = element_blank(),
         legend.text=element_text(size=11),
         legend.position = "none")
-plot_emerge_count
-filename <- paste("../../results/figures/Simulations/base_count_boxplot", name, ".png", sep = "")
+plot_emerge_density
+filename <- paste("../../results/figures/Simulations/base_density_boxplot", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
+
+# Plot the way I plotted the species ones
+
+## Summarize
+```{r}
+summary_emerge_prop <- dfsimallreps %>% 
+  group_by(Years, rep, Species) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  group_by(Years, Species) %>% 
+  summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
+```
+
+### Filter out the flat parts - take out years if they differ by <0.001 (0.1%)
+```{r}
+max_year <- summary_emerge_prop %>% 
+  mutate(mean = round(mean, 3)) %>% 
+  group_by(Species) %>% 
+  mutate(maxmean = max(mean)) %>% 
+  filter(mean == maxmean) %>% 
+  ungroup() %>%
+  group_by(Species) %>% 
+  filter(Years == min(Years)) %>%
+  ungroup() %>% 
+  filter(Years ==max(Years)) %>% 
+  select(Years) %>% 
+  unlist()
+
+max_year
+```
+
+```{r}
+summary_emerge_prop <- summary_emerge_prop %>% 
+  filter(Years < max_year + 2)
+```
+
+
+## Save prop summary
+```{r}
+save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base.Rdata")
+```
+
+
+## Plot 
+```{r}
+ggplot(summary_emerge_prop)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
+  ylab("Proportion of initial trees that have emerged")+
+  xlab("Years since fire")+
+  theme(legend.position = c(0.75, 0.3))+
+   scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
+                                labels = c("White fir", "Ponderosa pine"))+
+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), 
+                                   labels = c("White fir", "Ponderosa pine"))+
+
+  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
+
+  
+  theme(text = element_text(size = 11), 
+        
+        legend.title = element_blank(),
+        legend.spacing=unit(0, "cm"),
+        legend.text=element_text(size=10),
+        legend.margin = margin(0, 0, 0, 0)
+        )+
+  xlab(element_blank())+
+  xlim(9,max(summary_emerge$Years))+
+  ylim(c(0,1))
+filename <- paste("../../results/figures/Simulations/base_prop_line", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+
+```{r}
+summary_emerge_density <- dfsimallreps %>% 
+  group_by(Years, Species, rep) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  mutate(density = total_emergents/900) %>% 
+   group_by(Years, Species) %>% 
+  summarize(mean = mean(density), sd = sd(density))
+```
+
+## Density
+```{r}
+summary_emerge_density <- summary_emerge_density %>% 
+  filter(Years < max_year + 2)
+```
+
+
+## Save density summary
+```{r}
+save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base.Rdata")
+```
+
+```{r}
+ggplot(summary_emerge_density)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
+  
+  xlab("Years since fire")+
+  theme(legend.position = c(0.75, 0.3))+
+    ylab("Density of emerged trees per m^2")+
+  scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
+                                labels = c("White fir", "Ponderosa pine"))+
+
+  scale_color_manual(values = c("#899DA4", "#9A8822"), 
+                                   labels = c("White fir", "Ponderosa pine"))+
+
+  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
+
+  
+  theme(text = element_text(size = 11), 
+        
+        legend.position = "none"
+        )
+
+filename <- paste("../../results/figures/Simulations/base_density_line", name, ".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+

@@ -157,6 +157,42 @@ grid.arrange(welch_shrspp, me_shrspp, ncol = 2)
 -  The species in common between me and welch are ARPA, CECO, CEIN, CEPR, CHSE
 
 # Calculate proportion within each shrub cover for each conifer species in Welch data, limiting to the species I found in AMRC
+
+## Restructure data so that there's only one row per tree species per regen plot
+
+Choose the dominant shrub species by choosing highest shrub cover*height 
+```{r}
+welch_shrspp <- welch %>% 
+  group_by(Regen_Plot) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  dplyr::select(Regen_Plot, Shrub_species, Species, Cover, modal_ht_cm, Fire, Count_total)
+welch_shrspp
+```
+
+### Make sure there's only one row per plot/Species combo
+```{r}
+welch_shrspp %>% 
+  group_by(Regen_Plot, Species) %>% 
+  filter(n()>1)
+```
+
+## Make pretty for simulations
+```{r}
+welch_shrspp %>% 
+  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
+  mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, Shrub_species) %>% 
+  summarize(sum = sum(Count_total)) %>% 
+  ungroup() %>% 
+  mutate(prop = sum/sum(sum)) %>% 
+  mutate(total = sum(prop))  
+```
+
+
 ```{r}
 welch_shrspp <- welch %>% 
   filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
@@ -308,6 +344,7 @@ tree %>% filter(Regen_Plot == "AMR1300270")
 tree %>% filter(Regen_Plot == "AMR1300271")
 ```
 
+area = 15*
 ```{r}
 welch <- welch %>% 
   mutate()

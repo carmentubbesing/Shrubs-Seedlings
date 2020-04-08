@@ -1,5 +1,5 @@
 ---
-title: "simulations_plot_ShrubSpecies"
+title: "simulations_plot_ShrubSpecies COEFFICIENT"
 author: "Carmen"
 date: "3/6/2020"
 output: html_document
@@ -17,7 +17,7 @@ require(egg)
 ```
 
 ```{r}
-date <- "2020-03-26"
+date <- "2020-03-28"
 
 namearpa <- paste("~/Simulation8_", date, "_1000_welch_ARPAcoef_empiricalgrowth.Rdata", sep = "")
 
@@ -27,16 +27,37 @@ namececo <- paste("~/Simulation6_", date, "_1000_welch_CECOcoef_empiricalgrowth.
 ```
 
 ```{r}
+ 
+load(namecein)
+cein <- dfsimallreps
+remove(dfsimallreps)
+
+```
+
+
+
+```{r}
+max_year <- cein %>% 
+    group_by(Years, emerged) %>% 
+    summarize(sum_emerged = sum(emerged)) %>% 
+    filter(emerged ==0) %>% 
+    ungroup() %>% 
+    summarize(max_year = max(Years)) %>% 
+    unlist()
+max_year
+cein <- cein %>% 
+  filter(Years < max_year+1)
+```
+
+
+
+```{r}
 load(namearpa)
 arpa <- dfsimallreps
 remove(dfsimallreps)
 
 load(namececo)
 ceco <- dfsimallreps
-remove(dfsimallreps)
- 
-load(namecein)
-cein <- dfsimallreps
 remove(dfsimallreps)
 ```
 
@@ -50,16 +71,19 @@ ceco <- ceco %>%
 cein <- cein %>% 
   mutate(simspp = ifelse(Species == "PIPO", "CEIN", "ABCO")) %>% 
   mutate(source = "cein")
+nrow_total <-  nrow(cein) + nrow(ceco) + nrow(arpa)
 ```
 
 ```{r}
 df <- full_join(arpa, ceco)
+remove(arpa, ceco)
 df <- full_join(df, cein)
+remove(cein)
 ```
 
 # Check df nrows
 ```{r}
-nrow(df) == nrow(cein) + nrow(ceco) + nrow(arpa)
+nrow(df) == nrow_total
 ```
 
 
@@ -71,9 +95,10 @@ df %>%
   count()
 ```
 
+
 ```{r}
 df <- df %>% 
-  filter(is.finite(pred_exp) & !is.na(pred_exp))
+ mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))
 ```
 
 # Check that abco all looks the same
@@ -112,7 +137,7 @@ ggplot(summary_emerge %>% filter(simspp == "ABCO"))+
   theme(legend.position = c(0.7, 0.3))
 ```
 
-## Summarize
+# Summarize
 ```{r}
 summary_emerge <- df %>% 
   group_by(Years, rep, simspp, source, Species) %>% 
@@ -126,109 +151,31 @@ summary_emerge <- df %>%
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
 
-## Plot 
+## Filter out the flat parts - take out years if they differ by <0.001 (0.1%)
 ```{r}
-plot_emerge_prop <- 
-  ggplot(summary_emerge )+
-  theme_bw()+
-  geom_line(aes(x = Years, y = mean, col = simspp, group = simspp, linetype = Species), size = 1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .3)+
-  ylab("Proportion of initial trees that have emerged")+
-  xlab("Years since fire")+
-  #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
-  theme(legend.position = c(0.7, 0.3))+
-   scale_fill_manual(name = "Shrub species", 
-                    values = c("#A9A9A9", "#d95f02", "#1b9e77", "#7570b3"), 
-                                labels = c("All shrub species", "Manzanita", 
-                                "Whitethorn", 
-                                "Deerbrush"))+
-
-  scale_color_manual(name = "Shrub species", 
-                    values = c("#A9A9A9", "#d95f02","#1b9e77",  "#7570b3"), 
-                                labels = c("All shrub species", "Manzanita", 
-                                "Whitethorn", 
-                                "Deerbrush"))+
-  scale_linetype_discrete(labels = c("White fir",
-                          "Ponderosa pine"))+
-  
-  theme(text = element_text(size = 11), 
-        
-        legend.title = element_blank(),
-        legend.spacing=unit(0, "cm"),
-        legend.text=element_text(size=10),
-        legend.margin = margin(0, 0, 0, 0)
-        )+
-  xlab(element_blank())+
-  xlim(9,max(summary_emerge$Years))
-
-plot_emerge_prop
-```
-
-# Plot Q50 
-```{r}
-Q50 <- summary_emerge %>% 
-  mutate(dist50 = mean-.5) %>% 
-  filter(dist50>0) %>%
-  ungroup() %>% 
+max_year <- summary_emerge %>% 
+  mutate(mean = round(mean, 3)) %>% 
   group_by(Species, simspp) %>% 
-  filter(dist50 == min(dist50)) %>% 
-  mutate(bound = "mean")
-
-Q50_ub <- summary_emerge %>% 
-  mutate(lowerdist50 = mean-sd-.5) %>% 
-  filter(lowerdist50>0) %>%
-  ungroup() %>% 
+  mutate(maxmean = max(mean)) %>% 
+  filter(mean == maxmean) %>% 
+  ungroup() %>%
   group_by(Species, simspp) %>% 
-  filter(lowerdist50 == min(lowerdist50)) %>% 
-  mutate(bound = "upper")
-
-Q50_lb <- summary_emerge %>% 
-  mutate(upperdist50 = mean+sd-.5) %>% 
-  filter(upperdist50>0) %>%
+  filter(Years == min(Years)) %>%
   ungroup() %>% 
-  group_by(Species, simspp) %>% 
-  filter(upperdist50 == min(upperdist50)) %>% 
-  mutate(bound = "lower")
+  filter(Years ==max(Years)) %>% 
+  select(Years) %>% 
+  unlist()
 
+max_year
 ```
 
 ```{r}
-Q50 <- full_join(Q50, Q50_lb) 
-Q50 <- full_join(Q50, Q50_ub) 
-
-Q50 <- Q50 %>% 
-  dplyr::select(Years, Species, simspp, bound)
+summary_emerge <- summary_emerge %>% 
+  filter(Years < max_year + 1)
 ```
 
-## pivot wider
+
+## Save summary
 ```{r}
-Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>% 
-  dplyr::select(Species, simspp, lower, mean, upper)
+save(summary_emerge, file = "../../results/data/summary_emerge_coef.Rdata")
 ```
-
-```{r}
-Q50plot <- ggplot(Q50, aes(col = simspp))+
-  geom_point(aes(x = mean, y = interaction(Species, simspp), shape = Species), size = 2.5)+
-  theme_bw()+
-  geom_errorbarh(aes(y = interaction(Species, simspp), xmin = lower, xmax = upper), size = 1, height = .5)+
-  xlab(element_blank())+
-  ylab(element_blank())+
-  scale_color_manual(values = c("#A9A9A9", "#d95f02","#1b9e77",  "#7570b3"))+
-  theme(axis.text.y = element_blank(),
-        legend.position = "none", 
-        text = element_text(size = 11),
-        panel.grid.major.y  = element_blank(),
-        axis.ticks.y = element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))+
-  xlab("Years since fire")
-Q50plot
-```
-
-# Save
-```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_coef_withQ50", Sys.Date(), ".jpeg", sep = "")
-
-g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
-ggsave(filename, g, width = 4, height = 5)
-```
-

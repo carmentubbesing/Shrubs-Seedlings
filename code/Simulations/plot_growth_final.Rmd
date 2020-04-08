@@ -1,0 +1,124 @@
+---
+title: "plot_growth_final"
+author: "Carmen"
+date: "4/1/2020"
+output: html_document
+---
+
+
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+require(egg)
+require(grid)
+```
+
+
+# Load summarized results
+```{r}
+load(file = "../../results/data/summary_emerge_growth.Rdata")
+```
+
+# Plot 
+```{r}
+plot_emerge_prop <- 
+  
+  ggplot(summary_emerge)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, linetype = Species,  col = simspp, group = interaction(Species, simspp)), size = 1.1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = interaction(Species, simspp)), alpha = .2)+
+  ylab("Proportion of initial trees that have emerged")+
+  scale_fill_manual(name = "Shrub species", 
+                    values = c("#d95f02", "#1b9e77", "#e7298a"), 
+                                labels = c("Manzanita", 
+                                "Whitethorn", 
+                                "Deerbrush"))+
+
+  scale_color_manual(name = "Shrub species", 
+                    values = c("#d95f02","#1b9e77",  "#e7298a"), 
+                                labels = c("Manzanita", 
+                                "Whitethorn", 
+                                "Deerbrush"))+
+  scale_linetype_discrete(labels = c("White fir",
+                          "Ponderosa pine"))+
+  xlab(element_blank())+
+  theme(text = element_text(size = 11), 
+        legend.position = "none")+
+  xlim(9,max(summary_emerge$Years))+
+  ylim(c(-.05,1))
+
+plot_emerge_prop
+```
+
+
+# Plot Q50 
+```{r}
+Q50 <- summary_emerge %>% 
+  mutate(dist50 = mean-.5) %>% 
+  filter(dist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, simspp) %>% 
+  filter(dist50 == min(dist50)) %>% 
+  mutate(bound = "mean")
+
+Q50_ub <- summary_emerge %>% 
+  mutate(lowerdist50 = mean-sd-.5) %>% 
+  filter(lowerdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, simspp) %>% 
+  filter(lowerdist50 == min(lowerdist50)) %>% 
+  mutate(bound = "upper")
+
+Q50_lb <- summary_emerge %>% 
+  mutate(upperdist50 = mean+sd-.5) %>% 
+  filter(upperdist50>0) %>%
+  ungroup() %>% 
+  group_by(Species, simspp) %>% 
+  filter(upperdist50 == min(upperdist50)) %>% 
+  mutate(bound = "lower")
+
+```
+
+```{r}
+Q50 <- full_join(Q50, Q50_lb) 
+Q50 <- full_join(Q50, Q50_ub) 
+
+Q50 <- Q50 %>% 
+  dplyr::select(Years, Species, simspp, bound)
+```
+
+## pivot wider
+```{r}
+Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>% 
+  dplyr::select(Species, simspp, lower, mean, upper)
+```
+
+```{r}
+Q50plot <- ggplot(Q50, aes(col = simspp))+
+  theme_bw()+
+  geom_errorbarh(aes(y = interaction(Species, simspp), xmin = lower, xmax = upper), size = 0.75)+
+  geom_point(aes(x = mean, y = interaction(Species, simspp), shape = Species), size = 2, fill = "white", stroke = 1.5)+
+  scale_shape_manual(values = c(16,21))+
+  xlab(element_blank())+
+  ylab(element_blank())+
+  scale_color_manual(values = c("#d95f02","#1b9e77",  "#e7298a"))+
+  theme(axis.text.y = element_blank(),
+        legend.position = "none", 
+        text = element_text(size = 11),
+        panel.grid.major.y  = element_blank(),
+        axis.ticks.y = element_blank())+
+  xlim(9,max(summary_emerge$Years))+
+  xlab("Years since fire")
+Q50plot
+```
+
+# Save
+```{r}
+filename <- paste("../../results/figures/Simulations/shrub_species_growth_withQ50", Sys.Date(), ".jpeg", sep = "")
+
+g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
+g
+ggsave(filename, g, width = 4, height = 5)
+```
+

@@ -1,0 +1,25 @@
+---
+title: "render_all_shrub_growth_time"
+author: "Carmen"
+date: "January 15, 2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+```{r setup}
+library(knitr)
+setwd("~/Shrubs-Seedlings/code/Simulations/")
+```
+
+```{r rendering, warning = F}
+strt <- Sys.time()
+rmarkdown::render("simulations_plot_base.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_plot_est_neut.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_plot_ShrubSpecies.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_plot_ShrubSpecies_coef.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_plot_ShrubSpecies_GROWTH.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_plot_ShrubSpecies_INDEX.Rmd", "html_document", quiet = T)
+print(strt-Sys.time())
+```
+

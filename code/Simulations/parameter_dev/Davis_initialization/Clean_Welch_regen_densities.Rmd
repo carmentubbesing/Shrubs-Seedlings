@@ -154,6 +154,14 @@ df %>%
   
 ```
 
+# List plots with CEIN 
+```{r}
+df %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Shrub_species == "CEIN3")
+```
+
+
 # Compare to plot table
 ```{r}
 plot %>% 
