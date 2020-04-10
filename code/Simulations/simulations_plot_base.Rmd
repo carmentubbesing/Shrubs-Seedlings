@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-03-27_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "1_2020-04-07_1000_empirical_empirical_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -165,7 +165,12 @@ Q50
 
 # Plot on a per-area basis
 
-Each plot in Welch's data was 60 m^2. Across 15 plots, that's 900 square meters.
+Each plot in Welch's data was 60 m^2. Across 15 plots, that's 900 square meters. He found 67 seedlings. So 200 seedlings is 900*(200/67) square meters
+
+```{r}
+area <-  900*(200/67)
+```
+
 
 ```{r}
 load("../../results/coefficients/welch_ratios.Rdata")
@@ -173,23 +178,6 @@ welch_shrspp %>%
   group_by(Species) %>% 
   summarize(sum(sum))
 ```
-
-He found 128 ABCO and 71 PIPO in those plots. On a per area basis, that's:
-```{r}
-128/900
-```
-
-0.1422 abco/ square meter
-
-```{r}
-71/900
-```
-
-0.0789 pipo per square meter 
-
-Modify the figure to reflect this:
-
-### Summarize but assign each iteration an initial area based on 5 x the # of abco 
 
 ```{r}
 counts <- dfsimallreps %>% 
@@ -226,7 +214,7 @@ summary_emerge <- dfsimallreps %>%
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
-  mutate(density = total_emergents/900)
+  mutate(density = total_emergents/area)
 ```
 
 ```{r}

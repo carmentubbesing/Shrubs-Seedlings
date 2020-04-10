@@ -58,56 +58,6 @@ welch %>%
 ```
 
 
-# Compare where the PIPO are in relation to the ABCO
-```{r}
-welch_shrspp <- welch %>% 
-  filter(Species %in% c("PIPO", "ABCO")) %>% 
-  group_by(Species, Shrub_species) %>% 
-  summarize(sum = sum(Count_total)) %>% 
-  ungroup() %>% 
-  group_by(Species) %>% 
-  mutate(prop = sum/sum(sum)) %>% 
-  filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11", "CEIN3")) %>% 
-  ggplot()+
-  geom_col(aes(x = Species, y = prop, fill = Shrub_species), position = "dodge")+
-  theme_minimal()+
-  ylim(c(0, 0.65))+
-  ggtitle("Welch data")
-welch_shrspp
-```
-
-## Look at counts
-```{r}
-welch %>% 
-  filter(Species %in% c("ABCO", "PIPO")) %>% 
-  group_by(Species, Shrub_species) %>% 
-  summarize(sum = sum(Count_total)) 
-```
-
-## Count plots
-```{r}
-welch %>% 
-  group_by(Regen_Plot, Species) %>% 
-  summarize(sum(Count_total)) %>% 
-  ungroup() %>% 
-  dplyr::select(Regen_Plot) %>% 
-  distinct()
-```
-
-
-
-```{r}
-welch %>% 
-  group_by(Regen_Plot, Species) %>% 
-  summarize(sum(Count_total))
-
-welch %>% 
-  group_by(Regen_Plot) %>% 
-  count()
-```
-
-# The other 
-
 ## Compare that to my data
 
 ### Load my data
@@ -149,22 +99,27 @@ me %>%
   summarize(sum(sum))
 ```
 
+# Calculate proportion within each shrub cover for each conifer species in Welch data, limiting to the species I found in AMRC
 
+
+## Follow one set of plots to make sure I'm doing it right
 ```{r}
-grid.arrange(welch_shrspp, me_shrspp, ncol = 2)
+welch %>% 
+  filter(Shrub_species == "ARPA6" & Species == "ABCO") %>% 
+  select(Regen_Plot, Species, Shrub_species, Count_total, Cover, modal_ht_cm)
 ```
 
--  The species in common between me and welch are ARPA, CECO, CEIN, CEPR, CHSE
-
-# Calculate proportion within each shrub cover for each conifer species in Welch data, limiting to the species I found in AMRC
 
 ## Restructure data so that there's only one row per tree species per regen plot
 
-Choose the dominant shrub species by choosing highest shrub cover*height 
+Choose the dominant shrub species by choosing highest shrub cover, then highest shrubarea
 ```{r}
 welch_shrspp <- welch %>% 
+  ungroup() %>% 
   group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
   mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
   filter(shrubarea == max(shrubarea)) %>% 
   dplyr::select(Regen_Plot, Shrub_species, Species, Cover, modal_ht_cm, Fire, Count_total)
 welch_shrspp
@@ -177,41 +132,31 @@ welch_shrspp %>%
   filter(n()>1)
 ```
 
-## Make pretty for simulations
+## See total trees in each species and shrub combo
 ```{r}
-welch_shrspp %>% 
+welch_shrspp <- welch_shrspp %>% 
   filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
   mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
   mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
   mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
   filter(Species %in% c("PIPO", "ABCO")) %>% 
   group_by(Species, Shrub_species) %>% 
-  summarize(sum = sum(Count_total)) %>% 
+  summarize(plots = n(), trees = sum(Count_total)) %>% 
   ungroup() %>% 
-  mutate(prop = sum/sum(sum)) %>% 
-  mutate(total = sum(prop))  
-```
-
-
-```{r}
-welch_shrspp <- welch %>% 
-  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
-  mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
-  mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
-  mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
-  filter(Species %in% c("PIPO", "ABCO")) %>% 
-  group_by(Species, Shrub_species) %>% 
-  summarize(sum = sum(Count_total)) %>% 
-  ungroup() %>% 
-  mutate(prop = sum/sum(sum)) %>% 
-  mutate(total = sum(prop)) 
+  mutate(proportion = trees/sum(trees))
 welch_shrspp
 ```
 
-# Save thise proportions to use in simulation initialization
+# Proportion of fir vs. pine?
 ```{r}
-save(welch_shrspp, file = "../../../../results/coefficients/welch_ratios.Rdata")
+welch_shrspp %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  summarize(total = sum(trees)) %>% 
+  ungroup() %>% 
+  mutate(prop = round(total/sum(total), 2))
 ```
+
 
 # Try to fill in missing CEIN data in my surveys
 
@@ -230,36 +175,6 @@ ggplot()+
   geom_point(aes(x = Shrub_species, y = mean_ht), col = "red")
 ```
 
-## Repeat for CEIN COVER
-```{r}
-welch_all %>% 
-  filter(years_since_fire %in% c(5:8)) %>% 
-  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
-  group_by(Shrub_species) %>% 
-  mutate(mean_cov = mean(Cover)) %>% 
-  ungroup() %>% 
-  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) %>%
-ggplot()+
-  geom_boxplot(aes(x = Shrub_species, y = Cover))+
-  theme_minimal()+
-  geom_point(aes(x = Shrub_species, y = mean_cov), col = "red")
-```
-
-## Repeat for shrub competition index
-```{r}
-welch_all %>% 
-  filter(years_since_fire %in% c(5:8)) %>% 
-  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
-  group_by(Shrub_species) %>% 
-  mutate(shrub_comp = sqrt(Cover*modal_ht_cm)) %>% 
-  mutate(mean_comp = mean(shrub_comp)) %>% 
-  ungroup() %>% 
-  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_comp))) %>%
-ggplot()+
-  geom_boxplot(aes(x = Shrub_species, y = shrub_comp))+
-  theme_minimal()+
-  geom_point(aes(x = Shrub_species, y = mean_comp), col = "red")
-```
 
 # Save CEIN height data for use in simulations
 ```{r}
@@ -275,6 +190,95 @@ welch_CEIN_hts
 
 ```{r}
 save(welch_CEIN_hts, file = "../../../../data/welch_CEIN_hts.Rdata")
+```
+
+  
+## Repeat for CEIN COVER, limiting it to plots where CEIN is dominant 
+```{r}
+welch_all_summary <- welch_all %>% 
+  filter(years_since_fire %in% c(5:8)) %>% 
+  ungroup() %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
+  group_by(Shrub_species) %>% 
+  mutate(mean_cov = mean(Cover)) %>% 
+  ungroup() %>% 
+  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) 
+
+ggplot(welch_all_summary)+
+  geom_boxplot(aes(x = Shrub_species, y = Cover))+
+  theme_minimal()+
+  geom_point(aes(x = Shrub_species, y = mean_cov), col = "red")+
+  xlab("Shrub species")
+ggsave(file = "../../../../results/figures/Simulations/welch_cein_ceco_ht_compare.png", width = 8)
+```
+
+
+### Make sure there's only one row per plot/Species combo
+```{r}
+welch_all_summary %>% 
+  group_by(Regen_Plot, Species) %>% 
+  filter(n()>1)
+```
+
+Those species don't matter for the species combo breakdown so I'm going to leave it as is. 
+
+# Look at overall combinations of shrub and tree species across Welch data
+```{r}
+welch_ratios <- welch_all_summary %>% 
+  group_by(Shrub_species, Species) %>% 
+  summarize(plots = n(), trees = sum(na.omit(Count_total))) %>% 
+  filter(Species %in% c("ABCO", "PIPO"))
+welch_ratios
+```
+
+
+# Save thise proportions to use in simulation initialization
+
+## reformat so it's compatible with my shrub data
+
+### Which shrub species are most common?
+```{r}
+welch_ratios %>% 
+  summarize(sum(plots), trees = sum(trees)) %>% 
+  arrange(desc(trees))
+```
+
+### Take out CHFO because it's not in my American River fire, it's not in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it
+```{r}
+welch_ratios <- welch_ratios %>% 
+  filter(Shrub_species != "CHFO")
+```
+
+
+```{r}
+main_spp <- c("LIDE", "ARPA", "CECO", "CEIN", "CHSE", "Other")
+
+welch_ratios <- welch_ratios %>% 
+  ungroup() %>% 
+  mutate(Shrub_species = case_when(
+    Shrub_species == "CEIN3" ~ "CEIN",
+    Shrub_species == "ARPA/ARVI" ~ "ARPA",
+    Shrub_species == "CHSE11" ~ "CHSE",
+    !Shrub_species %in% main_spp ~ "Other",
+    TRUE ~ as.character(Shrub_species)
+  )) %>% 
+  group_by(Shrub_species, Species) %>% 
+  summarize(trees = sum(trees)) %>% 
+  ungroup() %>% 
+  mutate(prop = trees/sum(trees))
+
+
+welch_ratios
+```
+
+
+```{r}
+save(welch_ratios, file = "../../../../results/coefficients/welch_ratios.Rdata")
 ```
 
 
@@ -334,19 +338,3 @@ me_shr_ht
 ```{r}
 grid.arrange(welch_shr_ht, me_shr_ht, ncol = 2)
 ```
-
-# Calculate per area densities
-
-# Replace NAs with 0s because there were no trees found in the plots that say NA
-```{r}
-tree %>% filter(Regen_Plot == "AMR1300269")
-tree %>% filter(Regen_Plot == "AMR1300270")
-tree %>% filter(Regen_Plot == "AMR1300271")
-```
-
-area = 15*
-```{r}
-welch <- welch %>% 
-  mutate()
-```
-

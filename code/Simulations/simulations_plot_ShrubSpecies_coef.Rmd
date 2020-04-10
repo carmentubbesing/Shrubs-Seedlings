@@ -17,24 +17,20 @@ require(egg)
 ```
 
 ```{r}
-date <- "2020-03-28"
+date <- "2020-04-08"
 
-namearpa <- paste("~/Simulation8_", date, "_1000_welch_ARPAcoef_empiricalgrowth.Rdata", sep = "")
+namearpa <- paste("~/Simulation8_", date, "_1000_empirical_ARPAcoef_empiricalgrowth.Rdata", sep = "")
 
-namecein <- paste("~/Simulation7_", date, "_1000_welch_CEINcoef_empiricalgrowth.Rdata", sep = "")
+namecein <- paste("~/Simulation7_", date, "_1000_empirical_CEINcoef_empiricalgrowth.Rdata", sep = "")
 
-namececo <- paste("~/Simulation6_", date, "_1000_welch_CECOcoef_empiricalgrowth.Rdata", sep = "")
+namececo <- paste("~/Simulation6_", date, "_1000_empirical_CECOcoef_empiricalgrowth.Rdata", sep = "")
 ```
 
 ```{r}
- 
 load(namecein)
 cein <- dfsimallreps
 remove(dfsimallreps)
-
 ```
-
-
 
 ```{r}
 max_year <- cein %>% 

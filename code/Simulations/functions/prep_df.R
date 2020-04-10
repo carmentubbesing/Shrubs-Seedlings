@@ -27,13 +27,11 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
   # If shrub_method = "welch", then select based on proportions in welch data
   if(shrub_method=="welch"){
     load("../../results/coefficients/welch_ratios.Rdata")
-    welch_shrspp <- welch_shrspp %>% 
-      dplyr::select(-sum, -total)
-    
+  
     df_new <- data.frame()
-    for(i in 1:nrow(welch_shrspp)){
-      welch_i <- welch_shrspp[i,]
-      welch_prop_i <- welch_shrspp[i,"prop"] %>% unlist()
+    for(i in 1:nrow(welch_ratios)){
+      welch_i <- welch_ratios[i,]
+      welch_prop_i <- welch_ratios[i,"prop"] %>% unlist()
       df_i <- df %>% filter(Species == welch_i$Species & ShrubSpp03 == welch_i$Shrub_species)
       
       if(welch_i$Shrub_species == "CEIN"){
@@ -63,8 +61,10 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
       group_by(Species, ShrubSpp03) %>%
       count() %>%
       ungroup() %>%
-      mutate(prop = n/sum(n))
-    welch_shrspp
+      mutate(prop = n/sum(n)) %>% 
+      arrange(ShrubSpp03) %>% 
+      select(ShrubSpp03, everything())
+    welch_ratios
     
   }
   
