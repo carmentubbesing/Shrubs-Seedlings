@@ -592,8 +592,9 @@ welch_CEIN_hts</code></pre>
 <pre class="r"><code>save(welch_CEIN_hts, file = &quot;../../../../data/welch_CEIN_hts.Rdata&quot;)</code></pre>
 <div id="repeat-for-cein-cover-limiting-it-to-plots-where-cein-is-dominant" class="section level2">
 <h2>Repeat for CEIN COVER, limiting it to plots where CEIN is dominant</h2>
-<pre class="r"><code>welch_all_summary &lt;- welch_all %&gt;% 
-  filter(years_since_fire %in% c(5:8)) %&gt;% 
+<pre class="r"><code>welch_subset &lt;- welch_all %&gt;% 
+  filter(years_since_fire %in% c(5:8)) </code></pre>
+<pre class="r"><code>welch_all_summary &lt;- welch_subset %&gt;% 
   ungroup() %&gt;% 
   group_by(Regen_Plot) %&gt;% 
   filter(Cover == max(Cover)) %&gt;% 
@@ -637,6 +638,10 @@ ggplot(welch_all_summary)+
 </div>
 <div id="look-at-overall-combinations-of-shrub-and-tree-species-across-welch-data" class="section level1">
 <h1>Look at overall combinations of shrub and tree species across Welch data</h1>
+<div id="count-the-plots-included-in-this-analysis-to-translate-later-results-to-per-area-densities" class="section level2">
+<h2>Count the plots included in this analysis to translate later results to per area densities</h2>
+<pre class="r"><code>plots &lt;- length(unique(welch_subset$Regen_Plot))
+save(plots, file = &quot;../../../../results/data/n_plots_welch_subset.Rdata&quot;)</code></pre>
 <pre class="r"><code>welch_ratios &lt;- welch_all_summary %&gt;% 
   group_by(Shrub_species, Species) %&gt;% 
   summarize(plots = n(), trees = sum(na.omit(Count_total))) %&gt;% 
@@ -664,6 +669,7 @@ welch_ratios</code></pre>
 ## 16 ARNE          ABCO        5    40
 ## 17 ARNE          PIPO        3     3
 ## 18 SYMO          PIPO        1     2</code></pre>
+</div>
 </div>
 <div id="save-thise-proportions-to-use-in-simulation-initialization" class="section level1">
 <h1>Save thise proportions to use in simulation initialization</h1>

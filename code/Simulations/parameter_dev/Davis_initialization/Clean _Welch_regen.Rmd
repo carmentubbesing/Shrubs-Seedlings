@@ -195,8 +195,13 @@ save(welch_CEIN_hts, file = "../../../../data/welch_CEIN_hts.Rdata")
   
 ## Repeat for CEIN COVER, limiting it to plots where CEIN is dominant 
 ```{r}
-welch_all_summary <- welch_all %>% 
-  filter(years_since_fire %in% c(5:8)) %>% 
+welch_subset <- welch_all %>% 
+  filter(years_since_fire %in% c(5:8)) 
+```
+
+
+```{r}
+welch_all_summary <- welch_subset %>% 
   ungroup() %>% 
   group_by(Regen_Plot) %>% 
   filter(Cover == max(Cover)) %>% 
@@ -228,6 +233,15 @@ welch_all_summary %>%
 Those species don't matter for the species combo breakdown so I'm going to leave it as is. 
 
 # Look at overall combinations of shrub and tree species across Welch data
+
+## Count the plots included in this analysis to translate later results to per area densities
+
+```{r}
+plots <- length(unique(welch_subset$Regen_Plot))
+save(plots, file = "../../../../results/data/n_plots_welch_subset.Rdata")
+```
+
+
 ```{r}
 welch_ratios <- welch_all_summary %>% 
   group_by(Shrub_species, Species) %>% 
@@ -252,6 +266,12 @@ welch_ratios %>%
 ```{r}
 welch_ratios <- welch_ratios %>% 
   filter(Shrub_species != "CHFO")
+```
+
+### Take out CHSE/PIPO combinations because they don't occur in my data
+```{r}
+welch_ratios <- welch_ratios %>% 
+  filter(!(Shrub_species == "CHSE11" & Species == "PIPO"))
 ```
 
 
