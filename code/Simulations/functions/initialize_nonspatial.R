@@ -13,9 +13,7 @@ initialize <- function(df, r, n_seedlings, lambda, length_m, height_m){
     mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>%
     mutate("Year"="2016") %>%
     mutate(Year = as.factor(Year)) %>%
-    rename(dia.cm = BasDia2016.cm) %>%
-    mutate(ShrubSpp03 = case_when(ShrubSpp03 == "CHSE" ~ "Other",
-                                  TRUE ~ as.character(ShrubSpp03)))
+    rename(dia.cm = BasDia2016.cm)
   
   
   ## Add unique identifier since there are some repeats of Sdlg numbers 
