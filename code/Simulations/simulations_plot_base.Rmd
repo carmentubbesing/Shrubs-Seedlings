@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-04-10_100_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "1_2020-04-13_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -27,15 +27,20 @@ require(gridExtra)
 ```{r}
 dfsimallreps %>% 
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
-  group_by(emerged) %>% 
-  count()
+  #group_by(emerged) %>% 
+  #count() %>% 
+  summarize(min(Years))
 ```
 
 ```{r}
 dfsimallreps <- dfsimallreps %>% 
-  filter(is.finite(pred_exp) & !is.na(pred_exp))
+ mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))
 ```
 
+## Make sure # reps and minimum year matches what I expect
+```{r}
+length(unique(dfsimallreps$rep))
+```
 
 # Plot how many trees emerge above the shrub canopy each year
 
@@ -60,7 +65,13 @@ summary_emerge <- dfsimallreps %>%
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO"))
 ```
 
-
+# Calculate % emergence by the end
+```{r}
+summary_emerge %>% 
+  group_by(Species) %>% 
+  filter(Years == max(Years)) %>% 
+  summarize(mean_prop = mean(prop_emerged), sd = sd(prop_emerged))
+```
 
 # Plot emergents per year 
 
@@ -79,8 +90,6 @@ plot_emerge_count <- ggplot(summary_emerge)+
         legend.text=element_text(size=11),
         legend.position = "none")
 plot_emerge_count
-filename <- paste("../../results/figures/Simulations/base_count_boxplot", name, ".png", sep = "")
-ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
 ## Proportions
@@ -99,14 +108,10 @@ plot_emerge_prop <- ggplot(summary_emerge)+
   scale_fill_discrete(labels = c( "Ponderosa pine", "White fir"))
 
 plot_emerge_prop
-filename <- paste("../../results/figures/Simulations/base_prop_boxplot", name, ".png", sep = "")
-ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
 
 # Plot Q50 
-
-# 
 
 ## Summarize with means
 ```{r}
@@ -177,40 +182,77 @@ welch_ratios %>%
   summarize(sum(trees))
 ```
 
+# Make sure the starting ratios of the results match Welch ratios
+
+## BY conifer species
+```{r}
+dfsimallreps %>% 
+  filter(Years == min(Years)) %>% 
+  group_by(Species) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(prop = n/sum(n)) 
+welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(n = sum(trees)) %>% 
+  ungroup() %>% 
+  mutate(prop = n/sum(n)) 
+```
+
+## By conifer/shrub combo
+```{r}
+dfsimallreps %>% 
+  filter(Years == min(Years)) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(prop = n/sum(n)) %>% 
+  arrange(ShrubSpp03)
+welch_ratios
+```
+
+
 ## Calculate total plot area and density in the welch data:
 
 ```{r}
-area <-  900*plots
+welch_area <-  900*plots
 welch_ratios %>% 
   group_by(Species) %>% 
   summarize(trees = sum(trees)) %>% 
-  mutate(density_m2 = trees/area)
+  mutate(density_m2 = trees/welch_area)
+```
+
+## Calculate initial area equivalent for my results
+
+```{r}
+welch_species_n <- welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(trees_welch = sum(trees))
+welch_species_n
 ```
 
 ```{r}
-counts <- dfsimallreps %>% 
-  group_by(Years, Species, rep) %>% 
-  summarize(total_emergents = sum(emerged), total = n()) %>% 
-  ungroup() %>% 
-  mutate() %>% 
+calc_area <- dfsimallreps %>% 
   filter(Years == min(Years)) %>% 
-  ungroup() %>% 
-  group_by(Species, total) %>% 
+  group_by(rep, Species) %>% 
   count() %>% 
-  ungroup() 
-
-counts %>% 
-  ggplot()+
-  geom_point(aes(x = total, y = n, col = Species))+
-  geom_line(aes(x = total, y = n, group = Species, col = Species))+
-  theme_bw()
-
-counts %>% 
   group_by(Species) %>% 
-  filter(n == max(n))
+  summarize(mean_trees = mean(n)) 
+calc_area <- full_join(calc_area, welch_species_n) %>% 
+  mutate(ratio = mean_trees/trees_welch) %>% 
+  mutate(area_sim = welch_area*ratio) %>% 
+  summarize(area_sim = mean(area_sim))
+area_sim <- calc_area$area_sim
 ```
 
-WHY IS THIS NUMBER LOWER THAN n_seedlings OF 200?
+```{r}
+welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(trees = sum(trees)) %>% 
+  mutate(density_m2 = trees/welch_area)
+```
+
+### Add column for initial area to summary_emerge
 
 ```{r}
 summary_emerge <- dfsimallreps %>% 
@@ -222,7 +264,7 @@ summary_emerge <- dfsimallreps %>%
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
-  mutate(density = total_emergents/area)
+  mutate(density = total_emergents/area_sim)
 ```
 
 ```{r}

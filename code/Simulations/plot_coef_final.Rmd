@@ -15,6 +15,7 @@ require(grid)
 
 # Load summarized results
 ```{r}
+setwd("~/Shrubs-Seedlings/code/Simulations/")
 load(file = "../../results/data/summary_emerge_coef.Rdata")
 ```
 
@@ -26,10 +27,10 @@ plot_emerge_prop <-
   theme_bw()+
   geom_line(aes(x = Years, y = mean, col = simspp, group = simspp, linetype = Species), size = 1.1)+
   geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .2)+
-  ylab("Proportion of initial trees that have emerged")+
+  ylab("Proportion of initial trees emerged")+
   xlab("Years since fire")+
   #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
-  theme(legend.position = c(0.75, 0.3))+
+  theme(legend.position = c(0.35, 0.4))+
    scale_fill_manual(name = "Shrub species", 
                     values = c("#888888", "#d95f02", "#1b9e77", "#e7298a"), 
                                 labels = c("All shrub species", "Manzanita", 
@@ -44,16 +45,21 @@ plot_emerge_prop <-
   scale_linetype_discrete(labels = c("White fir",
                           "Ponderosa pine"))+
   
-  theme(text = element_text(size = 11), 
+  theme(text = element_text(size = 13), 
         
         legend.title = element_blank(),
         legend.spacing=unit(0, "cm"),
-        legend.text=element_text(size=10),
-        legend.margin = margin(0, 0, 0, 0)
+        legend.text=element_text(size=12),
+        axis.text=element_text(size=11),
+        legend.margin = margin(0, 0, 0, 0),
+        strip.background = element_blank(),strip.text.x = element_blank(),
+        axis.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm")
         )+
   xlab(element_blank())+
   xlim(9,max(summary_emerge$Years))+
-  ylim(c(-.05,1))
+  ylim(c(0,1))+
+  facet_wrap(~Species, nrow = 1)
 
 plot_emerge_prop
 ```
@@ -101,28 +107,42 @@ Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>%
 ```
 
 ```{r}
+Q50 <- Q50 %>% 
+  mutate(shrub = case_when(
+    Species == "PIPO" ~ simspp,
+    TRUE ~ "CECO"
+  ))
+```
+
+
+```{r}
 Q50plot <- ggplot(Q50, aes(col = simspp))+
   theme_bw()+
-  geom_errorbarh(aes(y = interaction(Species, simspp), xmin = lower, xmax = upper), size = 1, height = .5)+
-     geom_point(aes(x = mean, y = interaction(Species, simspp), shape = Species), size = 2, fill = "white", stroke = 1.5)+
-  scale_shape_manual(values = c(16,21))+
+  geom_errorbarh(aes(y = shrub, xmin = lower, xmax = upper), size = 1, height = .6)+
+  geom_point(aes(x = mean, y = shrub), size = 1, fill = "white", stroke = 1.5)+
+  #scale_shape_manual(values = c(16,21))+
   scale_color_manual(values = c("#888888", "#d95f02","#1b9e77",  "#e7298a"))+
   theme(axis.text.y = element_blank(),
         legend.position = "none", 
-        text = element_text(size = 11),
+        text = element_text(size = 13),
+        axis.text = element_text(size = 12),
         panel.grid.major.y  = element_blank(),
+         strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
         axis.ticks.y = element_blank())+
   xlim(c(9,max(summary_emerge$Years)))+
   xlab("Years since fire")+
-  ylab(element_blank())
+  ylab("Shrub\nspecies")+
+  facet_wrap(~Species, nrow = 1)
 Q50plot
 ```
 
 # Save
 ```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_coef_withQ50", Sys.Date(), ".jpeg", sep = "")
+filename <- paste("../../results/figures/Simulations/shrub_species_coef_withQ50_facet", Sys.Date(), ".jpeg", sep = "")
 
-g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
-ggsave(filename, g, width = 4, height = 5)
+g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5,0.5), widths = 4)
+ggsave(filename, g, width = 8, height = 4.2)
 ```
 

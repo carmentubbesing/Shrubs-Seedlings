@@ -23,7 +23,10 @@ print(strt-Sys.time())
 ```
 
 ```{r}
-rmarkdown::render("simulations_base_plot_extra.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_base_plot_extra.Rmd", "html_document", quiet = T) # this takes a while 
 rmarkdown::render("plot_base_final.Rmd", "html_document", quiet = T)
+rmarkdown::render("plot_coef_final.Rmd", "html_document", quiet = T)
+rmarkdown::render("plot_growth_final.Rmd", "html_document", quiet = T)
+rmarkdown::render("plot_index_final.Rmd", "html_document", quiet = T)
 ```
 

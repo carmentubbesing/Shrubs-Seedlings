@@ -5,14 +5,12 @@ date: "4/1/2020"
 output: html_document
 ---
 
-
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
 require(egg)
 require(grid)
 ```
-
 
 # Load summarized data
 ```{r}
@@ -26,10 +24,10 @@ plot_emerge_prop <-
   theme_bw()+
   geom_line(aes(x = Years, y = mean, linetype = Species,  col = sim_spp, group = interaction(Species, sim_spp)), size = 1.2)+
   geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = sim_spp, group = interaction(Species, sim_spp)), alpha = .2)+
-  ylab("Proportion of initial trees that have emerged")+
+  ylab("Proportion of initial trees emerged")+
   xlab("Years since fire")+
   
-  theme(legend.position = c(0.8, 0.2))+
+  theme(legend.position = c(0.88, 0.2))+
    scale_fill_manual(name = "Shrub species", 
                     values = c("#d95f02", "#1b9e77", "#e7298a"), 
                                 labels = c("Manzanita", 
@@ -44,16 +42,22 @@ plot_emerge_prop <-
   scale_linetype_discrete(labels = c("White fir",
                           "Ponderosa pine"))+
   
-  theme(text = element_text(size = 11), 
-        panel.grid.minor.y = element_blank(),
+  theme(panel.grid.minor.y = element_blank(),
         legend.title = element_blank(),
         legend.spacing=unit(0, "cm"),
-        legend.text=element_text(size=11),
+        legend.text=element_text(size=13.5),
+        text = element_text(size = 13),
+        axis.text = element_text(size = 12),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
+        axis.text.x = element_blank(),
         legend.margin = margin(0, 0, 0, 0)
         )+
 
   xlab(element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))
+  xlim(c(9,max(summary_emerge$Years)))+
+  facet_wrap(~Species, nrow = 1)
 
 plot_emerge_prop
 ```
@@ -110,29 +114,31 @@ Q50 <- Q50 %>%
 mean_arpa_pipo <- Q50[Q50$Species == "PIPO" & Q50$sim_spp == "ARPA", "mean"] %>% unlist()
 ```
 
+```{r}
+
+```
+
 
 ```{r}
 Q50plot <- ggplot()+
   theme_bw()+
-  geom_errorbarh(data = Q50 %>% filter(!(Species == "PIPO" & sim_spp == "ARPA")), aes(col = sim_spp, y = interaction(sim_spp, Species), xmin = lower, xmax = upper), size = 1)+
-  
-  geom_errorbarh(data = Q50 %>% filter((Species == "PIPO" & sim_spp == "ARPA")), aes(col = sim_spp, y = interaction(sim_spp, Species), xmin = lower, xmax = mean), size = 1, height = 0)+
-
-  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & sim_spp == "ARPA")), aes(col = sim_spp, x = lower, ymin = 1.6, ymax= 2.45), size = 1)+
-  
-  geom_line(aes(y = 2, x = c(mean_arpa_pipo,max(summary_emerge$Years))), size = 1, linetype = "dotted", col = "#d95f02")+
-  
-  geom_point(data = Q50, aes(col = sim_spp, x = mean, y = interaction(sim_spp, Species), shape = Species), size = 2, fill = "white", stroke = 1.5)+
-  scale_shape_manual(values = c(16,21))+
-  ylab("Shrub and tree\nspecies combination")+
+  geom_errorbarh(data = Q50, aes(col = sim_spp, y = sim_spp, xmin = lower, xmax = upper), size = 1, height = 0.5)+
+  geom_point(data = Q50, aes(col = sim_spp, x = mean, y = sim_spp), size = 1, fill = "white", stroke = 1.5)+
+  #scale_shape_manual(values = c(16,21))+
+  ylab("Shrub\nspecies")+
   scale_color_manual(values = c("#d95f02","#1b9e77",  "#e7298a"))+
   theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(size = 12),
         legend.position = "none", 
-        text = element_text(size = 11),
+        text = element_text(size = 13),
         panel.grid.major.y  = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
         axis.ticks.y = element_blank())+
   xlim(c(9,max(summary_emerge$Years)))+
-  xlab("Years since fire")
+  xlab("Years since fire")+
+    facet_wrap(~Species, nrow = 1)
 Q50plot
 ```
 
@@ -140,12 +146,11 @@ Q50plot
 ```{r}
 filename <- paste("../../results/figures/Simulations/shrub_species_overall_withQ50", Sys.Date(), ".jpeg", sep = "")
 
-g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
-ggsave(filename, g, width = 5, height = 6)
+g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5, 0.5), widths = 4)
+ggsave(filename, g, width = 10, height = 5.25)
 ```
 
-
-# Find max prop emerged for each species (for Table 1)
+# Find max prop emerged for each species (for a table)
 ```{r}
 summary_emerge %>% 
   group_by(Species, sim_spp) %>% 

@@ -19,13 +19,11 @@ require(egg)
 ```
 
 ```{r}
-date <- "2020-03-28"
+date <- "2020-04-13"
 
 namececo <- paste("~/Simulation12_", date, "_1000_welch_empiricalcoef_CECOindex_empiricalgrowth.Rdata", sep = "")
 
 namearpa <- paste("~/Simulation14_", date, "_1000_welch_empiricalcoef_ARPAindex_empiricalgrowth.Rdata", sep = "")
-
-date <- "2020-03-27"
 
 namecein <- paste("~/Simulation13_", date, "_1000_welch_empiricalcoef_CEINindex_empiricalgrowth.Rdata", sep = "")
 ```

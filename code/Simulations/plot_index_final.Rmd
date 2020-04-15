@@ -5,7 +5,6 @@ date: "4/1/2020"
 output: html_document
 ---
 
-
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
@@ -13,27 +12,56 @@ require(egg)
 require(grid)
 ```
 
-
 # Load summary
 ```{r}
 load(file = "../../results/data/summary_emerge_index.Rdata")
+```
+
+## Filter out the flat parts - take out years if they differ by <0.01 (1%)
+```{r}
+max_year <- summary_emerge %>% 
+  mutate(mean = round(mean, 3)) %>% 
+  group_by(Species, simspp) %>% 
+  mutate(maxmean = max(mean)) %>% 
+  filter(mean == maxmean) %>% 
+  ungroup() %>%
+  group_by(Species, simspp) %>% 
+  filter(Years == min(Years)) %>%
+  ungroup() %>% 
+  filter(Years ==max(Years)) %>% 
+  select(Years) %>% 
+  unlist()
+
+max_year
+```
+
+```{r}
+summary_emerge <- summary_emerge %>% 
+  filter(Years < max_year + 1)
 ```
 
 ## Plot 
 ```{r}
 plot_emerge_prop <- 
   ggplot(summary_emerge)+
-  geom_line(aes(x = Years, y = mean, linetype = Species,  col = simspp, group = interaction(Species, simspp)), size = 1.1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = interaction(Species, simspp)), alpha = .2)+
-  ylab("Proportion of initial trees that have emerged")+
+  geom_line(aes(x = Years, y = mean, linetype = Species,  col = simspp, group = simspp), size = 1.1)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = simspp, group = simspp), alpha = .2)+
+  ylab("Proportion of initial trees emerged")+
   scale_fill_manual(values = c("#d95f02", "#1b9e77", "#e7298a"))+
   xlab(element_blank())+
   scale_color_manual(values = c("#d95f02","#1b9e77", "#e7298a"))+
   theme_bw()+
-  theme(text = element_text(size = 11), 
+  theme(text = element_text(size = 13), 
+        axis.text = element_text(size = 12), 
         legend.position = "none",
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
+        axis.text.x = element_blank(),
         panel.grid.minor.y = element_blank())+
-  ylim(c(-.05,1))
+  ylim(c(-.05,1))+
+    facet_wrap(~Species, nrow = 1)+
+  facet_wrap(~Species, nrow = 1)
 plot_emerge_prop
 ```
 
@@ -85,6 +113,7 @@ Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>%
 ```{r}
 lower_cein_abco <- Q50[Q50$Species == "ABCO" & Q50$simspp == "CEIN", "lower"] %>% unlist()
 mean_cein_abco <- Q50[Q50$Species == "ABCO" & Q50$simspp == "CEIN", "mean"] %>% unlist()
+mean_cein_pipo <- Q50[Q50$Species == "PIPO" & Q50$simspp == "CEIN", "mean"] %>% unlist()
 ```
 
 ## Plot
@@ -92,38 +121,41 @@ mean_cein_abco <- Q50[Q50$Species == "ABCO" & Q50$simspp == "CEIN", "mean"] %>% 
 Q50plot <- ggplot()+
  
   theme_bw()+
-  geom_errorbarh(data = Q50, aes(col = simspp, y = interaction(Species, simspp), xmin = lower, xmax = upper), size = 1)+
+  geom_errorbarh(data = Q50, aes(col = simspp, y =  simspp, xmin = lower, xmax = upper), size = 1, height = 0.5)+
   
-   geom_errorbarh(data = Q50 %>% filter(!(Species == "ABCO" & simspp == "CEIN")), aes(y = interaction(Species, simspp), col = simspp, xmin = lower, xmax = upper), size = 1)+
+  geom_errorbarh(data = Q50, aes(y = simspp, col = simspp, xmin = lower, xmax = upper), size = 1, height = 0.5)+
   
-  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN")), aes(col = simspp, y = interaction(Species, simspp), xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
   
-  geom_line(aes(y = 5, x = c(lower_cein_abco, mean_cein_abco)), size = 1, col = "#e7298a")+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = mean_cein_pipo), size = 1, height = 0)+
   
-  geom_point(data = Q50, aes(x = mean, y = interaction(Species, simspp), shape = Species, col = simspp), size = 2, fill = "white", stroke = 1.5)+
-  scale_shape_manual(values = c(16,21))+
+  geom_point(data = Q50, aes(x = mean, y = simspp, col = simspp), size = 1, fill = "white", stroke = 1.5)+
+  #scale_shape_manual(values = c(16,21))+
 
-  geom_linerange(data = Q50 %>% filter((Species == "ABCO" & simspp == "CEIN")), aes(x = lower, ymin = 4.6, ymax= 5.45), size = 1, col = "#e7298a")+
-  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & simspp == "CEIN")), aes(x = lower, ymin = 5.6, ymax= 6.45), size = 1, col = "#e7298a")+
+  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & simspp == "CEIN")), aes(x = lower, ymin = 2.75, ymax= 3.25), size = 1, col = "#e7298a")+
   
-  ylab("Shrub and tree\nspecies combination")+
+  ylab("Shrub\nspecies")+
   scale_color_manual(values = c("#d95f02","#1b9e77",  "#e7298a"))+
   theme(axis.text.y = element_blank(),
         legend.position = "none", 
-        text = element_text(size = 11),
+        text = element_text(size = 13),
+        axis.text = element_text(size = 12),
+        strip.background = element_blank(),
+        strip.text.x = element_blank(),
+        plot.margin = margin(0,0,0,0, "cm"),
         panel.grid.major.y  = element_blank(),
         axis.ticks.y = element_blank())+
   xlim(c(9,max(summary_emerge$Years)))+
-  xlab("Years since fire")
+  xlab("Years since fire")+
+  facet_wrap(~Species, nrow = 1)
 Q50plot
 ```
 
-
 # Save
 ```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_index_withQ50", Sys.Date(), ".jpeg", sep = "")
+filename <- paste("../../results/figures/Simulations/shrub_species_index_withQ50_facet", Sys.Date(), ".jpeg", sep = "")
 
-g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(3,1), widths = 2)
-ggsave(filename, g, width = 4, height = 5)
+g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5,0.5), widths = 4)
+ggsave(filename, g, width = 8, height = 4.2)
 ```
 

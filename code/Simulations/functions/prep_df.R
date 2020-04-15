@@ -24,8 +24,6 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
   
   # Randomly select seedlings with replacement
   
-  #ALERT: NEED TO FIGURE OUT WHY THERE'S NO CHSE IN THE FINAL RESULTS
-  
   # If shrub_method = "welch", then select based on proportions in welch data
   if(shrub_method=="welch"){
     load("../../results/coefficients/welch_ratios.Rdata")

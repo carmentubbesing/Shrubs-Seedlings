@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r}
-name <- "2_2020-03-27_1000_random_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "2_2020-04-14_1000_random_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -232,3 +232,22 @@ filename <- paste("../../results/figures/Simulations/base_density_boxplot", name
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
+# Save summary of proportions for plotting 
+```{r}
+summary_emerge_prop <- dfsimallreps %>% 
+  group_by(Years, rep, Species) %>% 
+  summarize(total_emergents = sum(emerged), total = n()) %>% 
+  ungroup() %>% 
+  group_by(rep, Species) %>% 
+  mutate(initial_n = max(total)) %>% 
+  ungroup() %>% 
+  mutate(prop_emerged = total_emergents/initial_n) %>% 
+  group_by(Years, Species) %>% 
+  summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
+```
+
+
+# Load summary
+```{r}
+save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_est_neut.Rdata")
+```

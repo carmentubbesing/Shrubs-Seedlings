@@ -21,7 +21,7 @@ require(egg)
 
 
 ```{r}
-date <- "2020-03-28"
+date <- "2020-04-13"
 
 namececo <- paste("~/Simulation9_", date, "_1000_welch_empiricalcoef_CECOgrowth.Rdata", sep = "")
 
