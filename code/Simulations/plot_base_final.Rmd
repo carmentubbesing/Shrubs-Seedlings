@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}

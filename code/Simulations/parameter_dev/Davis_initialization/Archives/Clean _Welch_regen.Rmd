@@ -1,0 +1,333 @@
+---
+title: "Clean Welch regen data"
+author: "Carmen"
+date: "3/5/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+```{r, include = F}
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/Davis_initialization/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+require(gridExtra)
+```
+
+# Load data
+
+## Welch data
+```{r}
+tree <- read_excel("~/../Shrubs-Seedlings/data/Data_for_shrub_growth/Welch_data/tree_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+load(file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+```
+
+# Clean Welch tree data 
+
+## Remove unnecessary columns
+```{r}
+tree <- tree %>% 
+  dplyr::select(ID, Regen_Plot, Count_total, Type, Species, num_dead, seed_veg_plant, tallest_age, tallest_ht_cm, tallest_lastyr_cm, Remarks, number_sprouts)
+```
+
+## Combine with previously cleaned Welch data with info on shrubs 
+```{r}
+df <- left_join(df, tree, by = "Regen_Plot") 
+```
+
+```{r}
+welch_all_fires <- df
+```
+
+```{r}
+remove(df)
+```
+
+# Load my data
+
+```{r}
+load(file="~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+me <- df
+remove(df)
+```
+
+# Try to fill in missing CEIN data in my surveys
+
+## See what initial HEIGHTS of CEIN look like compared to other shrub species at years 5-8 after fire, according to Welch data
+```{r}
+welch_all_fires %>% 
+  filter(years_since_fire %in% c(5:8)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
+  group_by(Shrub_species) %>% 
+  mutate(mean_ht = mean(modal_ht_cm)) %>% 
+  ungroup() %>% 
+  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_ht))) %>%
+ggplot()+
+  geom_boxplot(aes(x = Shrub_species, y = modal_ht_cm))+
+  theme_minimal()+
+  geom_point(aes(x = Shrub_species, y = mean_ht), col = "red")
+```
+
+
+# Save CEIN height data for use in simulations, limiting to fires that are 5-8 years old
+```{r}
+welch_CEIN_hts <- welch_all_fires %>% 
+  filter(years_since_fire %in% c(5:8)) %>% 
+  filter(Shrub_species == "CEIN3") %>% 
+  mutate(shrubarea3 = sqrt(Cover*modal_ht_cm)) %>% 
+  dplyr::select(years_since_fire, Regen_Plot, Cover, modal_ht_cm, Fire, Shrub_species) %>% 
+  distinct()
+
+welch_CEIN_hts
+```
+
+```{r}
+save(welch_CEIN_hts, file = "../../../../data/welch_CEIN_hts.Rdata")
+```
+
+  
+## Repeat for CEIN COVER, limiting it to plots where CEIN is dominant and fires that are 5-8 years old
+```{r}
+welch_subset_5.8years <- welch_all_fires %>% 
+  filter(years_since_fire %in% c(5:8)) 
+```
+
+
+```{r}
+welch_5.8years_summary <- welch_subset_5.8years %>% 
+  ungroup() %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
+  group_by(Shrub_species) %>% 
+  mutate(mean_cov = mean(Cover)) %>% 
+  ungroup() %>% 
+  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) 
+
+ggplot(welch_5.8years_summary)+
+  geom_boxplot(aes(x = Shrub_species, y = Cover))+
+  theme_minimal()+
+  geom_point(aes(x = Shrub_species, y = mean_cov), col = "red")+
+  xlab("Shrub species")
+ggsave(file = "../../../../results/figures/Simulations/welch_cein_ceco_ht_compare.png", width = 8)
+```
+
+
+### Make sure there's only one row per plot/Species combo
+```{r}
+welch_5.8years_summary %>% 
+  group_by(Regen_Plot, Species) %>% 
+  filter(n()>1)
+```
+
+Those species don't matter for the species combo breakdown so I'm going to leave it as is. 
+
+# Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire
+
+
+```{r}
+welch_ratios <- welch_5.8years_summary %>% 
+  group_by(Shrub_species, Species) %>% 
+  summarize(plots = n(), trees = sum(na.omit(Count_total))) %>% 
+  filter(Species %in% c("ABCO", "PIPO"))
+welch_ratios
+```
+
+
+# Save these proportions to use in simulation initialization
+
+## Reformat so it's compatible with my shrub data
+
+### Which shrub species are most common?
+```{r}
+welch_ratios %>% 
+  summarize(sum(plots), trees = sum(trees)) %>% 
+  arrange(desc(trees))
+```
+
+### Take out CHFO because it's not in my American River fire, it's not in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it
+```{r}
+welch_ratios <- welch_ratios %>% 
+  filter(Shrub_species != "CHFO")
+```
+
+### Take out CHSE/PIPO combinations because they don't occur in my data
+```{r}
+welch_ratios <- welch_ratios %>% 
+  filter(!(Shrub_species == "CHSE11" & Species == "PIPO"))
+```
+
+
+```{r}
+main_spp <- c("LIDE", "ARPA", "CECO", "CEIN", "CHSE", "Other")
+
+welch_ratios <- welch_ratios %>% 
+  ungroup() %>% 
+  mutate(Shrub_species = case_when(
+    Shrub_species == "CEIN3" ~ "CEIN",
+    Shrub_species == "ARPA/ARVI" ~ "ARPA",
+    Shrub_species == "CHSE11" ~ "CHSE",
+    !Shrub_species %in% main_spp ~ "Other",
+    TRUE ~ as.character(Shrub_species)
+  )) %>% 
+  group_by(Shrub_species, Species) %>% 
+  summarize(trees = sum(trees)) %>% 
+  ungroup() %>% 
+  mutate(prop = trees/sum(trees))
+
+
+welch_ratios
+```
+
+
+```{r}
+save(welch_ratios, file = "../../../../results/coefficients/welch_ratios.Rdata")
+```
+
+
+# EXTRA STUFF THAT'S NOT NECESSARY 
+
+## Summarize MY AMRC data
+
+```{r}
+me_AMRC <- me %>%
+  dplyr::select(Sdlg, Species, Cov1.3, Ht1.3, ShrubSpp03, shrubarea3, BasDia2016.cm, Ht2016.cm_spring, heatload, incidrad, Slope.Deg, Elevation, Fire, Years, Year) %>%
+  filter(Fire == "AMRC") %>% 
+  filter(Year==2016) %>%
+  mutate(Cov_prop = Cov1.3/1200) %>%
+  distinct() %>%
+  droplevels()
+```
+
+
+### Count 
+
+#### Tree species by shrub species
+```{r}
+me_AMRC %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(sum = n()) 
+```
+
+#### Total # trees in my focal spp combinations, I guess?
+```{r}
+me_AMRC %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(sum = n()) %>% 
+  filter(ShrubSpp03 %in% c("ARPA", "CECO", "CEIN")) %>% 
+  ungroup() %>% 
+  summarize(sum(sum))
+```
+
+### Plot species composition in my AMRC data
+```{r}
+me_shrspp_AMRC <- me_AMRC %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  summarize(sum = n()) %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  mutate(prop = sum/sum(sum)) %>% 
+  #filter(ShrubSpp03 %in% c("ARPA", "CECO", "CHSE")) %>% 
+  ggplot()+
+  geom_col(aes(x = Species, y = prop, fill = ShrubSpp03), position = "dodge")+
+  theme_minimal()+
+  ylim(c(0, 0.7))+
+  ggtitle("My AMRC data")
+me_shrspp_AMRC
+```
+
+## Compare shrub species composition in Welch AMRC data to my AMRC data
+
+### Filter welch to American River Complex
+```{r}
+welch_AMRC <- welch_all_fires %>% 
+  filter(Fire == "AMERICAN RIVER")
+```
+
+### Look at the shrubs
+```{r}
+welch_AMRC %>% 
+  group_by(Shrub_species) %>% 
+  count()
+```
+
+### Restructure data so that there's only one row per tree species per regen plot
+
+Choose the dominant shrub species by choosing highest shrub cover, then highest shrubarea
+```{r}
+welch_shrspp <- welch_AMRC %>% 
+  ungroup() %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  dplyr::select(Regen_Plot, Shrub_species, Species, Cover, modal_ht_cm, Fire, Count_total)
+welch_shrspp
+```
+
+### Make sure there's only one row per plot/Species combo
+```{r}
+welch_shrspp %>% 
+  group_by(Regen_Plot, Species) %>% 
+  filter(n()>1)
+```
+
+### See total trees in each species and shrub combo
+```{r}
+welch_shrspp <- welch_shrspp %>% 
+  filter(Shrub_species %in% c("CECO", "ARPA6", "CHSE11", "QUVA", "CEIN3")) %>% 
+  mutate(Shrub_species = ifelse(!Shrub_species %in% c("CECO", "ARPA6", "CEIN3", "CHFO"), "Other", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "ARPA6", "ARPA", Shrub_species)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species == "CEIN3", "CEIN", Shrub_species)) %>% 
+  filter(Species %in% c("PIPO", "ABCO")) %>% 
+  group_by(Species, Shrub_species) %>% 
+  summarize(plots = n(), trees = sum(Count_total)) %>% 
+  ungroup() %>% 
+  mutate(proportion = trees/sum(trees))
+welch_shrspp
+```
+
+### Proportion of fir vs. pine?
+```{r}
+welch_shrspp %>% 
+  ungroup() %>% 
+  group_by(Species) %>% 
+  summarize(total = sum(trees)) %>% 
+  ungroup() %>% 
+  mutate(prop = round(total/sum(total), 2))
+```
+
+
+## Compare shrub height between Welch AMRC data and my AMRC data
+```{r}
+welch_shr_ht <- ggplot(welch_AMRC %>% filter(Shrub_species %in% c("ARPA6", "CECO", "CHSE11")))+
+  geom_boxplot(aes(x = Shrub_species, y = modal_ht_cm, fill = Shrub_species))+
+  theme_minimal()+
+  ylim(15, 125)+
+  ggtitle("Welch data at 5 years\nSHRUB HEIGHT")+
+  theme(legend.position = "none") 
+welch_shr_ht
+```
+
+```{r}
+me_shr_ht <- ggplot(me_AMRC %>% filter(ShrubSpp03 %in% c("ARPA", "CECO", "CHSE")))+
+  geom_boxplot(aes(x = ShrubSpp03, y = Ht1.3, fill = ShrubSpp03))+
+  theme_minimal()+
+  ylim(15, 125)+
+  ggtitle("My data at 8 years\nSHRUB HEIGHT")+
+  theme(legend.position = "none") 
+me_shr_ht
+```
+
+```{r}
+grid.arrange(welch_shr_ht, me_shr_ht, ncol = 2)
+```

@@ -16,7 +16,7 @@ require(effects)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
@@ -389,6 +389,13 @@ df %>%
 
 
 # Consolidate shrub species into fewer categories 
+
+## List all shrubs now
+```{r}
+summary(as.factor(df$ShrubSpp03))
+```
+
+
 ```{r}
 df %>% 
   group_by(Species, ShrubSpp03) %>% 
@@ -512,7 +519,9 @@ df <- droplevels(df)
 # Convert shrub area to sqrt
 ```{r}
 df <- df %>% 
-  mutate(sqrt_shrubarea3 = sqrt(shrubarea3))
+  mutate(sqrt_shrubarea3 = sqrt(shrubarea3)) %>% 
+  mutate(sqrt_shrubarea2 = sqrt(shrubarea2)) %>% 
+  mutate(sqrt_shrubarea1 = sqrt(shrubarea1))
 ```
 
 # Take out seedling/year combos with 0 growth
@@ -524,6 +533,7 @@ df <- df %>%
 # Save df
 ```{r}
 save(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+write.csv(df, file = "../../compiled_data/fire_footprints/master_seedlings_vert.csv", row.names = F)
 ```
 
 # Print final seedlings 

@@ -378,7 +378,7 @@ summary {
 
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
-<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
+<pre class="r"><code>setwd(&quot;~/../Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
 load(file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)
 load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata&quot;)</code></pre>
 </div>
@@ -389,11 +389,9 @@ load(file = &quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rda
 <pre class="r"><code>df &lt;- df %&gt;% 
   ungroup() %&gt;% 
   mutate(Sdlg = toupper(Sdlg))</code></pre>
-</div>
-<div id="take-out-variables-i-dont-need" class="section level2">
-<h2>Take out variables I don’t need</h2>
 <pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3, LAI.53, DIFN.53, ref)</code></pre>
+  ungroup() %&gt;% 
+  mutate(Sdlg = toupper(Sdlg))</code></pre>
 <pre class="r"><code>nrow(df)</code></pre>
 <pre><code>## [1] 274</code></pre>
 <pre class="r"><code>df &lt;- left_join(df, shr_by_sdlg)</code></pre>
@@ -423,6 +421,7 @@ summary(as.factor(df$Years))</code></pre>
 <pre class="r"><code>df %&gt;% 
   group_by(Species) %&gt;% 
   summarize(n())</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 5 x 2
 ##   Species `n()`
 ##   &lt;chr&gt;   &lt;int&gt;

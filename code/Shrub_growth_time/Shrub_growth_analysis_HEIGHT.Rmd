@@ -14,7 +14,7 @@ require(effects)
 require(mgcv)
 require(gridExtra)
 require(egg)
-load(file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
+load(file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
 ```
 
 # Model for each shrub species
@@ -367,15 +367,16 @@ OTHER_plot
 grid.arrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot)
 final_plot <- ggarrange(ceco_plot, arpa_plot, chse_plot, cein_plot, OTHER_plot, nrow = 3, ncol = 2)
 final_plot
-ggsave("~/Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_fig_final.png", final_plot, width = 6, height = 8)
+ggsave("~/../Shrubs-Seedlings/results/figures/Shrub_growth_time/gam_fig_final.png", final_plot, width = 6, height = 8)
 ```
 
 # Save the models to use in the simulation
 ```{r}
-save(gamCECO, file = "~/Shrubs-Seedlings/results/coefficients/gamCECO.Rdata")
-save(gamARPA, file = "~/Shrubs-Seedlings/results/coefficients/gamARPA.Rdata")
-save(gamCEIN, file = "~/Shrubs-Seedlings/results/coefficients/gamCEIN.Rdata")
-save(gamCHSE, file = "~/Shrubs-Seedlings/results/coefficients/gamCHSE.Rdata")
-save(gamOTHER, file = "~/Shrubs-Seedlings/results/coefficients/gamOTHER.Rdata")
+setwd("~/../Shrubs-Seedlings/results/coefficients")
+save(gamCECO, file = "gamCECO.Rdata")
+save(gamARPA, file = "gamARPA.Rdata")
+save(gamCEIN, file = "gamCEIN.Rdata")
+save(gamCHSE, file = "gamCHSE.Rdata")
+save(gamOTHER, file = "gamOTHER.Rdata")
 ```
 

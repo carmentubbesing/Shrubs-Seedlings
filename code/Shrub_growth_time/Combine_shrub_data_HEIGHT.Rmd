@@ -9,26 +9,29 @@ output:
 
 ```{r, include=FALSE}
 require(tidyverse)
+require(viridis)
+require(pals)
 ```
 
 # Load data
 
 ## Data from others
 ```{r}
-load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Latimer_df.Rdata")
+setwd("~/../Shrubs-Seedlings/compiled_data/shrub_growth")
+load("Latimer_df.Rdata")
 latimer <- df
 remove(df)
-load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+load("Young_df.Rdata")
 young <- df
 remove(df)
-load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+load("Welch_df.Rdata")
 welch <- df
 remove(df)
 ```
 
 ## Data from my fire footprints
 ```{r}
-load("~/Shrubs-Seedlings/compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
+load("~/../Shrubs-Seedlings/compiled_data/shrub_growth/My_FireFootprint_data.Rdata")
 me <- ht_by_spp
 ```
 
@@ -99,6 +102,31 @@ nrow(latimer) + nrow(welch) + nrow(young) == nrow(df)
 summary(as.factor(df$df_source))
 ```
 
+## Add data from my fire footprints
+```{r}
+me <- me %>% 
+  dplyr::select(Fire, years_since_fire, Year_meas, Shrub_species, modal_ht_cm, df_source)
+```
+
+```{r}
+nrow_pre <- nrow(df) 
+df <- full_join(df, me)
+nrow(df) == nrow_pre + nrow(me)
+```
+
+## Sync species names
+```{r}
+summary(as.factor(df$Shrub_species))
+
+df <- df %>% 
+  mutate(Shrub_species = 
+           case_when(Shrub_species == "ARPA" ~ "ARPA6",
+                     Shrub_species == "CEIN" ~ "CEIN3",
+                     Shrub_species == "CHSE" ~ "CHSE11",
+                     TRUE ~ Shrub_species))
+```
+
+
 # Clean
 
 ## Sync shrub species names
@@ -142,57 +170,76 @@ young %>%
 
 All good!
 
-# Plot for all species together
+
+## Look at all the fires and their ages
 ```{r}
-ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point()+
-  geom_smooth(method = "loess", span = 1)
+df %>% 
+  group_by(Fire, fire_year) %>% 
+  count() %>% arrange(Fire) %>% 
+  print(n = 38)
 ```
 
-## Sooo I should take out the oldest fire, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
+
+## Clean up fire names and ages
+
+### Fix 2007 fires
+```{r}
+df %>% 
+  filter(fire_year == 2007) %>% 
+  group_by(Fire, fire_year, df_source) %>% 
+  count() %>% arrange(Fire)
+```
+
 ```{r}
 df <- df %>% 
-  filter(years_since_fire<24)
+  mutate(Fire = case_when(
+    Fire %in% c("ANTELOPE", "MOONLIGHT", "MoonAnt") ~ "MOONANT",
+    TRUE ~ Fire
+  ))
 ```
 
-# Plot for all species together again
-```{r}
-ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point()+
-  geom_smooth(method = "loess", span = 1)
-```
-
-# Add data from fire footprints
-```{r}
-me <- me %>% 
-  dplyr::select(Fire, years_since_fire, Year_meas, Shrub_species, modal_ht_cm, df_source)
-```
+### Fix my fires
 
 ```{r}
-nrow_pre <- nrow(df) 
-df <- full_join(df, me)
-nrow(df) == nrow_pre + nrow(me)
-```
-
-# Sync species names
-```{r}
-summary(as.factor(df$Shrub_species))
-
 df <- df %>% 
-  mutate(Shrub_species = 
-           case_when(Shrub_species == "ARPA" ~ "ARPA6",
-                     Shrub_species == "CEIN" ~ "CEIN3",
-                     Shrub_species == "CHSE" ~ "CHSE11",
-                     TRUE ~ Shrub_species))
+  mutate(Fire = case_when(
+    Fire %in% c("AMRC", "AmRiv") ~ "AMERICAN RIVER",
+    Fire == "CLVD" ~ "CLEVELAND",
+    Fire == "FRDS" ~ "FREDS",
+    Fire == "PLKN" ~ "PILLIKEN",
+    Fire == "WRTS" ~ "WRIGHTS",
+    TRUE ~ Fire
+  ))
+```
+
+### Make all caps
+```{r}
+df <- df %>% 
+  mutate(Fire = toupper(Fire))
 ```
 
 
-# Plot for all species together again
+## Remove fires not in forest areas
+```{r}
+df <- df %>% 
+  filter(Fire != "ZACA")
+```
+
+
+# Plot height for all species together
 ```{r}
 ggplot(df, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point()+
+  geom_point(alpha = .7)+
   geom_smooth(method = "loess", span = 1)
 ```
+
+## Sooo I should take out the oldest fire from Davis, Cottonwood, which Derek mentioned is at the sagebrush ecotone so not a good comparison
+```{r}
+df <- df %>%
+  filter(Fire != "CTNWD")
+```
+
+
 
 # Plot just for ARVI and ARPA
 ```{r}
@@ -268,6 +315,14 @@ ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
 
 ```
 
+# List fires and their ages
+```{r}
+df %>% 
+  group_by(Fire, fire_year) %>% 
+  count() %>% 
+  print(n= 33)
+```
+
 
 # SUPPLEMENT FIG: Plot for all species that are in my data 
 
@@ -289,11 +344,17 @@ df_plot <- droplevels(df_plot)
 
 ```{r}
 ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point(aes(shape = df_source, col = Fire))+
+  geom_point(aes(fill = Fire, col = Fire), alpha = .5, shape = 21)+
+  scale_color_manual(values = as.vector(polychrome(n = 33)[4:34]))+
+  scale_fill_manual(values = as.vector(polychrome(n = 33)[4:34]))+
   theme_minimal()+
+  theme(
+    legend.position = "bottom"
+  )
   ylab("Shrub height (cm)")+
   xlab("Years since fire")+
   guides(color = guide_legend(ncol = 3))
+ggsave(file = "~/../Shrubs-Seedlings/results/figures/Shrub_growth_time/all_fires_supp.png", width = 8, height = 6)
 ```
 
 
@@ -337,7 +398,7 @@ ggplot(df_plot %>% filter(Shrub_species == "CHSE11"), aes(x = years_since_fire, 
 
 # Save combined data
 ```{r}
-save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
+save(df, file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/all_combined_HEIGHT.Rdata")
 ```
 
 # Find rows with NA shrub ht

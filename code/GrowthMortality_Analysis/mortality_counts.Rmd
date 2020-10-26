@@ -101,3 +101,9 @@ area <- pi*1
 n_plots*area
 ```
 
+# Save data
+```{r}
+write.csv(df, file = "../../MORPHO data/mort_counts.csv", row.names = F)
+```
+
+

@@ -17,7 +17,7 @@ library(effects)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/GrowthMortality_Analysis/")
+setwd("~/../../Shrubs-Seedlings/code/GrowthMortality_Analysis/")
 load(file = "../../compiled_data/growth_mortality/df_detailed_clean.Rdata")
 load("../../results/data/GrowthMortality/died2017_abco.Rdata")
 load("../../results/data/GrowthMortality/died2016_abco.Rdata")
@@ -211,4 +211,5 @@ test
 # Save vertical growth df
 ```{r}
 save(df, file = "../../compiled_data/growth_mortality/df_vert.Rdata")
+write.csv(df, file = "../../compiled_data/growth_mortality/df_vert.csv", row.names = F)
 ```

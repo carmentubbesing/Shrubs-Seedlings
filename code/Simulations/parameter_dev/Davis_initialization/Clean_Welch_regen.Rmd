@@ -1,0 +1,79 @@
+---
+title: "Clean Welch regen data"
+author: "Carmen"
+date: "3/5/2020"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+```{r, include = F}
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/Davis_initialization/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+require(gridExtra)
+```
+
+# Load data
+
+## My data
+```{r}
+load(file="~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+me <- df
+remove(df)
+```
+
+## Welch data
+```{r}
+tree <- read_excel("~/../Shrubs-Seedlings/data/Data_for_shrub_growth/Welch_data/tree_regen_RegenDatabase_1_13_16_updatedDates.xlsx") 
+load(file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+```
+
+# Clean Welch tree data 
+
+## Remove unnecessary columns
+```{r}
+tree <- tree %>% 
+  dplyr::select(ID, Regen_Plot, Count_total, Type, Species, num_dead, seed_veg_plant, tallest_age, tallest_ht_cm, tallest_lastyr_cm, Remarks, number_sprouts)
+```
+
+## Combine with previously cleaned Welch data with info on shrubs 
+```{r}
+df <- left_join(df, tree, by = "Regen_Plot") 
+```
+
+```{r}
+welch_all_fires <- df
+```
+
+```{r}
+remove(df)
+```
+
+## Remove Zaca fire
+```{r}
+welch_all_fires <- welch_all_fires %>% 
+  filter(Fire != "ZACA")
+```
+
+## Find plots with no regen to make sure they're included 
+```{r}
+welch_all_fires <- welch_all_fires %>% 
+  mutate(Count_total = ifelse(is.na(Count_total), 0, Count_total))
+```
+
+
+## Filter to fires that are 5-8 years old
+```{r}
+welch_subset_5.8years <- welch_all_fires %>% 
+  filter(years_since_fire %in% c(5:8)) 
+```
+
+
+# Save
+```{r}
+save(welch_subset_5.8years, file = "~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs.Rdata")
+```
+

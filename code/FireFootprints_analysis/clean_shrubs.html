@@ -381,51 +381,33 @@ summary {
 </ul></li>
 <li><a href="#aggregate-shrub-data-by-seedling">Aggregate shrub data by seedling</a><ul>
 <li><a href="#clean-up-segment-names">Clean up segment names</a></li>
+</ul></li>
+<li><a href="#merge-fire-with-long-shrub-data-to-see-how-often-cein-was-a-minor-component-in-amcr">Merge fire with long shrub data to see how often CEIN was a minor component in AMCR</a><ul>
+<li><a href="#take-a-look-at-amcr-decomposed-shrub-data">Take a look at AMCR decomposed shrub data</a></li>
 <li><a href="#cover">Cover</a><ul>
 <li><a href="#summarize-shrub-cover-by-segment">Summarize shrub cover by segment</a></li>
 <li><a href="#replace-na-shrub-cover-with-0">Replace NA shrub cover with 0</a></li>
+<li><a href="#find-seedlings-with-0-cover-to-inform-height">Find seedlings with 0 cover to inform height</a></li>
 </ul></li>
 <li><a href="#height">Height</a><ul>
 <li><a href="#summarize-height-by-segment">Summarize height by segment</a></li>
 <li><a href="#replace-na-height-with-0">Replace NA height with 0</a></li>
+<li><a href="#add-in-zeros-where-there-were-no-shrubs-measured-in-certain-segments-and-it-wasnt-captured-by-the-replace_na-above">Add in zeros where there were no shrubs measured in certain segments and it wasn’t captured by the replace_na above</a></li>
 </ul></li>
 <li><a href="#combine-cover-and-ht-values-into-one-data-frame">Combine cover and ht values into one data frame</a></li>
 <li><a href="#shrub-species-0-3-m">Shrub species 0-3 m</a></li>
 </ul></li>
 <li><a href="#combine-shrub-data-together">Combine shrub data together</a><ul>
-<li><a href="#combine-segments-into-0-3-m">Combine segments into 0-3 m</a><ul>
-<li><a href="#delete-unnecessary-columns">Delete unnecessary columns</a></li>
-</ul></li>
-</ul></li>
-<li><a href="#light-files-and-difn">Light files and DIFN</a><ul>
-<li><a href="#merge-in-difn-and-light-file-data-from-seedling-df">Merge in DIFN and Light File data from seedling df</a></li>
-<li><a href="#mark-the-measurements-without-seedling-as-ref-for-reference">Mark the measurements without seedling as “ref” for reference</a></li>
-</ul></li>
-<li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a><ul>
-<li><a href="#add-light-files-for-non-seedling-shrub-locations">Add light files for non-seedling shrub locations</a></li>
-</ul></li>
-<li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a><ul>
-<li><a href="#load-in-difn-data-using-only-the-first-4-gaps-down-to-53-degrees">Load in DIFN data using only the first 4 gaps (down to 53 degrees)</a></li>
-<li><a href="#delete-repeat-row-that-only-has-data-in-one-of-the-rows">Delete repeat row that only has data in one of the rows</a></li>
-<li><a href="#join-difn.53-data-with-shrub-data">Join DIFN.53 data with shrub data</a></li>
-<li><a href="#check-for-duplicated-seedlings">Check for duplicated seedlings</a></li>
-<li><a href="#find-which-seedlings-have-difn.all-but-lack-difn.53">Find which seedlings have DIFN.all but lack DIFN.53</a></li>
-<li><a href="#fill-in-a-couple-seedlings-with-funky-difn-situations">Fill in a couple seedlings with funky DIFN situations</a></li>
-<li><a href="#check-again">Check again</a></li>
+<li><a href="#combine-segments-into-0-1-0-2-and0-3-m">Combine segments into 0-1, 0-2, and0-3 m</a></li>
 </ul></li>
 <li><a href="#list-seedlings">List seedlings</a></li>
-<li><a href="#figure-out-where-the-arvi-is">Figure out where the ARVI is</a></li>
-<li><a href="#save-for-difn">Save for DIFN</a><ul>
-<li><a href="#take-out-trees-that-arent-abco-or-pipo">Take out trees that aren’t ABCO or PIPO</a></li>
-</ul></li>
 <li><a href="#save">Save</a></li>
 </ul>
 </div>
 
 <div id="load-data" class="section level1">
 <h1>Load data</h1>
-<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/code/FireFootprints_analysis/&quot;)
-shr &lt;- read.csv(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv&quot;)
+<pre class="r"><code>shr &lt;- read.csv(&quot;~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv&quot;)
 load(&quot;../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata&quot;)</code></pre>
 </div>
 <div id="basic-shrub-cleaning" class="section level1">
@@ -449,12 +431,10 @@ shr$Ht.cm[is.na(shr$Ht.cm)] &lt;- 0</code></pre>
 <div id="take-out-conifer-since-its-not-a-shrub" class="section level2">
 <h2>Take out “conifer” since it’s not a shrub</h2>
 <pre class="r"><code>summary(as.factor(shr$ShrubSpp))</code></pre>
-<pre><code>##            APAN    ARNE    ARPA    ARVI    CECO    CEIN    CEPR    CHFO    CHSE 
-##       2       1      47     903      41    1655     349      51     267     275 
-##    CHUM conifer    CONU    LIDE    none   other     pea    PREM    QUKA    QUKE 
-##       3     254      10     110     263     142       0     164       1      14 
-##    QUVA   Ribes    RIRO    SYMO  willow  Willow 
-##      66       3      21      28      75       2</code></pre>
+<pre><code>##            APAN    ARNE    ARPA    ARVI    CECO    CEIN    CEPR    CHFO    CHSE    CHUM conifer    CONU    LIDE    none   other    PREM    QUKA    QUKE    QUVA 
+##       2       1      47     903      41    1655     349      51     267     275       3     254      10     110     263     142     164       1      14      66 
+##   Ribes    RIRO    SYMO  willow  Willow 
+##       3      21      28      75       2</code></pre>
 <pre class="r"><code>shr &lt;- shr %&gt;% 
   filter(!(ShrubSpp == &quot;conifer&quot;))</code></pre>
 </div>
@@ -482,6 +462,21 @@ summary(as.factor(shr$Seg))</code></pre>
 <pre><code>##    1    2    3 
 ## 1517 1542 1434</code></pre>
 </div>
+</div>
+<div id="merge-fire-with-long-shrub-data-to-see-how-often-cein-was-a-minor-component-in-amcr" class="section level1">
+<h1>Merge fire with long shrub data to see how often CEIN was a minor component in AMCR</h1>
+<pre class="r"><code>fire &lt;- df %&gt;% 
+  dplyr::select(Fire, Sdlg)
+shr_fire &lt;- left_join(shr, fire)</code></pre>
+<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
+<div id="take-a-look-at-amcr-decomposed-shrub-data" class="section level2">
+<h2>Take a look at AMCR decomposed shrub data</h2>
+<pre class="r"><code>shr_fire %&gt;% 
+  filter(Fire == &quot;AMRC&quot;) %&gt;% 
+  ggplot()+
+  geom_boxplot(aes(x = ShrubSpp, y = Cover.cm))</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABUAAAAPACAMAAADDuCPrAAABelBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYzMzM6AAA6OgA6Ojo6OmY6OpA6ZmY6ZpA6ZrY6kJA6kLY6kNtNTU1NTW5NTY5Nbm5Nbo5NbqtNjshmAABmADpmOgBmOjpmZjpmZmZmZpBmkGZmkJBmkLZmkNtmtttmtv9uTU1uTY5ubk1ubm5ubo5ujo5ujqtujshuq6tuq+SOTU2Obk2Obm6Ojk2Ojm6Ojo6Oq8iOyOSOyP+QOgCQOjqQZjqQZmaQkLaQtraQttuQ2/+rbk2rjm6rq8iryMiryOSr5Mir5P+2ZgC2Zjq2kDq2kGa2tpC2tra2ttu229u22/+2///Ijk3Ijm7Iq27Iq47Iq6vIyKvI5KvI5OTI5P/I/8jI///bkDrbkGbbtmbbtpDbtrbb27bb29vb2//b///kq27kq47kyI7kyKvk5Kvk5Mjk5P/k/+Tk///r6+v/tmb/yI7/25D/27b/29v/5Kv/5Mj/5OT//7b//8j//9v//+T////RIGEhAAAACXBIWXMAAB2HAAAdhwGP5fFlAAAgAElEQVR4nO2d/YMkV3WeW6CPRUQQ0yu0Ugg4xmiCsWStiGOkgINXjoOAYMNgx44i2YDFRgSyaCR20e7O/57uul093aere86pe+rWrVPP84N2Z+dWvfe9fetRf03P4hIAAHqxGHsCAABTBYECAPQEgQIA9ASBAgD0BIECAPQEgQIA9ASBAgD0BIECAPQEgQIA9ASBAgD0BIECAPQEgQIA9ASBAgD0pJBAf9ufrINrCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghCHSsEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRWCQMcKocgsQygSKwSBjhVCkVmGUCRWCAIdK4QiswyhSKwQBDpWCEVmGUKRWCEIdKwQiswyhCKxQhDoWCEUmWUIRWKFINCxQigyyxCKxApBoGOFUGSWIRSJFYJAxwqhyCxDKBIrBIGOFUKRWYZQJFYIAh0rhCKzDKFIrBAEOlYIRWYZQpFYIQh0rBCKzDKEIrFCEOhYIRSZZQhFYoUg0LFCKDLLEIrECkGgY4VQZJYhFIkVgkDHCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghCHSsEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRXiJNCHt1/c/O3xW2fL5SvvdHyBQItnUKS6EIrECnES6PnyxdakyzXPv3vwBQItn0GR6kIoEivERaCPz5etQM+Xt965fHBneeue/AKBls+gSHUhJTKeWTF4SJhbZHyB/ur1ZSvQ+2fN3c2Ht29+T3yBQEfIoEh1IQUynnmmhEHD3CKjC/TucvnqBxuB3t3++Zr4AoGOkEGR6kKGz3jmmSIGDXOLjC/QF/7m8mLjyvPlG82fzdd7XyDQETIoUl3I4BnPPFPGoGFukdEFuuPIx3c2j9bvn926t/dFGtbetD1ToDTP+FEio0jIEOvsyGQmGhIE2lBihvWvgq/bjtV1zSgSMtRq+zCVedaD50r5CfT5d/e+2B8+1v1tLQVexCySkbtajlvraF3P7VsiJPN24yF8dSFZKyV2x8D3QFuyJpxxsBYEmkCghgwdvIhUXQgCdQeBJhCoIUMHb2OqLqQigUZ5FR6BJhCoIUMHb6SvLqQmgbZv+dy8D/S1vX+8ImvCGQdrQaAJBGrI0BHGO2GKVCXQID+JhEATCNSQoSOMd8IUqUqgj+8sX9j++PveF3tkTTjjYC0INIFADRk6wngnTJGqBHr5YPcDmB5M9dOYEGgCgRoydITxTpgidQn08sFbK2W+cq/jix2yJpxxsBYEmkCghgwdYbwTpkgVAjWSNeGMg7Ug0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNIFBDho4w3glTBIH6g0ATCNSQoSOMd8IUQaD+INAEAjVk6AjjnTBFEKg/CDSBQA0ZOsJ4J0wRBOoPAk0gUEOGjjDeCVMEgfqDQBMI1JChI4x3whRBoP4g0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNIFBDho4w3glTBIH6g0ATCNSQoSOMd8IUQaD+INAEAjVk6AjjnTBFEKg/CDSBQA0ZOsJ4J0wRBOoPAk0gUEOGjjDeCVMEgfqDQBMI1JChI4x3whRBoP4g0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNIFBDho4w3glTBIH6g0ATCNSQoSOMd8IUQaD+INAEAjVk6AjjnTBFEKg/CDSBQA0ZOsJ4J0wRBOoPAk0gUEOGjjDeCVMEgfqDQBMI1JChI4x3whRBoP4g0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNIFBDho4w3glTBIH6g0ATCNSQoSOMd8IUQaD+INAEAjVk6AjjnTBFEKg/CDSBQA0ZOsJ4J0wRBOoPAk0gUEOGjjDeCVMEgfqDQBMI1JChI4x3whRBoP4g0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNIFBDho4w3glTBIH6g0ATCNSQoSOMd8IUQaD+INAEAjVk6AjjnTBFEKg/CDSBQA0ZOsJ4J0wRBOoPAk0gUEOGjjDeCVMEgfqDQBMI1JChI4x3whRBoP4g0AQCNWToCOOdMEUQqD8INIFADRk6wngnTBEE6g8CTSBQQ4aOMN4JUwSB+oNAEwjUkKEjjHfCFEGg/iDQBAI1ZOgI450wRRCoPwg0gUANGTrCeCdMEQTqDwJNPOPJ0Qy/fYVAy4WEKYJA/UGgCQRqyNARxjthiiBQfxBoAoEaMnSE8c4U9q8OBOoOAk0gUEOGDgRqof6rXewOBNqAQBMI1JChA4FaqP9qF7sDgTYg0ASvwhsydCBQC/Vf7WJ3INAGBJpAoIYMHQjUQv1Xu9gdCLQBgSYQqCFDBwK1UP/VLnYHAm1AoAkEasjQgUAt1H+1i92BQBsQaAKBGjJ0IFAL9V/tYncg0AYEmkCghgwdCNRC/Ve72B0ItAGBJhCoIUMHArVQ/9UudgcCbUCgCQRqyNCBQC3Uf7WL3YFAGxBoAoEaMnQgUAv1X+1idyDQBgSaQKCGDB0I1EL9V7vYHQi0AYEmEKghQwcCtVD/1S52BwJtQKAJBGrI0IFALdR/tYvdgUAbEGgCgRoydCBQC/Vf7WJ3INAGBJpAoIYMHQjUQv1Xu9gdCLQBgSYQqCFDBwK1UP/VLnYHAm1AoAkEasjQgUAt1H+1i92BQBsQaAKBGjJ0IFALuUWG/zxwsTsKCbR2PC/qMTNycfXO8BlFQqZwu5VgCuvg6E9lXe6BNnAPNME9UEOGDu6BWqh//4phCLQBgSYQqCFDBwK1UP/+FcMQaAMCTSBQQ4YOBGqh/v0rhiHQBgSaQKCGDB0I1EL9+1cMQ6ANCDSBQA0ZOhCohfr3rxiGQBsQaAKBGjJ0IFAL9e9fMQyBNiDQBAI1ZOhAoBbq379iGAJtQKAJBGrI0IFALdS/f8UwBNqAQBMI1JChA4FaqH//imEItAGBJhCoIUMHArVQ//4VwxBoAwJNIFBDhg4EaqH+/SuGIdAGBJpAoIYMHQjUQv37VwxDoA0INIFADRk6EKiF+vevGIZAGxBoAoEaMnQgUAv1718xDIE2INAEAjVk6ECgFurfv2IYAm1AoAkEasjQgUAt1L9/xTAE2oBAEwjUkKEDgVqof/+KYQi0AYEmEKghQwcCtVD//hXDEGgDAk0gUEOGDgRqof79K4Yh0AYEmkCghgwdCNRC/ftXDEOgDQg0gUANGToQqIX6968YhkAbEGgCgRoydCBQC/XvXzEMgTYg0AQCNWToQKAW6t+/YhgCbUCgCQRqyNCBQC3Uv3/FMATagEATCNSQoQOBWqh//4phCLQBgSYQqCFDBwK1UP/+FcMQaAMCTSBQQ4YOBGqh/v0rhiHQBgSaQKCGDB0I1EL9+1cMQ6ANCDSBQA0ZOhCohfr3rxiGQBsQaAKBGjJ0IFAL9e9fMQyBNiDQBAI1ZOhAoBbq379iGAJtQKAJBGrI0IFALdS/f8UwBNqAQBMI1JChA4FaqH//imEItAGBJhCoIUMHArVQ//4VwxBoAwJNIFBDhg4EaqH+/SuGIdAGBJpAoIYMHQjUQv37VwxDoA0INIFADRk6EKiF+vevGIZAGxBoAoEaMnRMQqDP+DFqEQTaNeGMg7Ug0AQCNWTomIJAHf057moh0K4JZxysBYEmEKghQ8c0BBpktRBo14QzDtaCQBMI1JChA4HGKiKGIdAGBJpAoIYMHQg0VhExDIE2INAEAjVk6ECgsYqIYQi0AYEmEKghQwcCjVVEDEOgDQg0gUANGToQaKwiYhgCbUCgCQRqyNCBQGMVEcMQaAMCTSBQQ4YOBBqriBiGQBsQaAKBGjJ0INBYRcQwBNqAQBMI1JChA4HGKiKGIdAGBJpAoIYMHQg0VhExDIE2INAEAjVk6ECgsYqIYQi0AYEmEKghQwcCjVVEDEOgDQg0gUANGToQaKwiYhgCbUCgCQRqyNCBQGMVEcMQaAMCTSBQQ4YOBBqriBiGQBsQaKKMQAt8fG8YJRQJCbNaCLRrwhkHa8m82QsYQUn9GxCBDsAEbvYoRcQwBNqQd7MXUYKO+jcgAh2A7DsAQVYLgXZNOONgLbkC9Vup8BsQgQ4AAi1WRAxDoA0I1L0JAk1MYP/GWS0E2jXhjIO1IFD3JrwKn5jA/o2zWgi0a8IZB2tBoO5NEGhiAvs3zmoh0K4JZxysBYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNaCLRrwhkHa0Gg7k0QaGIC+zfOaiHQrglnHKwFgbo3QaCJCezfOKuFQLsmnHGwFgTq3gSBJiawf+OsFgLtmnDGwVoQqHsTBJqYwP6Ns1oItGvCGQdrQaDuTRBoYgL7N85qIdCuCWccrAWBujdBoIkJ7N84q4VAuyaccbAWBOreBIEmJrB/46wWAu2acMbBWhCoexMEmpjA/o2zWgi0a8IZB2tBoO5NEGhiAvs3zmoh0K4JZxysBYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNaCLRrwhkHa0Gg7k0QaGIC+zfOaiHQrglnHKwFgbo3QaCJCezfOKuFQLsmnHGwFgTq3gSBJiawf+OsFgLtmnDGwVoQqHsTBJqYwP6Ns1oItGvCGQdrQaDuTRBoYgL7N85qIdCuCWccrAWBujdBoIkJ7N84q4VAuyaccbAWBOreBIEmJrB/46wWAu2acMbBWhCoexMEmpjA/o2zWgi0a8IZB2tBoO5NEGhiAvs3zmoh0K4JZxysBYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNakxPo4zvLluffvbx8ePvq73tkrMkENiACtRRBoP4g0GJFxDBfgd4/Q6CZhN+ACHQAEGixImKY00P4+2c3v7f642L5Yvf3M9ZkAhsQgVqKIFB/EGixImKYj0BXd0RfW/95nv44JGNNJrABEailCAL1B4EWKyKG+Qj07vLWvcu1R5v7oR1krMkENiACtRRBoP4g0GJFxDAXgT68vXwj/XnrH19fLr/xzsGIjDWZwAZEoJYiCNQfBFqsiBjmItC7m6c+29eQkk7TLBIeKUOSN0NfJfida9T0o6cqslolilRE5hzDrFb5Ih4CfXh788j9Yrl89d7l799abh/JI9AxzzVqOgItCAJ1Ty8o0Iv0DOjVPdHD15Iy7pVP4CEQD+EtRXgI7w8P4YsVEcMcBPr4ztVD9sTWqFsy1mQCGxCBWoogUH8QaLEiYpiDQO+fyffNH/5LxppMYAMiUEsRBOoPAi1WRAxzEOjhu+fvn3EPtC/hNyACHQAEWqyIGOYg0O0zntvH8odKzViTCWxABGopgkD9QaDFiohh+QLdeff8eRLn4ZOiCFRN+A2IQAcAgRYrIoblC/Th7e0TnvfP1m9jevD6wWtICFRN+A2IQAcAgRYrIoblC3T3Cc+7mw9jOvhRpIw1mcAGRKCWIgjUHwRarIgYli/QvfcsPfjmcnnzVXn/E4HqCb8BEegAINBiRcQwPpG+AYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNaCLRrwhkHa0Gg7k0QaGIC+zfOaiHQrglnHKwFgbo3QaCJCezfOKuFQLsmnHGwFgTq3gSBJiawf+OsFgLtmnDGwVoQqHsTBJqYwP6Ns1oItGvCGQdrQaDuTRBoYgL7N85qIdCuCWccrAWBujdBoIkJ7N84q4VAuyaccbAWBOreBIEmJrB/46wWAu2acMbBWhCoexMEmpjA/o2zWgi0a8IZB2tBoO5NEGhiAvs3zmoh0K4JZxysBYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNaCLRrwhkHa0Gg7k0QaGIC+zfOaiHQrglnHKwFgbo3QaCJCezfOKuFQLsmnHGwFgTq3gSBJiawf+OsFgLtmnDGwVoQqHsTBJqYwP6Ns1oItGvCGQdrQaDuTRBoYgL7N85qIdCuCWccrAWBujdBoIkJ7N84q4VAuyaccbAWBOreBIEmJrB/46wWAu2acMbBWhCoexMEmpjA/o2zWgi0a8IZB2tBoO5NEGhiAvs3zmoh0K4JZxysBYG6N0GgiQns3zirhUC7JpxxsBYE6t4EgSYmsH/jrBYC7ZpwxsFaEKh7EwSamMD+jbNaCLRrwhkHa0Gg7k0QaGIC+zfOaiHQrglnHKwFgbo3GVugjmQt6QT2bxmBlrhFEGjXhDMO/q3r7XY8wm+lEKhTSIHbXQUC3YYMf5Mg0K4JZxw8uZsNgXqFDH+z60Cg25DhbxIE2jXhjIMDKUEHq9WGDH+16kCg25DhbxEE2jXhjIMDKUEHq9WGFLhcVSDQbcjwtwgC7ZpwxsGBlKCD1SpXRAcCtVD//hXDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDEKgeBOpSBIH6g0CLFRHDCgl0PFyXdPgM13ONmj7uapUoUhGZcwyzWuWLcA9UD/dAXYpwD9Qf7oEWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGIVA9CNSlCAL1B4EWKyKGHRfoz3+05W9/mTubjDWpf0kRqKkIAvUHgRYrIoYdE+g/31hc8amf5M4mY03qX1IEaiqCQP1BoMWKiGFHBPrhYoFAJQjUpQgC9QeBFisihnUL9NGbiye++69b3s+eTcaa1L+kCNRUBIH6g0CLFRHDugX6yUuLl91msiZjTepfUgRqKoJA/UGgxYqIYccEmv+ofY+MNal/SRGoqQgC9QeBFisihh17CI9AD0GgLkUQqD8ItFgRMezIi0jv8RD+EATqUgSB+oNAixURw44I9JOXnvgrt6lcIlCHEB2sVrkiOhCohfr3rxh27H2gH7+0ePIrLX/IG+nXIFCXIgjUHwRarIgYdkyg3+d9oAcgUJciCNQfBFqsiBh29DlQBHoAAnUpgkD9QaDFiohhJ95In/24fYeMNal/SRGoqQgC9QeBFisihh17H6jva0gIND9EB6tVrogOBGqh/v0rhvFGej0I1KUIAvUHgRYrIobxRno9CNSlCAL1B4EWKyKGHX0R6QtuM1mTsSb1LykCNRVBoP4g0GJFxLAjAn305hNfc5vKJQJ1CNHBapUrogOBWqh//4phRx7Cf+fLi8UTz/FG+j0QqEsRBOoPAi1WRAw7+nF2vA/0AATqUgSB+oNAixURwxCoHgTqUgSB+pMtUEeyZlL//hXD+K2cehCoSxEE6g8CbYsMfrOLYQhUDwJ1KYJA/UGgbZHBb3YxDIHqQaAuRRCoPwi0LTL4zS6GXSfQf/WZTcaa1L+kCNRUBIH6g0DbIoPf7GLYUYE++uFnf9K8mvS5HzvMJmNN6l9SBGoqgkD94VX4YkXEsGMC/fBG89r7+uX4Jxx+u0fGmtS/pAjUVASB+oNAixURw44I9KMbi8VT67fP//zbNxYOn8yUsSb1LykCNRVBoP4g0GJFxLAjAn178WT7yP3Rm4uns2eTsSb1LykCNRVBoP4g0GJFxDDF54F+dIM30jcgUJciCNQfBFqsiBim+DxQjw8HzViT+pcUgZqKIFB/EGixImIY90D1IFCXIgjUHwRarIgYdvQ50Kc7/96XjDWpf0kRqKkIAvUHgRYrIoYdEeiHi8Xn3m/+9rvvLxb572PKWJP6lxSBmoogUH8QaLEiYtix94G+vVgsnnj22WdvrP7MvwOKQPNDdLBa5YroQKAW6t+/YtgxgT76QftZdk/8scNsMtak/iVFoKYiCNQfBFqsiBh2/GfhH/3sy6t7oM/9pcuvh89Yk/qXFIGaiiBQfxBosSJiGJ/GpAeBuhRBoP4g0GJFxDAEqgeBuhRBoP4g0GJFxDAEqgeBuhRBoP4g0GJFxLDrBfro5z/6W34r5xoE6lIEgfqDQIsVEcOuF+gnL/FL5RII1KUIAvUHgRYrIoYhUD0I1KUIAvUHgRYrIobxEF4PAnUpgkD9QaDFiohhvIikB4G6FEGg/iDQYkXEMASqB4G6FEGg/iDQYkXEsGOfxuTyq+SuyFiT+pcUgZqKIFB/EGixImLYsc8DdfgEpl0y1qT+JUWgpiII1B8EWqyIGKb4RHoPMtak/iVFoKYiCNQfBFqsiBjWLdBHbzr8Js5dMtak/iVFoKYiCNQfBFqsiBh25DnQ9xZPuT4JmrEm9S8pAjUVQaD+INBiRcSwIwL93Q8Wi08/95UNf8j7QNcgUJciCNQfBFqsiBh29EWkXfhJpAYE6lIEgfqDQIsVEcMQqB4E6lIEgfqDQIsVEcOy30j/8Pay4fl31189futsuXzlnYNRGWtS/5IiUFMRBOoPAi1WRAzLFuj9sx2BbmyaZLpLxprUv6QI1FQEgfqDQIsVEcNOCvTR+9fnXCxfvPrifHnrncsHd5a37olRGWtS/5IiUFMRBOoPAi1WRAw7LtCf/fv1k5+f/Luvnn4J/nz52vbv988290Nvfk+MyliT+pcUgZqKIFB/EGixImLY0V9r/P306tEnLy2ePPUS0uM7O7K8u7k3endHqomMNal/SRGoqQgC9QeBFisihh0T6NuLxZP/4canfvLovywWT524D/rw9q1/fH25/EbzutH58o3mH/ce1jdkrEn2kjpSIiP6BkSgA4BAixURw44I9MPF4mubn4j/lxunPlikfQ1prc7tvdH7Z+2UzL0AACAASURBVO2ToK0U8vv0xdVtJTJGXKtAq+V6JbmdajAy5xhmtcoXOfZxdosvbD9S5L3F08ePv1guX713+fu3lit3ItAhQ4pQoohrBgJtQKDu6VkCTR8mshHoRzdOvJG+fdpz/VrSjkDlG5ky7pXzEN5CiQeMmVMsEhLmQakOVqtYETHs1MfZbQSq+my7i+Wtex33QFsy1gSBWkCg7eE9rpluJnCLsFrliohhXgJd3+msVKA9Fq+bGbwKrwKBWkCgFuq/2sWwYw/h1y8cbcz54cmX4Tc0zqzzVXj72h0BgSYQqAUEaqH+q10MO/p5oE+3Al3J9PiLSI/v7Dqzff8n7wMdIEQHAm0Pn9MtwmqVKyKGHRHoRzcWn/9lI9CPv7Q49en05+nOZhIpP4k0YIgOBNoePqdbhNUqV0QMO/ZG+vcWi8WzN5547jOrP79wIub+2fptTA9eb378faXRF/hZ+IFCdCDQ9vA53SKsVrkiYtjRn4X/5xvtp4Ge8uf64Xr6AKbmR5Ee8GlMg4XoQKDt4XO6RVitckXEsOMfJvK7Hz67suenr/0F8Q++uVzefHVzl/PBWyt/viLvfyJQhxAdCLQ9fE63CKtVrogYlv15oDoy1qT+JUWg9YWEUYIOVqtYETEMgepBoAkEagGBWqj/ahfDjr2R/tpH7jYy1qT+JUWg9YWEUYIOVqtYETHs+C+Ve+KaT1I2kbEm9S8pAq0vJIwSdLBaxYqIYUd+Eun7zWvwn/2u12wy1qT+JUWg9YWEUYIOVqtYETHs6HOg69/osbob6vRQPmNN6l9SBFpfSBgl6GC1ihURw068iPToX9bvol98+msOD+Uz1qT+JUWg9YWEUYIOVqtYETHs9Kvwv/th81D+32QrNGNN6l9SBFpfSBgl6GC1ihURw659G9PH317/brnc2WSsSf1LikDrCwmjBB2sVrEiYtg1An30w88sEOgGBJpAoBYQqIX6r3Yx7JRAH/3sS15PgmasSf1LikDrCwmjBB2sVrEiYthxgbq+DJ+xJvUvKQKtLySMEnSwWsWKiGFHBLp+5nPFk15vBM1Yk/qXFIHWFxJGCTpYrWJFxLDjP4nk+qNIGWtS/5Ii0PpCwihBB6tVrIgYdlSgn/s7t6lcIlCHEB0ItD18TrcIq1WuiBh25Ec5/9bx5+DXZKxJ/UuKQOsLCaMEHaxWsSJiGB9npweBJhCoBQRqof6rXQy75hPpn3j2q+97zCZjTepfUgRaX0gYJehgtYoVEcOOCvS9he53IunIWJP6lxSB1hcSRgk6WK1iRcSwU7+V89PPfeXL1/1WTiUZa1L/kiLQ+kLCKEEHq1WsiBh2/PfCP5XeQf/xmyd/L7ySjDWpf0kRaH0hYZSgg9UqVkQMOyLQtxdPta/DP3pz8XT2bDLWpP4lRaD1hYRRgg5Wq1gRMezI25je3LnX+dGNp/g4uzUINIFALSBQC/Vf7WLYsTfS73wA094XPclYk/qXFIHWFxJGCTpYrWJFxDAEqgeBJhCoBQRqof6rXQw79hB+8fL2iw8XPIRvQKAJBGoBgVqo/2oXw3gRSQ8CTSBQCwjUQv1Xuxh2/G1MT6ZPE/nFl3gb0wYEmkCgFhCoheyr3ZFjM9zj1BvpF88++6zTjyJlrAkCtYBA28PndIuwWtsitQj08l9ubH6S84mvOSxrxpogUAsItD18TrcIq7UtUo1ALx/97Mure6DPfdflg+0y1gSBWkCg7eFzukVYrW2RegTqSsaaIFALCLQ9fE63CKu1LYJADyeccTACHQAEagGBWqj/ahfDugX6u82HgH70WZ9H8Ag0P0QHAm0Pn9MtwmqVKyKGdQn04y+1L7y/5/QaEgLND9GBQNvD53SLsFrliohhHQJdv/6+eev8D/hA5R0QaAKBWkCgFuq/2sWwQ4F+uP598O2v5Hz0/dVXLx+MMZOxJvUvKQKtLySMEnSwWsWKiGEHAl3/Svjd+5yrR/H5nyWCQPNDdCDQ9vA53SKsVrkiYtiBQFfC3PvskEdvejyIz1iT+pcUgdYXEkYJOlitYkXEMCnQtS/3H7J/uODTmBIINIFALSBQC/Vf7WKYFOjqEbz47JCPbjg8hs9Yk/qXFIHWFxJGCTpYrWJFxLAOgQpdHv5LDzLWpP4lRaD1hYRRgg5Wq1gRMQyB6kGgCQRqAYFaqP9qF8M6ngM9fAjPc6ANCDSBQC0gUAv1X+1i2MGr8G/LF93fW/CJ9AkEmkCgFhCohfqvdjHsQKDyRXfexrQFgSYQqAUEaqH+q10Mu/aN9G/zRvoWBJpAoBYQqIX6r3YxrPtHOT/f3gf9+Nv8So8tCDSBQC0gUAv1X+1iWMeHiTS/DunJv/zRj370wy+t/5r/DCgCdQjRgUDbw+d0i7Ba5YqIYV0fZ/fP7a9Dan4l0h97zCZjTepfUgRaX0gYJehgtYoVEcM6P1C5eeCe9Pn5911mk7Em9S8pAq0vJIwSdLBaxYqIYcd+pccv/sd3vvJHP/Kx5yUCdQjRgUDbw+d0i7Ba5YqIYfxOJD0INIFALSBQC/Vf7WIYAtWDQBMI1AICtVD/1S6GIVA9CDSBQC0gUAv1X+1iGALVg0ATCNQCArVQ/9UuhiFQPQg0gUAtIFAL9V/tYhgC1YNAEwjUAgK1UP/VLoYhUD0INIFALSBQC/Vf7WIYAtWDQBMI1AICtVD/1S6GIVA9CDSBQC0gUAv1X+1iGALVg0ATCNQCArVQ/9UuhiFQPQg0gUAtIFAL9V/tYhgC1YNAEwjUAgK1UP/VLoYhUD0INIFALSBQC/Vf7WIYAtWDQBMI1AICtVD/1S6GIVA9CDSBQC0gUAv1X+1iGALVg0ATCNRC7i3yjB8nMoKsFgLtmnDGwQh0ABCohez9W8CggVZr8CJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiGALVg0ATCNTCBPYvq2UoIoYhUD0INIFALUxg/7JahiJiWCGBjofrkg6f4XqugSgyxcyQEjd7EYoUYbV6n4p7oHq4B5rgHqiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaAKBWpjA/mW1DEXEMASqB4EmEKiFCexfVstQRAxDoHoQaGIaAnUkayYT2L+RBDr4zS76IlA9CDSBQC1MYP8iUMPNLvoiUD0INDEFgdYTMoH9G0egOrLmKPoiUD0INBHGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQi0ZIgKBNpN1oQzDkagAxDGbQh0GzL4b8JQgkC7yZpwxsEIdADCuA2BbkMQqBaxqAhUDwJNhHEbArXNJOtwHQi0m6wJZxyMQAcgjNsQqG0mWYfrQKDdZE0442AEOgBh3IZAbTPJOlwHAu0ma8IZByPQAQjjNgRqm0nW4ToQaDdZE844GIEOQBi3IVDbTLIO14FAu8macMbBCHQAwrgNgdpmknW4DgTaTdaEMw5GoAMQxm0I1DaTrMN1INBusiaccTACHYAwbkOgtplkHa4DgXaTNeGMgxHoAIRxGwK1zSTrcB0ItJusCWccjEAHIIzbEKhtJlmH60Cg3WRNOONgBDoAYdyGQG0zyTpcxwwF+qtvLpc3X3mn+fvD28uG598Vg7ImnHEwAh2AMG5DoLaZZB2uY34C/WlS5s3vrb+4f4ZAhwrRgUBrC5nA/tXOJOtwHbMT6MXy5rcuLx/cSc68WL7YPSxrwhkHI9ABCOM2BGqbSdbhOuYm0Md3lm+s/1w9dl//eb58rXtc1oQzDkagAxDGbQjUNpOsw3XMTaAPb28erTfqfHwnPZI/JGvCGQcj0AEI4zYEaptJ1uE65ibQLY1AH96+9Y+vL5ffeOfg21kTzjgYgQ5AGLchUNtMsg7XMVeBPry9vu/ZvoaUHtan2yzhk9IH1w04fIbruQaiyBTjhORRYv8WObwiPJs4CfRu8+rRxXL56r3L37+13D6SR6BuIfUQx23zWmwEuqE+gV4kZd7dvAh/+FpS1l3mjIN5CD8AYR5d8xDeNpOsw3XM8yH8xdnNN/a+Xt66tz8ia8IZByPQAQjjNgRqm0nW4TpmKdC7S/Hi+/0z+U76rAlnHIxAByCM2xCobSZZh+uYo0B/Kv25Eij3QN1DdCDQ2kImsH+1M8k6XMf8BPr4fPnCu5u/bt5V3/EDSVkTzjgYgQ5AGLchUNtMsg7XMT+Bnu8833mexLkV6RVZE844GIEOQBi3IVDbTLIO1zE7gd7dfb3o/tn6bUwPXj94DQmB5ofoQKC1hUxg/2pnknW4jrkJtP38uhXrO593Nx/GdPCjSFkTzjgYgQ5AGLchUNtMsg7XMTeBXiz3BHr5YP3hoK/K+58I1CFEBwKtLWQC+1c7k6zDdcxNoFqyJpxxMAIdgDBuQ6C2mWQdrgOBdpM14YyDEegAhHEbArXNJOtwHQi0m6wJZxyMQAcgjNsQqG0mWYfrQKDdZE0442AEOgBh3IZAbTPJOlwHAu0ma8IZByPQAQjjNgRqm0nW4ToQaDdZE844GIEOQBi3IVDbTLIO14FAu8macMbBCHQAwrgNgdpmknW4DgTaTdaEMw5GoAMQxm0I1DaTrMN1INBusiaccTACHYAwbkOgtplkHa4DgXaTNeGMgxHoAIRxGwK1zSTrcB0ItJusCWccjEAHIIzbEKhtJlmH60Cg3WRNOONgBDoAYdyGQG0zyTpcBwLtJmvCGQcj0AEI4zYEaptJ1uE6EGg3WRPOOBiBDkAYtyFQ20yyDteBQLvJmnDGwQh0AMK4DYHaZpJ1uA4E2k3WhDMORqADEMZtCNQ2k6zDdSDQbrImnHEwAh2AMG5DoLaZZB2uA4F2kzXhjIMR6ACEcRsCtc0k63AdCLSbrAlnHIxAByCM2xCobSZZh+tAoN1kTTjjYAQ6AGHchkBtM8k6XAcC7SZrwhkHI9ABCOM2BGqbSdbhOhBoN1kTzjgYgQ5AGLchUNtMsg7XgUC7yZpwxsEIdADCuA2B2maSdbgOBNpN1oQzDkagAxDGbQjUNpOsw3Ug0G6yJpxxMAIdgDBuQ6C2mWQdrgOBdpM14YyDEegAhHEbArXNJOtwHQi0m6wJZxyMQAcgjNsQqG0mWYfrQKDdZE0442AEOgBh3DYNgTqSOZOsw3Ug0G6yJpxxcJkN6JqBQGOFTGD/ameSdbgOBIpABwrRgUBrC5nA/i1SpKIQBOpOiSspzP/Bw7gNgRYsUlEIAnUHgRoI4zYEWrBIRSEI1B0EaiCM26YhULeLEIFuQKDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQhCoOwjUQBi3IdCCRSoKQaDuIFADYdyGQAsWqSgEgbqDQA2EcRsCLVikohAE6g4CNRDGbQi0YJGKQiYo0Npx3KajZhShSJE4IXm4CtTtVNPGcyG4B9rAPVADYe4ccg+0YJGKQiZ4DzRrwhkHa0GgBsK4DYEWLFJRCAJ1B4EaCOM2BFqwSEUhCNQdBGogjNsQaMEiFYUgUHcQqIEwbkOgBYtUFIJA3UGgBsK4DYEWLFJRCAJ1B4EaCOM2BFqwSEUhCNQdBGogjNsQaMEiFYUgUHcQqIEwbkOgBYtUFIJA3UGgBsK4DYEWLFJRCAJ1B4EaCOM2BFqwSEUhCNQdBGogjNsQaMEiFYUgUHcQqIEwbkOgBYtUFIJA3UGgBsK4DYEWLFJRCAJ1B4EaCOM2BFqwSEUhCNQdBGogjNsQaMEiFYWEEegzjmQsyW+nIdBZLVacEARaXQgCdZfCzARa/2LFCckWaC03OwJtQKDdq5J1eJGMWS1WnBAEGiskqkAzluS3k7iS6nkIX/8mrymEIrFCEGj3quQdXyJjVosVJ4QisUJqEujwbWsKocgsQygSKwSBjhVCkVmGUCRWCAIdK4QiswyhSKwQBDpWCEVmGUKRWCEIdKwQiswyhCKxQhDoWCEUmWUIRWKFINCxQigyyxCKxApBoGOFUGSWIRSJFYJAxwqhyCxDKBIrBIGOFUKRWYZQJFYIAh0rhCKzDKFIrBAEOlYIRWYZQpFYIQh0rBCKzDKEIrFCEOhYIRSZZQhFYoUg0LFCKDLLEIrECkGgY4VQZJYhFIkVgkDHCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghCHSsEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRWCQMcKocgsQygSKwSBjhVCkVmGUCRWCAIdK4QiswyhSKwQBDpWCEVmGUKRWCEIdKwQiswyhCKxQhDoWCEUmWUIRWKFINCxQigyyxCKxApBoGOFUGSWIRSJFYJAxwqhyCxDKBIrBIGOFUKRWYZQJFYIAh0rhCKzDKFIrBAEOlYIRWYZQpFYIQh0rBCKzDKEIrFCEOhYIRSZZQhFYoUg0LFCKDLLEIrECkGgY4VQZJYhFIkVgkDHCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghCHSsEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRWCQMcKocgsQygSKwSBjhVCkVmGUCRWCAIdK4QiswyhSKwQBDpWCEVmGUKRWCEIdKwQiswyhCKxQhDoWCEUmWUIRWKFINCxQigyyxCKxApBoGOFUGSWIRSJFYJAxwqhyCxDKBIrBIGOFUKRWYZQJFYIAh0rhCKzDKFIrBAEOlYIRWYZQpFYIQh0rBCKzDKEIrFCEOhYIRSZZQhFYoUg0LFCKDLLEIrECkGgY4VQZJYhFIkVgkDHCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghwwr08Vtny+Ur7yDQkTIoUl0IRWKFDCrQh7eXa55/F4GOk0GR6kIoEitkUIGeL2+9c/ngzvLWPQQ6SgZFqguhSKyQIQV6/6y57/nw9s3vIdBRMihSXQhFYoUMKdC7yxc3f76GQEfJoEh1IRSJFTKkQM+XbzR/XmxEikBLZ1CkZMgzjoxapJqMCYQMKNDHdzYP3e+ftU+CttvDMQWgEjwFyiUyTRAoQE8QKAwkUPlGprHub9cUQpFoIZ7+HLVINRkTCCkjUPk+prHa1hRCkWghCHSGIQh0rBCKzDKEIrFCBhQor8KPnkGR6kIoEitkSIG27//kfaBjZVCkuhCKxAoZUqD8JNLYGRSpLoQisUKGFOjjO8sX+Fn4MTMoUl0IRWKFDCnQywd8GtO4GRSpLoQisUIGFejlg7dW/nxF3v9EoKUyKFJdCEVihQwr0GOM1bamEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRWCQMcKocgsQygSKwSBjhVCkVmGUCRWCAIdK4QiswyhSKwQBDpWCEVmGUKRWCEIdKwQiswyhCKxQhDoWCEUmWUIRWKFINCxQigyyxCKxApBoGOFUGSWIRSJFYJAxwqhyCxDKBIrBIGOFUKRWYZQJFYIAh0rhCKzDKFIrBAEOlYIRWYZQpFYIQh0rBCKzDKEIrFCEOhYIRSZZQhFYoUg0LFCKDLLEIrECkGgY4VQZJYhFIkVgkDHCqHILEMoEisEgY4VQpFZhlAkVggCHSuEIrMMoUisEAQ6VghFZhlCkVghCHSsEIrMMoQisUIQ6FghFJllCEVihSDQsUIoMssQisQKQaBjhVBkliEUiRWCQMcKocgsQygSK2QcgWbwzDNBQigyyxCKhA5BoMVCKDLLEIqEDkGgxUIoMssQioQOQaDFQigyyxCKhA5BoMVCKDLLEIqEDkGgxUIoMssQioQOQaDFQigyyxCKhA5BoMVCKDLLEIqEDqlfoAAAlYJAAQB6gkABAHqCQAEAeoJAAQB6gkABAHqCQAEAeoJAAQB6Uo1AH99Zvrb56/2zZeKLf3Hv8LsPb+/89fl3e2asztKGvHqv87TbWax4wynkdDMjx4NW33lxO+xi+fy7989sC3V5+eu3VlO9+co7l3vTvlqKve93/oM9ZufmbP/6+B++vsr8xt8cm4aSvY2SFmO7ZH/yF7/JPPtYPP6HV1f/Pe+7fw4Qu/P47k0rdPHFP/3r7S7+n3/+H99VB/3qm2frk6Z1P7zZ75/d2pz3p+1N0eMqORlycIX0DKlIoKtbp122nRtq55/av65uXOJDmwAADPxJREFU15vfa/9q88L+WbY0Jzk4bd8L6lTI6WZGTgTdXV4tzPoCswp0tZU2vHZ52bEU4vu7//CKoYw4zaFAt8Ev7H3lKtCVwL/VWbJ6LhoJDCDQtDtP7d5GoDsLdbFcqnfYw9f3N89xgd7dBpivkutC5BXSK2RNNQI9f/4/tQLbLuCvztrNsfPd9e36YvtXmxf2ztIeugp5seu0V/8f7F3kIOR0M7+gVZl2az+8vRpkFOjq8C9+azXR3/807T+5FPL76+16c31H7vf/YNmD8jQHV9JKsLfWd05/9fr+6pnpFOjmn379VrpM+599LPwFurc7j+/eNv6LZ+3duPMvqnfY+p7K+lZ/sFr3V9M/HBHolT/NV8m1IfIK6RPSUItAH96+9UErsKsbqr1zvfvdVd+vb8obBbp/lu2h7QUlTtvzgjoZcrqZY9D59pwXa6MZBXq+tWD6H7VcCvn9nX948Lq+jTzNwZV00Q5Ie3wYgR4rWT+DCTTtzhO7dzPohdc3Ix7e/jP1pXh1q1+cNRfcMYHu+NN8lVwfIq6QPiENtQj0YvnatuPVDdX+0+53V3/5p7PWPiYviLO0h6a/Hpy25wV1MuR0M8egi+0jlOb6sgl0Z3R6WkgsRcf3r05//0z7f/GD0xy0uLvdz+cd0zBwWqCr9DccBHq+fOODry+Xmyd01/d9Nn+X31g9Ev6G8bniK7bnTc9/vLhemvuvb5862Tn7aoN8cLZ8QX+fSuzOE7v3Mp3/1t9vFHdx879rN/HuXrm7eaqgM+eDnWdSrFeJIkRcIT1CErUI9Hx12Z1vVuxQM7vfXf/b5soy9pVn2fzzxfbuz95pe15QJ0NON3MMSk64vOpiWajd+zS/X89XLMXB9+/u3glS3yM6OM2JTd4wlECTqB0E+idXzxdepOcLb74hv3F/5xs9uDrvlUD/9Gz7pPru2S+abxhKHReo3L2bf7z1fzeP4c+f/9/aS3F3r6QHFt0Cvdh9Jtp6lShCxBXSIyRRiUA3a3br3vaLhot2W+x8d/Mimrhfbs3YHvr4g/Y5UHHafhfU6ZDTzRyDtnfeLja5hoXabq39rOPf3/8HbZvDmI5HBemp1c5pWLhGoM2JHQS6fPHe5Qdn6e7s8pXfXD7+afPC5O43VpVevXf5+O/1r7nssXfe9iH8+onijrNfmOx5ebA7T+zedtD/u9MMeXj7Re2luH+rn3c+8FjnrCb/rf2JGa4STYi4QnpfipUI9G4qmR79tTfU+oZ77eC7Tf/Di8CYsfsS463t3Z/d03a8Yp4dcrqZidNB20fS55sXSAwLdTid/aU4+P7+P2izDmN2WyTBPGheS/3GXx+80ci4za8VaHPb9z37hs3zbs312l6dzTNtXd+42++Zy73ztgI9cvaLpXFbid3ZsXv3vl7L5m6zvVb/1V6K+7f63WMCXc1gZ5z1KtGEiCuk96VYh0Af39m8FiHfNdPccPvf3XkO2CRQeZY2onkhuOO0vS6oa0JON7NwTVD7nrbtZhlWoLtn9xTo5eNfpbejvNJxARsoJNDtff/tXaDmHs3eNzal+93f3T9vK9AjZzffmzr6Nqbu3bs+fzOF9V7UC3R33F1xFV9deTe/fjV781WiCRFXSO9LsQ6B3k/PpVyI95tt30C9+9320d1qrxifWD48y+rBzv47gXZO22uLXxNyupljUPtIevP4xPgQ/lCg+w/hXe6BHsYcbvKGX6/fTJ/xrPSlVqDZD+E3DypevFqRJmXnG1fvfO31GH7/vHuvwh+evb9A0+7s2L3yIfy9zeO2F9WXou4e6Cry/tn2FUTzVaK6B7p/hfS+FOsQ6N3tDd/1jrz97276b2++fhntodv3ShycttcFdU3I6WaOQe0mOm+fFJnkc6BbHtwe8lX49q1engLdnFwKdOdOdj+B7p73QKD7Z7/YGkiJWIHrdu/m3vUb60fwaoHqngNdj7nay+arRPUc6P4V0vtSrEKgOzd8x5PV4rvb169t7zo4cpbVadrlFKftc0FdF3K6mWNQKrL69/YZUduTxVezuVi/KiGmffD9fq/CH5xGbvKdOxKZiiv0Kvz190B7Pd19xTX3QPfP7iXQY7u3fRqhefCrvhS7XiDfznrv/abny4Mn+LWFFCGX+1dI70uxCoFub+r0xO7BDbX33Z3/gajffHb8LOuV23tL1Pa0fS6o60JON3MMumxfy2x/SM0i0N3R5x1u6fj+7sPhHu8DPXhKu/nrzh2JQQWafirFU6DyOdDDb/Sj+znQI2d3E+jR3Zteqv+nM8vLEe2t/tNXf7N5i6a8mducVWzzZ4+rRBFyuX+F9L4UqxDo9t1Xne/bFt/d3lTrHyXTe+HYWdqHCgen7XNBXRdyuplj0GV6jrF9fNL7J5E+WHb9CJD8/uofXti8M7zfTyKl0xw8zLq782bnrPuIpwX6093Ltj87JpOvwu9+I6X0euvakVfhj5zdTaBHdm8Tstplf57eQKXdYeftK1Q3/3P6IaHtrNvLoM3ZPA3a5yq5PuRy/wrpfSnWINCdxb97eE9Dfvfq63PLJxgcPcv6B673flThvPdLFteGnG7mGJS+82e3t/9bNQm0/SH19U+9nPpZ+Pb769Ttz8K/oE6Sp+l8H+hmwGA/yvn4199M/xNwFWh6v+bv39q8D/TqG+u7Vav/13xw1u+e6N55k4SPnt1PoJ27dxN/dyl/DPca1p+bsL5RV5O8+hCPF/7X6s9fv96+iLzJacTd6yq5PiSdr71C+l+KNQh058mw5vnj/RtKfveq6+pLtReOn2X99d6duM1pdz97Rrmk14acbqbn2qDN364+zMb2ksWD/c+yOVgK8f3VJfZW+w+WT2MSpzl8on874OYbXdNQs/MM1xtbgW7/Kf1UUP+zb9g1mfhJpMNvpI+4sLN73vvNDxodPbufQLe7d2+F2sfb8kclr+Nqryxv/s1uqeVy/33ga3FvfzxwMw3tVXJtyOZ82zeB9r0UKxDo7jM3zef07d2QB9/d+5+F9lY7dZb0JPnBae0X1PUhp5upuT5I/M3+eaDNpyl2fR7opsDe99f0+zzQvdN0vFL6+FffXK4/n/I3R6ah5JRA/+Qv2mfEPAW6/7Pw+984276NrQc75738P2dSoLtndxRou3s7BCreTqki7ZVv/Le32pVOH/v6xe0t0c5jdSO98HrPq+SakKtalzmXYg0CBYBZ8uCbXp8kNVoIAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAoWq+MW3P7NYLD79Rz9OX37y0uILugO7RoqTAXiDQKEiHr25aPn8L9f/kCPQg5MBeINAoR52lLdYPLWWXoZAD08G4A0ChXp4b7F44mvvr/7yux/eWCxevswS6OHJALxBoFANq/uMn2qfrvzoRnOvsb9AO04G4A0ChWpYOfDp7RdvLz71kxyBdpwMwBsECtWwutP4tPintRYf/fAzi8Wnv/rLzZCXf/al1Zd/dSXM97aqffT91YP1z3739MlWQ578bufXAFYQKNTDe4vFH+w/1F457nMv7bwOtNLiV9ZffOonHQLdG9l9sj94c/8Vqr2vAawgUKiHT9YGfO6/vr//L0+s7nx+vBLd2pfrl9af+KvLj7972SHQ5u1Kj76/SHc9u0+2+Nz72yHyawArCBQqon3r0bNf3Xhv7biXN99Z30tcD3i5/c6BQL+w+Xql2GMnS6J8uxkivwawgkChKn7x7RtJe082L6GvHLd5dJ1eB1q/tp5eDuoQ6NV3nj52sr0hXYcAWECgUBuPfv6d9U9gNvcJr8z2XivQjVA7BNo68O2dpzS7T5aGHDkEQA0ChRp59IOFeBvTVqAb53W9Cr85WL5p6fBkaciJQwBUIFCok/eaJztNAn35cvcfOk+2N+TkIQAKEChUw97dwCTI/vdAT56Me6DgAwKFanhv90fWP7qhFejBzyw1T2iePNn2OdC9rwGsIFCohpXmtj++vlLatQ/h0982L8xfvV6fjuk+2d4Q+TWAFQQK9fD2+o3tf7f6y6P1j2vuf5iIFOj29fgPt68Qbe5ybt7U2Xmyzdmu3ge6+zWAFQQK9fDJSzsf4dm+8+iIQNeP0Z/68WXzs+zbn0T6g19efvztjRU7T7Y35OAQACMIFCpi50OQn2zuEp4QaDv2qR+0Av23G2V+/vjJntu8s/4LXV8DWEGgUBUff+fZ9R3GzUcqnRLoZfqUpq8dfBrT35062fre5uJzP+78GsAKAoXZ0PGRodzzhCwQKMwGBAreIFCYDQgUvEGgMBsQKHiDQGE2IFDwBoHCbECg4A0CBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOgJAgUA6AkCBQDoCQIFAOjJ/weh6irLIrQvagAAAABJRU5ErkJggg==" width="672" /></p>
+</div>
 <div id="cover" class="section level2">
 <h2>Cover</h2>
 <div id="summarize-shrub-cover-by-segment" class="section level3">
@@ -493,11 +488,59 @@ summary(as.factor(shr$Seg))</code></pre>
   rename(Cov1=`1`) %&gt;%
   rename(Cov2=`2`) %&gt;%
   rename(Cov3=`3`)</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Sdlg&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>cov &lt;- pivot_longer(cov, cols = c(2:4), names_to = &quot;Seg&quot;, values_to = &quot;cov&quot;) %&gt;% 
+  mutate(Seg = case_when(
+    Seg == &quot;Cov1&quot; ~ 1,
+    Seg == &quot;Cov2&quot; ~ 2,
+    Seg == &quot;Cov3&quot; ~ 3
+    
+  ))
+cov</code></pre>
+<pre><code>## # A tibble: 858 x 3
+## # Groups:   Sdlg [286]
+##    Sdlg    Seg   cov
+##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 1         1   290
+##  2 1         2   580
+##  3 1         3   440
+##  4 10        1   330
+##  5 10        2   440
+##  6 10        3   420
+##  7 100       1   360
+##  8 100       2   400
+##  9 100       3   400
+## 10 103       1   400
+## # ... with 848 more rows</code></pre>
 </div>
 <div id="replace-na-shrub-cover-with-0" class="section level3">
 <h3>Replace NA shrub cover with 0</h3>
 <pre class="r"><code>cov &lt;- cov %&gt;% 
-  replace_na(list(Cov1 = 0, Cov2 = 0, Cov3 = 0))</code></pre>
+  replace_na(list(cov = 0))</code></pre>
+</div>
+<div id="find-seedlings-with-0-cover-to-inform-height" class="section level3">
+<h3>Find seedlings with 0 cover to inform height</h3>
+<pre class="r"><code>cov %&gt;% filter(cov==0) %&gt;% arrange(Sdlg)</code></pre>
+<pre><code>## # A tibble: 16 x 3
+## # Groups:   Sdlg [12]
+##    Sdlg      Seg   cov
+##    &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;
+##  1 289         1     0
+##  2 290         1     0
+##  3 294         1     0
+##  4 294         2     0
+##  5 36          1     0
+##  6 37          1     0
+##  7 37          2     0
+##  8 37          3     0
+##  9 38          1     0
+## 10 38          2     0
+## 11 39          1     0
+## 12 47          1     0
+## 13 67          3     0
+## 14 DCECO-1     3     0
+## 15 DCECO-2     3     0
+## 16 DCECO-3     3     0</code></pre>
 </div>
 </div>
 <div id="height" class="section level2">
@@ -505,27 +548,98 @@ summary(as.factor(shr$Seg))</code></pre>
 <div id="summarize-height-by-segment" class="section level3">
 <h3>Summarize height by segment</h3>
 <pre class="r"><code>ht &lt;- shr %&gt;%
-  dplyr::select(Sdlg, ShrubSpp,Cover.cm, Ht.cm) %&gt;% 
-  group_by(Sdlg) %&gt;% 
-  mutate(ht_wm.cm = weighted.mean(Ht.cm, Cover.cm)) %&gt;% 
+  dplyr::select(Sdlg, ShrubSpp,Cover.cm, Ht.cm, Seg) %&gt;% 
+  group_by(Sdlg, Seg) %&gt;% 
+  mutate(ht_wm_seg.cm = weighted.mean(Ht.cm, Cover.cm)) %&gt;% 
   ungroup() %&gt;% 
-  dplyr::select(Sdlg, ht_wm.cm) %&gt;% 
+  dplyr::select(Sdlg, Seg, ht_wm_seg.cm) %&gt;% 
   distinct() </code></pre>
 </div>
 <div id="replace-na-height-with-0" class="section level3">
 <h3>Replace NA height with 0</h3>
-<pre class="r"><code>ht %&gt;% filter(is.na(ht_wm.cm))</code></pre>
-<pre><code>## # A tibble: 1 x 2
-##   Sdlg  ht_wm.cm
-##   &lt;fct&gt;    &lt;dbl&gt;
-## 1 37         NaN</code></pre>
+<pre class="r"><code>ht %&gt;% filter(is.na(ht_wm_seg.cm)) %&gt;% arrange(Sdlg)</code></pre>
+<pre><code>## # A tibble: 10 x 3
+##    Sdlg    Seg ht_wm_seg.cm
+##    &lt;chr&gt; &lt;dbl&gt;        &lt;dbl&gt;
+##  1 289       1          NaN
+##  2 36        1          NaN
+##  3 37        1          NaN
+##  4 37        2          NaN
+##  5 37        3          NaN
+##  6 38        1          NaN
+##  7 38        2          NaN
+##  8 39        1          NaN
+##  9 47        1          NaN
+## 10 67        3          NaN</code></pre>
 <pre class="r"><code>ht &lt;- ht %&gt;% 
-  replace_na(list(ht_wm.cm=0))</code></pre>
+  replace_na(list(ht_wm_seg.cm=0))</code></pre>
+</div>
+<div id="add-in-zeros-where-there-were-no-shrubs-measured-in-certain-segments-and-it-wasnt-captured-by-the-replace_na-above" class="section level3">
+<h3>Add in zeros where there were no shrubs measured in certain segments and it wasn’t captured by the replace_na above</h3>
+<pre class="r"><code>cov %&gt;% filter(Sdlg %in% c(290, 294, 38))</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Sdlg [3]
+##   Sdlg    Seg   cov
+##   &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;
+## 1 290       1     0
+## 2 290       2    90
+## 3 290       3   290
+## 4 294       1     0
+## 5 294       2     0
+## 6 294       3    40
+## 7 38        1     0
+## 8 38        2     0
+## 9 38        3   150</code></pre>
+<pre class="r"><code>ht %&gt;% 
+  group_by(Sdlg) %&gt;% 
+  filter(n() != 3)</code></pre>
+<pre><code>## # A tibble: 9 x 3
+## # Groups:   Sdlg [5]
+##   Sdlg      Seg ht_wm_seg.cm
+##   &lt;chr&gt;   &lt;dbl&gt;        &lt;dbl&gt;
+## 1 DCECO-1     1         36.7
+## 2 DCECO-1     2         45  
+## 3 DCECO-2     2         74.2
+## 4 DCECO-2     1         83.8
+## 5 DCECO-3     2         62.8
+## 6 DCECO-3     1         84.3
+## 7 294         3         90  
+## 8 290         2        144. 
+## 9 290         3        172.</code></pre>
+<pre class="r"><code>new_rows &lt;- cov %&gt;% 
+  filter(Sdlg %in% c(290, 294) &amp; cov == 0) %&gt;% 
+  rename(ht_wm_seg.cm = cov)
+new_rows</code></pre>
+<pre><code>## # A tibble: 3 x 3
+## # Groups:   Sdlg [2]
+##   Sdlg    Seg ht_wm_seg.cm
+##   &lt;chr&gt; &lt;dbl&gt;        &lt;dbl&gt;
+## 1 290       1            0
+## 2 294       1            0
+## 3 294       2            0</code></pre>
+<pre class="r"><code>ht &lt;- bind_rows(ht, new_rows)</code></pre>
 </div>
 </div>
 <div id="combine-cover-and-ht-values-into-one-data-frame" class="section level2">
 <h2>Combine cover and ht values into one data frame</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- full_join(cov,ht,by=&quot;Sdlg&quot;)</code></pre>
+<pre class="r"><code>shr_by_seg &lt;- full_join(cov,ht)</code></pre>
+<pre><code>## Joining, by = c(&quot;Sdlg&quot;, &quot;Seg&quot;)</code></pre>
+<pre class="r"><code>shr_by_seg</code></pre>
+<pre><code>## # A tibble: 858 x 4
+## # Groups:   Sdlg [286]
+##    Sdlg    Seg   cov ht_wm_seg.cm
+##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt;
+##  1 1         1   290        131. 
+##  2 1         2   580        117. 
+##  3 1         3   440        104. 
+##  4 10        1   330         85.2
+##  5 10        2   440        104. 
+##  6 10        3   420        154. 
+##  7 100       1   360         91.1
+##  8 100       2   400         87.5
+##  9 100       3   400         87.5
+## 10 103       1   400         97.5
+## # ... with 848 more rows</code></pre>
 </div>
 <div id="shrub-species-0-3-m" class="section level2">
 <h2>Shrub species 0-3 m</h2>
@@ -537,14 +651,30 @@ summary(as.factor(shr$Seg))</code></pre>
   filter(cov == max(cov)) %&gt;%
   dplyr::select(Sdlg,ShrubSpp,cov) %&gt;%
   distinct(.keep_all=TRUE) %&gt;% 
-  rename(ShrubSpp03 = ShrubSpp)</code></pre>
+  rename(ShrubSpp03 = ShrubSpp)
+spp3</code></pre>
+<pre><code>## # A tibble: 288 x 3
+## # Groups:   Sdlg [286]
+##    Sdlg  ShrubSpp03   cov
+##    &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt;
+##  1 20    PREM         290
+##  2 21    PREM         290
+##  3 22    PREM         240
+##  4 23    CEIN         370
+##  5 24    PREM         360
+##  6 25    CEIN         470
+##  7 26    CEIN        1100
+##  8 27    CEIN        1180
+##  9 28    CECO        1020
+## 10 1     ARPA         730
+## # ... with 278 more rows</code></pre>
 <pre class="r"><code>spp3 %&gt;% 
   group_by(Sdlg) %&gt;% 
   filter(n()&gt;1)</code></pre>
 <pre><code>## # A tibble: 4 x 3
 ## # Groups:   Sdlg [2]
 ##   Sdlg  ShrubSpp03   cov
-##   &lt;fct&gt; &lt;fct&gt;      &lt;dbl&gt;
+##   &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt;
 ## 1 190   willow       300
 ## 2 190   CECO         300
 ## 3 285   CECO         470
@@ -562,7 +692,7 @@ summary(as.factor(shr$Seg))</code></pre>
   mutate(winner = ifelse(total_product == max(total_product), 1, 0))</code></pre>
 <pre><code>## # A tibble: 8 x 7
 ##   Sdlg  ShrubSpp Cover.cm Ht.cm product total_product winner
-##   &lt;fct&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
+##   &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
 ## 1 20    CECO          100    70    7000          7000      0
 ## 2 20    PREM          100   100   10000         25800      1
 ## 3 20    PREM           30    80    2400         25800      1
@@ -587,7 +717,7 @@ summary(as.factor(shr$Seg))</code></pre>
   mutate(winner = ifelse(total_product == max(total_product), 1, 0))</code></pre>
 <pre><code>## # A tibble: 8 x 7
 ##   Sdlg  ShrubSpp Cover.cm Ht.cm product total_product winner
-##   &lt;fct&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
+##   &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
 ## 1 21    CECO          100    70    7000          7000      0
 ## 2 21    PREM           10   110    1100         25800      1
 ## 3 21    PREM          100   100   10000         25800      1
@@ -612,7 +742,7 @@ summary(as.factor(shr$Seg))</code></pre>
   mutate(winner = ifelse(total_product == max(total_product), 1, 0))</code></pre>
 <pre><code>## # A tibble: 15 x 7
 ##    Sdlg  ShrubSpp Cover.cm Ht.cm product total_product winner
-##    &lt;fct&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
+##    &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;         &lt;dbl&gt;  &lt;dbl&gt;
 ##  1 188   CECO           30   130    3900         73500      0
 ##  2 188   CECO           90   150   13500         73500      0
 ##  3 188   CECO           10   100    1000         73500      0
@@ -640,9 +770,10 @@ summary(as.factor(shr$Seg))</code></pre>
   mutate(math = Cover.cm*Ht.cm) %&gt;% 
   group_by(ShrubSpp) %&gt;% 
   summarise(sum(math))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 2 x 2
 ##   ShrubSpp `sum(math)`
-##   &lt;fct&gt;          &lt;dbl&gt;
+##   &lt;chr&gt;          &lt;dbl&gt;
 ## 1 CECO           31500
 ## 2 willow         54500</code></pre>
 <pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
@@ -655,7 +786,7 @@ summary(as.factor(shr$Seg))</code></pre>
   dplyr::select(Sdlg, ShrubSpp, Dead., Cover.cm, Ht.cm) </code></pre>
 <pre><code>## # A tibble: 13 x 5
 ##    Sdlg  ShrubSpp Dead. Cover.cm Ht.cm
-##    &lt;fct&gt; &lt;fct&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
+##    &lt;chr&gt; &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;
 ##  1 285   CECO         0       80    50
 ##  2 285   CECO         1       50    10
 ##  3 285   CECO         0       70    70
@@ -676,9 +807,10 @@ summary(as.factor(shr$Seg))</code></pre>
   mutate(math = Cover.cm*Ht.cm) %&gt;% 
   group_by(ShrubSpp) %&gt;% 
   summarise(sum(math))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
 <pre><code>## # A tibble: 2 x 2
 ##   ShrubSpp `sum(math)`
-##   &lt;fct&gt;          &lt;dbl&gt;
+##   &lt;chr&gt;          &lt;dbl&gt;
 ## 1 ARPA           67500
 ## 2 CECO           28300</code></pre>
 <pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
@@ -691,245 +823,226 @@ summary(as.factor(shr$Seg))</code></pre>
 <pre class="r"><code>spp3 &lt;- spp3 %&gt;% 
   ungroup() %&gt;% 
   dplyr::select(Sdlg, ShrubSpp03)
-shr_by_sdlg &lt;- full_join(shr_by_sdlg, spp3, by = c(&quot;Sdlg&quot; =&quot;Sdlg&quot;))</code></pre>
-<div id="combine-segments-into-0-3-m" class="section level2">
-<h2>Combine segments into 0-3 m</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;%
-  mutate(Cov1.3 = Cov1 + Cov2 +Cov3) %&gt;%
-  mutate(Ht1.3 = ht_wm.cm)
+shr_by_sdlg &lt;- full_join(shr_by_seg, spp3, by = c(&quot;Sdlg&quot; =&quot;Sdlg&quot;))
 shr_by_sdlg</code></pre>
+<pre><code>## # A tibble: 858 x 5
+## # Groups:   Sdlg [286]
+##    Sdlg    Seg   cov ht_wm_seg.cm ShrubSpp03
+##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;        &lt;dbl&gt; &lt;chr&gt;     
+##  1 1         1   290        131.  ARPA      
+##  2 1         2   580        117.  ARPA      
+##  3 1         3   440        104.  ARPA      
+##  4 10        1   330         85.2 ARPA      
+##  5 10        2   440        104.  ARPA      
+##  6 10        3   420        154.  ARPA      
+##  7 100       1   360         91.1 CECO      
+##  8 100       2   400         87.5 CECO      
+##  9 100       3   400         87.5 CECO      
+## 10 103       1   400         97.5 CECO      
+## # ... with 848 more rows</code></pre>
+<div id="combine-segments-into-0-1-0-2-and0-3-m" class="section level2">
+<h2>Combine segments into 0-1, 0-2, and0-3 m</h2>
+<pre class="r"><code>shr_by_sdlg3 &lt;- shr_by_sdlg %&gt;% 
+  summarize(Cov1.3 = sum(cov), Ht1.3 = weighted.mean(ht_wm_seg.cm, cov)) %&gt;% 
+  replace_na(list(Ht1.3 = 0))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>shr_by_sdlg3</code></pre>
+<pre><code>## # A tibble: 286 x 3
+##    Sdlg  Cov1.3 Ht1.3
+##    &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1 1       1310 116. 
+##  2 10      1190 116. 
+##  3 100     1160  88.6
+##  4 103     1150 107. 
+##  5 104     1200 122. 
+##  6 105     1190  77.6
+##  7 106     1220  79.0
+##  8 107     1140  77.8
+##  9 108     1180 213. 
+## 10 109      810 174. 
+## # ... with 276 more rows</code></pre>
+<pre class="r"><code>shr_by_sdlg2 &lt;- shr_by_sdlg %&gt;% 
+  filter(Seg %in% c(1:2)) %&gt;% 
+  summarize(Cov1.2 = sum(cov), Ht1.2 = weighted.mean(ht_wm_seg.cm, cov)) %&gt;% 
+  replace_na(list(Ht1.2 = 0))</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre class="r"><code>shr_by_sdlg2</code></pre>
+<pre><code>## # A tibble: 286 x 3
+##    Sdlg  Cov1.2 Ht1.2
+##    &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1 1        870 121. 
+##  2 10       770  95.8
+##  3 100      760  89.2
+##  4 103      760 108. 
+##  5 104      800 122. 
+##  6 105      890  80.1
+##  7 106      810  83.3
+##  8 107      710  76.1
+##  9 108      780 209. 
+## 10 109      520 169. 
+## # ... with 276 more rows</code></pre>
+<pre class="r"><code>shr_by_sdlg1 &lt;- shr_by_sdlg %&gt;% 
+  filter(Seg ==1) %&gt;% 
+  rename(Cov1 = cov, Ht1 = ht_wm_seg.cm) %&gt;% 
+  replace_na(list(Ht1 = 0))
+shr_by_sdlg1</code></pre>
+<pre><code>## # A tibble: 286 x 5
+## # Groups:   Sdlg [286]
+##    Sdlg    Seg  Cov1   Ht1 ShrubSpp03
+##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;     
+##  1 1         1   290 131.  ARPA      
+##  2 10        1   330  85.2 ARPA      
+##  3 100       1   360  91.1 CECO      
+##  4 103       1   400  97.5 CECO      
+##  5 104       1   400 128.  CECO      
+##  6 105       1   510  83.5 CECO      
+##  7 106       1   400  85   CECO      
+##  8 107       1   380  69.5 CECO      
+##  9 108       1   380 207.  ARPA      
+## 10 109       1   170 172.  ARPA      
+## # ... with 276 more rows</code></pre>
+<pre class="r"><code>shr_by_sdlg &lt;- full_join(shr_by_sdlg1, shr_by_sdlg2)</code></pre>
+<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
+<pre class="r"><code>shr_by_sdlg &lt;- full_join(shr_by_sdlg, shr_by_sdlg3) %&gt;% 
+  select(Sdlg, ShrubSpp03, everything(), -Seg)</code></pre>
+<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
+<pre class="r"><code>shr_by_sdlg </code></pre>
 <pre><code>## # A tibble: 286 x 8
 ## # Groups:   Sdlg [286]
-##    Sdlg   Cov1  Cov2  Cov3 ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3
-##    &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;
-##  1 1       290   580   440    116.  ARPA         1310 116. 
-##  2 10      330   440   420    116.  ARPA         1190 116. 
-##  3 100     360   400   400     88.6 CECO         1160  88.6
-##  4 103     400   360   390    107.  CECO         1150 107. 
-##  5 104     400   400   400    122.  CECO         1200 122. 
-##  6 105     510   380   300     77.6 CECO         1190  77.6
-##  7 106     400   410   410     79.0 CECO         1220  79.0
-##  8 107     380   330   430     77.8 CECO         1140  77.8
-##  9 108     380   400   400    213.  ARPA         1180 213. 
-## 10 109     170   350   290    174.  ARPA          810 174. 
+##    Sdlg  ShrubSpp03  Cov1   Ht1 Cov1.2 Ht1.2 Cov1.3 Ht1.3
+##    &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+##  1 1     ARPA         290 131.     870 121.    1310 116. 
+##  2 10    ARPA         330  85.2    770  95.8   1190 116. 
+##  3 100   CECO         360  91.1    760  89.2   1160  88.6
+##  4 103   CECO         400  97.5    760 108.    1150 107. 
+##  5 104   CECO         400 128.     800 122.    1200 122. 
+##  6 105   CECO         510  83.5    890  80.1   1190  77.6
+##  7 106   CECO         400  85      810  83.3   1220  79.0
+##  8 107   CECO         380  69.5    710  76.1   1140  77.8
+##  9 108   ARPA         380 207.     780 209.    1180 213. 
+## 10 109   ARPA         170 172.     520 169.     810 174. 
 ## # ... with 276 more rows</code></pre>
-<div id="delete-unnecessary-columns" class="section level3">
-<h3>Delete unnecessary columns</h3>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  dplyr::select(-Cov1, -Cov2, -Cov3)</code></pre>
-</div>
-</div>
-</div>
-<div id="light-files-and-difn" class="section level1">
-<h1>Light files and DIFN</h1>
-<div id="merge-in-difn-and-light-file-data-from-seedling-df" class="section level2">
-<h2>Merge in DIFN and Light File data from seedling df</h2>
-<pre class="r"><code>names(df)</code></pre>
-<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Elevation&quot;         
-##  [4] &quot;Nearby_Easting&quot;     &quot;Nearby_Northing&quot;    &quot;Sdlg&quot;              
-##  [7] &quot;Species&quot;            &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;        
-## [10] &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;   
-## [13] &quot;HTLCB&quot;              &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot;
-## [16] &quot;Ht2015.meas2016&quot;    &quot;Note1&quot;              &quot;Note2&quot;             
-## [19] &quot;Note3_Light&quot;        &quot;DataSheet1&quot;         &quot;Light_File&quot;        
-## [22] &quot;DIFN&quot;               &quot;FirePatch&quot;          &quot;return&quot;            
-## [25] &quot;Date1&quot;              &quot;Date2&quot;              &quot;personel2&quot;         
-## [28] &quot;personel1&quot;          &quot;Time1&quot;              &quot;Time2&quot;             
-## [31] &quot;Photo&quot;              &quot;DataSheet2&quot;</code></pre>
-<pre class="r"><code>df_light &lt;- df %&gt;% 
-  dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species)
-shr_by_sdlg &lt;- left_join(shr_by_sdlg, df_light)</code></pre>
-<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
-<pre><code>## Warning: Column `Sdlg` joining factors with different levels, coercing to
-## character vector</code></pre>
-<pre class="r"><code>shr_by_sdlg</code></pre>
-<pre><code>## # A tibble: 286 x 9
-## # Groups:   Sdlg [286]
-##    Sdlg  ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3 Light_File  DIFN FirePatch Species
-##    &lt;chr&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
-##  1 1        116.  ARPA         1310 116.          20 0.232 CLVD-N    PILA   
-##  2 10       116.  ARPA         1190 116.          27 0.325 CLVD-N    PIPO   
-##  3 100       88.6 CECO         1160  88.6          0 0     AMRC-2    ABCO   
-##  4 103      107.  CECO         1150 107.           0 0     AMRC-2    ABCO   
-##  5 104      122.  CECO         1200 122.           0 0     AMRC-2    ABCO   
-##  6 105       77.6 CECO         1190  77.6         86 0.061 AMRC-2    ABCO   
-##  7 106       79.0 CECO         1220  79.0          0 0     AMRC-2    ABCO   
-##  8 107       77.8 CECO         1140  77.8         80 0.093 AMRC-2    ABCO   
-##  9 108      213.  ARPA         1180 213.           0 0     CLVD-SE   PIPO   
-## 10 109      174.  ARPA          810 174.          91 0.117 CLVD-SE   PIPO   
-## # ... with 276 more rows</code></pre>
-</div>
-<div id="mark-the-measurements-without-seedling-as-ref-for-reference" class="section level2">
-<h2>Mark the measurements without seedling as “ref” for reference</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  mutate(ref = ifelse(Sdlg %in% c(&quot;ARPA-1&quot;,  &quot;ceco-1&quot;,  &quot;CEIN-1&quot;, &quot;CEIN-2&quot;,&quot;chfo-1&quot;, &quot;DCECO-1&quot;, &quot;DCECO-2&quot;, &quot;DCECO-3&quot;, &quot;LIDE-1&quot;,  &quot;LIDE-2&quot;, &quot;LIDE-3&quot;, &quot;LIDE-4&quot;), 1,0))
-summary(as.factor(shr_by_sdlg$ref))</code></pre>
-<pre><code>##   0   1 
-## 274  12</code></pre>
-</div>
-</div>
-<div id="make-sdlg-all-caps" class="section level1">
-<h1>Make Sdlg all caps</h1>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  ungroup() %&gt;% 
-  mutate(Sdlg = toupper(Sdlg))</code></pre>
-<div id="add-light-files-for-non-seedling-shrub-locations" class="section level2">
-<h2>Add light files for non-seedling shrub locations</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-4&quot;, 48, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-3&quot;, 47, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-2&quot;, 46, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-1&quot;, 45, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-1&quot;, 125, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-2&quot;, 126, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;CECO-1&quot;, 74, Light_File)) %&gt;% 
-  mutate(Light_File = ifelse(Sdlg == &quot;ARPA-1&quot;, 94, Light_File))</code></pre>
-</div>
-</div>
-<div id="add-difn-degrees-from-fv2200-output-file" class="section level1">
-<h1>Add DIFN degrees from FV2200 output file</h1>
-<div id="load-in-difn-data-using-only-the-first-4-gaps-down-to-53-degrees" class="section level2">
-<h2>Load in DIFN data using only the first 4 gaps (down to 53 degrees)</h2>
-<pre class="r"><code>DIFNl53 &lt;- read.table(file=&quot;~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4&quot;,header=T,sep=&quot;\t&quot;)
-names(shr_by_sdlg)</code></pre>
-<pre><code>##  [1] &quot;Sdlg&quot;       &quot;ht_wm.cm&quot;   &quot;ShrubSpp03&quot; &quot;Cov1.3&quot;     &quot;Ht1.3&quot;     
-##  [6] &quot;Light_File&quot; &quot;DIFN&quot;       &quot;FirePatch&quot;  &quot;Species&quot;    &quot;ref&quot;</code></pre>
-<pre class="r"><code>DIFNl53 &lt;- distinct(DIFNl53)</code></pre>
-</div>
-<div id="delete-repeat-row-that-only-has-data-in-one-of-the-rows" class="section level2">
-<h2>Delete repeat row that only has data in one of the rows</h2>
-<pre class="r"><code>DIFNl53 &lt;- DIFNl53 %&gt;% 
-  filter(!(LAI_File ==111 &amp; DIFN==0))</code></pre>
-</div>
-<div id="join-difn.53-data-with-shrub-data" class="section level2">
-<h2>Join DIFN.53 data with shrub data</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- left_join(shr_by_sdlg, DIFNl53, by=c(&quot;Light_File&quot;=&quot;LAI_File&quot;)) %&gt;%
-  rename(DIFN.all = DIFN.x) %&gt;%
-  rename(DIFN.53 =DIFN.y) %&gt;%
-  rename(LAI.53 = LAI) %&gt;% 
-  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
-shr_by_sdlg</code></pre>
-<pre><code>## # A tibble: 286 x 13
-##    Sdlg  ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species
-##    &lt;chr&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
-##  1 1        116.  ARPA         1310 116.          20    0.232 CLVD-N    PILA   
-##  2 10       116.  ARPA         1190 116.          27    0.325 CLVD-N    PIPO   
-##  3 100       88.6 CECO         1160  88.6          0    0     AMRC-2    ABCO   
-##  4 103      107.  CECO         1150 107.           0    0     AMRC-2    ABCO   
-##  5 104      122.  CECO         1200 122.           0    0     AMRC-2    ABCO   
-##  6 105       77.6 CECO         1190  77.6         86    0.061 AMRC-2    ABCO   
-##  7 106       79.0 CECO         1220  79.0          0    0     AMRC-2    ABCO   
-##  8 107       77.8 CECO         1140  77.8         80    0.093 AMRC-2    ABCO   
-##  9 108      213.  ARPA         1180 213.           0    0     CLVD-SE   PIPO   
-## 10 109      174.  ARPA          810 174.          91    0.117 CLVD-SE   PIPO   
-## # ... with 276 more rows, and 4 more variables: ref &lt;dbl&gt;, Date &lt;fct&gt;,
-## #   LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
-</div>
-<div id="check-for-duplicated-seedlings" class="section level2">
-<h2>Check for duplicated seedlings</h2>
-<pre class="r"><code>shr_by_sdlg %&gt;% 
-  group_by(Sdlg) %&gt;% 
-  summarize(n=n()) %&gt;% 
-  filter(n !=1)</code></pre>
-<pre><code>## # A tibble: 0 x 2
-## # ... with 2 variables: Sdlg &lt;chr&gt;, n &lt;int&gt;</code></pre>
-</div>
-<div id="find-which-seedlings-have-difn.all-but-lack-difn.53" class="section level2">
-<h2>Find which seedlings have DIFN.all but lack DIFN.53</h2>
-<pre class="r"><code>shr_by_sdlg %&gt;% 
-  filter(!(is.na(DIFN.all) | DIFN.all==0) &amp; is.na(DIFN.53))</code></pre>
-<pre><code>## # A tibble: 2 x 13
-##   Sdlg  ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species
-##   &lt;chr&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
-## 1 3         116. ARPA         1310  116.          0    0.222 CLVD-N    PSME   
-## 2 9         132. ARPA         1440  132.          0    0.283 CLVD-N    ABCO   
-## # ... with 4 more variables: ref &lt;dbl&gt;, Date &lt;fct&gt;, LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
-</div>
-<div id="fill-in-a-couple-seedlings-with-funky-difn-situations" class="section level2">
-<h2>Fill in a couple seedlings with funky DIFN situations</h2>
-<p>Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky</p>
-<pre class="r"><code>shr_by_sdlg[shr_by_sdlg$Sdlg==9,&quot;DIFN.53&quot;] &lt;- DIFNl53[DIFNl53$LAI_File==15,&quot;DIFN&quot;]
-shr_by_sdlg[shr_by_sdlg$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),&quot;DIFN&quot;])</code></pre>
-</div>
-<div id="check-again" class="section level2">
-<h2>Check again</h2>
-<pre class="r"><code>shr_by_sdlg %&gt;% 
-  filter(!(is.na(DIFN.all) | DIFN.all==0) &amp; is.na(DIFN.53))</code></pre>
-<pre><code>## # A tibble: 0 x 13
-## # ... with 13 variables: Sdlg &lt;chr&gt;, ht_wm.cm &lt;dbl&gt;, ShrubSpp03 &lt;fct&gt;,
-## #   Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;,
-## #   FirePatch &lt;chr&gt;, Species &lt;chr&gt;, ref &lt;dbl&gt;, Date &lt;fct&gt;, LAI.53 &lt;dbl&gt;,
-## #   DIFN.53 &lt;dbl&gt;</code></pre>
+<!-- # Light files and DIFN -->
+<!-- ## Merge in DIFN and Light File data from seedling df -->
+<!-- ```{r} -->
+<!-- names(df) -->
+<!-- df_light <- df %>%  -->
+<!--   dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species) -->
+<!-- shr_by_sdlg <- left_join(shr_by_sdlg, df_light) -->
+<!-- shr_by_sdlg -->
+<!-- ``` -->
+<!-- ## Mark the measurements without seedling as "ref" for reference -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
+<!--   mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0)) -->
+<!-- summary(as.factor(shr_by_sdlg$ref)) -->
+<!-- ``` -->
+<!-- # Make Sdlg all caps -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
+<!--   ungroup() %>%  -->
+<!--   mutate(Sdlg = toupper(Sdlg)) -->
+<!-- ``` -->
+<!-- ## Add light files for non-seedling shrub locations -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-4", 48, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-3", 47, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-2", 46, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-1", 45, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-1", 125, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-2", 126, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "CECO-1", 74, Light_File)) %>%  -->
+<!--   mutate(Light_File = ifelse(Sdlg == "ARPA-1", 94, Light_File)) -->
+<!-- ``` -->
+<!-- # Add DIFN degrees from FV2200 output file -->
+<!-- ## Load in DIFN data using only the first 4 gaps (down to 53 degrees) -->
+<!-- ```{r} -->
+<!-- DIFNl53 <- read.table(file="~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4",header=T,sep="\t") -->
+<!-- names(shr_by_sdlg) -->
+<!-- DIFNl53 <- distinct(DIFNl53) -->
+<!-- ``` -->
+<!-- ## Delete repeat row that only has data in one of the rows -->
+<!-- ```{r} -->
+<!-- DIFNl53 <- DIFNl53 %>%  -->
+<!--   filter(!(LAI_File ==111 & DIFN==0)) -->
+<!-- ``` -->
+<!-- ## Join DIFN.53 data with shrub data -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg <- left_join(shr_by_sdlg, DIFNl53, by=c("Light_File"="LAI_File")) %>% -->
+<!--   rename(DIFN.all = DIFN.x) %>% -->
+<!--   rename(DIFN.53 =DIFN.y) %>% -->
+<!--   rename(LAI.53 = LAI) %>%  -->
+<!--   dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr) -->
+<!-- shr_by_sdlg -->
+<!-- ``` -->
+<!-- ## Check for duplicated seedlings -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg %>%  -->
+<!--   group_by(Sdlg) %>%  -->
+<!--   summarize(n=n()) %>%  -->
+<!--   filter(n !=1) -->
+<!-- ``` -->
+<!-- ## Find which seedlings have DIFN.all but lack DIFN.53  -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg %>%  -->
+<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
+<!-- ``` -->
+<!-- ## Fill in a couple seedlings with funky DIFN situations -->
+<!-- Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"] -->
+<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"]) -->
+<!-- ``` -->
+<!-- ## Check again -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg %>%  -->
+<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
+<!-- ``` -->
+<!-- # Figure out where the ARVI is -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg %>%  -->
+<!--   filter(ShrubSpp03=="ARVI") -->
+<!-- ``` -->
+<!-- # Save for DIFN -->
+<!-- ```{r} -->
+<!-- save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata") -->
+<!-- ``` -->
+<!-- ## Take out trees that aren't ABCO or PIPO -->
+<!-- ```{r} -->
+<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
+<!--   filter(Species %in% c("ABCO", "PIPO")) -->
+<!-- ``` -->
 </div>
 </div>
 <div id="list-seedlings" class="section level1">
 <h1>List seedlings</h1>
 <pre class="r"><code>sort(shr_by_sdlg$Sdlg)</code></pre>
-<pre><code>##   [1] &quot;1&quot;       &quot;10&quot;      &quot;100&quot;     &quot;103&quot;     &quot;104&quot;     &quot;105&quot;     &quot;106&quot;    
-##   [8] &quot;107&quot;     &quot;108&quot;     &quot;109&quot;     &quot;11&quot;      &quot;110&quot;     &quot;111&quot;     &quot;112&quot;    
-##  [15] &quot;113&quot;     &quot;115&quot;     &quot;116&quot;     &quot;117&quot;     &quot;118&quot;     &quot;119&quot;     &quot;12&quot;     
-##  [22] &quot;120&quot;     &quot;121&quot;     &quot;122&quot;     &quot;123&quot;     &quot;124&quot;     &quot;125F&quot;    &quot;125W&quot;   
-##  [29] &quot;126&quot;     &quot;127&quot;     &quot;128&quot;     &quot;129&quot;     &quot;13&quot;      &quot;130&quot;     &quot;131&quot;    
-##  [36] &quot;132&quot;     &quot;133&quot;     &quot;134&quot;     &quot;135&quot;     &quot;136&quot;     &quot;137&quot;     &quot;138&quot;    
-##  [43] &quot;139&quot;     &quot;14&quot;      &quot;140&quot;     &quot;141&quot;     &quot;142&quot;     &quot;143&quot;     &quot;144&quot;    
-##  [50] &quot;145&quot;     &quot;146&quot;     &quot;147&quot;     &quot;148&quot;     &quot;149&quot;     &quot;15&quot;      &quot;150&quot;    
-##  [57] &quot;151&quot;     &quot;152&quot;     &quot;153&quot;     &quot;154&quot;     &quot;155&quot;     &quot;156&quot;     &quot;157&quot;    
-##  [64] &quot;158&quot;     &quot;159&quot;     &quot;16&quot;      &quot;160&quot;     &quot;161&quot;     &quot;162&quot;     &quot;163&quot;    
-##  [71] &quot;164&quot;     &quot;165&quot;     &quot;166&quot;     &quot;167&quot;     &quot;168&quot;     &quot;169&quot;     &quot;170&quot;    
-##  [78] &quot;171&quot;     &quot;172&quot;     &quot;173&quot;     &quot;174&quot;     &quot;175&quot;     &quot;176&quot;     &quot;177&quot;    
-##  [85] &quot;178&quot;     &quot;179&quot;     &quot;180&quot;     &quot;181&quot;     &quot;182&quot;     &quot;183&quot;     &quot;184&quot;    
-##  [92] &quot;185&quot;     &quot;186&quot;     &quot;187&quot;     &quot;188&quot;     &quot;189&quot;     &quot;19&quot;      &quot;190&quot;    
-##  [99] &quot;191&quot;     &quot;192&quot;     &quot;193&quot;     &quot;194&quot;     &quot;195&quot;     &quot;196&quot;     &quot;197&quot;    
-## [106] &quot;198&quot;     &quot;199&quot;     &quot;2&quot;       &quot;20&quot;      &quot;200&quot;     &quot;201&quot;     &quot;202&quot;    
-## [113] &quot;203&quot;     &quot;204&quot;     &quot;205&quot;     &quot;206&quot;     &quot;207&quot;     &quot;208&quot;     &quot;209&quot;    
-## [120] &quot;21&quot;      &quot;210&quot;     &quot;211&quot;     &quot;212&quot;     &quot;213&quot;     &quot;214&quot;     &quot;215&quot;    
-## [127] &quot;216&quot;     &quot;217&quot;     &quot;218&quot;     &quot;219&quot;     &quot;22&quot;      &quot;220&quot;     &quot;221&quot;    
-## [134] &quot;222&quot;     &quot;223&quot;     &quot;224&quot;     &quot;225&quot;     &quot;226&quot;     &quot;227&quot;     &quot;228&quot;    
-## [141] &quot;229&quot;     &quot;23&quot;      &quot;230&quot;     &quot;231&quot;     &quot;232&quot;     &quot;233&quot;     &quot;234&quot;    
-## [148] &quot;235&quot;     &quot;236&quot;     &quot;237&quot;     &quot;238&quot;     &quot;239&quot;     &quot;24&quot;      &quot;240&quot;    
-## [155] &quot;241&quot;     &quot;242&quot;     &quot;243&quot;     &quot;244&quot;     &quot;245&quot;     &quot;246&quot;     &quot;247&quot;    
-## [162] &quot;248&quot;     &quot;249&quot;     &quot;25&quot;      &quot;250&quot;     &quot;251&quot;     &quot;252&quot;     &quot;253&quot;    
-## [169] &quot;254&quot;     &quot;255&quot;     &quot;256&quot;     &quot;257&quot;     &quot;258&quot;     &quot;259&quot;     &quot;26&quot;     
-## [176] &quot;260&quot;     &quot;261&quot;     &quot;262&quot;     &quot;263&quot;     &quot;264&quot;     &quot;265&quot;     &quot;27&quot;     
-## [183] &quot;275&quot;     &quot;276&quot;     &quot;277&quot;     &quot;278&quot;     &quot;279&quot;     &quot;28&quot;      &quot;280&quot;    
-## [190] &quot;281&quot;     &quot;282&quot;     &quot;283&quot;     &quot;284&quot;     &quot;285&quot;     &quot;286&quot;     &quot;287&quot;    
-## [197] &quot;288&quot;     &quot;289&quot;     &quot;290&quot;     &quot;291&quot;     &quot;292&quot;     &quot;293&quot;     &quot;294&quot;    
-## [204] &quot;3&quot;       &quot;35&quot;      &quot;36&quot;      &quot;37&quot;      &quot;38&quot;      &quot;39&quot;      &quot;4&quot;      
-## [211] &quot;40&quot;      &quot;41&quot;      &quot;42&quot;      &quot;43&quot;      &quot;44&quot;      &quot;45&quot;      &quot;46&quot;     
-## [218] &quot;47&quot;      &quot;48&quot;      &quot;49&quot;      &quot;5&quot;       &quot;50&quot;      &quot;51&quot;      &quot;52&quot;     
-## [225] &quot;53&quot;      &quot;54&quot;      &quot;55&quot;      &quot;56&quot;      &quot;57&quot;      &quot;58&quot;      &quot;6&quot;      
-## [232] &quot;60&quot;      &quot;61&quot;      &quot;62&quot;      &quot;63&quot;      &quot;64&quot;      &quot;65&quot;      &quot;66&quot;     
-## [239] &quot;67&quot;      &quot;68&quot;      &quot;69&quot;      &quot;7&quot;       &quot;70&quot;      &quot;71&quot;      &quot;72&quot;     
-## [246] &quot;73&quot;      &quot;74&quot;      &quot;75&quot;      &quot;76&quot;      &quot;77&quot;      &quot;78&quot;      &quot;79&quot;     
-## [253] &quot;8&quot;       &quot;80&quot;      &quot;81&quot;      &quot;82&quot;      &quot;83&quot;      &quot;84&quot;      &quot;85&quot;     
-## [260] &quot;86&quot;      &quot;87&quot;      &quot;88&quot;      &quot;89&quot;      &quot;9&quot;       &quot;90&quot;      &quot;91&quot;     
-## [267] &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;      &quot;96&quot;      &quot;97&quot;      &quot;98&quot;     
-## [274] &quot;99&quot;      &quot;ARPA-1&quot;  &quot;CECO-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;CHFO-1&quot;  &quot;DCECO-1&quot;
-## [281] &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot;  &quot;LIDE-4&quot;</code></pre>
-</div>
-<div id="figure-out-where-the-arvi-is" class="section level1">
-<h1>Figure out where the ARVI is</h1>
-<pre class="r"><code>shr_by_sdlg %&gt;% 
-  filter(ShrubSpp03==&quot;ARVI&quot;)</code></pre>
-<pre><code>## # A tibble: 2 x 13
-##   Sdlg  ht_wm.cm ShrubSpp03 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species
-##   &lt;chr&gt;    &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
-## 1 111       163. ARVI         1040  163.         93    0.101 CLVD-SE   CADE   
-## 2 ARPA~     197. ARVI         1190  197.         94   NA     &lt;NA&gt;      &lt;NA&gt;   
-## # ... with 4 more variables: ref &lt;dbl&gt;, Date &lt;fct&gt;, LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
-</div>
-<div id="save-for-difn" class="section level1">
-<h1>Save for DIFN</h1>
-<pre class="r"><code>save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata&quot;)</code></pre>
-<div id="take-out-trees-that-arent-abco-or-pipo" class="section level2">
-<h2>Take out trees that aren’t ABCO or PIPO</h2>
-<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;% 
-  filter(Species %in% c(&quot;ABCO&quot;, &quot;PIPO&quot;))</code></pre>
-</div>
+<pre><code>##   [1] &quot;1&quot;       &quot;10&quot;      &quot;100&quot;     &quot;103&quot;     &quot;104&quot;     &quot;105&quot;     &quot;106&quot;     &quot;107&quot;     &quot;108&quot;     &quot;109&quot;     &quot;11&quot;      &quot;110&quot;     &quot;111&quot;     &quot;112&quot;     &quot;113&quot;    
+##  [16] &quot;115&quot;     &quot;116&quot;     &quot;117&quot;     &quot;118&quot;     &quot;119&quot;     &quot;12&quot;      &quot;120&quot;     &quot;121&quot;     &quot;122&quot;     &quot;123&quot;     &quot;124&quot;     &quot;125f&quot;    &quot;125w&quot;    &quot;126&quot;     &quot;127&quot;    
+##  [31] &quot;128&quot;     &quot;129&quot;     &quot;13&quot;      &quot;130&quot;     &quot;131&quot;     &quot;132&quot;     &quot;133&quot;     &quot;134&quot;     &quot;135&quot;     &quot;136&quot;     &quot;137&quot;     &quot;138&quot;     &quot;139&quot;     &quot;14&quot;      &quot;140&quot;    
+##  [46] &quot;141&quot;     &quot;142&quot;     &quot;143&quot;     &quot;144&quot;     &quot;145&quot;     &quot;146&quot;     &quot;147&quot;     &quot;148&quot;     &quot;149&quot;     &quot;15&quot;      &quot;150&quot;     &quot;151&quot;     &quot;152&quot;     &quot;153&quot;     &quot;154&quot;    
+##  [61] &quot;155&quot;     &quot;156&quot;     &quot;157&quot;     &quot;158&quot;     &quot;159&quot;     &quot;16&quot;      &quot;160&quot;     &quot;161&quot;     &quot;162&quot;     &quot;163&quot;     &quot;164&quot;     &quot;165&quot;     &quot;166&quot;     &quot;167&quot;     &quot;168&quot;    
+##  [76] &quot;169&quot;     &quot;170&quot;     &quot;171&quot;     &quot;172&quot;     &quot;173&quot;     &quot;174&quot;     &quot;175&quot;     &quot;176&quot;     &quot;177&quot;     &quot;178&quot;     &quot;179&quot;     &quot;180&quot;     &quot;181&quot;     &quot;182&quot;     &quot;183&quot;    
+##  [91] &quot;184&quot;     &quot;185&quot;     &quot;186&quot;     &quot;187&quot;     &quot;188&quot;     &quot;189&quot;     &quot;19&quot;      &quot;190&quot;     &quot;191&quot;     &quot;192&quot;     &quot;193&quot;     &quot;194&quot;     &quot;195&quot;     &quot;196&quot;     &quot;197&quot;    
+## [106] &quot;198&quot;     &quot;199&quot;     &quot;2&quot;       &quot;20&quot;      &quot;200&quot;     &quot;201&quot;     &quot;202&quot;     &quot;203&quot;     &quot;204&quot;     &quot;205&quot;     &quot;206&quot;     &quot;207&quot;     &quot;208&quot;     &quot;209&quot;     &quot;21&quot;     
+## [121] &quot;210&quot;     &quot;211&quot;     &quot;212&quot;     &quot;213&quot;     &quot;214&quot;     &quot;215&quot;     &quot;216&quot;     &quot;217&quot;     &quot;218&quot;     &quot;219&quot;     &quot;22&quot;      &quot;220&quot;     &quot;221&quot;     &quot;222&quot;     &quot;223&quot;    
+## [136] &quot;224&quot;     &quot;225&quot;     &quot;226&quot;     &quot;227&quot;     &quot;228&quot;     &quot;229&quot;     &quot;23&quot;      &quot;230&quot;     &quot;231&quot;     &quot;232&quot;     &quot;233&quot;     &quot;234&quot;     &quot;235&quot;     &quot;236&quot;     &quot;237&quot;    
+## [151] &quot;238&quot;     &quot;239&quot;     &quot;24&quot;      &quot;240&quot;     &quot;241&quot;     &quot;242&quot;     &quot;243&quot;     &quot;244&quot;     &quot;245&quot;     &quot;246&quot;     &quot;247&quot;     &quot;248&quot;     &quot;249&quot;     &quot;25&quot;      &quot;250&quot;    
+## [166] &quot;251&quot;     &quot;252&quot;     &quot;253&quot;     &quot;254&quot;     &quot;255&quot;     &quot;256&quot;     &quot;257&quot;     &quot;258&quot;     &quot;259&quot;     &quot;26&quot;      &quot;260&quot;     &quot;261&quot;     &quot;262&quot;     &quot;263&quot;     &quot;264&quot;    
+## [181] &quot;265&quot;     &quot;27&quot;      &quot;275&quot;     &quot;276&quot;     &quot;277&quot;     &quot;278&quot;     &quot;279&quot;     &quot;28&quot;      &quot;280&quot;     &quot;281&quot;     &quot;282&quot;     &quot;283&quot;     &quot;284&quot;     &quot;285&quot;     &quot;286&quot;    
+## [196] &quot;287&quot;     &quot;288&quot;     &quot;289&quot;     &quot;290&quot;     &quot;291&quot;     &quot;292&quot;     &quot;293&quot;     &quot;294&quot;     &quot;3&quot;       &quot;35&quot;      &quot;36&quot;      &quot;37&quot;      &quot;38&quot;      &quot;39&quot;      &quot;4&quot;      
+## [211] &quot;40&quot;      &quot;41&quot;      &quot;42&quot;      &quot;43&quot;      &quot;44&quot;      &quot;45&quot;      &quot;46&quot;      &quot;47&quot;      &quot;48&quot;      &quot;49&quot;      &quot;5&quot;       &quot;50&quot;      &quot;51&quot;      &quot;52&quot;      &quot;53&quot;     
+## [226] &quot;54&quot;      &quot;55&quot;      &quot;56&quot;      &quot;57&quot;      &quot;58&quot;      &quot;6&quot;       &quot;60&quot;      &quot;61&quot;      &quot;62&quot;      &quot;63&quot;      &quot;64&quot;      &quot;65&quot;      &quot;66&quot;      &quot;67&quot;      &quot;68&quot;     
+## [241] &quot;69&quot;      &quot;7&quot;       &quot;70&quot;      &quot;71&quot;      &quot;72&quot;      &quot;73&quot;      &quot;74&quot;      &quot;75&quot;      &quot;76&quot;      &quot;77&quot;      &quot;78&quot;      &quot;79&quot;      &quot;8&quot;       &quot;80&quot;      &quot;81&quot;     
+## [256] &quot;82&quot;      &quot;83&quot;      &quot;84&quot;      &quot;85&quot;      &quot;86&quot;      &quot;87&quot;      &quot;88&quot;      &quot;89&quot;      &quot;9&quot;       &quot;90&quot;      &quot;91&quot;      &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;     
+## [271] &quot;96&quot;      &quot;97&quot;      &quot;98&quot;      &quot;99&quot;      &quot;ARPA-1&quot;  &quot;ceco-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;chfo-1&quot;  &quot;DCECO-1&quot; &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot; 
+## [286] &quot;LIDE-4&quot;</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>
-<pre class="r"><code>save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)</code></pre>
+<pre class="r"><code>save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)
+#write.csv(shr_by_sdlg, file = &quot;../../compiled_data/fire_footprints/shrub_master_data_2016.csv&quot;, row.names = F)</code></pre>
 </div>
 
 

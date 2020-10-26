@@ -10,7 +10,7 @@ output:
 # This script runs simulations without being spatially explicit. Thus, the functions `shrubclump` and `ratify_r` were removed.
 
 ```{r, include = F}
-setwd("~/Shrubs-Seedlings/code/Simulations/") # change this if needed
+setwd("~/../Shrubs-Seedlings/code/Simulations/") # change this if needed
 
 pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)

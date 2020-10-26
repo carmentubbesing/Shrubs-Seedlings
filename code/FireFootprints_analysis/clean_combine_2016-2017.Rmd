@@ -27,7 +27,7 @@ df17 <- read_excel("Shrubs_Summer17_Compiled_Sep14.xlsx") %>%
 
 # Read in 2016 data
 ```{r}
-setwd("~/Shrubs-Seedlings/compiled_data/fire_footprints/")
+setwd("~/../Shrubs-Seedlings/compiled_data/fire_footprints/")
 load("master_data_2016.Rdata")
 df16 <- df %>% 
   rename(Ht16_meas2016.cm = Ht.cm)
@@ -168,10 +168,12 @@ df <- df %>%
 summary(as.factor(df$Status))
 ```
 
-# Create shrubarea variable
+# Create shrubarea variables
 ```{r}
 df <- df %>% 
-  mutate(shrubarea3 = Ht1.3 * Cov1.3)
+  mutate(shrubarea3 = Ht1.3 * Cov1.3) %>% 
+  mutate(shrubarea2 = Ht1.2 * Cov1.2) %>% 
+  mutate(shrubarea1 = Ht1 * Cov1) 
 ```
 
 # Find seedlings with no 2017 Datasheet recorded
@@ -183,7 +185,7 @@ df %>%
 
 # Save
 ```{r}
-save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
-write.csv(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv", row.names = F)
+save(df, file = "~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata")
+write.csv(df, file = "~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv", row.names = F)
 ```
 

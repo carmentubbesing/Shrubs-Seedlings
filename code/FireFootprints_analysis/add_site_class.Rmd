@@ -20,7 +20,7 @@ require(ggplot2)
 
 # Read in raster
 ```{r}
-setwd("~/../Documents/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 load("../../compiled_data/fire_footprints/master_seedlings.Rdata")
 ```
 
@@ -103,6 +103,6 @@ summary(as.factor(df$siteclass))
 
 # Save
 ```{r}
-save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
+save(df, file = "~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
 ```
 

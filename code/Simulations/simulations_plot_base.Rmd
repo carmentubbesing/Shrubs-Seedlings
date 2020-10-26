@@ -9,13 +9,13 @@ output:
 
 ```{r}
 name <- "1_2020-04-13_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
-df_filename <- paste("~/Simulation", name, ".Rdata", sep = "")
+df_filename <- paste("~/../Ch3_Simulation_Results/Simulation", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
 ```
 
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}
@@ -51,6 +51,20 @@ dfsimallreps %>%
   group_by(emerged, Species) %>% 
   count()
 ```
+
+# Calculate mean and SD starting # of each species
+```{r}
+df9 <- dfsimallreps %>% filter(Years == min(Years))
+```
+
+```{r}
+df9 %>% 
+  group_by(rep, Species) %>% 
+  count() %>% 
+  group_by(Species) %>% 
+  summarize(mean(n), sd(n), min(n), max(n))
+```
+
 
 # Summarize
 ```{r}
@@ -170,9 +184,9 @@ Q50
 
 # Plot on a per-area basis
 
-Each plot in Welch's data was 60 m^2. Across 15 plots, that's 900 square meters.
+Each plot in Welch's data was 60 m^2. 
 
-
+## Load Welch data on # plots
 ```{r}
 load("../../results/coefficients/welch_ratios.Rdata")
 load("../../results/data/n_plots_welch_subset.Rdata")
@@ -243,6 +257,7 @@ calc_area <- full_join(calc_area, welch_species_n) %>%
   mutate(area_sim = welch_area*ratio) %>% 
   summarize(area_sim = mean(area_sim))
 area_sim <- calc_area$area_sim
+area_sim_ha <- area_sim/10000
 ```
 
 ```{r}
@@ -264,13 +279,13 @@ summary_emerge <- dfsimallreps %>%
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
-  mutate(density = total_emergents/area_sim)
+  mutate(density_ha = total_emergents/area_sim_ha)
 ```
 
 ```{r}
 plot_emerge_density <- ggplot(summary_emerge)+
   theme_minimal()+
-  geom_boxplot(aes(x = as.factor(Years), y = density, fill = Species), alpha = .8, outlier.shape = NA)+
+  geom_boxplot(aes(x = as.factor(Years), y = density_ha, fill = Species), alpha = .8, outlier.shape = NA)+
   ylab("Density of emerged trees per m^2")+
   xlab("Years since fire")+
   scale_x_discrete(breaks =c("10","20","30", "40"))+
@@ -373,8 +388,9 @@ summary_emerge_density <- dfsimallreps %>%
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(density = total_emergents/900) %>% 
-   group_by(Years, Species) %>% 
-  summarize(mean = mean(density), sd = sd(density))
+  mutate(density_ha = density*10000) %>% 
+  group_by(Years, Species) %>% 
+  summarize(mean = mean(density_ha), sd = sd(density_ha))
 ```
 
 ## Density
@@ -397,7 +413,7 @@ ggplot(summary_emerge_density)+
   
   xlab("Years since fire")+
   theme(legend.position = c(0.75, 0.3))+
-    ylab("Density of emerged trees per m^2")+
+    ylab("Density of emerged trees per ha")+
   scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
                                 labels = c("White fir", "Ponderosa pine"))+
 

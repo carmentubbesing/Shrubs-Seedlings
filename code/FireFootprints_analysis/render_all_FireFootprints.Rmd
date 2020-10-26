@@ -11,7 +11,7 @@ This code contains all of the steps necessary to clean and analyze Fire Footprin
 
 ```{r prep}
 library(knitr)
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 ```
 
 # Cleaning

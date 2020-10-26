@@ -394,7 +394,7 @@ summary {
 <li><a href="#record-why-things-were-left-out">Record why things were left out</a></li>
 <li><a href="#remove-seedlings-that-were-excluded-for-reasons-other-than-dead-or-couldnt-find-them">Remove seedlings that were excluded for reasons other than dead or couldn’t find them</a></li>
 </ul></li>
-<li><a href="#create-shrubarea-variable">Create shrubarea variable</a></li>
+<li><a href="#create-shrubarea-variables">Create shrubarea variables</a></li>
 <li><a href="#find-seedlings-with-no-2017-datasheet-recorded">Find seedlings with no 2017 Datasheet recorded</a></li>
 <li><a href="#save">Save</a></li>
 </ul>
@@ -408,7 +408,7 @@ df17 &lt;- read_excel(&quot;Shrubs_Summer17_Compiled_Sep14.xlsx&quot;) %&gt;%
 </div>
 <div id="read-in-2016-data" class="section level1">
 <h1>Read in 2016 data</h1>
-<pre class="r"><code>setwd(&quot;~/Shrubs-Seedlings/compiled_data/fire_footprints/&quot;)
+<pre class="r"><code>setwd(&quot;~/../Shrubs-Seedlings/compiled_data/fire_footprints/&quot;)
 load(&quot;master_data_2016.Rdata&quot;)
 df16 &lt;- df %&gt;% 
   rename(Ht16_meas2016.cm = Ht.cm)
@@ -456,24 +456,14 @@ remove(df)</code></pre>
 <h2>Full join</h2>
 <pre class="r"><code>df &lt;- full_join(df16, df17, by = &quot;Sdlg&quot;)
 sort(names(df))</code></pre>
-<pre><code>##  [1] &quot;Aspect.deg&quot;         &quot;BasDia.cm&quot;          &quot;Cov1.3&quot;            
-##  [4] &quot;Datasheet1_2016&quot;    &quot;Datasheet2_2016&quot;    &quot;DataSheet2017&quot;     
-##  [7] &quot;Date1_2016&quot;         &quot;Date2_2016&quot;         &quot;Date2017&quot;          
-## [10] &quot;Dia_1_mm&quot;           &quot;Dia_2_mm&quot;           &quot;Dia_at_2015_growth&quot;
-## [13] &quot;Dia_at_2016_growth&quot; &quot;DIFN&quot;               &quot;DIFN.53&quot;           
-## [16] &quot;Elevation&quot;          &quot;Fire.x&quot;             &quot;Fire.y&quot;            
-## [19] &quot;FirePatch.x&quot;        &quot;FirePatch.y&quot;        &quot;Growth_15&quot;         
-## [22] &quot;Growth_16&quot;          &quot;Growth_17&quot;          &quot;Ht1.3&quot;             
-## [25] &quot;Ht16_meas2016.cm&quot;   &quot;Ht2015.meas2016&quot;    &quot;Ht2017.cm&quot;         
-## [28] &quot;HTLCB&quot;              &quot;LAI.53&quot;             &quot;LastYearGrth.cm&quot;   
-## [31] &quot;Light_File&quot;         &quot;Map&quot;                &quot;Nearby_Easting&quot;    
-## [34] &quot;Nearby_Northing&quot;    &quot;Note1_2016&quot;         &quot;Note2_2016&quot;        
-## [37] &quot;Note3_Light&quot;        &quot;Notes2017&quot;          &quot;Patch&quot;             
-## [40] &quot;personel1&quot;          &quot;personel2&quot;          &quot;Photo&quot;             
-## [43] &quot;ref&quot;                &quot;return&quot;             &quot;Sdlg&quot;              
-## [46] &quot;ShrubSpp03&quot;         &quot;Slope.Deg&quot;          &quot;Species.x&quot;         
-## [49] &quot;Species.y&quot;          &quot;Status&quot;             &quot;Time1&quot;             
-## [52] &quot;Time2&quot;              &quot;Years&quot;</code></pre>
+<pre><code>##  [1] &quot;Aspect.deg&quot;         &quot;BasDia.cm&quot;          &quot;Cov1&quot;               &quot;Cov1.2&quot;             &quot;Cov1.3&quot;             &quot;Datasheet1_2016&quot;    &quot;Datasheet2_2016&quot;   
+##  [8] &quot;DataSheet2017&quot;      &quot;Date1_2016&quot;         &quot;Date2_2016&quot;         &quot;Date2017&quot;           &quot;Dia_1_mm&quot;           &quot;Dia_2_mm&quot;           &quot;Dia_at_2015_growth&quot;
+## [15] &quot;Dia_at_2016_growth&quot; &quot;DIFN&quot;               &quot;Elevation&quot;          &quot;Fire.x&quot;             &quot;Fire.y&quot;             &quot;FirePatch.x&quot;        &quot;FirePatch.y&quot;       
+## [22] &quot;Growth_15&quot;          &quot;Growth_16&quot;          &quot;Growth_17&quot;          &quot;Ht1&quot;                &quot;Ht1.2&quot;              &quot;Ht1.3&quot;              &quot;Ht16_meas2016.cm&quot;  
+## [29] &quot;Ht2015.meas2016&quot;    &quot;Ht2017.cm&quot;          &quot;HTLCB&quot;              &quot;LastYearGrth.cm&quot;    &quot;Light_File&quot;         &quot;Map&quot;                &quot;Nearby_Easting&quot;    
+## [36] &quot;Nearby_Northing&quot;    &quot;Note1_2016&quot;         &quot;Note2_2016&quot;         &quot;Note3_Light&quot;        &quot;Notes2017&quot;          &quot;Patch&quot;              &quot;personel1&quot;         
+## [43] &quot;personel2&quot;          &quot;Photo&quot;              &quot;return&quot;             &quot;Sdlg&quot;               &quot;ShrubSpp03&quot;         &quot;Slope.Deg&quot;          &quot;Species.x&quot;         
+## [50] &quot;Species.y&quot;          &quot;Status&quot;             &quot;Time1&quot;              &quot;Time2&quot;              &quot;Years&quot;</code></pre>
 </div>
 </div>
 <div id="sync-up-repeat-column-names" class="section level1">
@@ -482,21 +472,14 @@ sort(names(df))</code></pre>
 <h2>Check for different species</h2>
 <pre class="r"><code>df %&gt;% 
   filter(Species.x != Species.y)</code></pre>
-<pre><code>## # A tibble: 0 x 53
-## # ... with 53 variables: Fire.x &lt;chr&gt;, Patch &lt;chr&gt;, Elevation &lt;dbl&gt;,
-## #   Nearby_Easting &lt;dbl&gt;, Nearby_Northing &lt;dbl&gt;, Sdlg &lt;chr&gt;, Species.x &lt;chr&gt;,
-## #   Slope.Deg &lt;dbl&gt;, Aspect.deg &lt;dbl&gt;, Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;,
-## #   LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;, Dia_at_2016_growth &lt;dbl&gt;,
-## #   Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;dbl&gt;, Note1_2016 &lt;chr&gt;,
-## #   Note2_2016 &lt;chr&gt;, Note3_Light &lt;fct&gt;, Datasheet1_2016 &lt;fct&gt;,
-## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch.x &lt;chr&gt;, return &lt;chr&gt;,
-## #   Date1_2016 &lt;date&gt;, Date2_2016 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
-## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;, Datasheet2_2016 &lt;chr&gt;,
-## #   ShrubSpp03 &lt;fct&gt;, Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;,
-## #   ref &lt;dbl&gt;, Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Fire.y &lt;chr&gt;,
-## #   FirePatch.y &lt;chr&gt;, Species.y &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;,
-## #   Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;,
-## #   Growth_16 &lt;chr&gt;, Growth_15 &lt;chr&gt;, Notes2017 &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 0 x 54
+## # ... with 54 variables: Fire.x &lt;chr&gt;, Patch &lt;chr&gt;, Elevation &lt;dbl&gt;, Nearby_Easting &lt;dbl&gt;, Nearby_Northing &lt;dbl&gt;, Sdlg &lt;chr&gt;, Species.x &lt;chr&gt;, Slope.Deg &lt;dbl&gt;,
+## #   Aspect.deg &lt;dbl&gt;, Ht16_meas2016.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;dbl&gt;, Dia_at_2016_growth &lt;dbl&gt;, Dia_at_2015_growth &lt;dbl&gt;,
+## #   Ht2015.meas2016 &lt;int&gt;, Note1_2016 &lt;chr&gt;, Note2_2016 &lt;chr&gt;, Note3_Light &lt;chr&gt;, Datasheet1_2016 &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch.x &lt;chr&gt;,
+## #   return &lt;chr&gt;, Date1_2016 &lt;date&gt;, Date2_2016 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;, Datasheet2_2016 &lt;chr&gt;,
+## #   ShrubSpp03 &lt;chr&gt;, Cov1 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;, Years &lt;dbl&gt;, Date2017 &lt;dbl&gt;, DataSheet2017 &lt;chr&gt;, Fire.y &lt;chr&gt;,
+## #   FirePatch.y &lt;chr&gt;, Species.y &lt;chr&gt;, Map &lt;chr&gt;, Status &lt;chr&gt;, Ht2017.cm &lt;dbl&gt;, Dia_1_mm &lt;chr&gt;, Dia_2_mm &lt;chr&gt;, Growth_17 &lt;chr&gt;, Growth_16 &lt;chr&gt;,
+## #   Growth_15 &lt;chr&gt;, Notes2017 &lt;chr&gt;</code></pre>
 </div>
 <div id="go-with-2017-species-when-its-listed-since-one-trees-species-was-corrected" class="section level2">
 <h2>Go with 2017 species when it’s listed since one tree’s species was corrected</h2>
@@ -580,18 +563,18 @@ df %&gt;%
 <pre class="r"><code>df &lt;- df %&gt;% 
   filter(!Status %in% c(&quot;exclude, under oak&quot;, &quot;exclude, lone in patch&quot;))
 summary(as.factor(df$Status))</code></pre>
-<pre><code>##  Actually PILA          alive could not find           dead           done 
-##              1             21              2              7             27 
-##           DONE          eaten      herbicide     herbicided      not found 
-##            130              1              3              6             19 
+<pre><code>##  Actually PILA          alive could not find           dead           done           DONE          eaten      herbicide     herbicided      not found 
+##              1             21              2              7             27            130              1              3              6             19 
 ##         unsure           NA&#39;s 
 ##              1             51</code></pre>
 </div>
 </div>
-<div id="create-shrubarea-variable" class="section level1">
-<h1>Create shrubarea variable</h1>
+<div id="create-shrubarea-variables" class="section level1">
+<h1>Create shrubarea variables</h1>
 <pre class="r"><code>df &lt;- df %&gt;% 
-  mutate(shrubarea3 = Ht1.3 * Cov1.3)</code></pre>
+  mutate(shrubarea3 = Ht1.3 * Cov1.3) %&gt;% 
+  mutate(shrubarea2 = Ht1.2 * Cov1.2) %&gt;% 
+  mutate(shrubarea1 = Ht1 * Cov1) </code></pre>
 </div>
 <div id="find-seedlings-with-no-2017-datasheet-recorded" class="section level1">
 <h1>Find seedlings with no 2017 Datasheet recorded</h1>
@@ -615,8 +598,8 @@ summary(as.factor(df$Status))</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>
-<pre class="r"><code>save(df, file = &quot;~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata&quot;)
-write.csv(df, file = &quot;~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv&quot;, row.names = F)</code></pre>
+<pre class="r"><code>save(df, file = &quot;~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.Rdata&quot;)
+write.csv(df, file = &quot;~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings.csv&quot;, row.names = F)</code></pre>
 </div>
 
 

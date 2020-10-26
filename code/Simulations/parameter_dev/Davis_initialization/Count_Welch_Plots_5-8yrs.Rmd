@@ -1,0 +1,126 @@
+---
+title: "Count_Welch_Plots_5-8yrs"
+output: 
+  html_document:
+    toc: TRUE
+---
+
+
+```{r, include = F}
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/Davis_initialization/")
+require(tidyverse)
+require(lubridate)
+require(readxl)
+```
+
+
+
+```{r}
+load(file = "~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs.Rdata")
+```
+
+```{r}
+welch_5.8yrs %>% 
+  group_by(Regen_Plot) %>% 
+  summarize(sum_regen = sum(Count_total)) %>% 
+  arrange(sum_regen)
+```
+
+# Remove plots with dominant shrub species that aren't in my AMRC data, even in the "other" category of my shrub data
+
+The shrub species that get to stay are: ARPA   CECO   CEIN   CEPR   CHFO   CHSE   LIDE PREM   QUVA 
+
+
+## Find the dominant shrub species of each plot
+```{r}
+welch_5.8yrs_shrubdom <- welch_5.8yrs %>% 
+  ungroup() %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  dplyr::select(Regen_Plot, Shrub_species) %>% 
+  distinct()
+```
+
+## Make a list of all the plots that have dominant shrub species outside of the ones in my AMRC data
+```{r}
+no_go_regen_plots <- welch_5.8yrs_shrubdom %>% 
+  filter(Shrub_species %in% c("ARNE", "RIBES", "SYMO"))
+```
+
+## Remove those plots from the welch data
+```{r}
+welch_5.8yrs <- welch_5.8yrs %>% 
+  filter(!Regen_Plot %in% no_go_regen_plots$Regen_Plot)
+```
+
+# Count total regen plots
+```{r}
+n_plots <- length(unique(welch_5.8yrs$Regen_Plot))
+n_plots
+```
+
+# Take out repeated plots in order to tabulate regen
+```{r}
+welch_5.8yrs <- welch_5.8yrs %>% 
+  mutate(Species = ifelse(is.na(Species), "0", Species)) %>% 
+  filter(Species %in% c("0", "PIPO", "ABCO")) %>% 
+  dplyr::select(years_since_fire, Regen_Plot, Fire, Count_total, Species) %>% 
+  distinct()
+```
+
+# Plot densities of regen histogram
+```{r}
+welch_5.8yrs %>% 
+  mutate(Species = ifelse(is.na(Species), "0", Species)) %>% 
+  filter(Species %in% c("0", "PIPO", "ABCO")) %>% 
+  group_by(Regen_Plot) %>% 
+  summarize(sum_regen = sum(Count_total)) %>% 
+  ggplot()+
+  geom_histogram(aes(sum_regen))+
+  theme_minimal()
+```
+
+# Check plot seedling densities against Access database (this checked out) 
+```{r}
+welch_5.8yrs %>% 
+  mutate(Species = ifelse(is.na(Species), "0", Species)) %>% 
+  filter(Species %in% c("0", "PIPO", "ABCO")) %>% 
+  group_by(Regen_Plot) %>% 
+  summarize(sum_regen = sum(Count_total)) %>% 
+  arrange(desc(sum_regen))
+```
+
+# Calculate density of fir and pine per ha using plot size
+
+Each plot was 60 m2 according to Welch Ecosphere paper
+
+Total area of all plots = 
+```{r}
+total_area_ha <- n_plots*60/10000
+total_area_ha
+```
+ha.
+
+In this area, there were a total of 
+```{r}
+welch_5.8yrs %>% 
+  mutate(Species = ifelse(is.na(Species), "0", Species)) %>% 
+  filter(Species %in% c("0", "PIPO", "ABCO")) %>% 
+  group_by(Species) %>% 
+  summarize(sum_regen = sum(Count_total)) 
+```
+tree per species.
+
+This equals the following densities:
+```{r}
+472/3.63
+```
+130 trees per ha
+
+```{r}
+406/3.63
+```
+111.8 trees per ha

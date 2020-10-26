@@ -16,7 +16,7 @@ require(tidyr)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
 load(file = "../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata")
 ```
@@ -30,10 +30,10 @@ df <- df %>%
   mutate(Sdlg = toupper(Sdlg))
 ```
 
-## Take out variables I don't need
 ```{r}
 shr_by_sdlg <- shr_by_sdlg %>% 
-  dplyr::select(Sdlg, ShrubSpp03, Cov1.3, Ht1.3, LAI.53, DIFN.53, ref)
+  ungroup() %>% 
+  mutate(Sdlg = toupper(Sdlg))
 ```
 
 ```{r}

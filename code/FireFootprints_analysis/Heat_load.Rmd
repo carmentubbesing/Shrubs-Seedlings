@@ -15,7 +15,7 @@ require(tidyverse)
 
 # Load data
 ```{r}
-load(file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
+load(file = "~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings1.Rdata")
 ```
 
 # Add elevation and slope where they're missing - look in original data sheets
@@ -528,7 +528,7 @@ df %>%
 
 # Save
 ```{r}
-save(df, file = "~/../Documents/Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata")
+save(df, file = "~/../Shrubs-Seedlings/compiled_data/fire_footprints/master_seedlings2.Rdata")
 ```
 
 Now I can use incident radiation and heat load in my random forest models

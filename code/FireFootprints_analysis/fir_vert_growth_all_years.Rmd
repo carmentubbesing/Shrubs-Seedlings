@@ -387,6 +387,7 @@ df %>%
 ## Save final data
 ```{r}
 save(df, file ="../../compiled_data/fire_footprints/fir_vert.Rdata")
+
 ```
 
 # Save LM with non-normalized data

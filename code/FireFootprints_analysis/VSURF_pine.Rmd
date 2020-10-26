@@ -18,7 +18,7 @@ set.seed(12346)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 
@@ -46,9 +46,46 @@ xdf <- df %>%
          Years,
          BasDia2016.cm, 
          Ht_cm1,
+         sqrt_shrubarea1,
+         sqrt_shrubarea2,
          sqrt_shrubarea3,
+         Ht1,
+         Ht1.2,
+         Ht1.3,
+         Cov1,
+         Cov1.2,
+         Cov1.3,
          ShrubSpp03) 
 ```
+
+
+## Find NA values
+```{r}
+df[unique (unlist (lapply (xdf, function (x) which (is.na (x))))),] %>% 
+  select(Sdlg, 
+         Elevation,
+         Slope.Deg,
+         heatload,
+         incidrad,
+         #Aspect.rad.fold.NESW,
+         siteclass,
+         Year,
+         Years,
+         BasDia2016.cm, 
+         Ht_cm1,
+         sqrt_shrubarea1,
+         sqrt_shrubarea2,
+         sqrt_shrubarea3,
+         Ht1,
+         Ht1.2,
+         Ht1.3,
+         Cov1,
+         Cov1.2,
+         Cov1.3,
+         ShrubSpp03) %>% 
+  arrange(Sdlg)
+```
+
 
 ## Normalize the numeric ones
 ```{r}
@@ -70,10 +107,13 @@ vsurf$varselect.pred
 xdf[vsurf$varselect.pred]
 ```
 
-## Save the results
 ```{r}
 vars <- names(xdf[vsurf$varselect.pred])
 vars
+```
+
+## Save the results
+```{r}
 save(vars, file = "../../results/VSURF_pipo_vars.Rdata")
 ```
 
@@ -84,6 +124,38 @@ forest <- randomForest(
     dplyr::select(vars),
   y = df$VertGrowth_Rel,
   importance = TRUE,
+  scale = TRUE)
+varImpPlot(forest)
+```
+
+
+
+
+## Look at random forest of variables after interpretation step
+```{r}
+vars.interp <- names(xdf[vsurf$varselect.interp])
+vars.interp
+forest <- randomForest(
+  x = xdf %>%
+    dplyr::select(vars.interp),
+  y = df$VertGrowth_Rel,
+  ntree = 1000,
+  importance = TRUE,
+  scale = TRUE)
+varImpPlot(forest)
+```
+
+
+## Look at random forest of variables after interpretation step
+```{r}
+vars.thres <- names(xdf[vsurf$varselect.thres])
+vars.thres
+forest <- randomForest(
+  x = xdf %>%
+    dplyr::select(vars.thres),
+  y = df$VertGrowth_Rel,
+  importance = TRUE,
+  ntree = 1000,
   scale = TRUE)
 varImpPlot(forest)
 ```
