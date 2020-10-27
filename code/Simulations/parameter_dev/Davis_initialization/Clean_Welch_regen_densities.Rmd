@@ -7,7 +7,7 @@ output: html_document
 
 
 ```{r, include = F}
-setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+setwd("~/../Shrubs-Seedlings/code/Shrub_growth_time/")
 require(tidyverse)
 require(lubridate)
 require(readxl)

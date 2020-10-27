@@ -10,7 +10,7 @@ output:
 # This script runs simulations without being spatially explicit. Thus, the functions `shrubclump` and `ratify_r` were removed.
 
 ```{r, include = F}
-setwd("~/Shrubs-Seedlings/code/Simulations/") # change this if needed
+setwd("~/../Shrubs-Seedlings/code/Simulations/") 
 
 pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)
@@ -44,9 +44,9 @@ fire <- "AMRC"
 ```{r}
 climate_method <- "historic" #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method <- "empirical" #random, empirical
-shrub_method <- "welch" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
-shrub_coefficient <- "empirical"  #emprical, CECO, ARPA, CHSE, LIDE, Other
-shrub_heightgrowth <- "empirical"  #emprical, CECO, ARPA, CEIN
+shrub_method <- "welch" #empirical, welch, CECO, ARPA,  LIDE, OTHER
+shrub_coefficient <- "empirical"  #empirical, CECO, ARPA, LIDE, Other
+shrub_heightgrowth <- "empirical"  #empirical, CECO, ARPA, CEIN
 shrub_initial_index <- "empirical" # empirical, CECO, ARPA, CEIN
 n_seedlings <- 200
 ```
@@ -117,7 +117,7 @@ conifer_species_method <- "empirical" #random, empirical
 ## CECO
 ```{r}
 remove(dfsimallreps)
-shrub_method <- "CECO" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_method <- "CECO" #empirical, welch, CECO, ARPA, LIDE, OTHER
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 Sys.time()-time
@@ -131,7 +131,7 @@ save(dfsimallreps, file =filename)
 ## ARPA
 ```{r}
 remove(dfsimallreps)
-shrub_method <- "ARPA" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_method <- "ARPA" #empirical, welch, CECO, ARPA, LIDE, OTHER
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -158,13 +158,13 @@ save(dfsimallreps, file =filename)
 # Repeat for single shrub COEFFICIENT models
 
 ```{r}
-shrub_method <- "welch" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_method <- "welch" #empirical, welch, CECO, ARPA, LIDE, OTHER
 ```
 
 ## CECO
 ```{r}
 remove(dfsimallreps)
-shrub_coefficient <- "CECO"  #emprical, CECO, ARPA, CEIN
+shrub_coefficient <- "CECO"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -177,7 +177,7 @@ save(dfsimallreps, file =filename)
 ## CEIN
 ```{r}
 remove(dfsimallreps)
-shrub_coefficient <- "CEIN"  #emprical, CECO, ARPA, CEIN
+shrub_coefficient <- "CEIN"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -190,7 +190,7 @@ save(dfsimallreps, file =filename)
 ## ARPA
 ```{r}
 remove(dfsimallreps)
-shrub_coefficient <- "ARPA"  #emprical, CECO, ARPA, CEIN
+shrub_coefficient <- "ARPA"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -204,13 +204,13 @@ save(dfsimallreps, file =filename)
 # Repeat for single shrub GROWTH models
 
 ```{r}
-shrub_coefficient <- "empirical" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_coefficient <- "empirical" #empirical, welch, CECO, ARPA, LIDE, OTHER
 ```
 
 ## CECO
 ```{r}
 remove(dfsimallreps)
-shrub_heightgrowth <- "CECO"  #emprical, CECO, ARPA, CEIN
+shrub_heightgrowth <- "CECO"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -223,7 +223,7 @@ save(dfsimallreps, file =filename)
 ## CEIN
 ```{r}
 remove(dfsimallreps)
-shrub_heightgrowth <- "CEIN"  #emprical, CECO, ARPA, CEIN
+shrub_heightgrowth <- "CEIN"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -237,7 +237,7 @@ save(dfsimallreps, file =filename)
 
 ```{r}
 remove(dfsimallreps)
-shrub_heightgrowth <- "ARPA"  #emprical, CECO, ARPA, CEIN
+shrub_heightgrowth <- "ARPA"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -250,14 +250,14 @@ save(dfsimallreps, file =filename)
 # Repeat for single shrub INITIAL INDEX models
 
 ```{r}
-shrub_heightgrowth <- "empirical" #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_heightgrowth <- "empirical" #empirical, welch, CECO, ARPA, LIDE, OTHER
 ```
 
 
 ## CECO
 ```{r}
 remove(dfsimallreps)
-shrub_initial_index <- "CECO"  #emprical, CECO, ARPA, CEIN
+shrub_initial_index <- "CECO"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
@@ -272,7 +272,7 @@ save(dfsimallreps, file =filename)
 ```{r}
 remove(dfsimallreps)
 years_max <- 70
-shrub_initial_index <- "CEIN"  #emprical, CECO, ARPA, CEIN
+shrub_initial_index <- "CEIN"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
@@ -287,7 +287,7 @@ save(dfsimallreps, file =filename)
 ```{r}
 remove(dfsimallreps)
 years_max <- 50
-shrub_initial_index <- "ARPA"  #emprical, CECO, ARPA, CEIN
+shrub_initial_index <- "ARPA"  #empirical, CECO, ARPA, CEIN
 time <- Sys.time()
 
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)

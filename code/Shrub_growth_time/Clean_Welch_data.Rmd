@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r, include = F}
-setwd("~/Shrubs-Seedlings/code/Shrub_growth_time/")
+setwd("~/../Shrubs-Seedlings/code/Shrub_growth_time/")
 require(tidyverse)
 require(lubridate)
 require(readxl)
@@ -23,7 +23,7 @@ shrub <- read_excel("../../data/Data_for_shrub_growth/Welch_data/shrub_regen_Reg
 
 # Load cleaned Young data
 ```{r}
-load("~/Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
+load("~/../Shrubs-Seedlings/compiled_data/shrub_growth/Young_df.Rdata")
 young <- df
 remove(df)
 ```
@@ -160,5 +160,5 @@ names(df)
 
 # Save
 ```{r}
-save(df, file = "~/Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
+save(df, file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
 ```

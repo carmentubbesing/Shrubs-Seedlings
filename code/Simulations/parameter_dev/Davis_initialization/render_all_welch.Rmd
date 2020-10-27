@@ -1,0 +1,32 @@
+---
+title: "render_all_welch"
+output: html_document
+---
+
+
+```{r}
+library(knitr)
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/Davis_initialization")
+strt_renderall <- Sys.time()
+```
+
+# Clean Welch data
+```{r}
+rmarkdown::render("../../../Shrub_growth_time/Clean_Welch_data.Rmd", "html_document", quiet = T)
+```
+
+# Create `welch_5_8_yrs.Rdata`
+```{r}
+rmarkdown::render("Clean_Welch_regen.Rmd", "html_document", quiet = T)
+```
+
+# Calculate species ratios
+```{r}
+rmarkdown::render("Calc_Welch_ratios.Rmd", "html_document", quiet = T)
+```
+
+# Count plots
+```{r}
+rmarkdown::render("Count_Welch_Plots_5-8yrs.Rmd", "html_document", quiet = T)
+```
+

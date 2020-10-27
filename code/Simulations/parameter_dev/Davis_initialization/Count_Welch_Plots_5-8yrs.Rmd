@@ -5,6 +5,8 @@ output:
     toc: TRUE
 ---
 
+To count plots, I can only include plots that meet the following requirements:
+- no 
 
 ```{r, include = F}
 setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/Davis_initialization/")
@@ -13,10 +15,9 @@ require(lubridate)
 require(readxl)
 ```
 
-
-
 ```{r}
 load(file = "~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs.Rdata")
+welch_5.8yrs <- welch_subset_5.8years
 ```
 
 ```{r}
@@ -42,6 +43,7 @@ welch_5.8yrs_shrubdom <- welch_5.8yrs %>%
   filter(shrubarea == max(shrubarea)) %>% 
   dplyr::select(Regen_Plot, Shrub_species) %>% 
   distinct()
+summary(as.factor(welch_5.8yrs_shrubdom$Shrub_species))
 ```
 
 ## Make a list of all the plots that have dominant shrub species outside of the ones in my AMRC data
@@ -62,7 +64,7 @@ n_plots <- length(unique(welch_5.8yrs$Regen_Plot))
 n_plots
 ```
 
-# Take out repeated plots in order to tabulate regen
+# Take out repeated plots and plots without PIPO or ABCO seedlings in order to tabulate regen
 ```{r}
 welch_5.8yrs <- welch_5.8yrs %>% 
   mutate(Species = ifelse(is.na(Species), "0", Species)) %>% 
@@ -70,6 +72,14 @@ welch_5.8yrs <- welch_5.8yrs %>%
   dplyr::select(years_since_fire, Regen_Plot, Fire, Count_total, Species) %>% 
   distinct()
 ```
+
+# Count ABCO vs. PIPO
+```{r}
+welch_5.8yrs %>% 
+  group_by(Species) %>% 
+  summarize(sum(Count_total))
+```
+
 
 # Plot densities of regen histogram
 ```{r}
@@ -115,12 +125,16 @@ welch_5.8yrs %>%
 tree per species.
 
 This equals the following densities:
+
+ABCO: 
 ```{r}
-472/3.63
+472/total_area_ha
 ```
 130 trees per ha
 
+
+PIPO:
 ```{r}
-406/3.63
+406/total_area_ha
 ```
 111.8 trees per ha

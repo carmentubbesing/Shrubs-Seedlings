@@ -17,7 +17,7 @@ require(gridExtra)
 load(file = "~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs.Rdata")
 ```
 
-
+# Summarize cover of dominant shrub by regen plot
 ```{r}
 welch_5.8years_summary <- welch_subset_5.8years %>% 
   ungroup() %>% 
@@ -30,32 +30,123 @@ welch_5.8years_summary <- welch_subset_5.8years %>%
   group_by(Shrub_species) %>% 
   mutate(mean_cov = mean(Cover)) %>% 
   ungroup() %>% 
-  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) 
+  mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) %>% 
+  select(Regen_Plot, Shrub_species, Cover) %>% 
+  distinct()
+```
 
+## Check
+```{r}
+nrow(welch_5.8years_summary) == length(unique(welch_5.8years_summary$Regen_Plot))
+```
+
+### Make sure there's only one row per plot/Species combo
+```{r}
+welch_5.8years_summary %>% 
+  group_by(Regen_Plot) %>% 
+  count() %>% 
+  arrange(desc(n))
+```
+
+#### Fix the one plot with a duplicate
+```{r}
+welch_5.8years_summary %>% 
+  filter(Regen_Plot == "CUB1300199")
+```
+
+
+```{r}
+welch_subset_5.8years %>% 
+  filter(Regen_Plot == "CUB1300199") %>% 
+  select(Regen_Plot, Shrub_species, Cover, Count_total, Species)
+```
+
+```{r}
+welch_5.8years_summary <- welch_5.8years_summary %>% 
+  filter(!(Regen_Plot == "CUB1300199" & Shrub_species == "QUVA"))
+```
+
+
+## Plot for supplement
+
+```{r}
+welch_5.8years_summary <- welch_5.8years_summary %>% 
+  group_by(Shrub_species) %>% 
+  mutate(mean_cov = mean(Cover))
+```
+
+
+```{r}
 ggplot(welch_5.8years_summary)+
   geom_boxplot(aes(x = Shrub_species, y = Cover))+
   theme_minimal()+
   geom_point(aes(x = Shrub_species, y = mean_cov), col = "red")+
   xlab("Shrub species")
 ggsave(file = "../../../../results/figures/Simulations/welch_cein_ceco_ht_compare.png", width = 8)
-
 ```
 
 
-### Make sure there's only one row per plot/Species combo
-```{r}
-welch_5.8years_summary %>% 
-  group_by(Regen_Plot, Species) %>% 
-  filter(n()>1)
-```
-
-Those species don't matter for the species combo breakdown so I'm going to leave it as is. 
 
 # Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire
 
+```{r}
+welch_summary_combos <- welch_subset_5.8years %>% 
+  ungroup() %>% 
+  group_by(Regen_Plot) %>% 
+  filter(Cover == max(Cover)) %>% 
+  mutate(shrubarea = Cover*modal_ht_cm) %>% 
+  group_by(Regen_Plot) %>% 
+  filter(shrubarea == max(shrubarea)) %>% 
+  mutate(Shrub_species = ifelse(Shrub_species %in% c("ARPA6", "ARVI"), "ARPA/ARVI", Shrub_species)) %>% 
+  ungroup()  %>% 
+  select(Regen_Plot, Shrub_species, Cover, Species, Count_total) %>% 
+  arrange(Regen_Plot)
+welch_summary_combos
+```
+
+# Take out CHFO because it's not in my American River fire
+
+CHFO isn't in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it
+
+THIS IS THE STEP THAT DRASTICALLY CHANGES THE RESULTS BECAUSE THERE'S SO MUCH PIPO UNDER CHFO
+
+## Look at what's getting removed
+```{r}
+welch_summary_combos %>% 
+  filter(Species == "PIPO" & Shrub_species == "CHFO")
+```
 
 ```{r}
-welch_ratios <- welch_5.8years_summary %>% 
+welch_summary_combos %>% 
+  filter(Species == "ABCO" & Shrub_species == "CHFO")
+```
+
+
+What to do about CHSE? There are some problems:
+1. There are no PIPO/CHSE combos in my data
+2. There is TONS of ABCO under CHSE according to Welch data
+3. CHSE was not one of the species with a coefficient in Chapter 2
+4. Why did I leave CHSE separate in the simulations instead of lumping it under "other"? The only reason is that it's separate for shrub growth models from Welch data. 
+5. So what I need to do is lump it with "other" for the shrub gams and then it can be lumped with "other" for everything.
+6. Then I can leave in ALL trees under CHSE. Since there are only 4 PIPO, it won't change the results much.
+6. Lumping shouldn't change the GAMs much, either, because the GAM shapes are similar for CHSE and for Other
+
+## Remove it
+
+```{r}
+welch_subset_5.8years <- welch_subset_5.8years %>% 
+  filter(Shrub_species != "CHFO")
+```
+
+```{r}
+welch_summary_combos <- welch_summary_combos %>% 
+  filter(Shrub_species != "CHFO")
+```
+
+# Calculate ratios
+
+```{r}
+welch_ratios <- welch_summary_combos %>% 
   group_by(Shrub_species, Species) %>% 
   summarize(plots = n(), trees = sum(na.omit(Count_total))) %>% 
   filter(Species %in% c("ABCO", "PIPO"))
@@ -63,7 +154,7 @@ welch_ratios
 ```
 
 
-## Save these proportions to use in simulation initialization
+# Save these proportions to use in simulation initialization
 
 ## Reformat so it's compatible with my shrub data
 
@@ -74,28 +165,21 @@ welch_ratios %>%
   arrange(desc(trees))
 ```
 
-### Take out CHFO because it's not in my American River fire, it's not in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it
+### Which tree species is most common?
 ```{r}
-welch_ratios <- welch_ratios %>% 
-  filter(Shrub_species != "CHFO")
+welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(sum(trees))
 ```
 
-### Take out CHSE/PIPO combinations because they don't occur in my data
 ```{r}
-welch_ratios <- welch_ratios %>% 
-  filter(!(Shrub_species == "CHSE11" & Species == "PIPO"))
-```
-
-
-```{r}
-main_spp <- c("LIDE", "ARPA", "CECO", "CEIN", "CHSE", "Other")
+main_spp <- c("ARPA", "CECO", "CEIN", "Other")
 
 welch_ratios <- welch_ratios %>% 
   ungroup() %>% 
   mutate(Shrub_species = case_when(
     Shrub_species == "CEIN3" ~ "CEIN",
     Shrub_species == "ARPA/ARVI" ~ "ARPA",
-    Shrub_species == "CHSE11" ~ "CHSE",
     !Shrub_species %in% main_spp ~ "Other",
     TRUE ~ as.character(Shrub_species)
   )) %>% 
@@ -104,8 +188,13 @@ welch_ratios <- welch_ratios %>%
   ungroup() %>% 
   mutate(prop = trees/sum(trees))
 
-
 welch_ratios
+  ```
+
+```{r}
+welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(sum(prop))
 ```
 
 
@@ -117,6 +206,12 @@ save(welch_ratios, file = "../../../../results/coefficients/welch_ratios.Rdata")
 # EXTRA STUFF THAT'S NOT NECESSARY 
 
 ## Summarize MY AMRC data
+
+```{r}
+load(file="../../../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+me <- df
+remove(df)
+```
 
 ```{r}
 me_AMRC <- me %>%
@@ -172,7 +267,7 @@ me_shrspp_AMRC
 
 ### Filter welch to American River Complex
 ```{r}
-welch_AMRC <- welch_all_fires %>% 
+welch_AMRC <- welch_subset_5.8years %>% 
   filter(Fire == "AMERICAN RIVER")
 ```
 

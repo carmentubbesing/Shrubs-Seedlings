@@ -4,7 +4,6 @@ abco_shrubgrowth <- function(pts.sf.abco, shrub_heightgrowth){
   load("../../results/coefficients/gamCECO.Rdata")
   load("../../results/coefficients/gamARPA.Rdata")
   load("../../results/coefficients/gamCEIN.Rdata")
-  load("../../results/coefficients/gamCHSE.Rdata")
   load("../../results/coefficients/gamOTHER.Rdata")
   
   # Add a column for mean predicted shrub height for the present year, predicted by the GAM for each species
@@ -19,16 +18,12 @@ abco_shrubgrowth <- function(pts.sf.abco, shrub_heightgrowth){
   } else if(shrub_heightgrowth == "ARPA"){
     pts.sf.abco <- pts.sf.abco %>% 
       mutate(mean_shrub_ht_by_spp = predict.gam(gamARPA, x1, se= T)$fit)
-  } else if(shrub_heightgrowth == "CHFO"){
-    pts.sf.abco <- pts.sf.abco %>% 
-      mutate(mean_shrub_ht_by_spp = predict.gam(gamCHFO, x1, se= T)$fit)
   } else if(shrub_heightgrowth == "empirical") {
     pts.sf.abco <- pts.sf.abco %>% 
       mutate(mean_shrub_ht_by_spp = case_when(
         ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x1, se= T)$fit,
         ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x1, se= T)$fit,
         ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x1, se= T)$fit,
-        ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x1, se= T)$fit,
         TRUE  ~ predict.gam(gamOTHER, x1, se= T)$fit
       ))     
   }
@@ -53,16 +48,13 @@ abco_shrubgrowth <- function(pts.sf.abco, shrub_heightgrowth){
   } else if(shrub_heightgrowth == "ARPA"){
     pts.sf.abco <- pts.sf.abco %>% 
       mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamARPA, x2, se= T)$fit)
-  } else if(shrub_heightgrowth == "CHFO"){
-    pts.sf.abco <- pts.sf.abco %>% 
-      mutate(mean_shrub_ht_by_spp_T2 = predict.gam(gamCHFO, x2, se= T)$fit)
+
   } else if(shrub_heightgrowth == "empirical") {
     pts.sf.abco <- pts.sf.abco %>% 
       mutate(mean_shrub_ht_by_spp_T2 = case_when(
         ShrubSpp03 == "CECO" ~ predict.gam(gamCECO, x2, se= T)$fit,
         ShrubSpp03 == "ARPA" ~ predict.gam(gamARPA, x2, se= T)$fit,
         ShrubSpp03 == "CEIN" ~ predict.gam(gamCEIN, x2, se= T)$fit,
-        ShrubSpp03 == "CHSE" ~ predict.gam(gamCHSE, x2, se= T)$fit,
         TRUE  ~ predict.gam(gamOTHER, x2, se= T)$fit
       ))     
   }

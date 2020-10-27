@@ -9,7 +9,7 @@ output: html_document
 
 ```{r prep}
 library(knitr)
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 strt_renderall <- Sys.time()
 ```
 
