@@ -27,7 +27,7 @@ source("functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 20
+iterations <- 1000
 ```
 
 ## Define length of simulation
@@ -48,7 +48,7 @@ shrub_method <- "welch" #empirical, welch, CECO, ARPA,  LIDE, OTHER
 shrub_coefficient <- "empirical"  #empirical, CECO, ARPA, LIDE, Other
 shrub_heightgrowth <- "empirical"  #empirical, CECO, ARPA, CEIN
 shrub_initial_index <- "empirical" # empirical, CECO, ARPA, CEIN
-n_seedlings <- 200
+n_seedlings <- 100
 ```
 
 ## Define filter function

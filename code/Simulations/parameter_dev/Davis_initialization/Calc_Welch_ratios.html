@@ -373,16 +373,24 @@ summary {
 </ul></li>
 <li><a href="#plot-for-supplement">Plot for supplement</a></li>
 </ul></li>
-<li><a href="#look-at-overall-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire">Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire</a><ul>
-<li><a href="#save-these-proportions-to-use-in-simulation-initialization">Save these proportions to use in simulation initialization</a></li>
+<li><a href="#look-at-overall-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire">Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire</a></li>
+<li><a href="#remove-plots-with-unapplicable-shrub-species">Remove plots with unapplicable shrub species</a><ul>
+<li><a href="#plots-dominated-by-shrub-species-that-werent-even-in-the-other-category-in-my-fire-footprint-data-which-included">Plots dominated by shrub species that weren’t even in the Other category in my Fire Footprint data, which included:</a><ul>
+<li><a href="#look-at-whats-getting-removed">Look at what’s getting removed</a></li>
+<li><a href="#remove-it">Remove it</a></li>
+</ul></li>
+<li><a href="#take-out-chfo-because-its-not-in-my-american-river-fire">Take out CHFO because it’s not in my American River fire</a><ul>
+<li><a href="#look-at-whats-getting-removed-1">Look at what’s getting removed</a></li>
+<li><a href="#remove-it-1">Remove it</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#save-the-welch-subsets">Save the welch subsets</a></li>
+<li><a href="#count-total-regen-plots-with-or-without-seedlings-present-excluding-those-dominated-by-chfo">Count total regen plots, with or without seedlings present, excluding those dominated by CHFO</a></li>
+<li><a href="#calculate-ratios">Calculate ratios</a><ul>
 <li><a href="#reformat-so-its-compatible-with-my-shrub-data">Reformat so it’s compatible with my shrub data</a><ul>
 <li><a href="#which-shrub-species-are-most-common">Which shrub species are most common?</a></li>
 <li><a href="#which-tree-species-is-most-common">Which tree species is most common?</a></li>
-<li><a href="#take-out-chfo-because-its-not-in-my-american-river-fire-its-not-in-the-top-4-species-ny-trees-in-the-welch-data-and-it-would-be-difficult-to-initialize-without-knowing-who-establishes-under-it">Take out CHFO because it’s not in my American River fire, it’s not in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it</a></li>
 </ul></li>
-</ul></li>
-<li><a href="#this-is-the-step-that-drastically-changes-the-results-because-theres-so-much-pipo-under-chfo">THIS IS THE STEP THAT DRASTICALLY CHANGES THE RESULTS BECAUSE THERE’S SO MUCH PIPO UNDER CHFO</a><ul>
-<li><a href="#take-out-chsepipo-combinations-because-they-dont-occur-in-my-data">Take out CHSE/PIPO combinations because they don’t occur in my data</a></li>
 </ul></li>
 <li><a href="#extra-stuff-thats-not-necessary">EXTRA STUFF THAT’S NOT NECESSARY</a><ul>
 <li><a href="#summarize-my-amrc-data">Summarize MY AMRC data</a><ul>
@@ -444,6 +452,8 @@ summary {
 ##  9 AMR1300268     1
 ## 10 AMR1300269     1
 ## # ... with 595 more rows</code></pre>
+<div id="fix-the-one-plot-with-a-duplicate" class="section level4">
+<h4>Fix the one plot with a duplicate</h4>
 <pre class="r"><code>welch_5.8years_summary %&gt;% 
   filter(Regen_Plot == &quot;CUB1300199&quot;)</code></pre>
 <pre><code>## # A tibble: 2 x 3
@@ -463,6 +473,7 @@ summary {
 ## 4 CUB1300199 ARPA6             4           0 &lt;NA&gt;</code></pre>
 <pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
   filter(!(Regen_Plot == &quot;CUB1300199&quot; &amp; Shrub_species == &quot;QUVA&quot;))</code></pre>
+</div>
 </div>
 </div>
 <div id="plot-for-supplement" class="section level2">
@@ -491,15 +502,129 @@ summary {
   filter(shrubarea == max(shrubarea)) %&gt;% 
   mutate(Shrub_species = ifelse(Shrub_species %in% c(&quot;ARPA6&quot;, &quot;ARVI&quot;), &quot;ARPA/ARVI&quot;, Shrub_species)) %&gt;% 
   ungroup()  %&gt;% 
-  select(Regen_Plot, Shrub_species, Cover, Species, Count_total)</code></pre>
+  select(Regen_Plot, Shrub_species, Cover, Species, Count_total) %&gt;% 
+  arrange(Regen_Plot)
+welch_summary_combos</code></pre>
+<pre><code>## # A tibble: 802 x 5
+##    Regen_Plot Shrub_species Cover Species Count_total
+##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
+##  1 AMR1300156 CECO              5 PILA              6
+##  2 AMR1300156 CECO              5 ABMA              4
+##  3 AMR1300156 CECO              5 ABCO              3
+##  4 AMR1300192 QUVA              2 PIPO              1
+##  5 AMR1300192 QUVA              2 ABMA              2
+##  6 AMR1300196 CECO             20 PSME              4
+##  7 AMR1300196 CECO             20 ABCO              1
+##  8 AMR1300247 CHSE11            1 PIPO             14
+##  9 AMR1300247 CHSE11            1 ABCO             16
+## 10 AMR1300247 CHSE11            1 PILA              3
+## # ... with 792 more rows</code></pre>
+</div>
+<div id="remove-plots-with-unapplicable-shrub-species" class="section level1">
+<h1>Remove plots with unapplicable shrub species</h1>
+<div id="plots-dominated-by-shrub-species-that-werent-even-in-the-other-category-in-my-fire-footprint-data-which-included" class="section level2">
+<h2>Plots dominated by shrub species that weren’t even in the Other category in my Fire Footprint data, which included:</h2>
+<p>ARNE ARPA ARVI CECO CEIN CEPR CHFO CHSE CONU LIDE none other PREM QUKE QUVA willow NA’s</p>
+<pre class="r"><code>sort(unique(welch_summary_combos$Shrub_species))</code></pre>
+<pre><code>##  [1] &quot;ARNE&quot;      &quot;ARPA/ARVI&quot; &quot;CECO&quot;      &quot;CEIN3&quot;     &quot;CEPR&quot;      &quot;CHFO&quot;     
+##  [7] &quot;CHSE11&quot;    &quot;PREM&quot;      &quot;QUVA&quot;      &quot;RIBES&quot;     &quot;SYMO&quot;</code></pre>
+<div id="look-at-whats-getting-removed" class="section level3">
+<h3>Look at what’s getting removed</h3>
+<pre class="r"><code>welch_summary_combos %&gt;% 
+  filter(Shrub_species %in% c(&quot;SYMO&quot;, &quot;RIBES&quot;))</code></pre>
+<pre><code>## # A tibble: 35 x 5
+##    Regen_Plot Shrub_species Cover Species Count_total
+##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
+##  1 ANT1201793 SYMO            1   PIPO              2
+##  2 BST1100263 RIBES           2   ABMA             61
+##  3 BST1100263 RIBES           2   PSME              2
+##  4 BST1100263 RIBES           2   ABCO              5
+##  5 BUT1200079 SYMO           25   &lt;NA&gt;              0
+##  6 BUT1200093 SYMO            0.5 &lt;NA&gt;              0
+##  7 CUB1300101 RIBES           2   ABCO              1
+##  8 CUB1300235 RIBES          20   ABCO             14
+##  9 CUB1300235 RIBES          20   PILA              4
+## 10 CUB1300235 RIBES          20   PSME              5
+## # ... with 25 more rows</code></pre>
+</div>
+<div id="remove-it" class="section level3">
+<h3>Remove it</h3>
+<pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
+  filter(!Shrub_species %in% c(&quot;SYMO&quot;, &quot;RIBES&quot;))</code></pre>
+<pre class="r"><code>welch_summary_combos &lt;- welch_summary_combos %&gt;% 
+  filter(!Shrub_species %in% c(&quot;SYMO&quot;, &quot;RIBES&quot;))</code></pre>
+</div>
+</div>
+<div id="take-out-chfo-because-its-not-in-my-american-river-fire" class="section level2">
+<h2>Take out CHFO because it’s not in my American River fire</h2>
+<p>CHFO isn’t in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it</p>
+<p>THIS IS THE STEP THAT DRASTICALLY CHANGES THE RESULTS BECAUSE THERE’S SO MUCH PIPO UNDER CHFO</p>
+<div id="look-at-whats-getting-removed-1" class="section level3">
+<h3>Look at what’s getting removed</h3>
+<pre class="r"><code>welch_summary_combos %&gt;% 
+  filter(Species == &quot;PIPO&quot; &amp; Shrub_species == &quot;CHFO&quot;)</code></pre>
+<pre><code>## # A tibble: 20 x 5
+##    Regen_Plot Shrub_species Cover Species Count_total
+##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
+##  1 FRD0900023 CHFO             15 PIPO              1
+##  2 FRD0900030 CHFO             15 PIPO              3
+##  3 FRD0900070 CHFO             10 PIPO             25
+##  4 FRD0900117 CHFO             15 PIPO             13
+##  5 FRD1200049 CHFO             50 PIPO              1
+##  6 FRD1200090 CHFO             25 PIPO              7
+##  7 FRD1200117 CHFO             15 PIPO             14
+##  8 PWR0900046 CHFO             20 PIPO              1
+##  9 PWR0900073 CHFO             49 PIPO              2
+## 10 PWR0900075 CHFO             35 PIPO              1
+## 11 PWR0900080 CHFO             20 PIPO              3
+## 12 PWR0900087 CHFO              1 PIPO              1
+## 13 PWR0900091 CHFO             20 PIPO              2
+## 14 PWR0900098 CHFO             10 PIPO              5
+## 15 PWR0900103 CHFO             12 PIPO              1
+## 16 PWR0900118 CHFO             40 PIPO              3
+## 17 PWR0900142 CHFO             60 PIPO              2
+## 18 PWR0900219 CHFO             60 PIPO              2
+## 19 PWR0900245 CHFO             20 PIPO              1
+## 20 RAL1100626 CHFO              5 PIPO              7</code></pre>
+<pre class="r"><code>welch_summary_combos %&gt;% 
+  filter(Species == &quot;ABCO&quot; &amp; Shrub_species == &quot;CHFO&quot;)</code></pre>
+<pre><code>## # A tibble: 1 x 5
+##   Regen_Plot Shrub_species Cover Species Count_total
+##   &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
+## 1 FRD1200090 CHFO             25 ABCO              2</code></pre>
+<p>What to do about CHSE? There are some problems: 1. There are no PIPO/CHSE combos in my data 2. There is TONS of ABCO under CHSE according to Welch data 3. CHSE was not one of the species with a coefficient in Chapter 2 4. Why did I leave CHSE separate in the simulations instead of lumping it under “other”? The only reason is that it’s separate for shrub growth models from Welch data. 5. So what I need to do is lump it with “other” for the shrub gams and then it can be lumped with “other” for everything. 6. Then I can leave in ALL trees under CHSE. Since there are only 4 PIPO, it won’t change the results much. 6. Lumping shouldn’t change the GAMs much, either, because the GAM shapes are similar for CHSE and for Other</p>
+</div>
+<div id="remove-it-1" class="section level3">
+<h3>Remove it</h3>
+<pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
+  filter(Shrub_species != &quot;CHFO&quot;)</code></pre>
+<pre class="r"><code>welch_summary_combos &lt;- welch_summary_combos %&gt;% 
+  filter(Shrub_species != &quot;CHFO&quot;)</code></pre>
+</div>
+</div>
+</div>
+<div id="save-the-welch-subsets" class="section level1">
+<h1>Save the welch subsets</h1>
+<pre class="r"><code>save(welch_subset_5.8years, file = &quot;~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs_noCHFO.Rdata&quot;)
+save(welch_5.8years_summary, file = &quot;~/../Shrubs-Seedlings/compiled_data/welch_shrub_5_8_yrs_noCHFO.Rdata&quot;)</code></pre>
+</div>
+<div id="count-total-regen-plots-with-or-without-seedlings-present-excluding-those-dominated-by-chfo" class="section level1">
+<h1>Count total regen plots, with or without seedlings present, excluding those dominated by CHFO</h1>
+<pre class="r"><code>n_plots &lt;- length(unique(welch_5.8years_summary$Regen_Plot))
+n_plots</code></pre>
+<pre><code>## [1] 511</code></pre>
+<pre class="r"><code>save(n_plots, file = &quot;~/../Shrubs-Seedlings/results/coefficients/n_plots_welch.Rdata&quot;)</code></pre>
+</div>
+<div id="calculate-ratios" class="section level1">
+<h1>Calculate ratios</h1>
 <pre class="r"><code>welch_ratios &lt;- welch_summary_combos %&gt;% 
   group_by(Shrub_species, Species) %&gt;% 
   summarize(plots = n(), trees = sum(na.omit(Count_total))) %&gt;% 
   filter(Species %in% c(&quot;ABCO&quot;, &quot;PIPO&quot;))</code></pre>
 <pre><code>## `summarise()` regrouping output by &#39;Shrub_species&#39; (override with `.groups` argument)</code></pre>
 <pre class="r"><code>welch_ratios</code></pre>
-<pre><code>## # A tibble: 18 x 4
-## # Groups:   Shrub_species [11]
+<pre><code>## # A tibble: 14 x 4
+## # Groups:   Shrub_species [8]
 ##    Shrub_species Species plots trees
 ##    &lt;chr&gt;         &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt;
 ##  1 ARNE          ABCO        5    40
@@ -511,18 +636,11 @@ summary {
 ##  7 CEIN3         ABCO       21   129
 ##  8 CEIN3         PIPO       34   116
 ##  9 CEPR          PIPO        4    24
-## 10 CHFO          ABCO        1     2
-## 11 CHFO          PIPO       20    95
-## 12 CHSE11        ABCO        6   105
-## 13 CHSE11        PIPO        4    17
-## 14 PREM          PIPO        1     1
-## 15 QUVA          ABCO        1     2
-## 16 QUVA          PIPO        1     1
-## 17 RIBES         ABCO        5    28
-## 18 SYMO          PIPO        1     2</code></pre>
-<div id="save-these-proportions-to-use-in-simulation-initialization" class="section level2">
-<h2>Save these proportions to use in simulation initialization</h2>
-</div>
+## 10 CHSE11        ABCO        6   105
+## 11 CHSE11        PIPO        4    17
+## 12 PREM          PIPO        1     1
+## 13 QUVA          ABCO        1     2
+## 14 QUVA          PIPO        1     1</code></pre>
 <div id="reformat-so-its-compatible-with-my-shrub-data" class="section level2">
 <h2>Reformat so it’s compatible with my shrub data</h2>
 <div id="which-shrub-species-are-most-common" class="section level3">
@@ -531,20 +649,17 @@ summary {
   summarize(sum(plots), trees = sum(trees)) %&gt;% 
   arrange(desc(trees))</code></pre>
 <pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
-<pre><code>## # A tibble: 11 x 3
-##    Shrub_species `sum(plots)` trees
-##    &lt;chr&gt;                &lt;int&gt; &lt;dbl&gt;
-##  1 CEIN3                   55   245
-##  2 CECO                    56   205
-##  3 CHSE11                  10   122
-##  4 ARPA/ARVI               27   108
-##  5 CHFO                    21    97
-##  6 ARNE                     8    43
-##  7 RIBES                    5    28
-##  8 CEPR                     4    24
-##  9 QUVA                     2     3
-## 10 SYMO                     1     2
-## 11 PREM                     1     1</code></pre>
+<pre><code>## # A tibble: 8 x 3
+##   Shrub_species `sum(plots)` trees
+##   &lt;chr&gt;                &lt;int&gt; &lt;dbl&gt;
+## 1 CEIN3                   55   245
+## 2 CECO                    56   205
+## 3 CHSE11                  10   122
+## 4 ARPA/ARVI               27   108
+## 5 ARNE                     8    43
+## 6 CEPR                     4    24
+## 7 QUVA                     2     3
+## 8 PREM                     1     1</code></pre>
 </div>
 <div id="which-tree-species-is-most-common" class="section level3">
 <h3>Which tree species is most common?</h3>
@@ -555,70 +670,15 @@ summary {
 <pre><code>## # A tibble: 2 x 2
 ##   Species `sum(trees)`
 ##   &lt;chr&gt;          &lt;dbl&gt;
-## 1 ABCO             472
-## 2 PIPO             406</code></pre>
-</div>
-<div id="take-out-chfo-because-its-not-in-my-american-river-fire-its-not-in-the-top-4-species-ny-trees-in-the-welch-data-and-it-would-be-difficult-to-initialize-without-knowing-who-establishes-under-it" class="section level3">
-<h3>Take out CHFO because it’s not in my American River fire, it’s not in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it</h3>
-</div>
-</div>
-</div>
-<div id="this-is-the-step-that-drastically-changes-the-results-because-theres-so-much-pipo-under-chfo" class="section level1">
-<h1>THIS IS THE STEP THAT DRASTICALLY CHANGES THE RESULTS BECAUSE THERE’S SO MUCH PIPO UNDER CHFO</h1>
-<pre class="r"><code>welch_summary_combos %&gt;% 
-  filter(Species == &quot;PIPO&quot; &amp; Shrub_species == &quot;CHFO&quot;)</code></pre>
-<pre><code>## # A tibble: 20 x 5
-##    Regen_Plot Shrub_species Cover Species Count_total
-##    &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
-##  1 PWR0900098 CHFO             10 PIPO              5
-##  2 PWR0900091 CHFO             20 PIPO              2
-##  3 PWR0900087 CHFO              1 PIPO              1
-##  4 PWR0900103 CHFO             12 PIPO              1
-##  5 PWR0900080 CHFO             20 PIPO              3
-##  6 PWR0900075 CHFO             35 PIPO              1
-##  7 PWR0900046 CHFO             20 PIPO              1
-##  8 PWR0900073 CHFO             49 PIPO              2
-##  9 PWR0900142 CHFO             60 PIPO              2
-## 10 PWR0900219 CHFO             60 PIPO              2
-## 11 PWR0900245 CHFO             20 PIPO              1
-## 12 PWR0900118 CHFO             40 PIPO              3
-## 13 FRD0900030 CHFO             15 PIPO              3
-## 14 FRD0900070 CHFO             10 PIPO             25
-## 15 FRD0900023 CHFO             15 PIPO              1
-## 16 FRD0900117 CHFO             15 PIPO             13
-## 17 RAL1100626 CHFO              5 PIPO              7
-## 18 FRD1200049 CHFO             50 PIPO              1
-## 19 FRD1200090 CHFO             25 PIPO              7
-## 20 FRD1200117 CHFO             15 PIPO             14</code></pre>
-<pre class="r"><code>welch_summary_combos %&gt;% 
-  filter(Species == &quot;ABCO&quot; &amp; Shrub_species == &quot;CHFO&quot;)</code></pre>
-<pre><code>## # A tibble: 1 x 5
-##   Regen_Plot Shrub_species Cover Species Count_total
-##   &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
-## 1 FRD1200090 CHFO             25 ABCO              2</code></pre>
-<pre class="r"><code>welch_ratios &lt;- welch_ratios %&gt;% 
-  filter(Shrub_species != &quot;CHFO&quot;)</code></pre>
-<div id="take-out-chsepipo-combinations-because-they-dont-occur-in-my-data" class="section level3">
-<h3>Take out CHSE/PIPO combinations because they don’t occur in my data</h3>
-<pre class="r"><code>welch_summary_combos %&gt;% 
-  filter(Species == &quot;PIPO&quot; &amp; Shrub_species == &quot;CHSE11&quot;)</code></pre>
-<pre><code>## # A tibble: 4 x 5
-##   Regen_Plot Shrub_species Cover Species Count_total
-##   &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
-## 1 AMR1300247 CHSE11            1 PIPO             14
-## 2 CUB1300169 CHSE11           35 PIPO              1
-## 3 CUB1300221 CHSE11           15 PIPO              1
-## 4 CUB1300354 CHSE11            5 PIPO              1</code></pre>
-<pre class="r"><code>welch_ratios &lt;- welch_ratios %&gt;% 
-  filter(!(Shrub_species == &quot;CHSE11&quot; &amp; Species == &quot;PIPO&quot;))</code></pre>
-<pre class="r"><code>main_spp &lt;- c(&quot;LIDE&quot;, &quot;ARPA&quot;, &quot;CECO&quot;, &quot;CEIN&quot;, &quot;CHSE&quot;, &quot;Other&quot;)
+## 1 ABCO             442
+## 2 PIPO             309</code></pre>
+<pre class="r"><code>main_spp &lt;- c(&quot;ARPA&quot;, &quot;CECO&quot;, &quot;CEIN&quot;, &quot;Other&quot;)
 
 welch_ratios &lt;- welch_ratios %&gt;% 
   ungroup() %&gt;% 
   mutate(Shrub_species = case_when(
     Shrub_species == &quot;CEIN3&quot; ~ &quot;CEIN&quot;,
     Shrub_species == &quot;ARPA/ARVI&quot; ~ &quot;ARPA&quot;,
-    Shrub_species == &quot;CHSE11&quot; ~ &quot;CHSE&quot;,
     !Shrub_species %in% main_spp ~ &quot;Other&quot;,
     TRUE ~ as.character(Shrub_species)
   )) %&gt;% 
@@ -628,18 +688,17 @@ welch_ratios &lt;- welch_ratios %&gt;%
   mutate(prop = trees/sum(trees))</code></pre>
 <pre><code>## `summarise()` regrouping output by &#39;Shrub_species&#39; (override with `.groups` argument)</code></pre>
 <pre class="r"><code>welch_ratios</code></pre>
-<pre><code>## # A tibble: 9 x 4
+<pre><code>## # A tibble: 8 x 4
 ##   Shrub_species Species trees   prop
 ##   &lt;chr&gt;         &lt;chr&gt;   &lt;dbl&gt;  &lt;dbl&gt;
-## 1 ARPA          ABCO       18 0.0236
-## 2 ARPA          PIPO       90 0.118 
-## 3 CECO          ABCO      148 0.194 
-## 4 CECO          PIPO       57 0.0746
-## 5 CEIN          ABCO      129 0.169 
-## 6 CEIN          PIPO      116 0.152 
-## 7 CHSE          ABCO      105 0.137 
-## 8 Other         ABCO       70 0.0916
-## 9 Other         PIPO       31 0.0406</code></pre>
+## 1 ARPA          ABCO       18 0.0240
+## 2 ARPA          PIPO       90 0.120 
+## 3 CECO          ABCO      148 0.197 
+## 4 CECO          PIPO       57 0.0759
+## 5 CEIN          ABCO      129 0.172 
+## 6 CEIN          PIPO      116 0.154 
+## 7 Other         ABCO      147 0.196 
+## 8 Other         PIPO       46 0.0613</code></pre>
 <pre class="r"><code>welch_ratios %&gt;% 
   group_by(Species) %&gt;% 
   summarize(sum(prop))</code></pre>
@@ -647,9 +706,10 @@ welch_ratios &lt;- welch_ratios %&gt;%
 <pre><code>## # A tibble: 2 x 2
 ##   Species `sum(prop)`
 ##   &lt;chr&gt;         &lt;dbl&gt;
-## 1 ABCO          0.615
-## 2 PIPO          0.385</code></pre>
+## 1 ABCO          0.589
+## 2 PIPO          0.411</code></pre>
 <pre class="r"><code>save(welch_ratios, file = &quot;../../../../results/coefficients/welch_ratios.Rdata&quot;)</code></pre>
+</div>
 </div>
 </div>
 <div id="extra-stuff-thats-not-necessary" class="section level1">

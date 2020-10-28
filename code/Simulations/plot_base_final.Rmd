@@ -65,7 +65,7 @@ ggplot(summary_emerge_density)+
   
   xlab("Years since fire")+
   theme(legend.position = c(0.75, 0.3))+
-    ylab("Density of emerged trees per m^2")+
+    ylab("Density of emerged trees per ha")+
   scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
                                 labels = c("White fir", "Ponderosa pine"))+
 

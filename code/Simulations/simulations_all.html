@@ -377,23 +377,31 @@ summary {
 <li><a href="#define-length-of-simulation">Define length of simulation</a></li>
 <li><a href="#define-fire">Define fire</a></li>
 <li><a href="#sensitivity-methods">Sensitivity methods</a></li>
+<li><a href="#define-filter-function">Define filter function</a></li>
 </ul></li>
-<li><a href="#iterate">Iterate</a></li>
+<li><a href="#iterate-for-base-model">Iterate for base model</a></li>
 <li><a href="#filter-out-years-in-which-nothing-happens">Filter out years in which nothing happens</a></li>
 <li><a href="#save-results">Save results</a></li>
+<li><a href="#repeat-for-establishment-neutral-model">Repeat for establishment-neutral model</a></li>
 <li><a href="#repeat-for-single-shrub-species-models">Repeat for single shrub species models</a><ul>
 <li><a href="#ceco">CECO</a></li>
 <li><a href="#arpa">ARPA</a></li>
+<li><a href="#cein">CEIN</a></li>
 </ul></li>
 <li><a href="#repeat-for-single-shrub-coefficient-models">Repeat for single shrub COEFFICIENT models</a><ul>
 <li><a href="#ceco-1">CECO</a></li>
-<li><a href="#cein">CEIN</a></li>
+<li><a href="#cein-1">CEIN</a></li>
 <li><a href="#arpa-1">ARPA</a></li>
 </ul></li>
 <li><a href="#repeat-for-single-shrub-growth-models">Repeat for single shrub GROWTH models</a><ul>
 <li><a href="#ceco-2">CECO</a></li>
-<li><a href="#cein-1">CEIN</a></li>
+<li><a href="#cein-2">CEIN</a></li>
 <li><a href="#arpa-2">ARPA</a></li>
+</ul></li>
+<li><a href="#repeat-for-single-shrub-initial-index-models">Repeat for single shrub INITIAL INDEX models</a><ul>
+<li><a href="#ceco-3">CECO</a></li>
+<li><a href="#cein-3">CEIN</a></li>
+<li><a href="#arpa-3">ARPA</a></li>
 </ul></li>
 </ul>
 </div>
@@ -403,7 +411,7 @@ summary {
 <div id="iteration-function" class="section level4">
 <h4>Iteration function</h4>
 <pre class="r"><code>print(Sys.time())</code></pre>
-<pre><code>## [1] &quot;2020-03-23 15:27:43 PDT&quot;</code></pre>
+<pre><code>## [1] &quot;2020-10-27 16:00:55 PDT&quot;</code></pre>
 <pre class="r"><code>source(&quot;functions/iterate.R&quot;)</code></pre>
 </div>
 </div>
@@ -411,7 +419,7 @@ summary {
 <h1>Define stuff</h1>
 <div id="define-iterations" class="section level2">
 <h2>Define iterations</h2>
-<pre class="r"><code>iterations &lt;- 10</code></pre>
+<pre class="r"><code>iterations &lt;- 100</code></pre>
 </div>
 <div id="define-length-of-simulation" class="section level2">
 <h2>Define length of simulation</h2>
@@ -425,23 +433,14 @@ summary {
 <h2>Sensitivity methods</h2>
 <pre class="r"><code>climate_method &lt;- &quot;historic&quot; #historic, random, uniform_2015, uniform_2016, uniform_2017
 conifer_species_method &lt;- &quot;empirical&quot; #random, empirical
-shrub_method &lt;- &quot;empirical&quot; #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
-shrub_coefficient &lt;- &quot;empirical&quot;  #emprical, CECO, ARPA, CHSE, LIDE, Other
-shrub_heightgrowth &lt;- &quot;empirical&quot;  #emprical, CECO, ARPA, CEIN
-n_seedlings &lt;- 200</code></pre>
+shrub_method &lt;- &quot;welch&quot; #empirical, welch, CECO, ARPA,  LIDE, OTHER
+shrub_coefficient &lt;- &quot;empirical&quot;  #empirical, CECO, ARPA, LIDE, Other
+shrub_heightgrowth &lt;- &quot;empirical&quot;  #empirical, CECO, ARPA, CEIN
+shrub_initial_index &lt;- &quot;empirical&quot; # empirical, CECO, ARPA, CEIN
+n_seedlings &lt;- 100</code></pre>
 </div>
-</div>
-<div id="iterate" class="section level1">
-<h1>Iterate</h1>
-<pre class="r"><code>time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 38.11318 secs</code></pre>
-</div>
-<div id="filter-out-years-in-which-nothing-happens" class="section level1">
-<h1>Filter out years in which nothing happens</h1>
+<div id="define-filter-function" class="section level2">
+<h2>Define filter function</h2>
 <pre class="r"><code>filter_years &lt;- function(){
   max_year &lt;- dfsimallreps %&gt;% 
     group_by(Years, emerged) %&gt;% 
@@ -453,140 +452,225 @@ print(paste(&quot;That took&quot;))</code></pre>
 
 dfsimallreps &lt;&lt;- dfsimallreps %&gt;% 
   filter(Years &lt; max_year+1)
-}
-filter_years()</code></pre>
-<pre class="r"><code>print(paste(&quot;The whole thing took&quot;))</code></pre>
-<pre><code>## [1] &quot;The whole thing took&quot;</code></pre>
-<pre class="r"><code>round(Sys.time()-strt)</code></pre>
-<pre><code>## Time difference of 39 secs</code></pre>
-<pre class="r"><code>Sys.time()</code></pre>
-<pre><code>## [1] &quot;2020-03-23 15:28:21 PDT&quot;</code></pre>
+}</code></pre>
+</div>
+</div>
+<div id="iterate-for-base-model" class="section level1">
+<h1>Iterate for base model</h1>
+<pre class="r"><code>time &lt;- Sys.time()
+
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.327394 mins</code></pre>
+</div>
+<div id="filter-out-years-in-which-nothing-happens" class="section level1">
+<h1>Filter out years in which nothing happens</h1>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
 </div>
 <div id="save-results" class="section level1">
 <h1>Save results</h1>
-<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation1_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth_&quot;, shrub_initial_index, &quot;index.Rdata&quot;, sep = &quot;&quot;)
+
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+<div id="repeat-for-establishment-neutral-model" class="section level1">
+<h1>Repeat for establishment-neutral model</h1>
+<pre class="r"><code>conifer_species_method &lt;- &quot;random&quot; #random, empirical
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+filename &lt;-  paste(&quot;~/Simulation2_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth_&quot;, shrub_initial_index, &quot;index.Rdata&quot;, sep = &quot;&quot;)
+
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="repeat-for-single-shrub-species-models" class="section level1">
 <h1>Repeat for single shrub species models</h1>
+<pre class="r"><code>conifer_species_method &lt;- &quot;empirical&quot; #random, empirical</code></pre>
 <div id="ceco" class="section level2">
 <h2>CECO</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_method &lt;- &quot;CECO&quot; #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_method &lt;- &quot;CECO&quot; #empirical, welch, CECO, ARPA, LIDE, OTHER
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 31.21479 secs</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 12.31154 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation3_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="arpa" class="section level2">
 <h2>ARPA</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_method &lt;- &quot;ARPA&quot; #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER
+shrub_method &lt;- &quot;ARPA&quot; #empirical, welch, CECO, ARPA, LIDE, OTHER
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 37.55715 secs</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
-save(dfsimallreps, file =filename)</code></pre>
-</div>
-</div>
-<div id="repeat-for-single-shrub-coefficient-models" class="section level1">
-<h1>Repeat for single shrub COEFFICIENT models</h1>
-<pre class="r"><code>shrub_method &lt;- &quot;empirical&quot; #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER</code></pre>
-<div id="ceco-1" class="section level2">
-<h2>CECO</h2>
-<pre class="r"><code>remove(dfsimallreps)
-shrub_coefficient &lt;- &quot;CECO&quot;  #emprical, CECO, ARPA, CEIN
-time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 36.15707 secs</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 15.36334 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation4_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="cein" class="section level2">
 <h2>CEIN</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_coefficient &lt;- &quot;CEIN&quot;  #emprical, CECO, ARPA, CEIN
+shrub_method &lt;- &quot;CEIN&quot; #empirical, welch, CECO, ARPA, CEIN
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 print(paste(&quot;That took&quot;))</code></pre>
 <pre><code>## [1] &quot;That took&quot;</code></pre>
 <pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 2.269546 mins</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
-save(dfsimallreps, file =filename)</code></pre>
-</div>
-<div id="arpa-1" class="section level2">
-<h2>ARPA</h2>
-<pre class="r"><code>remove(dfsimallreps)
-shrub_coefficient &lt;- &quot;ARPA&quot;  #emprical, CECO, ARPA, CEIN
-time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 1.643044 mins</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+<pre><code>## Time difference of 14.08959 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation5_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 </div>
-<div id="repeat-for-single-shrub-growth-models" class="section level1">
-<h1>Repeat for single shrub GROWTH models</h1>
-<pre class="r"><code>shrub_coefficient &lt;- &quot;empirical&quot; #empirical, welch, CECO, ARPA, CHSE, LIDE, OTHER</code></pre>
-<div id="ceco-2" class="section level2">
+<div id="repeat-for-single-shrub-coefficient-models" class="section level1">
+<h1>Repeat for single shrub COEFFICIENT models</h1>
+<pre class="r"><code>shrub_method &lt;- &quot;welch&quot; #empirical, welch, CECO, ARPA, LIDE, OTHER</code></pre>
+<div id="ceco-1" class="section level2">
 <h2>CECO</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_heightgrowth &lt;- &quot;CECO&quot;  #emprical, CECO, ARPA, CEIN
+shrub_coefficient &lt;- &quot;CECO&quot;  #empirical, CECO, ARPA, CEIN
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 55.84619 secs</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.099318 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation6_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="cein-1" class="section level2">
 <h2>CEIN</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_heightgrowth &lt;- &quot;CEIN&quot;  #emprical, CECO, ARPA, CEIN
+shrub_coefficient &lt;- &quot;CEIN&quot;  #empirical, CECO, ARPA, CEIN
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 55.06715 secs</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.153472 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation7_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+<div id="arpa-1" class="section level2">
+<h2>ARPA</h2>
+<pre class="r"><code>remove(dfsimallreps)
+shrub_coefficient &lt;- &quot;ARPA&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.261802 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation8_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+</div>
+<div id="repeat-for-single-shrub-growth-models" class="section level1">
+<h1>Repeat for single shrub GROWTH models</h1>
+<pre class="r"><code>shrub_coefficient &lt;- &quot;empirical&quot; #empirical, welch, CECO, ARPA, LIDE, OTHER</code></pre>
+<div id="ceco-2" class="section level2">
+<h2>CECO</h2>
+<pre class="r"><code>remove(dfsimallreps)
+shrub_heightgrowth &lt;- &quot;CECO&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.162449 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation9_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+<div id="cein-2" class="section level2">
+<h2>CEIN</h2>
+<pre class="r"><code>remove(dfsimallreps)
+shrub_heightgrowth &lt;- &quot;CEIN&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.101046 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation10_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 <div id="arpa-2" class="section level2">
 <h2>ARPA</h2>
 <pre class="r"><code>remove(dfsimallreps)
-shrub_heightgrowth &lt;- &quot;ARPA&quot;  #emprical, CECO, ARPA, CEIN
+shrub_heightgrowth &lt;- &quot;ARPA&quot;  #empirical, CECO, ARPA, CEIN
 time &lt;- Sys.time()
-dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth)
-print(paste(&quot;That took&quot;))</code></pre>
-<pre><code>## [1] &quot;That took&quot;</code></pre>
-<pre class="r"><code>Sys.time()-time</code></pre>
-<pre><code>## Time difference of 3.141746 mins</code></pre>
-<pre class="r"><code>filter_years()
-filename &lt;-  paste(&quot;~/Simulations&quot;,  Sys.Date(), &quot;_&quot;, iterations, fire, &quot;_&quot;,climate_method,&quot;_&quot;, conifer_species_method, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.397657 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation11_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;,  shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+</div>
+<div id="repeat-for-single-shrub-initial-index-models" class="section level1">
+<h1>Repeat for single shrub INITIAL INDEX models</h1>
+<pre class="r"><code>shrub_heightgrowth &lt;- &quot;empirical&quot; #empirical, welch, CECO, ARPA, LIDE, OTHER</code></pre>
+<div id="ceco-3" class="section level2">
+<h2>CECO</h2>
+<pre class="r"><code>remove(dfsimallreps)
+shrub_initial_index &lt;- &quot;CECO&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.170231 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation12_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_initial_index, &quot;index_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+<div id="cein-3" class="section level2">
+<h2>CEIN</h2>
+<pre class="r"><code>remove(dfsimallreps)
+years_max &lt;- 70
+shrub_initial_index &lt;- &quot;CEIN&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.473825 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation13_&quot;,  Sys.Date(), &quot;_&quot;, iterations,  &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_initial_index, &quot;index_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
+save(dfsimallreps, file =filename)</code></pre>
+</div>
+<div id="arpa-3" class="section level2">
+<h2>ARPA</h2>
+<pre class="r"><code>remove(dfsimallreps)
+years_max &lt;- 50
+shrub_initial_index &lt;- &quot;ARPA&quot;  #empirical, CECO, ARPA, CEIN
+time &lt;- Sys.time()
+
+dfsimallreps &lt;- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time</code></pre>
+<pre><code>## Time difference of 1.164705 mins</code></pre>
+<pre class="r"><code>filter_years()</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>filename &lt;-  paste(&quot;~/Simulation14_&quot;,  Sys.Date(), &quot;_&quot;, iterations, &quot;_&quot;, shrub_method, &quot;_&quot;, shrub_coefficient, &quot;coef_&quot;, shrub_initial_index, &quot;index_&quot;, shrub_heightgrowth, &quot;growth.Rdata&quot;, sep = &quot;&quot;)
 save(dfsimallreps, file =filename)</code></pre>
 </div>
 </div>

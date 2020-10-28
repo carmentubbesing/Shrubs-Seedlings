@@ -27,13 +27,11 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
     source("functions/climate_year.R")
     
    
-    length_m <- 40
-    height_m <- 40
-    lambda <- 4
-    shrub_clumpiness <- 7
-    #cumsum_2015 <- 0.441
-    #cumsum_2016 <- 0.912
-    #cumsum_2017 <- 1
+    # length_m <- 40
+    # height_m <- 40
+    # lambda <- 4
+    # shrub_clumpiness <- 7
+
 
     # Remove old objects
     remove(pts.sf.abco, pts.sf.pipo)

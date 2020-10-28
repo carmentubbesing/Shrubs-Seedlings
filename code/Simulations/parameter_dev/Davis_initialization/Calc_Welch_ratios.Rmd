@@ -104,13 +104,41 @@ welch_summary_combos <- welch_subset_5.8years %>%
 welch_summary_combos
 ```
 
-# Take out CHFO because it's not in my American River fire
+# Remove plots with unapplicable shrub species
+
+## Plots dominated by shrub species that weren't even in the Other category in my Fire Footprint data, which included:
+
+ ARNE   ARPA   ARVI   CECO   CEIN   CEPR   CHFO   CHSE   CONU   LIDE   none  other 
+  PREM   QUKE   QUVA willow   NA's 
+```{r}
+sort(unique(welch_summary_combos$Shrub_species))
+```
+
+### Look at what's getting removed
+```{r}
+welch_summary_combos %>% 
+  filter(Shrub_species %in% c("SYMO", "RIBES"))
+```
+
+### Remove it
+```{r}
+welch_5.8years_summary <- welch_5.8years_summary %>% 
+  filter(!Shrub_species %in% c("SYMO", "RIBES"))
+```
+
+```{r}
+welch_summary_combos <- welch_summary_combos %>% 
+  filter(!Shrub_species %in% c("SYMO", "RIBES"))
+```
+
+
+## Take out CHFO because it's not in my American River fire
 
 CHFO isn't in the top 4 species ny # trees in the Welch data, and it would be difficult to initialize without knowing who establishes under it
 
 THIS IS THE STEP THAT DRASTICALLY CHANGES THE RESULTS BECAUSE THERE'S SO MUCH PIPO UNDER CHFO
 
-## Look at what's getting removed
+### Look at what's getting removed
 ```{r}
 welch_summary_combos %>% 
   filter(Species == "PIPO" & Shrub_species == "CHFO")
@@ -131,10 +159,10 @@ What to do about CHSE? There are some problems:
 6. Then I can leave in ALL trees under CHSE. Since there are only 4 PIPO, it won't change the results much.
 6. Lumping shouldn't change the GAMs much, either, because the GAM shapes are similar for CHSE and for Other
 
-## Remove it
+### Remove it
 
 ```{r}
-welch_subset_5.8years <- welch_subset_5.8years %>% 
+welch_5.8years_summary <- welch_5.8years_summary %>% 
   filter(Shrub_species != "CHFO")
 ```
 
@@ -143,8 +171,21 @@ welch_summary_combos <- welch_summary_combos %>%
   filter(Shrub_species != "CHFO")
 ```
 
-# Calculate ratios
+# Save the welch subsets
+```{r}
+save(welch_subset_5.8years, file = "~/../Shrubs-Seedlings/compiled_data/welch_5_8_yrs_noCHFO.Rdata")
+save(welch_5.8years_summary, file = "~/../Shrubs-Seedlings/compiled_data/welch_shrub_5_8_yrs_noCHFO.Rdata")
+```
 
+# Count total regen plots, with or without seedlings present, excluding those dominated by CHFO
+```{r}
+n_plots <- length(unique(welch_5.8years_summary$Regen_Plot))
+n_plots
+save(n_plots, file = "~/../Shrubs-Seedlings/results/coefficients/n_plots_welch.Rdata")
+```
+
+
+# Calculate ratios
 ```{r}
 welch_ratios <- welch_summary_combos %>% 
   group_by(Shrub_species, Species) %>% 
@@ -152,9 +193,6 @@ welch_ratios <- welch_summary_combos %>%
   filter(Species %in% c("ABCO", "PIPO"))
 welch_ratios
 ```
-
-
-# Save these proportions to use in simulation initialization
 
 ## Reformat so it's compatible with my shrub data
 

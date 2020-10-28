@@ -8,8 +8,8 @@ output:
 ---
 
 ```{r}
-name <- "1_2020-04-13_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
-df_filename <- paste("~/../Ch3_Simulation_Results/Simulation", name, ".Rdata", sep = "")
+name <- "Simulation1_2020-10-27_100_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
 ```
@@ -182,21 +182,14 @@ Q50 <- pivot_wider(Q50, names_from = bound, values_from = Years) %>%
 Q50
 ```
 
-# Plot on a per-area basis
-
-Each plot in Welch's data was 60 m^2. 
-
-## Load Welch data on # plots
-```{r}
-load("../../results/coefficients/welch_ratios.Rdata")
-load("../../results/data/n_plots_welch_subset.Rdata")
-
-welch_ratios %>% 
-  group_by(Species) %>% 
-  summarize(sum(trees))
-```
 
 # Make sure the starting ratios of the results match Welch ratios
+
+## Load Welch ratios
+```{r}
+load("../../results/coefficients/welch_ratios.Rdata")
+```
+
 
 ## BY conifer species
 ```{r}
@@ -225,46 +218,61 @@ dfsimallreps %>%
 welch_ratios
 ```
 
-
-## Calculate total plot area and density in the welch data:
-
 ```{r}
-welch_area <-  900*plots
 welch_ratios %>% 
   group_by(Species) %>% 
-  summarize(trees = sum(trees)) %>% 
-  mutate(density_m2 = trees/welch_area)
+  summarize(sum(trees))
 ```
+
+
+# Density - Plot on a per-area basis
+
+Each plot in Welch's data was 60 m^2. 
+
+## Load Welch data on # plots
+```{r}
+load("../../results/coefficients/n_plots_welch.Rdata")
+```
+
+## Calculate total plot area and density in the welch data
+```{r}
+welch_area_m2 <-  60*n_plots
+welch_area_ha <- welch_area_m2/10000
+welch_area_ha
+```
+
+```{r}
+welch_density <- welch_ratios %>% 
+  group_by(Species) %>% 
+  summarize(trees_welch = sum(trees)) %>% 
+  mutate(density_m2 = trees_welch/welch_area_m2) %>% 
+  mutate(density_ha = density_m2*10000)
+welch_density
+```
+
+Welch data has 144 ABCO and 101 PIPO per ha.
+
 
 ## Calculate initial area equivalent for my results
 
-```{r}
-welch_species_n <- welch_ratios %>% 
-  group_by(Species) %>% 
-  summarize(trees_welch = sum(trees))
-welch_species_n
-```
-
+### At the first year of the simulation, there were 56.5 ABCO and 39 PIPO
 ```{r}
 calc_area <- dfsimallreps %>% 
   filter(Years == min(Years)) %>% 
   group_by(rep, Species) %>% 
   count() %>% 
   group_by(Species) %>% 
-  summarize(mean_trees = mean(n)) 
-calc_area <- full_join(calc_area, welch_species_n) %>% 
-  mutate(ratio = mean_trees/trees_welch) %>% 
-  mutate(area_sim = welch_area*ratio) %>% 
-  summarize(area_sim = mean(area_sim))
-area_sim <- calc_area$area_sim
-area_sim_ha <- area_sim/10000
+  summarize(mean_trees_sim = mean(n)) 
+calc_area
 ```
 
+### So how many ha is the simulated area?
 ```{r}
-welch_ratios %>% 
-  group_by(Species) %>% 
-  summarize(trees = sum(trees)) %>% 
-  mutate(density_m2 = trees/welch_area)
+area <- full_join(calc_area, welch_density) %>% 
+  mutate(area_sim_ha = mean_trees_sim/density_ha) %>% 
+  summarize(area_sim_ha = mean(area_sim_ha))
+area_sim_ha <- area %>%  unlist()
+area_sim_ha
 ```
 
 ### Add column for initial area to summary_emerge
@@ -280,13 +288,14 @@ summary_emerge <- dfsimallreps %>%
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   mutate(Species = fct_relevel(Species, "PIPO", "ABCO")) %>% 
   mutate(density_ha = total_emergents/area_sim_ha)
+summary_emerge
 ```
 
 ```{r}
 plot_emerge_density <- ggplot(summary_emerge)+
   theme_minimal()+
   geom_boxplot(aes(x = as.factor(Years), y = density_ha, fill = Species), alpha = .8, outlier.shape = NA)+
-  ylab("Density of emerged trees per m^2")+
+  ylab("Density of emerged trees per ha")+
   xlab("Years since fire")+
   scale_x_discrete(breaks =c("10","20","30", "40"))+
   theme_bw()+
@@ -338,12 +347,10 @@ summary_emerge_prop <- summary_emerge_prop %>%
   filter(Years < max_year + 2)
 ```
 
-
 ## Save prop summary
 ```{r}
 save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base.Rdata")
 ```
-
 
 ## Plot 
 ```{r}
@@ -378,6 +385,8 @@ ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
 
+## Density
+
 ```{r}
 summary_emerge_density <- dfsimallreps %>% 
   group_by(Years, Species, rep) %>% 
@@ -387,18 +396,15 @@ summary_emerge_density <- dfsimallreps %>%
   mutate(initial_n = max(total)) %>% 
   ungroup() %>% 
   mutate(prop_emerged = total_emergents/initial_n) %>% 
-  mutate(density = total_emergents/900) %>% 
-  mutate(density_ha = density*10000) %>% 
+  mutate(density_ha = total_emergents/area_sim_ha) %>% 
   group_by(Years, Species) %>% 
   summarize(mean = mean(density_ha), sd = sd(density_ha))
 ```
 
-## Density
 ```{r}
 summary_emerge_density <- summary_emerge_density %>% 
   filter(Years < max_year + 2)
 ```
-
 
 ## Save density summary
 ```{r}
