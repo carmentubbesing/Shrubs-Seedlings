@@ -8,13 +8,13 @@ output:
 ---
 
 ```{r}
-name <- "~/Simulation1_2020-03-27_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex.Rdata"
+name <- "~/Ch3_Simulation_Results/Simulation1_2020-10-28_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex.Rdata"
 load(name)
 strt <- Sys.time()
 ```
 
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}

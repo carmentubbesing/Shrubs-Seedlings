@@ -108,7 +108,6 @@ save(dfsimallreps, file =filename)
 
 
 # Repeat for single shrub species models
-
 ```{r}
 conifer_species_method <- "empirical" #random, empirical
 ```

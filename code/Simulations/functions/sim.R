@@ -1,4 +1,4 @@
-sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, iterations, climate_method, shrub_coefficient, shrub_heightgrowth){
+sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, climate_method, shrub_coefficient, shrub_heightgrowth){
   load("../../data/PRISM/clean_1970-present.Rdata")
   prism <- df
   remove(df)

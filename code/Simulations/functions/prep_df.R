@@ -46,7 +46,7 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
           mutate(shrubarea3 = Cov1.3*Ht1.3)
       }
       
-      sample_i <- sample_n(df_i, size = n_seedlings*welch_prop_i, replace = T)
+      sample_i <- sample_n(df_i, size = round(n_seedlings*welch_prop_i), replace = T)
       
       if(nrow(df_new)==0){
         df_new <- sample_i
@@ -63,7 +63,7 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
       ungroup() %>%
       mutate(prop = n/sum(n)) %>% 
       arrange(ShrubSpp03) %>% 
-      select(ShrubSpp03, everything())
+      dplyr::select(ShrubSpp03, everything())
     
     welch_ratios
     

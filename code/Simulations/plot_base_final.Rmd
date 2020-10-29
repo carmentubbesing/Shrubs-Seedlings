@@ -2,7 +2,9 @@
 title: "plot_base_final"
 author: "Carmen"
 date: "4/1/2020"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 
@@ -17,11 +19,11 @@ require(gridExtra)
 
 # Load summary
 ```{r}
-load(file = "../../results/data/summary_emerge_prop_base.Rdata")
+load(file = "../../results/data/summary_emerge_prop_base_Oct28.Rdata")
 ```
 
 ```{r}
-load(file = "../../results/data/summary_emerge_density_base.Rdata")
+load(file = "../../results/data/summary_emerge_density_base_Oct28.Rdata")
 ```
 
 ## Plot 
@@ -52,7 +54,7 @@ ggplot(summary_emerge_prop)+
   xlab(element_blank())+
   xlim(9,max(summary_emerge_prop$Years))+
   ylim(c(0,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line.png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_prop_line_Oct28.png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -80,7 +82,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line.png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_density_line_Oct28.png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 

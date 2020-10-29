@@ -7,7 +7,7 @@ output: html_document
 
 ```{r}
 strt <- Sys.time()
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}
@@ -19,13 +19,13 @@ require(grid)
 
 
 ```{r}
-date <- "2020-03-27"
+date <- "2020-10-27"
 
-namecein <- paste("~/Simulation5_", date, "_1000_CEIN.Rdata", sep = "")
+namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", date, "_100_CEIN.Rdata", sep = "")
 
-namearpa <- paste("~/Simulation4_", date, "_1000_ARPA.Rdata", sep = "")
+namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", date, "_100_ARPA.Rdata", sep = "")
 
-namececo <- paste("~/Simulation3_", date, "_1000_CECO.Rdata", sep = "")
+namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", date, "_1000_CECO.Rdata", sep = "")
 ```
 
 ```{r}
@@ -109,7 +109,7 @@ max_year <- summary_emerge %>%
   filter(Years == min(Years)) %>%
   ungroup() %>% 
   filter(Years ==max(Years)) %>% 
-  select(Years) %>% 
+  dplyr::select(Years) %>% 
   unlist()
 
 max_year
