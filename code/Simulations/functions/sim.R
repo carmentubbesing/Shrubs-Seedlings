@@ -1,20 +1,28 @@
 sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, climate_method, shrub_coefficient, shrub_heightgrowth){
-  load("../../data/PRISM/clean_1970-present.Rdata")
+  load("../../data/PRISM/clean_1950-present.Rdata")
   prism <- df
   remove(df)
-  prism <- prism[7:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
-  dfsim <- data.frame()
-  dfsimall <- data.frame()
+  #prism <- prism[7:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
   
-  # Set initial emerged values
+  # Set initial emerged values and climate year
   pts.sf.pipo <- pts.sf.pipo %>% 
     mutate(emerged = ifelse(
       Ht_cm1*0.75 < Ht1.3, 0, 1
-    )) 
+    )) %>% 
+    mutate(climate_year = "2016")
+  
   pts.sf.abco <- pts.sf.abco %>% 
     mutate(emerged = ifelse(
       Ht_cm1*0.75 < Ht1.3, 0, 1
-    )) 
+    )) %>% 
+    mutate(climate_year = "2016")
+  
+  
+  dfsim <- full_join(pts.sf.pipo, pts.sf.abco)
+  dfsimall <- dfsim
+  
+  dfsimall %>% group_by(emerged) %>% count()
+  
   
   # Set error terms
   ## Mortality
@@ -30,6 +38,13 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   coef_int_mort_pipo <- unlist(coef_mort_pipo[2])
   coef_gr_mort_pipo <- unlist(coef_mort_pipo[1])
   
+  # Load gam models from `Shrub_growth_analysis.Rmd`
+  load("../../results/coefficients/gamCECO.Rdata")
+  load("../../results/coefficients/gamARPA.Rdata")
+  load("../../results/coefficients/gamCEIN.Rdata")
+  load("../../results/coefficients/gamCHSE.Rdata")
+  load("../../results/coefficients/gamOTHER.Rdata")
+  
   ## Vertical growth
   ## Vert Growth
   sample_gr <- sample(1000, 1)
@@ -44,13 +59,13 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         random > cumsum_2016 ~ 2017
       ) 
     } else if(climate_method == "historic"){
-      years <- unlist(max(pts.sf.abco$Years))
+      years <- unlist(max(pts.sf.abco$Years)-6)
       climate_year <- prism[years,2] %>% unlist()
       historic_year_i <- prism[years,1] %>% unlist()
       pts.sf.abco <- pts.sf.abco %>% 
-        mutate(historic_year = historic_year_i)
+        mutate(historic_year = historic_year_i) 
       pts.sf.pipo <- pts.sf.pipo %>% 
-        mutate(historic_year = historic_year_i)
+        mutate(historic_year = historic_year_i) 
       
     } else if(climate_method == "uniform_2015"){
       climate_year <- 2015
@@ -79,7 +94,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     # Apply all functions to abco if any of the abco haven't emerged yet, else just add a year 
     if(any(pts.sf.abco$emerged==0) ){
       pts.sf.abco <- pts.sf.abco %>% 
-        mutate(Year = climate_year) 
+        mutate(climate_year = climate_year) 
       pts.sf.abco <- abcogrowth(pts.sf.abco, sample_gr)
       pts.sf.abco <- abcomort(pts.sf.abco, coef_int_mort_abco, coef_gr_mort_abco)
       pts.sf.abco <- abcodia(pts.sf.abco, sample_gr)
@@ -95,7 +110,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     # Apply all functions to PIPO if any of the abco haven't emerged yet, else just add a year 
     if(any(pts.sf.pipo$emerged==0) ){
       pts.sf.pipo <- pts.sf.pipo %>% 
-        mutate(Year = climate_year) 
+        mutate(climate_year = climate_year) 
       pts.sf.pipo <- pipogrowth(pts.sf.pipo, sample_gr, shrub_coefficient)
       pts.sf.pipo <- pipomort(pts.sf.pipo, coef_int_mort_pipo, coef_gr_mort_pipo)
       pts.sf.pipo <- pipodia(pts.sf.pipo, sample_gr)
@@ -108,14 +123,9 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         mutate(Years = Years + 1)
     }
     
-    #dfsim <- full_join(st_drop_geometry(pts.sf.pipo), st_drop_geometry(pts.sf.abco))
     dfsim <- full_join(pts.sf.pipo, pts.sf.abco)
-      
-    if(nrow(dfsimall) == 0){
-      dfsimall <- dfsim
-    } else{
-      dfsimall <- full_join(dfsim, dfsimall)
-    }
+    dfsimall <- full_join(dfsim, dfsimall)
+    
   }
   dfsimall <-  dfsimall %>%
     mutate(coef_gr_mort_abco = coef_gr_mort_abco) %>%

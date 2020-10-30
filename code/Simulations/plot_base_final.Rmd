@@ -19,11 +19,11 @@ require(gridExtra)
 
 # Load summary
 ```{r}
-load(file = "../../results/data/summary_emerge_prop_base_Oct28.Rdata")
+load(file = "../../results/data/summary_emerge_prop_base_Oct29.Rdata")
 ```
 
 ```{r}
-load(file = "../../results/data/summary_emerge_density_base_Oct28.Rdata")
+load(file = "../../results/data/summary_emerge_density_base_Oct29.Rdata")
 ```
 
 ## Plot 
@@ -52,9 +52,9 @@ ggplot(summary_emerge_prop)+
         legend.margin = margin(0, 0, 0, 0)
         )+
   xlab(element_blank())+
-  xlim(9,max(summary_emerge_prop$Years))+
-  ylim(c(0,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line_Oct28.png", sep = "")
+  xlim(8,max(summary_emerge_prop$Years))+
+  ylim(c(-0.05,1))
+filename <- paste("../../results/figures/Simulations/base_prop_line_Oct29.png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -82,7 +82,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line_Oct28.png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_density_line_Oct29.png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -94,8 +94,7 @@ ggplot(summary_emerge_prop)+
   theme_minimal()
 ```
 
-
-# Find max prop emerged for each species (for Table 1)
+# Find mean prop emerged at end of sim for each species (for Table 1)
 ```{r}
 summary_emerge_prop %>% 
   group_by(Species) %>% 
@@ -108,4 +107,3 @@ summary_emerge_density %>%
   group_by(Species) %>% 
   filter(mean == max(mean))
 ```
-

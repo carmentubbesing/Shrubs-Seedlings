@@ -13,6 +13,19 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
     distinct() %>%
     droplevels()
   
+  # lump CHSE in with Other
+  df <- df %>% 
+    mutate(ShrubSpp03 = ifelse(ShrubSpp03 == "CHSE", "Other", paste(ShrubSpp03)))
+  summary(as.factor(df$ShrubSpp03))
+  
+  # Check how many have emerged
+  df %>% 
+    rename("Ht_cm1" = Ht2016.cm_spring) %>%
+    mutate(emerged = ifelse(
+      Ht_cm1*0.75 < Ht1.3, 0, 1
+    )) %>% 
+    filter(emerged == 1)
+  
   # Randomize where the trees are if conifer_species_method = random
   if(conifer_species_method == "random"){
     sample <- sample(nrow(df), nrow(df), replace = T)

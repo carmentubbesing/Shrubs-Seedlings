@@ -7,8 +7,13 @@ output:
     toc: TRUE
 ---
 
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+```
+
 ```{r}
-name <- "Simulation1_2020-10-28_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "Simulation1_2020-10-29_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -18,17 +23,46 @@ strt <- Sys.time()
 setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
-```{r, include = F}
-require(tidyverse)
-require(gridExtra)
+# Find emerged trees at 8 years (first simulation year)
+```{r}
+dfsimallreps %>% filter(Years == 8) %>% filter(emerged ==1) %>% dplyr::select(Sdlg, Species, ShrubSpp03, Ht1.3, Ht_cm1, emerged) %>% 
+  distinct()
 ```
 
-# Take out trees with non-finite or NA pred because they had already emerged and things got wacky
+These trees are either the one ABCO that had emerged at data collection OR trees under CEIN, because the Welch CEIN heights I drew from included some very short CEIN
+
+# Find out what is going on with non-finite or NA pred 
 ```{r}
 dfsimallreps %>% 
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
-  #group_by(emerged) %>% 
-  #count() %>% 
+  group_by(Years, ShrubSpp03) %>% 
+  arrange(Years) %>% 
+  count() 
+```
+
+```{r}
+dfsimallreps %>% 
+  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
+  filter(Years == 30) %>% 
+  dplyr::select(rep, ID_withinrep, Sdlg, Species, Cov1.3, Ht1.3, shrubarea3, Years, climate_year)
+```
+
+```{r}
+dfsimallreps %>% 
+  filter(Sdlg == 205) %>% 
+  filter(rep == 1 & ID_withinrep == 61) %>% 
+  arrange(Years) %>% 
+  View()
+```
+
+
+
+
+```{r}
+dfsimallreps %>% 
+  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
+  group_by(emerged) %>% 
+  count() %>% 
   summarize(min(Years))
 ```
 
@@ -51,6 +85,15 @@ dfsimallreps %>%
   group_by(emerged, Species) %>% 
   count()
 ```
+
+### Look at the one that hasn't emerged
+```{r}
+dfsimallreps %>% 
+  filter(rep == 14 & Sdlg == 71) %>% 
+  dplyr::select(Years, Sdlg, Species, Ht_cm1, Ht1.3, emerged, dead) %>% 
+  arrange(Years)
+```
+
 
 # Calculate mean and SD starting # of each species
 ```{r}
@@ -380,7 +423,7 @@ summary_emerge_prop <- summary_emerge_prop %>%
 
 ## Save prop summary
 ```{r}
-save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base_Oct28.Rdata")
+save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base_Oct29.Rdata")
 ```
 
 ## Plot 
@@ -409,9 +452,9 @@ ggplot(summary_emerge_prop)+
         legend.margin = margin(0, 0, 0, 0)
         )+
   xlab(element_blank())+
-  xlim(9,max_year)+
-  ylim(c(0,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line_Oct28", name, ".png", sep = "")
+  xlim(8,max_year)+
+  ylim(c(-0.05,1))
+filename <- paste("../../results/figures/Simulations/base_prop_line_Oct29", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -439,7 +482,7 @@ summary_emerge_density <- summary_emerge_density %>%
 
 ## Save density summary
 ```{r}
-save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base_Oct28.Rdata")
+save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base_Oct29.Rdata")
 ```
 
 ```{r}
@@ -465,7 +508,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line_Oct28", name, ".png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_density_line_Oct29", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 

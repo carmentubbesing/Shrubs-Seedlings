@@ -35,8 +35,8 @@ pipogrowth <- function(pts.sf.pipo, sample_gr, shrub_coefficient){
 
   pts.sf.pipo <- pts.sf.pipo %>%  
     mutate(pred = case_when(
-      Year == "2016" ~ pred + coefpipo[coefpipo$coef =="Year2016", "value"],
-      Year == "2017" ~ pred + coefpipo[coefpipo$coef =="Year2017", "value"],
+      climate_year == "2016" ~ pred + coefpipo[coefpipo$coef =="Year2016", "value"],
+      climate_year == "2017" ~ pred + coefpipo[coefpipo$coef =="Year2017", "value"],
       TRUE ~ as.numeric(pred)) ) %>% 
     mutate(pred_exp = exp(pred)) %>% 
     mutate(Ht_cm1 = ifelse(emerged == 1, Ht_cm1, Ht_cm1 + pred_exp*Ht_cm1))  %>% 

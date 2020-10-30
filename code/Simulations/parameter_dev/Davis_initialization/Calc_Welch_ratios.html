@@ -371,9 +371,12 @@ summary {
 <li><a href="#check">Check</a><ul>
 <li><a href="#make-sure-theres-only-one-row-per-plotspecies-combo">Make sure there’s only one row per plot/Species combo</a></li>
 </ul></li>
-<li><a href="#plot-for-supplement">Plot for supplement</a></li>
+<li><a href="#plot-for-supplement">Plot for supplement</a><ul>
+<li><a href="#summarize-cover-by-shrub-species-one-value-per-plot-which-represents-that-plots-dominant-species">Summarize cover by shrub species, one value per plot, which represents that plot’s dominant species</a></li>
+<li><a href="#plot">Plot</a></li>
 </ul></li>
-<li><a href="#look-at-overall-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire">Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire</a></li>
+</ul></li>
+<li><a href="#look-at-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire">Look at combinations of shrub and tree species across Welch data at 5-8 years post-fire</a></li>
 <li><a href="#remove-plots-with-unapplicable-shrub-species">Remove plots with unapplicable shrub species</a><ul>
 <li><a href="#plots-dominated-by-shrub-species-that-werent-even-in-the-other-category-in-my-fire-footprint-data-which-included">Plots dominated by shrub species that weren’t even in the Other category in my Fire Footprint data, which included:</a><ul>
 <li><a href="#look-at-whats-getting-removed">Look at what’s getting removed</a></li>
@@ -381,7 +384,7 @@ summary {
 </ul></li>
 <li><a href="#take-out-chfo-because-its-not-in-my-american-river-fire">Take out CHFO because it’s not in my American River fire</a><ul>
 <li><a href="#look-at-whats-getting-removed-1">Look at what’s getting removed</a></li>
-<li><a href="#remove-it-1">Remove it</a></li>
+<li><a href="#remove-chfo">Remove CHFO</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#save-the-welch-subsets">Save the welch subsets</a></li>
@@ -425,8 +428,23 @@ summary {
   mutate(mean_cov = mean(Cover)) %&gt;% 
   ungroup() %&gt;% 
   mutate(Shrub_species = fct_reorder(Shrub_species, desc(mean_cov))) %&gt;% 
-  select(Regen_Plot, Shrub_species, Cover) %&gt;% 
-  distinct()</code></pre>
+  dplyr::select(Regen_Plot, Shrub_species, Cover) %&gt;% 
+  distinct()
+welch_5.8years_summary</code></pre>
+<pre><code>## # A tibble: 606 x 3
+##    Regen_Plot Shrub_species Cover
+##    &lt;chr&gt;      &lt;fct&gt;         &lt;dbl&gt;
+##  1 STY0900047 CEPR            6  
+##  2 STY0900040 CEPR           70  
+##  3 STY0900051 CEPR            0.5
+##  4 STY0900055 CEPR            2  
+##  5 STY0900056 CEPR           15  
+##  6 STY0900061 CEPR            1  
+##  7 STY0900059 CEPR            3  
+##  8 STY0900060 CEPR           56  
+##  9 STY0900064 ARPA/ARVI       0.5
+## 10 STY0900063 CEPR            4  
+## # ... with 596 more rows</code></pre>
 <div id="check" class="section level2">
 <h2>Check</h2>
 <pre class="r"><code>nrow(welch_5.8years_summary) == length(unique(welch_5.8years_summary$Regen_Plot))</code></pre>
@@ -463,7 +481,7 @@ summary {
 ## 2 CUB1300199 QUVA             20</code></pre>
 <pre class="r"><code>welch_subset_5.8years %&gt;% 
   filter(Regen_Plot == &quot;CUB1300199&quot;) %&gt;% 
-  select(Regen_Plot, Shrub_species, Cover, Count_total, Species)</code></pre>
+  dplyr::select(Regen_Plot, Shrub_species, Cover, Count_total, Species)</code></pre>
 <pre><code>## # A tibble: 4 x 5
 ##   Regen_Plot Shrub_species Cover Count_total Species
 ##   &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt;       &lt;dbl&gt; &lt;chr&gt;  
@@ -474,13 +492,39 @@ summary {
 <pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
   filter(!(Regen_Plot == &quot;CUB1300199&quot; &amp; Shrub_species == &quot;QUVA&quot;))</code></pre>
 </div>
+<div id="check-again" class="section level4">
+<h4>Check again</h4>
+<pre class="r"><code>nrow(welch_5.8years_summary) == length(unique(welch_5.8years_summary$Regen_Plot))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+</div>
 </div>
 </div>
 <div id="plot-for-supplement" class="section level2">
 <h2>Plot for supplement</h2>
+<div id="summarize-cover-by-shrub-species-one-value-per-plot-which-represents-that-plots-dominant-species" class="section level3">
+<h3>Summarize cover by shrub species, one value per plot, which represents that plot’s dominant species</h3>
 <pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
   group_by(Shrub_species) %&gt;% 
-  mutate(mean_cov = mean(Cover))</code></pre>
+  mutate(mean_cov = mean(Cover))
+welch_5.8years_summary</code></pre>
+<pre><code>## # A tibble: 605 x 4
+## # Groups:   Shrub_species [11]
+##    Regen_Plot Shrub_species Cover mean_cov
+##    &lt;chr&gt;      &lt;fct&gt;         &lt;dbl&gt;    &lt;dbl&gt;
+##  1 STY0900047 CEPR            6      17.6 
+##  2 STY0900040 CEPR           70      17.6 
+##  3 STY0900051 CEPR            0.5    17.6 
+##  4 STY0900055 CEPR            2      17.6 
+##  5 STY0900056 CEPR           15      17.6 
+##  6 STY0900061 CEPR            1      17.6 
+##  7 STY0900059 CEPR            3      17.6 
+##  8 STY0900060 CEPR           56      17.6 
+##  9 STY0900064 ARPA/ARVI       0.5     9.96
+## 10 STY0900063 CEPR            4      17.6 
+## # ... with 595 more rows</code></pre>
+</div>
+<div id="plot" class="section level3">
+<h3>Plot</h3>
 <pre class="r"><code>ggplot(welch_5.8years_summary)+
   geom_boxplot(aes(x = Shrub_species, y = Cover))+
   theme_minimal()+
@@ -491,8 +535,9 @@ summary {
 <pre><code>## Saving 8 x 5 in image</code></pre>
 </div>
 </div>
-<div id="look-at-overall-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire" class="section level1">
-<h1>Look at overall combinations of shrub and tree species across Welch data at 5-8 years post-fire</h1>
+</div>
+<div id="look-at-combinations-of-shrub-and-tree-species-across-welch-data-at-5-8-years-post-fire" class="section level1">
+<h1>Look at combinations of shrub and tree species across Welch data at 5-8 years post-fire</h1>
 <pre class="r"><code>welch_summary_combos &lt;- welch_subset_5.8years %&gt;% 
   ungroup() %&gt;% 
   group_by(Regen_Plot) %&gt;% 
@@ -502,7 +547,7 @@ summary {
   filter(shrubarea == max(shrubarea)) %&gt;% 
   mutate(Shrub_species = ifelse(Shrub_species %in% c(&quot;ARPA6&quot;, &quot;ARVI&quot;), &quot;ARPA/ARVI&quot;, Shrub_species)) %&gt;% 
   ungroup()  %&gt;% 
-  select(Regen_Plot, Shrub_species, Cover, Species, Count_total) %&gt;% 
+  dplyr::select(Regen_Plot, Shrub_species, Cover, Species, Count_total) %&gt;% 
   arrange(Regen_Plot)
 welch_summary_combos</code></pre>
 <pre><code>## # A tibble: 802 x 5
@@ -592,14 +637,14 @@ welch_summary_combos</code></pre>
 ##   Regen_Plot Shrub_species Cover Species Count_total
 ##   &lt;chr&gt;      &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;         &lt;dbl&gt;
 ## 1 FRD1200090 CHFO             25 ABCO              2</code></pre>
-<p>What to do about CHSE? There are some problems: 1. There are no PIPO/CHSE combos in my data 2. There is TONS of ABCO under CHSE according to Welch data 3. CHSE was not one of the species with a coefficient in Chapter 2 4. Why did I leave CHSE separate in the simulations instead of lumping it under “other”? The only reason is that it’s separate for shrub growth models from Welch data. 5. So what I need to do is lump it with “other” for the shrub gams and then it can be lumped with “other” for everything. 6. Then I can leave in ALL trees under CHSE. Since there are only 4 PIPO, it won’t change the results much. 6. Lumping shouldn’t change the GAMs much, either, because the GAM shapes are similar for CHSE and for Other</p>
 </div>
-<div id="remove-it-1" class="section level3">
-<h3>Remove it</h3>
+<div id="remove-chfo" class="section level3">
+<h3>Remove CHFO</h3>
 <pre class="r"><code>welch_5.8years_summary &lt;- welch_5.8years_summary %&gt;% 
   filter(Shrub_species != &quot;CHFO&quot;)</code></pre>
 <pre class="r"><code>welch_summary_combos &lt;- welch_summary_combos %&gt;% 
   filter(Shrub_species != &quot;CHFO&quot;)</code></pre>
+<p>What to do about CHSE? There are some problems: 1. There are no PIPO/CHSE combos in my data 2. There is TONS of ABCO under CHSE according to Welch data 3. CHSE was not one of the species with a coefficient in Chapter 2 4. Why did I leave CHSE separate in the simulations instead of lumping it under “other”? The only reason is that it’s separate for shrub growth models from Welch data. 5. So what I need to do is lump it with “other” for the shrub gams and then it can be lumped with “other” for everything. 6. Then I can leave in ALL trees under CHSE. Since there are only 4 PIPO, it won’t change the results much. 6. Lumping shouldn’t change the GAMs much, either, because the GAM shapes are similar for CHSE and for Other</p>
 </div>
 </div>
 </div>

@@ -14,8 +14,8 @@ require(lubridate)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/precip_PRISM/")
-df <- read_csv("../../../../data/PRISM/PRISM_ppt_stable_4km_197001_201901_39.2267_-120.6117.csv", skip = 10, col_types = cols(Date = col_date(format = "%Y-%m"), `ppt (mm)` = col_double()))
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/precip_PRISM/")
+df <- read_csv("../../../../data/PRISM/PRISM_ppt_stable_4km_194001_202001_39.2267_-120.6117.csv", skip = 10, col_types = cols(Date = col_date(format = "%Y-%m"), `ppt (mm)` = col_double()))
 head(df)
 ```
 
@@ -24,6 +24,13 @@ head(df)
 df <- df %>% 
   rename(ppt_mm = `ppt (mm)`)
 ```
+
+# Filter to years after 1950
+```{r}
+df <- df %>% 
+  filter(Date > "1949-01-01")
+```
+
 
 # Summarize Sep-Aug years, since growth concludes in Aug
 ```{r}
@@ -39,17 +46,18 @@ df <- df %>%
 df
 ```
 
-# Take out 2019 since it's incomplete
+# Take out 1948-1949 and 2019-2020 since they're incomplete
 ```{r}
 df <- df %>% 
-  filter(water_year != "2018-2019")
+  filter(water_year != "2019-2020") %>% 
+  filter(water_year != "1948-1949")
 ```
 
 # Plot
 ```{r}
 ggplot(df, aes(x = water_year, y= ppt_mm))+
   geom_point()+
-  scale_x_discrete(breaks = c("1975-1976", "1985-1986", "1995-1996", "2005-2006", "2015-2016"))+
+  scale_x_discrete(breaks = c("1945-1946", "1955-1956", "1965-1966", "1975-1976", "1985-1986", "1995-1996", "2005-2006", "2015-2016"))+
   theme_minimal()
 ```
 
@@ -91,9 +99,6 @@ df <- df %>%
 
 df %>% 
   filter(min_year == "2016-2017")
-df %>% 
-  filter(water_year == "2016-2017")
-
 ```
 
 # View the proportion
@@ -115,6 +120,6 @@ df
 
 # Save df
 ```{r}
-save(df, file = "~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+save(df, file = "~/../Shrubs-Seedlings/data/PRISM/clean_1950-present.Rdata")
 ```
 

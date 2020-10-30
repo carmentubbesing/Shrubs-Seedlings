@@ -25,7 +25,7 @@ load(file = "~/../Shrubs-Seedlings/compiled_data/shrub_growth/Welch_df.Rdata")
 
 
 ```{r}
-welch_5.8years_summary <- welch_subset_5.8years %>% 
+welch_5.8years_summary <- df %>% 
   ungroup() %>% 
   group_by(Regen_Plot) %>% 
   filter(Cover == max(Cover)) %>% 
@@ -114,6 +114,26 @@ welch_CEIN_hts <- welch_all_fires %>%
 
 welch_CEIN_hts
 ```
+
+```{r}
+ggplot(welch_CEIN_hts)+
+  geom_histogram(aes(x = modal_ht_cm, fill = as.factor(years_since_fire)))+
+  theme_minimal()
+```
+
+Does year matter much?
+```{r}
+means <- welch_CEIN_hts %>% 
+  group_by(years_since_fire) %>% 
+  summarize(mean_ht = mean(modal_ht_cm))
+
+welch_CEIN_hts %>% 
+  ggplot(aes(x = as.factor(years_since_fire), y = modal_ht_cm))+
+  geom_boxplot()+
+  geom_point(data=means, aes(x = as.factor(years_since_fire), y = mean_ht), col = "purple")
+```
+
+
 
 ```{r}
 save(welch_CEIN_hts, file = "../../../../data/welch_CEIN_hts.Rdata")

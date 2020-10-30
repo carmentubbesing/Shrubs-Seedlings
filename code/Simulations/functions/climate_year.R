@@ -1,4 +1,4 @@
-cliamte_year <- function(climate_method, pts.sf.abco, pts.sf.pipo, prism){
+climate_year <- function(climate_method, pts.sf.abco, pts.sf.pipo, prism){
   # Assign a climate year depending on the method for this run
   
   if(climate_method == "random"){
