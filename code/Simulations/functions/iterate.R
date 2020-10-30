@@ -2,7 +2,7 @@
 
 iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index){
 
-  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
+  no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
@@ -40,9 +40,7 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
       mutate(rep = i)
     return(dfsimall)
   }
-  filename <-  paste("~/Ch3_Simulation_Results/Simulation1_",  Sys.Date(), "_", iterations, "_", conifer_species_method, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_heightgrowth, "growth_", shrub_initial_index, "index.Rdata", sep = "")
-  
-  save(dfsimallreps, file =filename)
+
   return(dfsimallreps)
 }
 

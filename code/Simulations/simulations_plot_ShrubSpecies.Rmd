@@ -17,15 +17,14 @@ require(egg)
 require(grid)
 ```
 
-
 ```{r}
-date <- "2020-10-27"
+date <- "2020-10-30"
 
 namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", date, "_100_CEIN.Rdata", sep = "")
 
 namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", date, "_100_ARPA.Rdata", sep = "")
 
-namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", date, "_1000_CECO.Rdata", sep = "")
+namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", date, "_100_CECO.Rdata", sep = "")
 ```
 
 ```{r}

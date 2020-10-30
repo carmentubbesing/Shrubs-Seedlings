@@ -19,11 +19,11 @@ require(gridExtra)
 
 # Load summary
 ```{r}
-load(file = "../../results/data/summary_emerge_prop_base_Oct29.Rdata")
+load(file = "../../results/data/summary_emerge_prop_base_Oct30.Rdata")
 ```
 
 ```{r}
-load(file = "../../results/data/summary_emerge_density_base_Oct29.Rdata")
+load(file = "../../results/data/summary_emerge_density_base_Oct30.Rdata")
 ```
 
 ## Plot 

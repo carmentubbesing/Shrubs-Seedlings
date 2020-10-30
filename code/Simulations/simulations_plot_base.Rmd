@@ -13,7 +13,7 @@ require(gridExtra)
 ```
 
 ```{r}
-name <- "Simulation1_2020-10-29_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- "Simulation1_2020-10-30_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -40,40 +40,21 @@ dfsimallreps %>%
   count() 
 ```
 
-```{r}
-dfsimallreps %>% 
-  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
-  filter(Years == 30) %>% 
-  dplyr::select(rep, ID_withinrep, Sdlg, Species, Cov1.3, Ht1.3, shrubarea3, Years, climate_year)
-```
-
-```{r}
-dfsimallreps %>% 
-  filter(Sdlg == 205) %>% 
-  filter(rep == 1 & ID_withinrep == 61) %>% 
-  arrange(Years) %>% 
-  View()
-```
-
-
-
-
-```{r}
-dfsimallreps %>% 
-  filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
-  group_by(emerged) %>% 
-  count() %>% 
-  summarize(min(Years))
-```
-
-```{r}
-dfsimallreps <- dfsimallreps %>% 
- mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))
-```
-
-## Make sure # reps and minimum year matches what I expect
+## Make sure # reps, seedlings per rep, and minimum year matches what I expect
 ```{r}
 length(unique(dfsimallreps$rep))
+```
+
+```{r}
+min(dfsimallreps$Years)
+```
+
+```{r}
+dfsimallreps %>% 
+  group_by(rep) %>% 
+  filter(Years == min(Years)) %>% 
+  count() %>% 
+  filter(n != 100)
 ```
 
 # Plot how many trees emerge above the shrub canopy each year
@@ -83,33 +64,24 @@ length(unique(dfsimallreps$rep))
 dfsimallreps %>% 
   filter(Years == max(Years)) %>% 
   group_by(emerged, Species) %>% 
-  count()
+  count() %>% 
+  filter(emerged==0)
 ```
-
-### Look at the one that hasn't emerged
-```{r}
-dfsimallreps %>% 
-  filter(rep == 14 & Sdlg == 71) %>% 
-  dplyr::select(Years, Sdlg, Species, Ht_cm1, Ht1.3, emerged, dead) %>% 
-  arrange(Years)
-```
-
 
 # Calculate mean and SD starting # of each species
 ```{r}
-df9 <- dfsimallreps %>% filter(Years == min(Years))
+df8 <- dfsimallreps %>% filter(Years == min(Years))
 ```
 
 ```{r}
-df9 %>% 
+df8 %>% 
   group_by(rep, Species) %>% 
   count() %>% 
   group_by(Species) %>% 
   summarize(mean(n), sd(n), min(n), max(n))
 ```
 
-
-# Summarize
+# Summarize emergents per year per rep
 ```{r}
 summary_emerge <- dfsimallreps %>% 
   group_by(Years, Species, rep) %>% 
@@ -233,7 +205,6 @@ Q50
 load("../../results/coefficients/welch_ratios.Rdata")
 ```
 
-
 ## By conifer species
 ```{r}
 dfsimallreps %>% 
@@ -254,19 +225,11 @@ welch_ratios %>%
 init_counts_by_rep <-  dfsimallreps %>% 
   filter(Years == min(Years)) %>% 
   group_by(Species, rep) %>% 
-  count() 
-ggplot(init_counts_by_rep %>% filter(Species == "PIPO"))+
-  geom_histogram(aes(n))
+  count() %>% 
+  group_by(Species) %>% 
+  summarize(mean(n))
+init_counts_by_rep
 ```
-
-There are just too few trees in the beginning! It should be 100. 
-```{r}
-dfsimallreps %>% 
-  filter(Years == min(Years)) %>% 
-  group_by(rep) %>% 
-  count()
-```
-
 
 ## By conifer/shrub combo
 ```{r}
@@ -279,13 +242,6 @@ dfsimallreps %>%
   arrange(ShrubSpp03)
 welch_ratios
 ```
-
-```{r}
-welch_ratios %>% 
-  group_by(Species) %>% 
-  summarize(sum(trees))
-```
-
 
 # Density - Plot on a per-area basis
 
@@ -423,7 +379,7 @@ summary_emerge_prop <- summary_emerge_prop %>%
 
 ## Save prop summary
 ```{r}
-save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base_Oct29.Rdata")
+save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base_Oct30.Rdata")
 ```
 
 ## Plot 
@@ -454,7 +410,7 @@ ggplot(summary_emerge_prop)+
   xlab(element_blank())+
   xlim(8,max_year)+
   ylim(c(-0.05,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line_Oct29", name, ".png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_prop_line_Oct30", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -482,7 +438,7 @@ summary_emerge_density <- summary_emerge_density %>%
 
 ## Save density summary
 ```{r}
-save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base_Oct29.Rdata")
+save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base_Oct30.Rdata")
 ```
 
 ```{r}
@@ -508,7 +464,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line_Oct29", name, ".png", sep = "")
+filename <- paste("../../results/figures/Simulations/base_density_line_Oct30", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -521,9 +477,3 @@ summary_emerge %>%
   group_by(Species) %>% 
   summarize(mean = mean(Years), min = min(Years), max = max(Years), sd = sd(Years))
 ```
-
-# Save welch ratios as a table
-```{r}
-write.csv(welch_ratios, file = "~/../Shrubs-Seedlings/results/coefficients/welch_ratios.csv", row.names = F)
-```
-

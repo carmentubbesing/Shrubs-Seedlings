@@ -56,7 +56,7 @@ plot_emerge_prop <-
         )+
 
   xlab(element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))+
+  xlim(c(8,max(summary_emerge$Years)))+
   facet_wrap(~Species, nrow = 1)
 
 plot_emerge_prop
@@ -136,7 +136,7 @@ Q50plot <- ggplot()+
         strip.text.x = element_blank(),
         plot.margin = margin(0,0,0,0, "cm"),
         axis.ticks.y = element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))+
+  xlim(c(8,max(summary_emerge$Years)))+
   xlab("Years since fire")+
     facet_wrap(~Species, nrow = 1)
 Q50plot

@@ -38,13 +38,6 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   coef_int_mort_pipo <- unlist(coef_mort_pipo[2])
   coef_gr_mort_pipo <- unlist(coef_mort_pipo[1])
   
-  # Load gam models from `Shrub_growth_analysis.Rmd`
-  load("../../results/coefficients/gamCECO.Rdata")
-  load("../../results/coefficients/gamARPA.Rdata")
-  load("../../results/coefficients/gamCEIN.Rdata")
-  load("../../results/coefficients/gamCHSE.Rdata")
-  load("../../results/coefficients/gamOTHER.Rdata")
-  
   ## Vertical growth
   ## Vert Growth
   sample_gr <- sample(1000, 1)
