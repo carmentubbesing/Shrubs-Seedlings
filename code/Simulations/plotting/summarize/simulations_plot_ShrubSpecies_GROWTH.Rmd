@@ -8,7 +8,7 @@ output: html_document
 
 ```{r}
 strt <- Sys.time()
-setwd("~/Shrubs-Seedlings/code/Simulations/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 
@@ -19,15 +19,14 @@ require(RColorBrewer)
 require(egg)
 ```
 
-
 ```{r}
-date <- "2020-04-13"
+date <- "2020-10-30"
 
-namececo <- paste("~/Simulation9_", date, "_1000_welch_empiricalcoef_CECOgrowth.Rdata", sep = "")
+namececo <- paste("~/Ch3_Simulation_Results/Simulation9_", data_date, "_", n_reps, "_welch_empiricalcoef_CECOgrowth.Rdata", sep = "")
 
-namecein <- paste("~/Simulation10_", date, "_1000_welch_empiricalcoef_CEINgrowth.Rdata", sep = "")
+namecein <- paste("~/Ch3_Simulation_Results/Simulation10_", data_date, "_", n_reps, "_welch_empiricalcoef_CEINgrowth.Rdata", sep = "")
 
-namearpa <- paste("~/Simulation11_", date, "_1000_welch_empiricalcoef_ARPAgrowth.Rdata", sep = "")
+namearpa <- paste("~/Ch3_Simulation_Results/Simulation11_", data_date, "_", n_reps, "_welch_empiricalcoef_ARPAgrowth.Rdata", sep = "")
 ```
 
 ```{r}
@@ -42,8 +41,6 @@ remove(dfsimallreps)
 load(namecein)
 cein <- dfsimallreps
 remove(dfsimallreps)
-
-
 ```
 
 ```{r}
@@ -54,7 +51,6 @@ ceco <- ceco %>%
 cein <- cein %>% 
   mutate(simspp = "CEIN")
 ```
-
 
 ```{r}
  max_year <- cein %>% 
@@ -141,5 +137,6 @@ summary_emerge <- summary_emerge %>%
 
 ## Save summary
 ```{r}
-save(summary_emerge, file = "../../results/data/summary_emerge_growth.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_growth_", data_date,"_", n_reps, ".Rdata", sep = "")
+save(summary_emerge, file = filename)
 ```

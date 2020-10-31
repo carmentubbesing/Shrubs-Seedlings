@@ -14,7 +14,8 @@ require(grid)
 
 # Load summary
 ```{r}
-load(file = "../../results/data/summary_emerge_index.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_index_", data_date,"_", n_reps, ".Rdata", sep = "")
+load(file = filename)
 ```
 
 ## Filter out the flat parts - take out years if they differ by <0.01 (1%)
@@ -153,7 +154,7 @@ Q50plot
 
 # Save
 ```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_index_withQ50_facet", Sys.Date(), ".jpeg", sep = "")
+filename <- paste("../../../../results/figures/Simulations/shrub_species_index_withQ50_", data_date, "_", n_reps, ".jpeg", sep = "")
 
 g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5,0.5), widths = 4)
 ggsave(filename, g, width = 8, height = 4.2)

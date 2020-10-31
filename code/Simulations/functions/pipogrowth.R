@@ -1,5 +1,5 @@
 pipogrowth <- function(pts.sf.pipo, sample_gr, shrub_coefficient){
-  load("../../results/coefficients/LM_pine_bootstrap_coef.Rdata")
+  load("../../../results/coefficients/LM_pine_bootstrap_coef.Rdata")
   coefpipo <- coef_all %>% filter(i == sample_gr)
   
   pts.sf.pipo <- pts.sf.pipo %>% 

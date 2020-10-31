@@ -8,7 +8,6 @@ output: html_document
 
 ```{r}
 strt <- Sys.time()
-setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}
@@ -19,13 +18,11 @@ require(egg)
 ```
 
 ```{r}
-date <- "2020-04-13"
+namececo <- paste("~/Ch3_Simulation_Results/Simulation12_", data_date, "_", n_reps, "_welch_empiricalcoef_CECOindex_empiricalgrowth.Rdata", sep = "")
 
-namececo <- paste("~/Simulation12_", date, "_1000_welch_empiricalcoef_CECOindex_empiricalgrowth.Rdata", sep = "")
+namearpa <- paste("~/Ch3_Simulation_Results/Simulation14_", data_date, "_", n_reps, "_welch_empiricalcoef_ARPAindex_empiricalgrowth.Rdata", sep = "")
 
-namearpa <- paste("~/Simulation14_", date, "_1000_welch_empiricalcoef_ARPAindex_empiricalgrowth.Rdata", sep = "")
-
-namecein <- paste("~/Simulation13_", date, "_1000_welch_empiricalcoef_CEINindex_empiricalgrowth.Rdata", sep = "")
+namecein <- paste("~/Ch3_Simulation_Results/Simulation13_", data_date, "_", n_reps, "_welch_empiricalcoef_CEINindex_empiricalgrowth.Rdata", sep = "")
 ```
 
 ```{r}
@@ -134,5 +131,6 @@ summary_emerge <- summary_emerge %>%
 
 ## Save summary
 ```{r}
-save(summary_emerge, file = "../../results/data/summary_emerge_index.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_index_", data_date,"_", n_reps, ".Rdata", sep = "")
+save(summary_emerge, file = filename)
 ```

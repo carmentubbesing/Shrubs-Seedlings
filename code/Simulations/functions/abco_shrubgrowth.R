@@ -1,11 +1,11 @@
 abco_shrubgrowth <- function(pts.sf.abco, shrub_heightgrowth){
   
   # Load gam models from `Shrub_growth_analysis.Rmd`
-  load("../../results/coefficients/gamCECO.Rdata")
-  load("../../results/coefficients/gamARPA.Rdata")
-  load("../../results/coefficients/gamCEIN.Rdata")
-  load("../../results/coefficients/gamCHSE.Rdata")
-  load("../../results/coefficients/gamOTHER.Rdata")
+  load("../../../results/coefficients/gamCECO.Rdata")
+  load("../../../results/coefficients/gamARPA.Rdata")
+  load("../../../results/coefficients/gamCEIN.Rdata")
+  load("../../../results/coefficients/gamCHSE.Rdata")
+  load("../../../results/coefficients/gamOTHER.Rdata")
   
   # Add a column for mean predicted shrub height for the present year, predicted by the GAM for each species
   x1 <- data.frame(years_since_fire = unique(pts.sf.abco$Years))
@@ -71,7 +71,7 @@ abco_shrubgrowth <- function(pts.sf.abco, shrub_heightgrowth){
   
   # Change shrub COVER based on linear model from my data
   #*******************************************************
-  load("../../results/coefficients/LM_shrubcover.Rdata")
+  load("../../../results/coefficients/LM_shrubcover.Rdata")
   
   # Add a column for predicted shrub cover for the present year, predicted by the LM
   pts.sf.abco <- pts.sf.abco %>% 

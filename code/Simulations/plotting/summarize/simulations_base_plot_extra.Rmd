@@ -8,8 +8,9 @@ output:
 ---
 
 ```{r}
-name <- "~/Ch3_Simulation_Results/Simulation1_2020-10-28_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex.Rdata"
-load(name)
+name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
+load(df_filename)
 strt <- Sys.time()
 ```
 

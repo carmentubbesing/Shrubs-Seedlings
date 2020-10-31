@@ -1,6 +1,6 @@
 prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_index, n_seedlings){
-  load(file="../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
-  load(file = "../../data/welch_CEIN_hts.Rdata")
+  load(file="../../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
+  load(file = "../../../data/welch_CEIN_hts.Rdata")
   dffull <- df
   
   # filter and clean df
@@ -39,7 +39,7 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
   
   # If shrub_method = "welch", then select based on proportions in welch data
   if(shrub_method=="welch"){
-    load("../../results/coefficients/welch_ratios.Rdata")
+    load("../../../results/coefficients/welch_ratios.Rdata")
   
     df_new <- data.frame()
     for(i in 1:nrow(welch_ratios)){

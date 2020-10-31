@@ -1,5 +1,5 @@
 abcogrowth <- function(pts.sf.abco, sample_gr){
-  load("../../results/coefficients/LM_fir_bootstrap_coef.Rdata")
+  load("../../../results/coefficients/LM_fir_bootstrap_coef.Rdata")
   coefabco <- coef_all %>% filter(i == sample_gr) %>% dplyr::select(-i) %>% t() %>% as.data.frame()
   names(coefabco) <- unlist(coefabco[2,])
   coefabco <- coefabco[1,] %>% mutate_all(paste) %>% mutate_all(as.numeric)

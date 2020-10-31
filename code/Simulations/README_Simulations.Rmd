@@ -11,6 +11,11 @@ output:
 
 This folder has all the code to run SORTIE-style simulations of stand-replacing fire patches
 
+# TO RE-RUN EVERYTHING:
+# 1. KNIT `simulations_all`
+# 2. KNIT `render_all_simulation_plots`
+
+
 # Prep code
 
 #### **diameter_ht.Rmd**

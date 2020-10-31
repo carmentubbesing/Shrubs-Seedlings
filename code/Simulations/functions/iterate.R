@@ -2,29 +2,29 @@
 
 iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index){
 
-  no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
+  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
   dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "remove") %dopar% {
     time.start <- Sys.time()
     
-    source("functions/prep_df.R")
+    source("../functions/prep_df.R")
     df <- prep_df(fire, conifer_species_method, shrub_method, shrub_initial_index, n_seedlings)
     
-    source("functions/initialize_nonspatial.R")
-    source("functions/sim.R")
-    source("functions/abco_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
-    source("functions/pipo_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
-    source("functions/abcomort.R") #uncertainty done
-    source("functions/pipomort.R") #uncertainty done
-    source("functions/abcodia_footprints.R") #uncertainty done
-    source("functions/pipodia_footprints.R") #uncertainty done
-    source("functions/abcogrowth.R") #uncertainty done
-    source("functions/pipogrowth.R") #uncertainty done
-    source("functions/pipo_emerge.R")
-    source("functions/abco_emerge.R")
-    source("functions/climate_year.R")
+    source("../functions/initialize_nonspatial.R")
+    source("../functions/sim.R")
+    source("../functions/abco_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
+    source("../functions/pipo_shrubgrowth.R") # no uncertainty for shrub cover, it messes everything up!
+    source("../functions/abcomort.R") #uncertainty done
+    source("../functions/pipomort.R") #uncertainty done
+    source("../functions/abcodia_footprints.R") #uncertainty done
+    source("../functions/pipodia_footprints.R") #uncertainty done
+    source("../functions/abcogrowth.R") #uncertainty done
+    source("../functions/pipogrowth.R") #uncertainty done
+    source("../functions/pipo_emerge.R")
+    source("../functions/abco_emerge.R")
+    source("../functions/climate_year.R")
 
     # Remove old objects
     remove(pts.sf.abco, pts.sf.pipo)

@@ -15,8 +15,9 @@ require(grid)
 
 # Load summarized results
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/")
-load(file = "../../results/data/summary_emerge_coef.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_coef_", data_date,"_", n_reps, ".Rdata", sep = "")
+
+load(file = filename)
 ```
 
 
@@ -140,7 +141,7 @@ Q50plot
 
 # Save
 ```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_coef_withQ50_facet", Sys.Date(), ".jpeg", sep = "")
+filename <- paste("../../../../results/figures/Simulations/shrub_species_coef_withQ50_facet_", data_date,"_", n_reps, ".jpeg", sep = "")
 
 g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5,0.5), widths = 4)
 ggsave(filename, g, width = 8, height = 4.2)

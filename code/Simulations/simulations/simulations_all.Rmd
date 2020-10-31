@@ -10,7 +10,7 @@ output:
 # This script runs simulations without being spatially explicit. Thus, the functions `shrubclump` and `ratify_r` were removed.
 
 ```{r, include = F}
-setwd("~/../Shrubs-Seedlings/code/Simulations/") 
+setwd("~/../Shrubs-Seedlings/code/Simulations/simulations/") 
 
 pkgs <- c("tidyverse", "sf", "knitr", "mgcv", "gridExtra", "doParallel")
 lapply(pkgs, require, character.only = T)
@@ -20,14 +20,14 @@ strt <- Sys.time()
 #### Iteration function
 ```{r}
 print(Sys.time())
-source("functions/iterate.R")
+source("../functions/iterate.R")
 ```
 
 # Define stuff
 
 ## Define iterations
 ```{r}
-iterations <- 10
+iterations <- 15
 ```
 
 ## Define length of simulation
@@ -72,7 +72,6 @@ dfsimallreps <<- dfsimallreps %>%
 time <- Sys.time()
 
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
-
 
 Sys.time()-time
 ```

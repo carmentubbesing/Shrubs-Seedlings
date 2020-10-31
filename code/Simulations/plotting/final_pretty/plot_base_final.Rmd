@@ -17,13 +17,17 @@ require(tidyverse)
 require(gridExtra)
 ```
 
+# If you're running this code on its own, you have to define data_date and n_reps at the top
+
 # Load summary
 ```{r}
-load(file = "../../results/data/summary_emerge_prop_base_Oct30.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_density_base_", data_date,"_", n_reps, ".Rdata", sep = "")
+load(file = filename)
 ```
 
 ```{r}
-load(file = "../../results/data/summary_emerge_density_base_Oct30.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_prop_base_", data_date,"_", n_reps, ".Rdata", sep = "")
+load(file = filename)
 ```
 
 ## Plot 
@@ -54,7 +58,7 @@ ggplot(summary_emerge_prop)+
   xlab(element_blank())+
   xlim(8,max(summary_emerge_prop$Years))+
   ylim(c(-0.05,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line_Oct29.png", sep = "")
+filename <- paste("../../../../results/figures/Simulations/base_prop_line_", data_date, "_", n_reps,".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -82,7 +86,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line_Oct29.png", sep = "")
+filename <- paste("../../../../results/figures/Simulations/base_density_line_", data_date,"_", n_reps, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 

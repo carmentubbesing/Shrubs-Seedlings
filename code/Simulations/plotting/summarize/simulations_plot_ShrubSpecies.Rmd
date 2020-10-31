@@ -5,9 +5,10 @@ date: "3/6/2020"
 output: html_document
 ---
 
+# If you're running this code on its own, you have to define data_date and n_reps at the top
+
 ```{r}
 strt <- Sys.time()
-setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 ```{r, include = F}
@@ -18,13 +19,11 @@ require(grid)
 ```
 
 ```{r}
-date <- "2020-10-30"
+namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", data_date, "_", n_reps, "_CEIN.Rdata", sep = "")
 
-namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", date, "_100_CEIN.Rdata", sep = "")
+namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", data_date, "_", n_reps, "_ARPA.Rdata", sep = "")
 
-namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", date, "_100_ARPA.Rdata", sep = "")
-
-namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", date, "_100_CECO.Rdata", sep = "")
+namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", data_date, "_", n_reps, "_CECO.Rdata", sep = "")
 ```
 
 ```{r}
@@ -121,6 +120,7 @@ summary_emerge <- summary_emerge %>%
 
 # Save summarized data
 ```{r}
-save(summary_emerge, file = "../../results/data/summary_emerge_prop_ShrubSpp.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_prop_ShrubSpp_", data_date,"_", n_reps, ".Rdata", sep = "")
+save(summary_emerge, file = filename)
 ```
 

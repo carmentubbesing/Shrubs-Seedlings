@@ -9,21 +9,27 @@ output:
 
 ```{r setup}
 library(knitr)
-setwd("~/Shrubs-Seedlings/code/Simulations/")
 ```
 
-```{r rendering, warning = F}
-strt <- Sys.time()
+```{r defining}
+data_date <<- "2020-10-30"
+n_reps <<- "10"
+```
+
+```{r summarizing, warning = F}
+strt_all <- Sys.time()
+setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/summarize/")
 rmarkdown::render("simulations_plot_base.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_base_plot_extra.Rmd", "html_document", quiet = T) # this takes a while 
 rmarkdown::render("simulations_plot_ShrubSpecies.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations_plot_ShrubSpecies_coef.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations_plot_ShrubSpecies_GROWTH.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations_plot_ShrubSpecies_INDEX.Rmd", "html_document", quiet = T)
-print(strt-Sys.time())
+print(Sys.time()-strt_all)
 ```
 
-```{r}
-rmarkdown::render("simulations_base_plot_extra.Rmd", "html_document", quiet = T) # this takes a while 
+```{r plotting, warning = F}
+setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/final_pretty/")
 rmarkdown::render("plot_base_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_coef_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_growth_final.Rmd", "html_document", quiet = T)

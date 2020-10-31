@@ -7,13 +7,15 @@ output:
     toc: TRUE
 ---
 
+# If you're running this code on its own, you have to define data_date and n_reps at the top
+
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
 ```
 
 ```{r}
-name <- "Simulation1_2020-10-30_1000_empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex"
+name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
@@ -202,7 +204,7 @@ Q50
 
 ## Load Welch ratios
 ```{r}
-load("../../results/coefficients/welch_ratios.Rdata")
+load("../../../../results/coefficients/welch_ratios.Rdata")
 ```
 
 ## By conifer species
@@ -249,7 +251,7 @@ Each plot in Welch's data was 60 m^2.
 
 ## Load Welch data on # plots
 ```{r}
-load("../../results/coefficients/n_plots_welch.Rdata")
+load("../../../../results/coefficients/n_plots_welch.Rdata")
 ```
 
 ## Calculate total plot area and density in the welch data
@@ -322,7 +324,7 @@ plot_emerge_density <- ggplot(summary_emerge)+
         legend.text=element_text(size=11),
         legend.position = "none")
 plot_emerge_density
-filename <- paste("../../results/figures/Simulations/base_density_boxplot", name, ".png", sep = "")
+filename <- paste("../../../../results/figures/Simulations/base_density_boxplot_", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -379,7 +381,8 @@ summary_emerge_prop <- summary_emerge_prop %>%
 
 ## Save prop summary
 ```{r}
-save(summary_emerge_prop, file = "../../results/data/summary_emerge_prop_base_Oct30.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_prop_base_", data_date,"_", n_reps, ".Rdata", sep = "")
+save(summary_emerge_prop, file = filename)
 ```
 
 ## Plot 
@@ -410,7 +413,7 @@ ggplot(summary_emerge_prop)+
   xlab(element_blank())+
   xlim(8,max_year)+
   ylim(c(-0.05,1))
-filename <- paste("../../results/figures/Simulations/base_prop_line_Oct30", name, ".png", sep = "")
+filename <- paste("../../../../results/figures/Simulations/base_prop_line_",name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
@@ -438,7 +441,8 @@ summary_emerge_density <- summary_emerge_density %>%
 
 ## Save density summary
 ```{r}
-save(summary_emerge_density, file = "../../results/data/summary_emerge_density_base_Oct30.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_density_base_", data_date,"_", n_reps, ".Rdata", sep = "")
+save(summary_emerge_density, file = filename)
 ```
 
 ```{r}
@@ -464,7 +468,7 @@ ggplot(summary_emerge_density)+
         legend.position = "none"
         )
 
-filename <- paste("../../results/figures/Simulations/base_density_line_Oct30", name, ".png", sep = "")
+filename <- paste("../../../../results/figures/Simulations/base_density_line_", name, ".png", sep = "")
 ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
