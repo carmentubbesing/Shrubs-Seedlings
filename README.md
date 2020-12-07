@@ -6,7 +6,6 @@ February 22, 2017
   - [Summary](#summary)
   - [Fire Footprint seedling growth in relation to shrubs (2016 and 2017
     data)](#fire-footprint-seedling-growth-in-relation-to-shrubs-2016-and-2017-data)
-      - [Concerns](#concerns)
       - [Data processing](#data-processing)
       - [Analysis](#analysis)
       - [Next steps](#next-steps)
@@ -15,30 +14,9 @@ February 22, 2017
 
 This repository holds the code for analyzing Carmen’s summer 2016-2017
 shrub and seedling measurements and other data related to the
-interactions between shrubs and conifer seedlings. The data being
-analyzed is located in Stephens lab dropbox -\> SORTIE -\>
-Shrubs\_Summer16 -\> Shrubs2016\_Completed\_Data\_and\_Photos
+interactions between shrubs and conifer seedlings. 
 
 # Fire Footprint seedling growth in relation to shrubs (2016 and 2017 data)
-
-## Concerns
-
-Some seedlings have diameter measurements that are smaller in 2017 than
-in 2016. For some seedlings, the difference is small enough that it
-could be a measurement error, such as the calipers not being perfect or
-people measuring on the wrong side of the tree. However, for some
-seedlings the differences are large and it seems that the error could be
-due to a serious mistake, like measuring the wrong tree or writing down
-the number wrong.
-
-Thoughts on how to deal with this problem:
-
-  - Since only 1 measurement was taken in 2016 and 2 were taken in 2017,
-    for trees with diameter measurements smaller in 2017 than 2016 I
-    could potentially use just the smaller of the two measurements from
-    2017, though that won’t help much since many seedlings have two very
-    similar measurements in 2017, and that logic would be hard to apply
-    to seedlings without this problem.
 
 ## Data processing
 
@@ -100,12 +78,4 @@ fires and years:
 
 <!-- ![](plots/pinus_predicted_actual.jpeg) -->
 
-## Next steps
 
-1.  figure out how to normalize in the sense of subtracting the mean and
-    dividing by the standard deviation when I’m then going to take the
-    square root of the variable
-      - square root first?
-      - check in Zuur book
-2.  add elevation and slope data in a synthetic variable, and delete
-    fire random effect
