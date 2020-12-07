@@ -368,6 +368,17 @@ summary {
 
 </div>
 
+<div id="TOC">
+<ul>
+<li><a href="#if-youre-running-this-code-on-its-own-you-have-to-define-data_date-and-n_reps-at-the-top">If you’re running this code on its own, you have to define data_date and n_reps at the top</a><ul>
+<li><a href="#summarize">Summarize</a><ul>
+<li><a href="#mean">Mean</a></li>
+</ul></li>
+<li><a href="#filter-out-the-flat-parts---take-out-years-if-they-differ-by-0.001-0.1">Filter out the flat parts - take out years if they differ by &lt;0.001 (0.1%)</a></li>
+</ul></li>
+<li><a href="#save-summarized-data">Save summarized data</a></li>
+</ul>
+</div>
 
 <div id="if-youre-running-this-code-on-its-own-you-have-to-define-data_date-and-n_reps-at-the-top" class="section level1">
 <h1>If you’re running this code on its own, you have to define data_date and n_reps at the top</h1>
@@ -394,7 +405,7 @@ ceco &lt;- ceco %&gt;%
   mutate(sim_spp = &quot;CECO&quot;)
 cein &lt;- cein %&gt;% 
   mutate(sim_spp = &quot;CEIN&quot;)</code></pre>
-<pre class="r"><code>nrow_total &lt;- nrow(arpa) + nrow(ceco) + nrow(cein)</code></pre>
+<pre class="r"><code>nrow_total &lt;- nrow(arpa) + nrow(ceco) + nrow(cein) + nrow(min)</code></pre>
 <pre class="r"><code>df &lt;- full_join(arpa, ceco)</code></pre>
 <pre><code>## Joining, by = c(&quot;Sdlg&quot;, &quot;Species&quot;, &quot;Cov1.3&quot;, &quot;Ht1.3&quot;, &quot;ShrubSpp03&quot;, &quot;shrubarea3&quot;, &quot;dia.cm&quot;, &quot;Ht_cm1&quot;, &quot;heatload&quot;, &quot;incidrad&quot;, &quot;Slope.Deg&quot;, &quot;Elevation&quot;, &quot;Fire&quot;, &quot;Years&quot;, &quot;Year&quot;, &quot;Cov_prop&quot;, &quot;sqrt_shrubarea3&quot;, &quot;ID_withinrep&quot;, &quot;emerged&quot;, &quot;climate_year&quot;, &quot;historic_year&quot;, &quot;pred&quot;, &quot;pred_exp&quot;, &quot;coef_gr_shrubarea&quot;, &quot;prob_mort&quot;, &quot;prob_mort_annual&quot;, &quot;rand&quot;, &quot;dead&quot;, &quot;mean_shrub_ht_by_spp&quot;, &quot;diff_shr_ht&quot;, &quot;mean_shrub_ht_by_spp_T2&quot;, &quot;predicted_shrub_cov&quot;, &quot;diff_shr_cov&quot;, &quot;predicted_shrub_cov_T2&quot;, &quot;coef_gr_mort_abco&quot;, &quot;coef_gr_mort_pipo&quot;, &quot;rep&quot;, &quot;sim_spp&quot;)</code></pre>
 <pre class="r"><code>remove(arpa, ceco)
@@ -402,22 +413,21 @@ df &lt;- full_join(df, cein)</code></pre>
 <pre><code>## Joining, by = c(&quot;Sdlg&quot;, &quot;Species&quot;, &quot;Cov1.3&quot;, &quot;Ht1.3&quot;, &quot;ShrubSpp03&quot;, &quot;shrubarea3&quot;, &quot;dia.cm&quot;, &quot;Ht_cm1&quot;, &quot;heatload&quot;, &quot;incidrad&quot;, &quot;Slope.Deg&quot;, &quot;Elevation&quot;, &quot;Fire&quot;, &quot;Years&quot;, &quot;Year&quot;, &quot;Cov_prop&quot;, &quot;sqrt_shrubarea3&quot;, &quot;ID_withinrep&quot;, &quot;emerged&quot;, &quot;climate_year&quot;, &quot;historic_year&quot;, &quot;pred&quot;, &quot;pred_exp&quot;, &quot;coef_gr_shrubarea&quot;, &quot;prob_mort&quot;, &quot;prob_mort_annual&quot;, &quot;rand&quot;, &quot;dead&quot;, &quot;mean_shrub_ht_by_spp&quot;, &quot;diff_shr_ht&quot;, &quot;mean_shrub_ht_by_spp_T2&quot;, &quot;predicted_shrub_cov&quot;, &quot;diff_shr_cov&quot;, &quot;predicted_shrub_cov_T2&quot;, &quot;coef_gr_mort_abco&quot;, &quot;coef_gr_mort_pipo&quot;, &quot;rep&quot;, &quot;sim_spp&quot;)</code></pre>
 <pre class="r"><code>remove(cein)</code></pre>
 <pre class="r"><code>nrow_total == nrow(df)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
-</div>
-<div id="take-out-trees-with-non-finite-or-na-pred-because-they-had-already-emerged-and-things-got-wacky" class="section level1">
-<h1>Take out trees with non-finite or NA pred because they had already emerged and things got wacky</h1>
+<pre><code>## logical(0)</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %&gt;% 
-  group_by(emerged) %&gt;% 
+  group_by(emerged, Years) %&gt;% 
   count()</code></pre>
-<pre><code>## # A tibble: 2 x 2
-## # Groups:   emerged [2]
-##   emerged     n
-##     &lt;dbl&gt; &lt;int&gt;
-## 1       0  2987
-## 2       1    13</code></pre>
-<pre class="r"><code>df &lt;- df %&gt;% 
- mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))</code></pre>
+<pre><code>## # A tibble: 2 x 3
+## # Groups:   emerged, Years [2]
+##   emerged Years      n
+##     &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt;
+## 1       0     8 297579
+## 2       1     8   2321</code></pre>
+<!-- ```{r} -->
+<!-- df <- df %>%  -->
+<!--  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp)) -->
+<!-- ``` -->
 <div id="summarize" class="section level2">
 <h2>Summarize</h2>
 <div id="mean" class="section level3">
@@ -452,10 +462,10 @@ df &lt;- full_join(df, cein)</code></pre>
   unlist()
 
 max_year</code></pre>
-<pre><code>## Years 
-##    40</code></pre>
+<pre><code>## Years1 Years2 
+##     42     42</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
-  filter(Years &lt; max_year + 1)</code></pre>
+  filter(Years &lt; unique(max_year) + 1)</code></pre>
 </div>
 </div>
 <div id="save-summarized-data" class="section level1">

@@ -14,7 +14,8 @@ require(grid)
 
 # Load summarized data
 ```{r}
-load(file = "../../results/data/summary_emerge_prop_ShrubSpp.Rdata")
+filename <- paste("../../../../results/data/summary_emerge_prop_ShrubSpp_", data_date,"_", n_reps, ".Rdata", sep = "")
+load(file = filename) 
 ```
 
 # Plot
@@ -29,16 +30,16 @@ plot_emerge_prop <-
   
   theme(legend.position = c(0.88, 0.2))+
    scale_fill_manual(name = "Shrub species", 
-                    values = c("#d95f02", "#1b9e77", "#e7298a"), 
+                    values = c("#d95f02", "#1b9e77", "#e7298a", "gray"), 
                                 labels = c("Manzanita", 
                                 "Whitethorn", 
-                                "Deerbrush"))+
+                                "Deerbrush", "Min"))+
 
   scale_color_manual(name = "Shrub species", 
-                    values = c("#d95f02","#1b9e77",  "#e7298a"), 
+                    values = c("#d95f02","#1b9e77",  "#e7298a", "gray"), 
                                 labels = c("Manzanita", 
                                 "Whitethorn", 
-                                "Deerbrush"))+
+                                "Deerbrush", "Min"))+
   scale_linetype_discrete(labels = c("White fir",
                           "Ponderosa pine"))+
   
@@ -144,7 +145,7 @@ Q50plot
 
 # Save plots
 ```{r}
-filename <- paste("../../results/figures/Simulations/shrub_species_overall_withQ50", Sys.Date(), ".jpeg", sep = "")
+filename <- paste("../../../../results/figures/Simulations/shrub_species_overall_withQ50_", data_date, "_", n_reps, ".jpeg", sep = "")
 
 g <- ggarrange(plot_emerge_prop, Q50plot, heights = c(2.5, 0.5), widths = 4)
 ggsave(filename, g, width = 10, height = 5.25)

@@ -31,7 +31,7 @@ plot_emerge_prop <-
   ylab("Proportion of initial trees emerged")+
   xlab("Years since fire")+
   #ggtitle(paste("Results for", max(dfsimallreps$rep), "simulations", sep = " "))+
-  theme(legend.position = c(0.35, 0.4))+
+  theme(legend.position = c(0.35, 0.3))+
    scale_fill_manual(name = "Shrub species", 
                     values = c("#888888", "#d95f02", "#1b9e77", "#e7298a"), 
                                 labels = c("All shrub species", "Manzanita", 
@@ -58,8 +58,8 @@ plot_emerge_prop <-
         plot.margin = margin(0,0,0,0, "cm")
         )+
   xlab(element_blank())+
-  xlim(9,max(summary_emerge$Years))+
-  ylim(c(0,1))+
+  xlim(8,max(summary_emerge$Years))+
+  #ylim(c(0,1))+
   facet_wrap(~Species, nrow = 1)
 
 plot_emerge_prop
@@ -132,11 +132,10 @@ Q50plot <- ggplot(Q50, aes(col = simspp))+
         strip.text.x = element_blank(),
         plot.margin = margin(0,0,0,0, "cm"),
         axis.ticks.y = element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))+
+  xlim(c(8,max(summary_emerge$Years)))+
   xlab("Years since fire")+
   ylab("Shrub\nspecies")+
   facet_wrap(~Species, nrow = 1)
-Q50plot
 ```
 
 # Save

@@ -372,7 +372,7 @@ summary {
 
 <pre class="r"><code>library(knitr)</code></pre>
 <pre class="r"><code>data_date &lt;&lt;- &quot;2020-10-30&quot;
-n_reps &lt;&lt;- &quot;10&quot;</code></pre>
+n_reps &lt;&lt;- &quot;15&quot;</code></pre>
 <pre class="r"><code>strt_all &lt;- Sys.time()
 setwd(&quot;~/../Shrubs-Seedlings/code/Simulations/plotting/summarize/&quot;)
 rmarkdown::render(&quot;simulations_plot_base.Rmd&quot;, &quot;html_document&quot;, quiet = T)
@@ -382,7 +382,7 @@ rmarkdown::render(&quot;simulations_plot_ShrubSpecies_coef.Rmd&quot;, &quot;html
 rmarkdown::render(&quot;simulations_plot_ShrubSpecies_GROWTH.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;simulations_plot_ShrubSpecies_INDEX.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 print(Sys.time()-strt_all)</code></pre>
-<pre><code>## Time difference of 36.59792 secs</code></pre>
+<pre><code>## Time difference of 35.03143 secs</code></pre>
 <pre class="r"><code>setwd(&quot;~/../Shrubs-Seedlings/code/Simulations/plotting/final_pretty/&quot;)
 rmarkdown::render(&quot;plot_base_final.Rmd&quot;, &quot;html_document&quot;, quiet = T)
 rmarkdown::render(&quot;plot_coef_final.Rmd&quot;, &quot;html_document&quot;, quiet = T)

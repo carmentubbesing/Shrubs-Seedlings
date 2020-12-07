@@ -38,10 +38,11 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
   # Randomly select seedlings with replacement
   
   # If shrub_method = "welch", then select based on proportions in welch data
-  if(shrub_method=="welch"){
+  if(shrub_method %in% c("welch", "min", "median", "max")){
     load("../../../results/coefficients/welch_ratios.Rdata")
   
     df_new <- data.frame()
+    
     for(i in 1:nrow(welch_ratios)){
       welch_i <- welch_ratios[i,]
       welch_prop_i <- welch_ratios[i,"prop"] %>% unlist()
@@ -82,10 +83,69 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
     
   }
   
+  # If shrub method = min, then set shrub cover, height and area to minimum values for that tree species
+  if(shrub_method == "min"){
+    df_new <- df_new %>% 
+      mutate(shrubarea3 = case_when(
+        Species == "ABCO" ~ min(dffull[dffull$Species == "ABCO", "shrubarea3"]) %>% unlist,
+        Species == "PIPO" ~ min(dffull[dffull$Species == "PIPO", "shrubarea3"]) %>% unlist,
+        TRUE ~ 999
+      )) %>% 
+      mutate(Ht1.3 = case_when(
+        Species == "ABCO" ~ min(dffull[dffull$Species == "ABCO", "Ht1.3"]) %>% unlist,
+        Species == "PIPO" ~ min(dffull[dffull$Species == "PIPO", "Ht1.3"]) %>% unlist,
+        TRUE ~ 999
+      )) %>% 
+      mutate(Cov1.3 = case_when(
+        Species == "ABCO" ~ min(dffull[dffull$Species == "ABCO", "Cov1.3"]) %>% unlist,
+        Species == "PIPO" ~ min(dffull[dffull$Species == "PIPO", "Cov1.3"]) %>% unlist,
+        TRUE ~ 999
+    ))
+    
+  }
+  
+  if(shrub_method == "median"){
+    df_new <- df_new %>% 
+      mutate(shrubarea3 = case_when(
+        Species == "ABCO" ~ median(dffull[dffull$Species == "ABCO", "shrubarea3"] %>% unlist),
+        Species == "PIPO" ~ median(dffull[dffull$Species == "PIPO", "shrubarea3"] %>% unlist),
+        TRUE ~ 999
+      )) %>% 
+      mutate(Ht1.3 = case_when(
+        Species == "ABCO" ~ median(dffull[dffull$Species == "ABCO", "Ht1.3"] %>% unlist),
+        Species == "PIPO" ~ median(dffull[dffull$Species == "PIPO", "Ht1.3"] %>% unlist),
+        TRUE ~ 999
+      )) %>% 
+      mutate(Cov1.3 = case_when(
+        Species == "ABCO" ~ median(dffull[dffull$Species == "ABCO", "Cov1.3"] %>% unlist),
+        Species == "PIPO" ~ median(dffull[dffull$Species == "PIPO", "Cov1.3"] %>% unlist),
+        TRUE ~ 999
+      ))
+    
+  }
+  
+  if(shrub_method == "max"){
+    df_new <- df_new %>% 
+      mutate(shrubarea3 = case_when(
+        Species == "ABCO" ~ max(dffull[dffull$Species == "ABCO", "shrubarea3"]) %>% unlist,
+        Species == "PIPO" ~ max(dffull[dffull$Species == "PIPO", "shrubarea3"]) %>% unlist,
+        TRUE ~ 999
+      )) %>% 
+      mutate(Ht1.3 = case_when(
+        Species == "ABCO" ~ max(dffull[dffull$Species == "ABCO", "Ht1.3"]) %>% unlist,
+        Species == "PIPO" ~ max(dffull[dffull$Species == "PIPO", "Ht1.3"]) %>% unlist,
+        TRUE ~ 999
+      )) %>% 
+      mutate(Cov1.3 = case_when(
+        Species == "ABCO" ~ max(dffull[dffull$Species == "ABCO", "Cov1.3"]) %>% unlist,
+        Species == "PIPO" ~ max(dffull[dffull$Species == "PIPO", "Cov1.3"]) %>% unlist,
+        TRUE ~ 999
+      ))
+    
+  }
+  
   # If shrub_method is for a single shrub species, select only seedlings under one of those shrub species
-  if(shrub_method == "empirical"){
-    df_new <- sample_n(df, size = n_seedlings, replace = T)
-  } else if(shrub_method == "ARPA") {
+  if(shrub_method == "ARPA") {
     df_new <- df %>% 
       filter(ShrubSpp03 == "ARPA") %>% 
       sample_n(size = n_seedlings, replace = T)
@@ -134,8 +194,7 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
       mutate(Ht1.3 = new_shrub_data$Ht1.3) %>% 
       mutate(shrubarea3 = new_shrub_data$shrubarea3)  
   }
-  
-  
+
   #check
   df_new %>%
     group_by(Species, ShrubSpp03) %>%
@@ -143,6 +202,10 @@ prep_df <- function(fire, conifer_species_method, shrub_method, shrub_initial_in
     ungroup() %>%
     mutate(prop = n/sum(n))
 
+  df_new %>% 
+    group_by(Species) %>% 
+    summarize(mean(Ht1.3), max(Ht1.3))
+  
   df <- df_new
   
   return(df)

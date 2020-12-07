@@ -2,11 +2,11 @@
 
 iterate <- function(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index){
 
-  no_cores <- detectCores() - 1 # Use all but one or two cores on your computer
+  no_cores <- detectCores() - 2 # Use all but one or two cores on your computer
   c1 <- makeCluster(no_cores)
   registerDoParallel(c1)
   set.seed(123)
-  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "remove") %dopar% {
+  dfsimallreps <- foreach(i= 1:iterations, .combine = rbind, .packages = c('tidyverse', 'sf', 'mgcv'),  .errorhandling = "pass") %dopar% {
     time.start <- Sys.time()
     
     source("../functions/prep_df.R")
@@ -30,12 +30,11 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
     remove(pts.sf.abco, pts.sf.pipo)
 
     # Execute
-
     pts <- initialize(df, r, n_seedlings)
     pts.sf.abco <- pts[[1]]
     pts.sf.pipo <- pts[[2]]
     
-    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, climate_method, shrub_coefficient, shrub_heightgrowth)
+    dfsimall <- sim(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, cumsum_2017, climate_method, shrub_coefficient, shrub_heightgrowth, shrub_method)
     dfsimall <-  dfsimall %>%
       mutate(rep = i)
     return(dfsimall)

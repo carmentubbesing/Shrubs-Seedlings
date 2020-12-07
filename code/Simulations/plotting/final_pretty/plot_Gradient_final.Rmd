@@ -1,0 +1,83 @@
+---
+title: "plot_ShrubSpecies_Final"
+author: "Carmen"
+date: "4/1/2020"
+output: html_document
+---
+
+```{r, include = F}
+require(tidyverse)
+require(gridExtra)
+require(egg)
+require(grid)
+```
+
+# Load summarized data
+```{r}
+filename <- paste("../../../../results/data/summary_emerge_prop_Gradient_", data_date,"_", n_reps, ".Rdata", sep = "")
+load(file = filename) 
+```
+
+# Plot
+```{r}
+plot_emerge_prop <- 
+  ggplot(summary_emerge)+
+  theme_bw()+
+  geom_line(aes(x = Years, y = mean, linetype = Species,  col = sim_spp, group = interaction(Species, sim_spp)), size = 1.2)+
+  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = sim_spp, group = interaction(Species, sim_spp)), alpha = .2)+
+  ylab("Proportion of initial trees emerged")+
+  xlab("Years since fire")+
+  
+  #theme(legend.position = c(0.88, 0.2))+
+   scale_fill_discrete(name = "Shrub competition", 
+                    #values = c("#d95f02", "#1b9e77", "#e7298a", "gray"), 
+                                labels = c("Maximum", 
+                                "Median", 
+                                "Minimum"))+
+
+  scale_color_discrete(name = "Shrub competition", 
+                    #values = c("#d95f02", "#1b9e77", "#e7298a", "gray"), 
+                                labels = c("Maximum", 
+                                "Median", 
+                                "Minimum"))+
+  scale_linetype_discrete(labels = c("White fir",
+                          "Ponderosa pine"))+
+  
+  theme(panel.grid.minor.y = element_blank(),
+        #legend.title = element_blank(),
+        legend.spacing=unit(0, "cm"),
+        legend.text=element_text(size=13.5),
+        text = element_text(size = 13),
+        axis.text = element_text(size = 12),
+        strip.background = element_blank(),
+        #strip.text.x = element_blank(),
+        #plot.margin = margin(0,0,0,0, "cm"),
+        #axis.text.x = element_blank(),
+        #legend.margin = margin(0, 0, 0, 0)
+        )+
+
+  #xlab(element_blank())+
+  xlim(c(8,max(summary_emerge$Years)))+
+  facet_wrap(~Species, nrow = 1)
+
+plot_emerge_prop
+```
+
+
+# Save plots
+```{r}
+filename <- paste("../../../../results/figures/Simulations/shrub_species_gradient_", data_date, "_", n_reps, ".jpeg", sep = "")
+
+plot_emerge_prop
+ggsave(filename, width = 10, height = 4)
+```
+
+# Find max prop emerged for each species (for a table)
+```{r}
+summary_emerge %>% 
+  group_by(Species, sim_spp) %>% 
+  filter(mean == max(mean)) %>% 
+  filter(Years == min(Years)) %>% 
+  arrange(sim_spp)
+```
+

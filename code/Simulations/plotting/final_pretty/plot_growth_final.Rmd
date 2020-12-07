@@ -51,9 +51,9 @@ plot_emerge_prop <-
         axis.text = element_text(size = 12),
         plot.margin = margin(0,0,0,0, "cm"),
         axis.text.x = element_blank())+
-  xlim(9,max(summary_emerge$Years))+
-  ylim(c(-0.02,1))+
-    facet_wrap(~Species, nrow = 1)
+  xlim(8,max(summary_emerge$Years))+
+  #ylim(c(-0.02,1))+
+  facet_wrap(~Species, nrow = 1)
 
 plot_emerge_prop
 ```
@@ -118,7 +118,7 @@ Q50plot <- ggplot(Q50, aes(col = simspp))+
         strip.text.x = element_blank(),
         plot.margin = margin(0,0,0,0, "cm"),
         panel.grid.major.y  = element_blank())+
-  xlim(9,max(summary_emerge$Years))+
+  xlim(8,max(summary_emerge$Years))+
   xlab("Years since fire")+
   facet_wrap(~Species, nrow = 1)
 Q50plot

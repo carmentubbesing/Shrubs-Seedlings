@@ -168,7 +168,7 @@ max_year
 
 ```{r}
 summary_emerge <- summary_emerge %>% 
-  filter(Years < max_year + 1)
+  filter(Years < unique(max_year) + 1)
 ```
 
 

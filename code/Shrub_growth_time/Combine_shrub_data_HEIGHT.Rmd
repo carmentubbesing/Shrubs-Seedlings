@@ -342,18 +342,33 @@ unique(df_plot$Shrub_species)
 df_plot <- droplevels(df_plot)
 ```
 
+## Add year to fire names
+```{r}
+df_plot <- df_plot %>% 
+  mutate(fire_year = case_when(
+    Fire == "AMERICAN RIVER" ~ 2008,
+    Fire == "FREDS" ~ 2004,
+    Fire == "CLEVELAND" ~ 1992,
+    Fire == "WRIGHTS" ~ 1981,
+    Fire == "STAR" ~ 2001,
+    Fire == "CLEVELAND" ~ 1992,
+    Fire == "PILLIKEN" ~ 1973,
+    TRUE ~ fire_year
+  )) %>% 
+  mutate(Fire_year_paste = paste(fire_year, Fire, sep = " "))
+unique(df_plot$Fire_year_paste)
+```
+
+
 ```{r}
 ggplot(df_plot, aes(x = years_since_fire, y = modal_ht_cm))+
-  geom_point(aes(fill = Fire, col = Fire), alpha = .5, shape = 21)+
-  scale_color_manual(values = as.vector(polychrome(n = 33)[4:34]))+
-  scale_fill_manual(values = as.vector(polychrome(n = 33)[4:34]))+
+  geom_point(aes(fill = Fire_year_paste, col = Fire_year_paste), alpha = .5, shape = 21)+
+  scale_color_manual(name = "Fire", values = as.vector(polychrome(n = 33)[4:34]))+
+  scale_fill_manual(name = "Fire", values = as.vector(polychrome(n = 33)[4:34]))+
   theme_minimal()+
-  theme(
-    legend.position = "bottom"
-  )
   ylab("Shrub height (cm)")+
   xlab("Years since fire")+
-  guides(color = guide_legend(ncol = 3))
+  guides(color = guide_legend(ncol = 2))
 ggsave(file = "~/../Shrubs-Seedlings/results/figures/Shrub_growth_time/all_fires_supp.png", width = 8, height = 6)
 ```
 

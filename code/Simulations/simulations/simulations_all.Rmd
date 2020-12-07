@@ -1,5 +1,5 @@
 ---
-title: "Growth_mort FOR MANY RUNS AT ONCE"
+title: "Simulations"
 author: "Carmen"
 date: "October 31, 2019"
 output: 
@@ -27,7 +27,7 @@ source("../functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 15
+iterations <- 100
 ```
 
 ## Define length of simulation
@@ -117,7 +117,7 @@ save(dfsimallreps, file =filename)
 ## ARPA
 ```{r}
 remove(dfsimallreps)
-shrub_method <- "ARPA" #empirical, welch, CECO, ARPA, LIDE, OTHER
+shrub_method <- "ARPA" #welch, CECO, ARPA, LIDE, OTHER
 time <- Sys.time()
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient,  shrub_heightgrowth, shrub_initial_index)
 
@@ -281,6 +281,60 @@ dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_spe
 Sys.time()-time
 filter_years()
 filename <-  paste("~/Ch3_Simulation_Results/Simulation14_",  Sys.Date(), "_", iterations, "_", shrub_method, "_", shrub_coefficient, "coef_", shrub_initial_index, "index_", shrub_heightgrowth, "growth.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+# Minimum shrub comp
+```{r}
+shrub_method <- "min" 
+
+remove(dfsimallreps)
+years_max <- 50
+
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Ch3_Simulation_Results/Simulation15_",  Sys.Date(), "_", iterations, "_MIN.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+
+# Median shrub comp
+```{r}
+shrub_method <- "median" 
+
+remove(dfsimallreps)
+years_max <- 50
+
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Ch3_Simulation_Results/Simulation16_",  Sys.Date(), "_", iterations, "_MEDIAN.Rdata", sep = "")
+save(dfsimallreps, file =filename)
+```
+
+
+
+# Max shrub comp
+```{r}
+shrub_method <- "max" 
+
+remove(dfsimallreps)
+years_max <- 50
+
+time <- Sys.time()
+
+dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
+
+Sys.time()-time
+filter_years()
+filename <-  paste("~/Ch3_Simulation_Results/Simulation17_",  Sys.Date(), "_", iterations, "_MAX.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
 

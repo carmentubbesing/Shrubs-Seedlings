@@ -2,9 +2,7 @@
 title: "simulations_plot_ShrubSpecies"
 author: "Carmen"
 date: "3/6/2020"
-output: 
-  html_document:
-    toc: TRUE
+output: html_document
 ---
 
 # If you're running this code on its own, you have to define data_date and n_reps at the top
@@ -21,56 +19,55 @@ require(grid)
 ```
 
 ```{r}
-namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", data_date, "_", n_reps, "_CEIN.Rdata", sep = "")
+namemin <- paste("~/Ch3_Simulation_Results/Simulation15_",  data_date, "_", n_reps, "_MIN.Rdata", sep = "")
 
-namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", data_date, "_", n_reps, "_ARPA.Rdata", sep = "")
+namemedian <- paste("~/Ch3_Simulation_Results/Simulation16_", data_date, "_", n_reps, "_MEDIAN.Rdata", sep = "")
 
-namececo <- paste("~/Ch3_Simulation_Results/Simulation3_", data_date, "_", n_reps, "_CECO.Rdata", sep = "")
+namemax <- paste("~/Ch3_Simulation_Results/Simulation17_", data_date, "_", n_reps, "_MAX.Rdata", sep = "")
 ```
 
 ```{r}
-load(namearpa)
-arpa <- dfsimallreps
+load(namemin)
+min <- dfsimallreps
 remove(dfsimallreps)
 
-load(namececo)
-ceco <- dfsimallreps
+load(namemedian)
+median <- dfsimallreps
 remove(dfsimallreps)
 
-load(namecein)
-cein <- dfsimallreps
+load(namemax)
+max <- dfsimallreps
 remove(dfsimallreps)
 ```
 
 ```{r}
-arpa <- arpa %>% 
-  mutate(sim_spp = "ARPA")
-ceco <- ceco %>% 
-  mutate(sim_spp = "CECO")
-cein <- cein %>% 
-  mutate(sim_spp = "CEIN")
+min <- min %>% 
+  mutate(sim_spp = "MIN")
+median <- median %>% 
+  mutate(sim_spp = "MEDIAN")
+max <- max %>% 
+  mutate(sim_spp = "MAX")
 ```
 
 ```{r}
-nrow_total <- nrow(arpa) + nrow(ceco) + nrow(cein) + nrow(min)
+nrow_total <- nrow(min) + nrow(median) + nrow(max)
 ``` 
 
 ```{r}
-df <- full_join(arpa, ceco)
-remove(arpa, ceco)
-df <- full_join(df, cein)
-remove(cein)
+df <- full_join(min, median)
+remove(min, median)
+df <- full_join(df, max)
+remove(max)
 ```
 
 ```{r}
 nrow_total == nrow(df)
 ```
 
-
 ```{r}
 df %>% 
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %>% 
-  group_by(emerged, Years) %>% 
+  group_by(emerged, Years, sim_spp) %>% 
   count()
 ```
 
@@ -122,7 +119,7 @@ summary_emerge <- summary_emerge %>%
 
 # Save summarized data
 ```{r}
-filename <- paste("../../../../results/data/summary_emerge_prop_ShrubSpp_", data_date,"_", n_reps, ".Rdata", sep = "")
+filename <- paste("../../../../results/data/summary_emerge_prop_gradient_", data_date,"_", n_reps, ".Rdata", sep = "")
 save(summary_emerge, file = filename)
 ```
 

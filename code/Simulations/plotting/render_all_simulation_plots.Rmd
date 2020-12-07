@@ -1,5 +1,5 @@
 ---
-title: "render_all_shrub_growth_time"
+title: "render all simulation plots"
 author: "Carmen"
 date: "January 15, 2020"
 output: 
@@ -12,8 +12,8 @@ library(knitr)
 ```
 
 ```{r defining}
-data_date <<- "2020-10-30"
-n_reps <<- "10"
+data_date <<- "2020-11-02"
+n_reps <<- "100"
 ```
 
 ```{r summarizing, warning = F}
@@ -25,14 +25,17 @@ rmarkdown::render("simulations_plot_ShrubSpecies.Rmd", "html_document", quiet = 
 rmarkdown::render("simulations_plot_ShrubSpecies_coef.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations_plot_ShrubSpecies_GROWTH.Rmd", "html_document", quiet = T)
 rmarkdown::render("simulations_plot_ShrubSpecies_INDEX.Rmd", "html_document", quiet = T)
+rmarkdown::render("simulations_summarize_gradient.Rmd", "html_document", quiet = T)
 print(Sys.time()-strt_all)
 ```
 
 ```{r plotting, warning = F}
 setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/final_pretty/")
 rmarkdown::render("plot_base_final.Rmd", "html_document", quiet = T)
+rmarkdown::render("plot_ShrubSpecies_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_coef_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_growth_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_index_final.Rmd", "html_document", quiet = T)
+rmarkdown::render("plot_Gradient_final.Rmd", "html_document", quiet = T)
 ```
 

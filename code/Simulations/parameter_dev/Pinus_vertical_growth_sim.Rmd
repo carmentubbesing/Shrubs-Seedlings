@@ -24,7 +24,7 @@ set.seed(12346)
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/Simulations/parameter_dev/")
+setwd("~/../Shrubs-Seedlings/code/Simulations/parameter_dev/")
 load(file="../../../compiled_data/fire_footprints/master_seedlings_vert.Rdata")
 ```
 

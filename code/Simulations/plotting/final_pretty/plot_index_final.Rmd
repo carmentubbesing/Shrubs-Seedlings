@@ -126,14 +126,14 @@ Q50plot <- ggplot()+
   
   geom_errorbarh(data = Q50, aes(y = simspp, col = simspp, xmin = lower, xmax = upper), size = 1, height = 0.5)+
   
-  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "ABCO")), aes(col = simspp, y = simspp, xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
   
-  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = mean_cein_pipo), size = 1, height = 0)+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "ABCO")), aes(col = simspp, y = simspp, xmin = lower, xmax = mean_cein_abco), size = 1, height = 0)+
   
   geom_point(data = Q50, aes(x = mean, y = simspp, col = simspp), size = 1, fill = "white", stroke = 1.5)+
   #scale_shape_manual(values = c(16,21))+
 
-  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & simspp == "CEIN")), aes(x = lower, ymin = 2.75, ymax= 3.25), size = 1, col = "#e7298a")+
+  geom_linerange(data = Q50 %>% filter((Species == "ABCO" & simspp == "CEIN")), aes(x = lower, ymin = 2.75, ymax= 3.25), size = 1, col = "#e7298a")+
   
   ylab("Shrub\nspecies")+
   scale_color_manual(values = c("#d95f02","#1b9e77",  "#e7298a"))+
@@ -146,7 +146,7 @@ Q50plot <- ggplot()+
         plot.margin = margin(0,0,0,0, "cm"),
         panel.grid.major.y  = element_blank(),
         axis.ticks.y = element_blank())+
-  xlim(c(9,max(summary_emerge$Years)))+
+  xlim(c(8,max(summary_emerge$Years)))+
   xlab("Years since fire")+
   facet_wrap(~Species, nrow = 1)
 Q50plot

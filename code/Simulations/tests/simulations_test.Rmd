@@ -7,135 +7,63 @@ output: html_document
 
 
 ```{r, include = F}
-setwd("~/Shrubs-Seedlings/code/Simulations/")
-require(raster)
 require(tidyverse)
-require(tmap)
-require(sf)
-require(sp)
-require(tmaptools)
 require(knitr)
-require(mgcv)
 require(gridExtra)
-require(doParallel)
 strt <- Sys.time()
 ```
 
-# Load functions
-
-#### Create shrub patch
+# Load base results
 ```{r}
-source("functions/shrubclump.R")
-```
-
-#### Initialization function
-```{r}
-source("functions/initialize.R")
-```
-
-#### Height growth functions
-```{r}
-source("functions/abcogrowth.R")
-source("functions/pipogrowth.R")
-```
-
-#### Diameter growth functions
-```{r}
-source("functions/abcodia_footprints.R")
-source("functions/pipodia_footprints.R")
-```
-
-#### Mortality functions
-```{r}
-source("functions/abcomort.R")
-source("functions/pipomort.R")
-```
-
-#### Shrub growth functions
-```{r}
-source("functions/abco_shrubgrowth.R")
-source("functions/pipo_shrubgrowth.R")
-```
-
-#### Simulation function
-```{r}
-source("functions/sim.R")
-```
-
-#### Iteration function
-```{r}
-source("functions/iterate.R")
-```
-
-# Define parameters
-```{r}
-fire <- "AMRC"
-years <- 20
-cumsum_2015 <- 0.441
-cumsum_2016 <- 0.912
-cumsum_2017 <- 1
-iterations <- 2
-max_shrub_ht_cm <- 250
-max_shrub_ht_years <- 15
-n_seedlings <- 100
-length_m <- 40
-height_m <- 40
-lambda <- 4
-shrub_clumpiness <- 7
-```
-
-
-# Initialize
-
-## Create clumped shrub pattern
-```{r}
-shrubclump()
-```
-
-## Randomly select seedlings from data and place them on the shrub patch
-```{r}
-initialize()
-```
-
-## Plot patch with seedlings
-```{r}
-pts.sf.pipo.graph <- pts.sf.pipo %>% 
-  rename("Pine height" = Ht_cm1)
-pts.sf.abco.graph <- pts.sf.abco %>% 
-  rename("Fir height" = Ht_cm1)
+data_date <- "2020-10-30"
+n_reps <- "1000"
 ```
 
 ```{r}
-tm_shape(p)+
-  tm_borders(col = "black", lwd= 5)+
-tm_shape(r)+
-  tm_raster(col = "sqrt_shrubarea3", title = "Shrub competition index", palette = "Greys", alpha = .5)+
-tm_shape(r)+
-  tm_raster(col = "ShrubSpp03", alpha = .2, title = "Shrub species", palette = "Set1")+
-  tm_layout(asp=1:1, legend.outside = T)+
-tm_shape(pts.sf.pipo.graph)+
-  tm_symbols(size = "Pine height", col = "darkgreen", size.max = 500, border.col = "white", border.lwd = .05)+
-tm_shape(pts.sf.abco.graph)+
-  tm_symbols(size = "Fir height", col = "darkblue", size.max = 500, border.col = "white", border.lwd = .05)
+name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
+load(df_filename)
 ```
 
-# Simulate across years
-```{r, warning=FALSE}
-time <- Sys.time()
-suppressMessages(sim(years))
-print(paste("One simulation run took", Sys.time()-time, "seconds"))
+# Look at one rep 
+```{r}
+dfsimall <- dfsimallreps %>% 
+  filter(rep ==3)
 ```
 
-# Tests
+## Find how common it is for diameter to shrink
+```{r}
+test_dia <- dfsimallreps %>% 
+  group_by(rep, ID_withinrep) %>% 
+  filter(Years %in% c(8,9)) %>% 
+  dplyr::select(Sdlg, ID_withinrep, Years, Species, ShrubSpp03, shrubarea3, dia.cm) %>% 
+  arrange(rep, ID_withinrep, Years)
+test_dia <- pivot_wider(test_dia, id_cols = c(Years, rep, ID_withinrep), names_from = Years, values_from = dia.cm)
+test_dia <- test_dia %>% 
+  rename(year8 = `8`, year9 = `9`)
+test_dia
+```
 
-### Plot # of new emergents each year
+```{r}
+test_dia %>% 
+  mutate(shrink = ifelse(year9<year8, 1, 0)) %>% 
+  group_by(shrink) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(percent = n/sum(n))
+```
+
+
+# THIS MEANS I NEED TO ADJUST THE DIAMETER MODEL TO HAVE HIGHER VALUES AT SMALLER DIAMETERS, OR INCLUDE YEAR AS A PREDICTOR OR SOMETHING
+
+## Plot # of new emergents each year
 ```{r}
 dfsimall %>% 
   group_by(Years, Species) %>% 
   mutate(emerged = ifelse(
     Ht_cm1*.75>Ht1.3, 1, 0
   )) %>% 
-  select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) %>% 
+  dplyr::select(Sdlg, Species, ID_withinrep, Ht1.3, Ht_cm1, Years, emerged) %>% 
   group_by(Species, ID_withinrep) %>% 
   arrange(Years) %>% 
   mutate(cumsum_emerge = cumsum(emerged)) %>% 
@@ -156,13 +84,13 @@ dfsimall %>%
 ### Shrub growth patterns
 ```{r}
 ht <- ggplot(dfsimall)+
-  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03, linetype = Species, group = Sdlg))+
+  geom_line(aes(x = Years, y = Ht1.3, col = ShrubSpp03,linetype = Species,  group = ID_withinrep))+
   theme_bw()
 ```
 
 ```{r}
 cov <- ggplot(dfsimall)+
-  geom_line(aes(x = Years, y = Cov1.3, col = ShrubSpp03, linetype = Species, group = Sdlg))+
+  geom_line(aes(x = Years, y = Cov1.3, col = ShrubSpp03, linetype = Species, group = ID_withinrep))+
   theme_bw()
 ```
 
@@ -172,11 +100,23 @@ grid.arrange(ht, cov, ncol = 2)
 
 ### Focal tree dia and ht growth patterns
 ```{r}
-dia <- ggplot(dfsimall, aes(x = Years, y = dia.cm, col = Species, group = Sdlg))+
-  geom_line(alpha = .3)+
+dia <- ggplot(dfsimall, aes(x = Years, y = dia.cm, col = Species, group = ID_withinrep))+
+  geom_line()+
+  geom_point()+
+  theme_bw()+
+  geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
+dia
+```
+
+It looks like dia drops sometimes. Maybe it's CEIN
+```{r}
+ggplot(dfsimall %>% filter(ShrubSpp03=="CEIN" & Species == "PIPO"), aes(x = Years, y = dia.cm, col = Species, group = ID_withinrep))+
+  geom_line()+
+  geom_point()+
   theme_bw()+
   geom_smooth(aes(x = Years, y = dia.cm, col = Species, group = Species))
 ```
+
 
 ```{r}
 ht <- ggplot(dfsimall, aes(x = Years, y = Ht_cm1, col = Species, group = Sdlg))+

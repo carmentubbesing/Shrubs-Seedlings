@@ -130,6 +130,7 @@ summary(PIPO1)
 # Do AICc model selection
 ```{r}
 AICcmodavg::AICc(PIPO1)
+AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 + sqrt_shrubarea3 + Years, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ sqrt_shrubarea3, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1, data = df))
 AICcmodavg::AICc(lm(BasDia2017.cm ~ Ht_cm1 * sqrt_shrubarea3, data = df))
