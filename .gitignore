@@ -1,6 +1,6 @@
 **.Rhistory
 **_cache/
 **_files/
-results/figures/*
+/results/figures/
 *.png
-*/data/*
+/data/
