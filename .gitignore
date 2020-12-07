@@ -3,4 +3,4 @@
 **_files/
 results/figures/*
 *.png
-data/*
+*/data/*
