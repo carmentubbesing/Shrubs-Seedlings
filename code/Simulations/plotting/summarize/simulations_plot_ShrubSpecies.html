@@ -383,6 +383,8 @@ summary {
 <div id="if-youre-running-this-code-on-its-own-you-have-to-define-data_date-and-n_reps-at-the-top" class="section level1">
 <h1>If you’re running this code on its own, you have to define data_date and n_reps at the top</h1>
 <pre class="r"><code>strt &lt;- Sys.time()</code></pre>
+<pre class="r"><code>data_date &lt;&lt;- &quot;2020-11-02&quot;
+n_reps &lt;&lt;- &quot;20&quot;</code></pre>
 <pre class="r"><code>namecein &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation5_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_CEIN.Rdata&quot;, sep = &quot;&quot;)
 
 namearpa &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation4_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_ARPA.Rdata&quot;, sep = &quot;&quot;)
@@ -405,25 +407,26 @@ ceco &lt;- ceco %&gt;%
   mutate(sim_spp = &quot;CECO&quot;)
 cein &lt;- cein %&gt;% 
   mutate(sim_spp = &quot;CEIN&quot;)</code></pre>
-<pre class="r"><code>nrow_total &lt;- nrow(arpa) + nrow(ceco) + nrow(cein) + nrow(min)</code></pre>
+<pre class="r"><code>nrow_total &lt;- nrow(arpa) + nrow(ceco) + nrow(cein)</code></pre>
 <pre class="r"><code>df &lt;- full_join(arpa, ceco)</code></pre>
 <pre><code>## Joining, by = c(&quot;Sdlg&quot;, &quot;Species&quot;, &quot;Cov1.3&quot;, &quot;Ht1.3&quot;, &quot;ShrubSpp03&quot;, &quot;shrubarea3&quot;, &quot;dia.cm&quot;, &quot;Ht_cm1&quot;, &quot;heatload&quot;, &quot;incidrad&quot;, &quot;Slope.Deg&quot;, &quot;Elevation&quot;, &quot;Fire&quot;, &quot;Years&quot;, &quot;Year&quot;, &quot;Cov_prop&quot;, &quot;sqrt_shrubarea3&quot;, &quot;ID_withinrep&quot;, &quot;emerged&quot;, &quot;climate_year&quot;, &quot;historic_year&quot;, &quot;pred&quot;, &quot;pred_exp&quot;, &quot;coef_gr_shrubarea&quot;, &quot;prob_mort&quot;, &quot;prob_mort_annual&quot;, &quot;rand&quot;, &quot;dead&quot;, &quot;mean_shrub_ht_by_spp&quot;, &quot;diff_shr_ht&quot;, &quot;mean_shrub_ht_by_spp_T2&quot;, &quot;predicted_shrub_cov&quot;, &quot;diff_shr_cov&quot;, &quot;predicted_shrub_cov_T2&quot;, &quot;coef_gr_mort_abco&quot;, &quot;coef_gr_mort_pipo&quot;, &quot;rep&quot;, &quot;sim_spp&quot;)</code></pre>
 <pre class="r"><code>remove(arpa, ceco)
 df &lt;- full_join(df, cein)</code></pre>
 <pre><code>## Joining, by = c(&quot;Sdlg&quot;, &quot;Species&quot;, &quot;Cov1.3&quot;, &quot;Ht1.3&quot;, &quot;ShrubSpp03&quot;, &quot;shrubarea3&quot;, &quot;dia.cm&quot;, &quot;Ht_cm1&quot;, &quot;heatload&quot;, &quot;incidrad&quot;, &quot;Slope.Deg&quot;, &quot;Elevation&quot;, &quot;Fire&quot;, &quot;Years&quot;, &quot;Year&quot;, &quot;Cov_prop&quot;, &quot;sqrt_shrubarea3&quot;, &quot;ID_withinrep&quot;, &quot;emerged&quot;, &quot;climate_year&quot;, &quot;historic_year&quot;, &quot;pred&quot;, &quot;pred_exp&quot;, &quot;coef_gr_shrubarea&quot;, &quot;prob_mort&quot;, &quot;prob_mort_annual&quot;, &quot;rand&quot;, &quot;dead&quot;, &quot;mean_shrub_ht_by_spp&quot;, &quot;diff_shr_ht&quot;, &quot;mean_shrub_ht_by_spp_T2&quot;, &quot;predicted_shrub_cov&quot;, &quot;diff_shr_cov&quot;, &quot;predicted_shrub_cov_T2&quot;, &quot;coef_gr_mort_abco&quot;, &quot;coef_gr_mort_pipo&quot;, &quot;rep&quot;, &quot;sim_spp&quot;)</code></pre>
 <pre class="r"><code>remove(cein)</code></pre>
+<p>This should be TRUE:</p>
 <pre class="r"><code>nrow_total == nrow(df)</code></pre>
-<pre><code>## logical(0)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
 <pre class="r"><code>df %&gt;% 
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %&gt;% 
   group_by(emerged, Years) %&gt;% 
   count()</code></pre>
 <pre><code>## # A tibble: 2 x 3
 ## # Groups:   emerged, Years [2]
-##   emerged Years      n
-##     &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt;
-## 1       0     8 297579
-## 2       1     8   2321</code></pre>
+##   emerged Years     n
+##     &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
+## 1       0     8  5956
+## 2       1     8    44</code></pre>
 <!-- ```{r} -->
 <!-- df <- df %>%  -->
 <!--  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp)) -->
@@ -463,7 +466,7 @@ df &lt;- full_join(df, cein)</code></pre>
 
 max_year</code></pre>
 <pre><code>## Years1 Years2 
-##     42     42</code></pre>
+##     38     38</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
   filter(Years &lt; unique(max_year) + 1)</code></pre>
 </div>

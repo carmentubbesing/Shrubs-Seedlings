@@ -2,7 +2,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   load("../../../data/PRISM/clean_1950-present.Rdata")
   prism <- df
   remove(df)
-  #prism <- prism[7:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
+  prism <- prism[11:nrow(prism),] # ADJUST THIS BASED ON HOW LONG THE SIMULATIONS TAKE
   
   # Set initial emerged values and climate year
   pts.sf.pipo <- pts.sf.pipo %>% 
@@ -38,9 +38,9 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
   coef_gr_mort_pipo <- unlist(coef_mort_pipo[1])
   
   ## Vertical growth
-  ## Vert Growth
   sample_gr <- sample(1000, 1)
   
+  # Run the simulation
   for(i in 1:years_max){
     
     if(climate_method == "random"){
@@ -51,13 +51,15 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
         random > cumsum_2016 ~ 2017
       ) 
     } else if(climate_method == "historic"){
-      years <- unlist(max(pts.sf.abco$Years)-6)
-      climate_year <- prism[years,2] %>% unlist()
+      years <- unlist(max(pts.sf.abco$Years)-7) # Find number of years the simulation has been running for 
+      climate_year_i <- prism[years,2] %>% unlist()
       historic_year_i <- prism[years,1] %>% unlist()
       pts.sf.abco <- pts.sf.abco %>% 
-        mutate(historic_year = historic_year_i) 
+        mutate(historic_year = historic_year_i) %>% 
+        mutate(climate_year = climate_year_i)
       pts.sf.pipo <- pts.sf.pipo %>% 
-        mutate(historic_year = historic_year_i) 
+        mutate(historic_year = historic_year_i) %>% 
+        mutate(climate_year = climate_year_i)
       
     } else if(climate_method == "uniform_2015"){
       climate_year <- 2015
@@ -86,7 +88,7 @@ sim <- function(years_max, pts.sf.abco, pts.sf.pipo, cumsum_2015, cumsum_2016, c
     # Apply all functions to abco if any of the abco haven't emerged yet, else just add a year 
     if(any(pts.sf.abco$emerged==0) ){
       pts.sf.abco <- pts.sf.abco %>% 
-        mutate(climate_year = climate_year) 
+        mutate(climate_year = climate_year_i) 
       pts.sf.abco <- abcogrowth(pts.sf.abco, sample_gr)
       pts.sf.abco <- abcomort(pts.sf.abco, coef_int_mort_abco, coef_gr_mort_abco)
       pts.sf.abco <- abcodia(pts.sf.abco, sample_gr)

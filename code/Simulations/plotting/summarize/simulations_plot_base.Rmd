@@ -15,14 +15,16 @@ require(gridExtra)
 ```
 
 ```{r}
+#data_date <<- "2020-12-15"
+#n_reps <<- "100"
+```
+
+```{r}
+setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/summarize/")
 name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 strt <- Sys.time()
-```
-
-```{r}
-setwd("~/../Shrubs-Seedlings/code/Simulations/")
 ```
 
 # Find emerged trees at 8 years (first simulation year)
@@ -339,10 +341,7 @@ summary_emerge %>%
   summarize(mean_ha = mean(density_ha), min_ha = min(density_ha), max_ha = max(density_ha), sd_ha = sd(density_ha))
 ```
 
-
-# Plot the way I plotted the species ones
-
-## Summarize
+# Summarize
 ```{r}
 summary_emerge_prop <- dfsimallreps %>% 
   group_by(Years, rep, Species) %>% 
@@ -355,6 +354,8 @@ summary_emerge_prop <- dfsimallreps %>%
   group_by(Years, Species) %>% 
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
 ```
+
+## Proportion
 
 ### Filter out the flat parts - take out years if they differ by <0.001 (0.1%)
 ```{r}
@@ -379,46 +380,13 @@ summary_emerge_prop <- summary_emerge_prop %>%
   filter(Years < max_year + 2)
 ```
 
-## Save prop summary
+### Save prop summary
 ```{r}
 filename <- paste("../../../../results/data/summary_emerge_prop_base_", data_date,"_", n_reps, ".Rdata", sep = "")
 save(summary_emerge_prop, file = filename)
 ```
 
-## Plot 
-```{r}
-ggplot(summary_emerge_prop)+
-  theme_bw()+
-  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
-  ylab("Proportion of initial trees that have emerged")+
-  xlab("Years since fire")+
-  theme(legend.position = c(0.75, 0.3))+
-   scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
-                                labels = c("White fir", "Ponderosa pine"))+
-
-  scale_color_manual(values = c("#899DA4", "#9A8822"), 
-                                   labels = c("White fir", "Ponderosa pine"))+
-
-  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
-
-  
-  theme(text = element_text(size = 11), 
-        
-        legend.title = element_blank(),
-        legend.spacing=unit(0, "cm"),
-        legend.text=element_text(size=10),
-        legend.margin = margin(0, 0, 0, 0)
-        )+
-  xlab(element_blank())+
-  xlim(8,max_year)+
-  ylim(c(-0.05,1))
-filename <- paste("../../../../results/figures/Simulations/base_prop_line_",name, ".png", sep = "")
-ggsave(file = filename, width = 5, height =4, dpi = 400)
-```
-
-
-## Plot Density
+## Summarize density
 
 ```{r}
 summary_emerge_density <- dfsimallreps %>% 
@@ -439,37 +407,10 @@ summary_emerge_density <- summary_emerge_density %>%
   filter(Years < max_year + 2)
 ```
 
-## Save density summary
+### Save density summary
 ```{r}
 filename <- paste("../../../../results/data/summary_emerge_density_base_", data_date,"_", n_reps, ".Rdata", sep = "")
 save(summary_emerge_density, file = filename)
-```
-
-```{r}
-ggplot(summary_emerge_density)+
-  theme_bw()+
-  geom_line(aes(x = Years, y = mean, col = Species, group = Species, linetype = Species), size = 1)+
-  geom_ribbon(aes(x = Years, ymin = mean-sd, ymax = mean+sd, fill = Species, group = Species), alpha = .3)+
-  
-  xlab("Years since fire")+
-  theme(legend.position = c(0.75, 0.3))+
-    ylab("Density of emerged trees per ha")+
-  scale_fill_manual(values = c( "#899DA4", "#9A8822"), 
-                                labels = c("White fir", "Ponderosa pine"))+
-
-  scale_color_manual(values = c("#899DA4", "#9A8822"), 
-                                   labels = c("White fir", "Ponderosa pine"))+
-
-  scale_linetype_discrete(     labels = c("White fir", "Ponderosa pine"))+
-
-  
-  theme(text = element_text(size = 11), 
-        
-        legend.position = "none"
-        )
-
-filename <- paste("../../../../results/figures/Simulations/base_density_line_", name, ".png", sep = "")
-ggsave(file = filename, width = 5, height =4, dpi = 400)
 ```
 
 # Calculate mean and SD years to end of simulation

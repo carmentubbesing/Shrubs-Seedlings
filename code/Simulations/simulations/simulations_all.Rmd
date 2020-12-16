@@ -27,12 +27,12 @@ source("../functions/iterate.R")
 
 ## Define iterations
 ```{r}
-iterations <- 100
+iterations <- 1000
 ```
 
 ## Define length of simulation
 ```{r}
-years_max <- 50
+years_max <- 60
 ```
 
 ## Define fire
@@ -318,8 +318,6 @@ filter_years()
 filename <-  paste("~/Ch3_Simulation_Results/Simulation16_",  Sys.Date(), "_", iterations, "_MEDIAN.Rdata", sep = "")
 save(dfsimallreps, file =filename)
 ```
-
-
 
 # Max shrub comp
 ```{r}

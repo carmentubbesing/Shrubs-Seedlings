@@ -24,7 +24,6 @@ iterate <- function(iterations, fire, years_max, climate_method, conifer_species
     source("../functions/pipogrowth.R") #uncertainty done
     source("../functions/pipo_emerge.R")
     source("../functions/abco_emerge.R")
-    source("../functions/climate_year.R")
 
     # Remove old objects
     remove(pts.sf.abco, pts.sf.pipo)

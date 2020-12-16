@@ -8,8 +8,14 @@ output:
 ---
 
 ```{r}
+#data_date <<- "2020-11-02"
+#n_reps <<- "20"
+```
+
+```{r}
 name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
+df_filename
 load(df_filename)
 strt <- Sys.time()
 ```
@@ -169,23 +175,6 @@ ggplot(dfsimallreps_summary, aes(x = Years, y = mean_ht, group = ShrubSpp03, col
   ylab("Focal tree height")+
   ylim(0,350)+
   theme_minimal()
-```
-
-## Growth by climate year
-```{r}
-ggplot(dfsimallreps %>% filter(Species == "PIPO") %>% filter(emerged == 0))+
-  geom_boxplot(aes(x = as.factor(Year), y = pred_exp), outlier.shape = NA)+
-  theme_minimal()+
-  ylim(0,0.5)+
-  xlab("")+
-  ylab("Predicted relative growth rate")
-```
-
-```{r}
-dfsimallreps %>% 
-   filter(Species == "PIPO") %>% filter(emerged == 0) %>% 
-  group_by(Year) %>% 
-  summarize(n(), mean(pred_exp))
 ```
 
 # Plot how many trees emerge above the shrub canopy each year

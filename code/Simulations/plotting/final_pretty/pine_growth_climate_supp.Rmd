@@ -1,0 +1,64 @@
+---
+title: "pine_growth_climate_supp"
+output: html_document
+---
+
+```{r}
+require(tidyverse)
+```
+
+# Load raw results
+
+```{r}
+data_date <<- "2020-12-15"
+n_reps <<- "200"
+```
+
+```{r}
+setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/final_pretty/")
+name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
+df_filename
+load(df_filename)
+strt <- Sys.time()
+```
+
+# Boxplots of growth by climate year
+```{r}
+ggplot(dfsimallreps %>% filter(Species == "PIPO") %>% filter(emerged == 0))+
+  geom_boxplot(aes(x = as.factor(climate_year), y = pred_exp), outlier.shape = NA)+
+  theme_minimal()+
+  ylim(0,0.5)+
+  xlab("")+
+  ylab("Predicted relative growth rate")
+```
+
+# FIGURE FOR SUPPLEMENT
+```{r}
+dfsimallreps %>% 
+  filter(Species == "PIPO") %>% 
+  filter(emerged == 0) %>% 
+  group_by(climate_year, Years) %>% 
+  summarize(mean_pred = mean(pred), mean_pred_exp = mean(pred_exp), sd_pred_exp = sd(pred_exp)) %>% 
+  ungroup() %>% 
+  ggplot()+
+  aes(x = Years, y = mean_pred_exp)+
+    geom_line(col = "#9A8822")+
+    geom_errorbar(aes(ymin = mean_pred_exp-sd_pred_exp, ymax = mean_pred_exp+sd_pred_exp), width = 0, col = "#9A8822")+
+    geom_point(aes(shape = as.factor(climate_year)), fill = "white", size = 2, col = "#9A8822", stroke = 1)+
+  theme_minimal()+
+  scale_shape_manual( name = "Climate year", values = c(22,24,8))+
+  ylab("Mean relative growth rate")+
+  theme(
+    legend.position = c(0.8,0.7)
+  )
+filename <- paste("../../../../results/figures/Simulations/pine_growth_climate", data_date, "_", n_reps,".png", sep = "")
+ggsave(file = filename, width = 5, height =4, dpi = 400)
+```
+
+# What's the highest year?
+```{r}
+dfsimallreps %>% 
+  summarize(max(Years))
+```
+

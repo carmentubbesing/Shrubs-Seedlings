@@ -5,51 +5,51 @@ date: "2/19/2020"
 output: html_document
 ---
 
-```{r}
-load("~/Simulations2020-03-06_1000AMRC_historic_empirical_welch.Rdata")
-strt <- Sys.time()
-dfbase <- dfsimallreps
-```
 
 ```{r, include = F}
 require(tidyverse)
 require(gridExtra)
 ```
 
-<!-- # Look at shrub comp differences between species -->
-<!-- ```{r} -->
-<!-- plot_base <- dfbase %>%  -->
-<!--   group_by(Species, Years) %>%  -->
-<!--   filter(emerged ==0) %>%  -->
-<!--   summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>%  -->
-<!--   ggplot()+ -->
-<!--   geom_line(aes(x = Years, y = ht, group = Species, col = Species)) + -->
-<!--   theme_minimal()+ -->
-<!--   ggtitle("Random species assignments") -->
-<!-- ``` -->
+# Load base results
+```{r}
+data_date <- "2020-12-15"
+n_reps <- "100"
+```
 
-<!-- # repeat for random assignments -->
-<!-- ```{r} -->
-<!-- load("~/Simulations2020-03-04_1000AMRC_random.Rdata") -->
-<!-- dfrandom <- dfsimallreps -->
-<!-- plot_random <- dfrandom %>%  -->
-<!--   group_by(Species, Years) %>%  -->
-<!--   filter(emerged ==0) %>%  -->
-<!--   summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3)) %>%  -->
-<!--   ggplot()+ -->
-<!--   geom_line(aes(x = Years, y = ht, group = Species, col = Species)) + -->
-<!--   theme_minimal()+ -->
-<!--   ggtitle("Base model") -->
-<!-- ``` -->
+```{r}
+name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
+load(df_filename)
+```
 
-<!-- ```{r} -->
-<!-- grid.arrange(plot_base, plot_random) -->
-<!-- ``` -->
+```{r}
+dfbase <- dfsimallreps
+```
 
-<!-- ```{r} -->
-<!-- dfsimallreps <- dfbase -->
-<!-- ``` -->
+# Look at shrub comp differences between conifer species over time
 
+```{r}
+dfbase %>% 
+  group_by(Species, ShrubSpp03) %>% 
+  count() %>% 
+  ggplot(aes(col = Species, fill = ShrubSpp03))+
+  geom_col(aes(x = interaction(Species, ShrubSpp03), y = n))
+
+```
+
+```{r}
+plot_base <- dfbase %>%
+  group_by(Species, Years) %>%
+  filter(emerged ==0) %>%
+  summarize(ht = mean(Ht1.3), cov = mean(Cov1.3), comp = mean(shrubarea3), n = n()) %>%
+  ggplot(aes(x = Years, y = ht, group = Species, col = Species)) +
+  geom_line() +
+  geom_line(aes(y = n/100), linetype = 2)+
+  ylab("shrub height")+
+  theme_minimal()
+plot_base
+```
 
 # Check for reps that got dropped as errors -- should be TRUE
 ```{r}
@@ -62,14 +62,20 @@ test1
 
 # Check random independence
 ```{r}
-test <-dfsimallreps %>% tbl_df() %>% group_by(rep, Sdlg) %>% count() %>% group_by(Sdlg) %>% count() %>% filter(n<5)
+test <- dfsimallreps %>% 
+  tibble::as_tibble() %>% 
+  group_by(rep, Sdlg) %>% 
+  count() %>% 
+  group_by(Sdlg) %>% 
+  count() %>% 
+  filter(n<5)
 test
 test2 <- nrow(test)==0
 remove(test)
 test2
 ```
 
-# Check for NA and inf values
+# Check for NA and inf values - should be TRUE
 ```{r}
 dfsimallreps_summary <- dfsimallreps %>% 
   ungroup() %>%
@@ -89,9 +95,19 @@ test3
 
 # Check different values of error terms
 
+## Find where there are NA values of error terms
+```{r}
+dfsimallreps %>% 
+  filter(is.na(coef_gr_shrubarea)) %>% 
+  group_by(Years) %>% 
+  count()
+```
+
+
 ## Growth
 ```{r}
 test <- dfsimallreps %>% 
+  filter(Years != 8) %>% 
   group_by(rep, coef_gr_shrubarea, Species) %>% 
   #filter(Species =="PIPO") %>% 
   summarize(test =min(coef_gr_shrubarea)-max(coef_gr_shrubarea)) 
@@ -122,18 +138,27 @@ remove(test)
 ```
 
 # Test climate years
+
+```{r}
+test10 <- dfsimallreps %>% 
+  group_by(climate_year) %>% 
+  count()
+test10 <- nrow(test10) == 3
+```
+
+
 ```{r}
 test <- dfsimallreps %>% 
   group_by(Years, rep, Species) %>% 
   mutate(sum_emerged = sum(emerged)) %>% 
   ungroup() %>% 
-  dplyr::select(rep, Years, Year, Species, historic_year, sum_emerged) %>% 
+  dplyr::select(rep, Years, Year, Species, climate_year, historic_year, sum_emerged) %>% 
   distinct() %>% 
   arrange(rep, Years)
 ```
 
 ```{r}
-load("~/Shrubs-Seedlings/data/PRISM/clean_1970-present.Rdata")
+load("~/../Shrubs-Seedlings/data/PRISM/clean_1950-present.Rdata")
 df <- df %>% ungroup()
 ```
 
@@ -154,24 +179,25 @@ correct <- join_test %>%
 abco <- dfsimallreps %>% 
   filter(emerged ==0) %>% 
   filter(Species == "ABCO") %>% 
-  dplyr::select(rep, Years, Year) %>% 
+  dplyr::select(rep, Years, climate_year) %>% 
   distinct() %>% 
-  group_by(Years, Year) %>% 
+  group_by(Years, climate_year) %>% 
   mutate(count = n()) %>% 
   ggplot()+
-  geom_point(aes(x = Years, y = Year))+
+  geom_point(aes(x = Years, y = climate_year))+
   theme_minimal()+
-  ggtitle("ABCO")
+  ggtitle("ABCO")+
+  xlim(c(8, max(join_test$Years)))
 
 pipo <- dfsimallreps %>% 
   filter(emerged ==0) %>% 
   filter(Species == "PIPO") %>% 
-  dplyr::select(rep, Years, Year) %>% 
+  dplyr::select(rep, Years, climate_year) %>% 
   distinct() %>% 
-  group_by(Years, Year) %>% 
+  group_by(Years, climate_year) %>% 
   mutate(count = n()) %>% 
   ggplot()+
-  geom_point(aes(x = Years, y = Year))+
+  geom_point(aes(x = Years, y = climate_year))+
   theme_minimal()+
   ggtitle("PIPO")+
   xlim(c(8, max(join_test$Years)))
@@ -228,5 +254,6 @@ test6
 test7
 test8
 test9
+test10
 ```
 

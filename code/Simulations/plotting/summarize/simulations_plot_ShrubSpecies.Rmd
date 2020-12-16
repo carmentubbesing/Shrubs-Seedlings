@@ -21,6 +21,11 @@ require(grid)
 ```
 
 ```{r}
+data_date <<- "2020-11-02"
+n_reps <<- "20"
+```
+
+```{r}
 namecein <- paste("~/Ch3_Simulation_Results/Simulation5_", data_date, "_", n_reps, "_CEIN.Rdata", sep = "")
 
 namearpa <- paste("~/Ch3_Simulation_Results/Simulation4_", data_date, "_", n_reps, "_ARPA.Rdata", sep = "")
@@ -52,7 +57,7 @@ cein <- cein %>%
 ```
 
 ```{r}
-nrow_total <- nrow(arpa) + nrow(ceco) + nrow(cein) + nrow(min)
+nrow_total <- nrow(arpa) + nrow(ceco) + nrow(cein)
 ``` 
 
 ```{r}
@@ -62,10 +67,10 @@ df <- full_join(df, cein)
 remove(cein)
 ```
 
+This should be TRUE:
 ```{r}
 nrow_total == nrow(df)
 ```
-
 
 ```{r}
 df %>% 
