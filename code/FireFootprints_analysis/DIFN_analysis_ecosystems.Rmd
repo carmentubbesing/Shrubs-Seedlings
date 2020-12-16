@@ -1,0 +1,253 @@
+---
+title: "DIFN_analysis_Ecosystems"
+date: "Dec 11, 2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r, include = F}
+require(nlme)
+require(randomForest)
+require(tree)
+require(knitr)
+require(tidyverse)
+require(ggplot2)
+require(VSURF)
+require(effects)
+require(MuMIn)
+set.seed(12346)
+```
+
+# Load data
+```{r}
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
+load(file = "../../compiled_data/fire_footprints/DIFN_Ecosystems.Rdata")
+```
+
+# Make sure there are no repeats 
+```{r}
+dfl %>% 
+  group_by(DIFN.53, shrubarea3) %>% 
+  filter(n()>1) %>% 
+  arrange(DIFN.53)
+```
+
+# The true repeats are: 
+1. Seedlings 80/82
+2. Seedlings 91/92/93
+3. More
+
+# Make a new data frame with only one row per DIFN measurement
+```{r}
+dfl_unique <- dfl %>% 
+  group_by(DIFN.53, shrubarea3) %>% 
+  mutate(Ht_cm_mean = mean(Ht_cm2)) %>% 
+  filter(Sdlg == min(Sdlg))
+```
+
+# Question 0: Why are there so many more rows of DIFN data than there are seedlings in the final data set?
+
+```{r}
+dfl_unique %>% 
+  filter(!Species %in% c("ABCO", "PIPO") | ref ==1) %>% 
+  group_by(Fire) %>% 
+  count()
+```
+
+There are about 200 trees in my Chapter 2 analysis. The extra trees here are non-PIPO/ABCO, reference shrub measurements, and trees that subsequently got thrown out of the analysis.
+
+# Question 1: How does DIFN vary with species and along the chronosequence?
+
+## Take out repeats
+```{r}
+dfl_unique <- dfl %>% 
+  filter(Ht.cm == min(Ht.cm))
+```
+
+```{r}
+dfl_unique <- dfl_unique %>% 
+  mutate(ShrubSpp03 = case_when(
+    ShrubSpp03 == "ARPA" ~ "Manzanita",
+    ShrubSpp03 == "CECO" ~ "Whitethorn",
+    ShrubSpp03 == "CEIN" ~ "Deerbrush",
+    TRUE ~ "Other")
+  )
+```
+
+```{r}
+ggplot(dfl_unique) + 
+  geom_boxplot(aes(x = as.factor(Years), y = DIFN.53)) + 
+  geom_point(aes(x = as.factor(Years), y = DIFN.53, col = ShrubSpp03)) + 
+  facet_wrap(~ ShrubSpp03)+
+  theme(legend.position = "none")+
+  xlab("Years since fire")
+ggsave("../../results/figures/DIFN/DIFN_reviewer_response.png") 
+```
+
+## Model DIFN.53 in relation to shrubarea3, shrub species, height, and years since fire
+
+```{r}
+dfl_unique <- dfl_unique %>% 
+  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
+LM <- lm(DIFN.53 ~ shrubarea3 + ShrubSpp03 + Years + Ht.cm.meanDIFN, data = dfl)
+summary(LM)
+drop1(LM, test = "Chisq")
+```
+
+```{r}
+plot(predictorEffect("shrubarea3", LM))
+```
+
+```{r}
+shr_spp_effects <- predictorEffect("ShrubSpp03", LM)
+shr_spp_effects <- as.data.frame(c(shr_spp_effects[6], shr_spp_effects[5], shr_spp_effects[17], shr_spp_effects[18]))
+shr_spp_effects <- shr_spp_effects[1:3,]
+shr_spp_effects <- shr_spp_effects %>% 
+  mutate(ShrubSpp03 = 
+           case_when(
+             ShrubSpp03 == "CEIN" ~ "Deerbrush",
+             ShrubSpp03 == "CECO" ~ "Whitethorn",
+             ShrubSpp03 == "ARPA" ~ "Manzanita"
+           ))
+```
+
+```{r}
+ggplot(shr_spp_effects)+
+  geom_point(aes(x = ShrubSpp03, y = fit))+
+  geom_errorbar(aes(x = ShrubSpp03, ymin = lower, ymax = upper), width = 0.5)+
+  ylab("Shrub species effect on diffuse non-interceptance")+
+  theme_minimal()+
+  xlab("")
+ggsave(file = "~/../Shrubs-Seedlings/results/figures/DIFN/DIFN_shr_spp_yrs.png", height = 4)
+```
+
+# Question 2: How does DIFN vary along the chronosequence with all species combined?
+```{r}
+ggplot(dfl_unique) + 
+  geom_smooth(aes(x = Years, y = DIFN.53), method = lm) +
+  geom_point(aes(x = Years, y = DIFN.53, col = ShrubSpp03)) + 
+  xlab("Years since fire")+
+  theme(legend.title = element_blank())
+ggsave("../../results/figures/DIFN/DIFN_years_lm.png") 
+```
+
+# Question 3: Which is a better predictor of growth, DIFN or shrub characteristics? 
+
+Re-run the analyses in my fire foorprints code using DIFN instead of shrub cover and height
+
+## Pines
+For pines, that model is: VertGrowth_Rel ~ 
+                                            Ht_cm1 + 
+                                            Years + 
+                                            sqrt_shrubarea3 + 
+                                            heatload + 
+                                            ShrubSpp03 + 
+                                            BasDia2016.cm + 
+                                            Year + 
+                                            Ht_cm1:sqrt_shrubarea3
+                                            
+```{r}
+load(file="../../compiled_data/fire_footprints/pine_vert_sim.Rdata")
+df_pine <- df
+```
+
+### Subset data to those than have DIFN AND growth
+```{r}
+df_pine <- df %>% filter(!is.na(DIFN.53))
+```
+
+### Model with DIFN
+```{r}
+f_DIFN <- VertGrowth_Rel ~ Ht_cm1 + Years + heatload + BasDia2016.cm + Year + DIFN.53 + Ht_cm1:DIFN.53
+LM_pine_DIFN.53 <- lme(f_DIFN, data = df_pine, random = ~1|Fire/FirePatch/Sdlg, method = "ML")
+summary(LM_pine_DIFN.53)
+```
+
+Pseudo R2 of DIFN: 
+```{r}
+pseudo_R2_DIFN <- r.squaredGLMM(LM_pine_DIFN.53)
+pseudo_R2_DIFN
+```
+
+### Model with shrub cover and height
+```{r}
+f_shrub <- VertGrowth_Rel ~ Ht_cm1 + Years + heatload + ShrubSpp03 + BasDia2016.cm + Year + sqrt_shrubarea3 + Ht_cm1:sqrt_shrubarea3
+LM_pine_shrubs <- lme(f_shrub, data = df_pine, random = ~1|Fire/FirePatch/Sdlg, method = "ML")
+summary(LM_pine_shrubs)
+```
+
+Pseudo R2 of shrub model:
+```{r}
+pseudo_R2_shrubs <- r.squaredGLMM(LM_pine_shrubs)
+pseudo_R2_shrubs
+pseudo_R2_DIFN
+AICcmodavg::AICc(LM_pine_DIFN.53)
+AICcmodavg::AICc(LM_pine_shrubs)
+```
+
+
+## Firs
+For firs, that model is: VertGrowth_Rel ~   Years + 
+                                            heatload + 
+                                            incidrad +
+                                            Ht_cm1 + 
+                                            sqrt_shrubarea3 + 
+                                            Slope.Deg. +
+                                            Elevation + 
+                                            Ht_cm1:sqrt_shrubarea3
+                                            
+```{r}
+load(file="../../compiled_data/fire_footprints/fir_vert.Rdata")
+df_fir <- df
+```
+
+### Subset data to those than have DIFN AND growth
+```{r}
+df_fir <- df_fir %>% filter(!is.na(DIFN.53))
+```
+
+### Model with DIFN
+```{r}
+f <- VertGrowth_Rel ~ Years + 
+                      heatload + 
+                      incidrad +
+                      Ht_cm1 + 
+                      DIFN.53 + 
+                      Slope.Deg +
+                      Elevation + 
+                      Ht_cm1:DIFN.53
+LM_fir_DIFN.53 <- lme(f, data = df_fir, random = ~1|Fire/FirePatch/Sdlg, method = "ML")
+summary(LM_fir_DIFN.53)
+```
+
+Pseudo R2 of DIFN: 
+```{r}
+pseudo_R2_DIFN <- r.squaredGLMM(LM_fir_DIFN.53)
+pseudo_R2_DIFN
+```
+
+### Model with shrub cover and height
+```{r}
+f <- VertGrowth_Rel ~ Years + 
+                      heatload + 
+                      incidrad +
+                      Ht_cm1 + 
+                      sqrt_shrubarea3 + 
+                      Slope.Deg +
+                      Elevation + 
+                      Ht_cm1:sqrt_shrubarea3
+LM_fir_shrubs <- lme(f, data = df_fir, random = ~1|Fire/FirePatch/Sdlg, method = "ML")
+summary(LM_fir_shrubs)
+```
+
+Pseudo R2 of shrub model:
+```{r}
+pseudo_R2_shrubs <- r.squaredGLMM(LM_fir_shrubs)
+pseudo_R2_shrubs
+pseudo_R2_DIFN
+AICcmodavg::AICc(LM_fir_DIFN.53)
+AICcmodavg::AICc(LM_fir_shrubs)
+```
+

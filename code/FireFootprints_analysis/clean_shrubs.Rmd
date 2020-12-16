@@ -323,126 +323,125 @@ shr_by_sdlg
 ```
 
 
-<!-- # Light files and DIFN -->
+# Save
+```{r}
+save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
+#write.csv(shr_by_sdlg, file = "../../compiled_data/fire_footprints/shrub_master_data_2016.csv", row.names = F)
+```
 
-<!-- ## Merge in DIFN and Light File data from seedling df -->
-<!-- ```{r} -->
-<!-- names(df) -->
-<!-- df_light <- df %>%  -->
-<!--   dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species) -->
-<!-- shr_by_sdlg <- left_join(shr_by_sdlg, df_light) -->
-<!-- shr_by_sdlg -->
-<!-- ``` -->
+## This version has 286 rows and 8 columns
 
-<!-- ## Mark the measurements without seedling as "ref" for reference -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0)) -->
-<!-- summary(as.factor(shr_by_sdlg$ref)) -->
-<!-- ``` -->
+# Light files and DIFN
 
-<!-- # Make Sdlg all caps -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   ungroup() %>%  -->
-<!--   mutate(Sdlg = toupper(Sdlg)) -->
-<!-- ``` -->
+## Merge in DIFN and Light File data from seedling df
+```{r}
+names(df)
+df_light <- df %>%
+  dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species)
+shr_by_sdlg <- left_join(shr_by_sdlg, df_light)
+shr_by_sdlg
+```
 
-<!-- ## Add light files for non-seedling shrub locations -->
+## Mark the measurements without seedling as "ref" for reference
+```{r}
+shr_by_sdlg <- shr_by_sdlg %>%
+  mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0))
+summary(as.factor(shr_by_sdlg$ref))
+```
 
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-4", 48, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-3", 47, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-2", 46, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-1", 45, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-1", 125, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-2", 126, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CECO-1", 74, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "ARPA-1", 94, Light_File)) -->
-<!-- ``` -->
+# Make Sdlg all caps
+```{r}
+shr_by_sdlg <- shr_by_sdlg %>%
+  ungroup() %>%
+  mutate(Sdlg = toupper(Sdlg))
+```
 
-<!-- # Add DIFN degrees from FV2200 output file -->
+## Add light files for non-seedling shrub locations
 
-<!-- ## Load in DIFN data using only the first 4 gaps (down to 53 degrees) -->
-<!-- ```{r} -->
-<!-- DIFNl53 <- read.table(file="~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4",header=T,sep="\t") -->
-<!-- names(shr_by_sdlg) -->
-<!-- DIFNl53 <- distinct(DIFNl53) -->
-<!-- ``` -->
+```{r}
+shr_by_sdlg <- shr_by_sdlg %>%
+  mutate(Light_File = ifelse(Sdlg == "LIDE-4", 48, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "LIDE-3", 47, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "LIDE-2", 46, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "LIDE-1", 45, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "CEIN-1", 125, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "CEIN-2", 126, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "CECO-1", 74, Light_File)) %>%
+  mutate(Light_File = ifelse(Sdlg == "ARPA-1", 94, Light_File))
+```
 
-<!-- ## Delete repeat row that only has data in one of the rows -->
-<!-- ```{r} -->
-<!-- DIFNl53 <- DIFNl53 %>%  -->
-<!--   filter(!(LAI_File ==111 & DIFN==0)) -->
-<!-- ``` -->
+# Add DIFN degrees from FV2200 output file
 
-<!-- ## Join DIFN.53 data with shrub data -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- left_join(shr_by_sdlg, DIFNl53, by=c("Light_File"="LAI_File")) %>% -->
-<!--   rename(DIFN.all = DIFN.x) %>% -->
-<!--   rename(DIFN.53 =DIFN.y) %>% -->
-<!--   rename(LAI.53 = LAI) %>%  -->
-<!--   dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr) -->
-<!-- shr_by_sdlg -->
-<!-- ``` -->
+## Load in DIFN data using only the first 4 gaps (down to 53 degrees)
+```{r}
+DIFNl53 <- read.table(file="~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4",header=T,sep="\t")
+names(shr_by_sdlg)
+DIFNl53 <- distinct(DIFNl53)
+```
 
-<!-- ## Check for duplicated seedlings -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   group_by(Sdlg) %>%  -->
-<!--   summarize(n=n()) %>%  -->
-<!--   filter(n !=1) -->
-<!-- ``` -->
+## Delete repeat row that only has data in one of the rows
+```{r}
+DIFNl53 <- DIFNl53 %>%
+  filter(!(LAI_File ==111 & DIFN==0))
+```
 
-<!-- ## Find which seedlings have DIFN.all but lack DIFN.53  -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
-<!-- ``` -->
+## Join DIFN.53 data with shrub data
+```{r}
+shr_by_sdlg <- left_join(shr_by_sdlg, DIFNl53, by=c("Light_File"="LAI_File")) %>%
+  rename(DIFN.all = DIFN.x) %>%
+  rename(DIFN.53 =DIFN.y) %>%
+  rename(LAI.53 = LAI) %>%
+  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
+shr_by_sdlg
+```
 
-<!-- ## Fill in a couple seedlings with funky DIFN situations -->
+## Check for duplicated seedlings
+```{r}
+shr_by_sdlg %>%
+  group_by(Sdlg) %>%
+  summarize(n=n()) %>%
+  filter(n !=1)
+```
 
-<!-- Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky -->
+## Find which seedlings have DIFN.all but lack DIFN.53
+```{r}
+shr_by_sdlg %>%
+  filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53))
+```
 
-<!-- ```{r} -->
-<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"] -->
-<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"]) -->
-<!-- ``` -->
+## Fill in a couple seedlings with funky DIFN situations
 
-<!-- ## Check again -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
-<!-- ``` -->
+Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky
+
+```{r}
+shr_by_sdlg[shr_by_sdlg$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"]
+shr_by_sdlg[shr_by_sdlg$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"])
+```
+
+## Check again
+```{r}
+shr_by_sdlg %>%
+  filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53))
+```
 
 
-<!-- # Figure out where the ARVI is -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(ShrubSpp03=="ARVI") -->
-<!-- ``` -->
+# Figure out where the ARVI is
+```{r}
+shr_by_sdlg %>%
+  filter(ShrubSpp03=="ARVI")
+```
 
-<!-- # Save for DIFN -->
-<!-- ```{r} -->
-<!-- save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata") -->
-<!-- ``` -->
+# Save for DIFN
+```{r}
+save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata")
+save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
+```
 
-<!-- ## Take out trees that aren't ABCO or PIPO -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   filter(Species %in% c("ABCO", "PIPO")) -->
-<!-- ``` -->
-
+This version has 286 rows and 16 columns
 
 # List seedlings
 ```{r}
 sort(shr_by_sdlg$Sdlg)
 ```
 
-# Save
-```{r}
-save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata")
-#write.csv(shr_by_sdlg, file = "../../compiled_data/fire_footprints/shrub_master_data_2016.csv", row.names = F)
-```
 

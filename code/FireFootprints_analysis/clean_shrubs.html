@@ -400,8 +400,28 @@ summary {
 <li><a href="#combine-shrub-data-together">Combine shrub data together</a><ul>
 <li><a href="#combine-segments-into-0-1-0-2-and0-3-m">Combine segments into 0-1, 0-2, and0-3 m</a></li>
 </ul></li>
+<li><a href="#save">Save</a><ul>
+<li><a href="#this-version-has-286-rows-and-8-columns">This version has 286 rows and 8 columns</a></li>
+</ul></li>
+<li><a href="#light-files-and-difn">Light files and DIFN</a><ul>
+<li><a href="#merge-in-difn-and-light-file-data-from-seedling-df">Merge in DIFN and Light File data from seedling df</a></li>
+<li><a href="#mark-the-measurements-without-seedling-as-ref-for-reference">Mark the measurements without seedling as “ref” for reference</a></li>
+</ul></li>
+<li><a href="#make-sdlg-all-caps">Make Sdlg all caps</a><ul>
+<li><a href="#add-light-files-for-non-seedling-shrub-locations">Add light files for non-seedling shrub locations</a></li>
+</ul></li>
+<li><a href="#add-difn-degrees-from-fv2200-output-file">Add DIFN degrees from FV2200 output file</a><ul>
+<li><a href="#load-in-difn-data-using-only-the-first-4-gaps-down-to-53-degrees">Load in DIFN data using only the first 4 gaps (down to 53 degrees)</a></li>
+<li><a href="#delete-repeat-row-that-only-has-data-in-one-of-the-rows">Delete repeat row that only has data in one of the rows</a></li>
+<li><a href="#join-difn.53-data-with-shrub-data">Join DIFN.53 data with shrub data</a></li>
+<li><a href="#check-for-duplicated-seedlings">Check for duplicated seedlings</a></li>
+<li><a href="#find-which-seedlings-have-difn.all-but-lack-difn.53">Find which seedlings have DIFN.all but lack DIFN.53</a></li>
+<li><a href="#fill-in-a-couple-seedlings-with-funky-difn-situations">Fill in a couple seedlings with funky DIFN situations</a></li>
+<li><a href="#check-again">Check again</a></li>
+</ul></li>
+<li><a href="#figure-out-where-the-arvi-is">Figure out where the ARVI is</a></li>
+<li><a href="#save-for-difn">Save for DIFN</a></li>
 <li><a href="#list-seedlings">List seedlings</a></li>
-<li><a href="#save">Save</a></li>
 </ul>
 </div>
 
@@ -431,10 +451,10 @@ shr$Ht.cm[is.na(shr$Ht.cm)] &lt;- 0</code></pre>
 <div id="take-out-conifer-since-its-not-a-shrub" class="section level2">
 <h2>Take out “conifer” since it’s not a shrub</h2>
 <pre class="r"><code>summary(as.factor(shr$ShrubSpp))</code></pre>
-<pre><code>##            APAN    ARNE    ARPA    ARVI    CECO    CEIN    CEPR    CHFO    CHSE    CHUM conifer    CONU    LIDE    none   other    PREM    QUKA    QUKE    QUVA 
-##       2       1      47     903      41    1655     349      51     267     275       3     254      10     110     263     142     164       1      14      66 
-##   Ribes    RIRO    SYMO  willow  Willow 
-##       3      21      28      75       2</code></pre>
+<pre><code>##            APAN    ARNE    ARPA    ARVI    CECO    CEIN    CEPR    CHFO    CHSE    CHUM conifer    CONU    LIDE    none   other    PREM    QUKA 
+##       2       1      47     903      41    1655     349      51     267     275       3     254      10     110     263     142     164       1 
+##    QUKE    QUVA   Ribes    RIRO    SYMO  willow  Willow 
+##      14      66       3      21      28      75       2</code></pre>
 <pre class="r"><code>shr &lt;- shr %&gt;% 
   filter(!(ShrubSpp == &quot;conifer&quot;))</code></pre>
 </div>
@@ -922,127 +942,188 @@ shr_by_sdlg1</code></pre>
 ##  9 108   ARPA         380 207.     780 209.    1180 213. 
 ## 10 109   ARPA         170 172.     520 169.     810 174. 
 ## # ... with 276 more rows</code></pre>
-<!-- # Light files and DIFN -->
-<!-- ## Merge in DIFN and Light File data from seedling df -->
-<!-- ```{r} -->
-<!-- names(df) -->
-<!-- df_light <- df %>%  -->
-<!--   dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species) -->
-<!-- shr_by_sdlg <- left_join(shr_by_sdlg, df_light) -->
-<!-- shr_by_sdlg -->
-<!-- ``` -->
-<!-- ## Mark the measurements without seedling as "ref" for reference -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   mutate(ref = ifelse(Sdlg %in% c("ARPA-1",  "ceco-1",  "CEIN-1", "CEIN-2","chfo-1", "DCECO-1", "DCECO-2", "DCECO-3", "LIDE-1",  "LIDE-2", "LIDE-3", "LIDE-4"), 1,0)) -->
-<!-- summary(as.factor(shr_by_sdlg$ref)) -->
-<!-- ``` -->
-<!-- # Make Sdlg all caps -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   ungroup() %>%  -->
-<!--   mutate(Sdlg = toupper(Sdlg)) -->
-<!-- ``` -->
-<!-- ## Add light files for non-seedling shrub locations -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-4", 48, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-3", 47, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-2", 46, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "LIDE-1", 45, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-1", 125, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CEIN-2", 126, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "CECO-1", 74, Light_File)) %>%  -->
-<!--   mutate(Light_File = ifelse(Sdlg == "ARPA-1", 94, Light_File)) -->
-<!-- ``` -->
-<!-- # Add DIFN degrees from FV2200 output file -->
-<!-- ## Load in DIFN data using only the first 4 gaps (down to 53 degrees) -->
-<!-- ```{r} -->
-<!-- DIFNl53 <- read.table(file="~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4",header=T,sep="\t") -->
-<!-- names(shr_by_sdlg) -->
-<!-- DIFNl53 <- distinct(DIFNl53) -->
-<!-- ``` -->
-<!-- ## Delete repeat row that only has data in one of the rows -->
-<!-- ```{r} -->
-<!-- DIFNl53 <- DIFNl53 %>%  -->
-<!--   filter(!(LAI_File ==111 & DIFN==0)) -->
-<!-- ``` -->
-<!-- ## Join DIFN.53 data with shrub data -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- left_join(shr_by_sdlg, DIFNl53, by=c("Light_File"="LAI_File")) %>% -->
-<!--   rename(DIFN.all = DIFN.x) %>% -->
-<!--   rename(DIFN.53 =DIFN.y) %>% -->
-<!--   rename(LAI.53 = LAI) %>%  -->
-<!--   dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr) -->
-<!-- shr_by_sdlg -->
-<!-- ``` -->
-<!-- ## Check for duplicated seedlings -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   group_by(Sdlg) %>%  -->
-<!--   summarize(n=n()) %>%  -->
-<!--   filter(n !=1) -->
-<!-- ``` -->
-<!-- ## Find which seedlings have DIFN.all but lack DIFN.53  -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
-<!-- ``` -->
-<!-- ## Fill in a couple seedlings with funky DIFN situations -->
-<!-- Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==9,"DIFN.53"] <- DIFNl53[DIFNl53$LAI_File==15,"DIFN"] -->
-<!-- shr_by_sdlg[shr_by_sdlg$Sdlg==3,"DIFN.53"] <- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),"DIFN"]) -->
-<!-- ``` -->
-<!-- ## Check again -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(!(is.na(DIFN.all) | DIFN.all==0) & is.na(DIFN.53)) -->
-<!-- ``` -->
-<!-- # Figure out where the ARVI is -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg %>%  -->
-<!--   filter(ShrubSpp03=="ARVI") -->
-<!-- ``` -->
-<!-- # Save for DIFN -->
-<!-- ```{r} -->
-<!-- save(shr_by_sdlg, file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata") -->
-<!-- ``` -->
-<!-- ## Take out trees that aren't ABCO or PIPO -->
-<!-- ```{r} -->
-<!-- shr_by_sdlg <- shr_by_sdlg %>%  -->
-<!--   filter(Species %in% c("ABCO", "PIPO")) -->
-<!-- ``` -->
 </div>
-</div>
-<div id="list-seedlings" class="section level1">
-<h1>List seedlings</h1>
-<pre class="r"><code>sort(shr_by_sdlg$Sdlg)</code></pre>
-<pre><code>##   [1] &quot;1&quot;       &quot;10&quot;      &quot;100&quot;     &quot;103&quot;     &quot;104&quot;     &quot;105&quot;     &quot;106&quot;     &quot;107&quot;     &quot;108&quot;     &quot;109&quot;     &quot;11&quot;      &quot;110&quot;     &quot;111&quot;     &quot;112&quot;     &quot;113&quot;    
-##  [16] &quot;115&quot;     &quot;116&quot;     &quot;117&quot;     &quot;118&quot;     &quot;119&quot;     &quot;12&quot;      &quot;120&quot;     &quot;121&quot;     &quot;122&quot;     &quot;123&quot;     &quot;124&quot;     &quot;125f&quot;    &quot;125w&quot;    &quot;126&quot;     &quot;127&quot;    
-##  [31] &quot;128&quot;     &quot;129&quot;     &quot;13&quot;      &quot;130&quot;     &quot;131&quot;     &quot;132&quot;     &quot;133&quot;     &quot;134&quot;     &quot;135&quot;     &quot;136&quot;     &quot;137&quot;     &quot;138&quot;     &quot;139&quot;     &quot;14&quot;      &quot;140&quot;    
-##  [46] &quot;141&quot;     &quot;142&quot;     &quot;143&quot;     &quot;144&quot;     &quot;145&quot;     &quot;146&quot;     &quot;147&quot;     &quot;148&quot;     &quot;149&quot;     &quot;15&quot;      &quot;150&quot;     &quot;151&quot;     &quot;152&quot;     &quot;153&quot;     &quot;154&quot;    
-##  [61] &quot;155&quot;     &quot;156&quot;     &quot;157&quot;     &quot;158&quot;     &quot;159&quot;     &quot;16&quot;      &quot;160&quot;     &quot;161&quot;     &quot;162&quot;     &quot;163&quot;     &quot;164&quot;     &quot;165&quot;     &quot;166&quot;     &quot;167&quot;     &quot;168&quot;    
-##  [76] &quot;169&quot;     &quot;170&quot;     &quot;171&quot;     &quot;172&quot;     &quot;173&quot;     &quot;174&quot;     &quot;175&quot;     &quot;176&quot;     &quot;177&quot;     &quot;178&quot;     &quot;179&quot;     &quot;180&quot;     &quot;181&quot;     &quot;182&quot;     &quot;183&quot;    
-##  [91] &quot;184&quot;     &quot;185&quot;     &quot;186&quot;     &quot;187&quot;     &quot;188&quot;     &quot;189&quot;     &quot;19&quot;      &quot;190&quot;     &quot;191&quot;     &quot;192&quot;     &quot;193&quot;     &quot;194&quot;     &quot;195&quot;     &quot;196&quot;     &quot;197&quot;    
-## [106] &quot;198&quot;     &quot;199&quot;     &quot;2&quot;       &quot;20&quot;      &quot;200&quot;     &quot;201&quot;     &quot;202&quot;     &quot;203&quot;     &quot;204&quot;     &quot;205&quot;     &quot;206&quot;     &quot;207&quot;     &quot;208&quot;     &quot;209&quot;     &quot;21&quot;     
-## [121] &quot;210&quot;     &quot;211&quot;     &quot;212&quot;     &quot;213&quot;     &quot;214&quot;     &quot;215&quot;     &quot;216&quot;     &quot;217&quot;     &quot;218&quot;     &quot;219&quot;     &quot;22&quot;      &quot;220&quot;     &quot;221&quot;     &quot;222&quot;     &quot;223&quot;    
-## [136] &quot;224&quot;     &quot;225&quot;     &quot;226&quot;     &quot;227&quot;     &quot;228&quot;     &quot;229&quot;     &quot;23&quot;      &quot;230&quot;     &quot;231&quot;     &quot;232&quot;     &quot;233&quot;     &quot;234&quot;     &quot;235&quot;     &quot;236&quot;     &quot;237&quot;    
-## [151] &quot;238&quot;     &quot;239&quot;     &quot;24&quot;      &quot;240&quot;     &quot;241&quot;     &quot;242&quot;     &quot;243&quot;     &quot;244&quot;     &quot;245&quot;     &quot;246&quot;     &quot;247&quot;     &quot;248&quot;     &quot;249&quot;     &quot;25&quot;      &quot;250&quot;    
-## [166] &quot;251&quot;     &quot;252&quot;     &quot;253&quot;     &quot;254&quot;     &quot;255&quot;     &quot;256&quot;     &quot;257&quot;     &quot;258&quot;     &quot;259&quot;     &quot;26&quot;      &quot;260&quot;     &quot;261&quot;     &quot;262&quot;     &quot;263&quot;     &quot;264&quot;    
-## [181] &quot;265&quot;     &quot;27&quot;      &quot;275&quot;     &quot;276&quot;     &quot;277&quot;     &quot;278&quot;     &quot;279&quot;     &quot;28&quot;      &quot;280&quot;     &quot;281&quot;     &quot;282&quot;     &quot;283&quot;     &quot;284&quot;     &quot;285&quot;     &quot;286&quot;    
-## [196] &quot;287&quot;     &quot;288&quot;     &quot;289&quot;     &quot;290&quot;     &quot;291&quot;     &quot;292&quot;     &quot;293&quot;     &quot;294&quot;     &quot;3&quot;       &quot;35&quot;      &quot;36&quot;      &quot;37&quot;      &quot;38&quot;      &quot;39&quot;      &quot;4&quot;      
-## [211] &quot;40&quot;      &quot;41&quot;      &quot;42&quot;      &quot;43&quot;      &quot;44&quot;      &quot;45&quot;      &quot;46&quot;      &quot;47&quot;      &quot;48&quot;      &quot;49&quot;      &quot;5&quot;       &quot;50&quot;      &quot;51&quot;      &quot;52&quot;      &quot;53&quot;     
-## [226] &quot;54&quot;      &quot;55&quot;      &quot;56&quot;      &quot;57&quot;      &quot;58&quot;      &quot;6&quot;       &quot;60&quot;      &quot;61&quot;      &quot;62&quot;      &quot;63&quot;      &quot;64&quot;      &quot;65&quot;      &quot;66&quot;      &quot;67&quot;      &quot;68&quot;     
-## [241] &quot;69&quot;      &quot;7&quot;       &quot;70&quot;      &quot;71&quot;      &quot;72&quot;      &quot;73&quot;      &quot;74&quot;      &quot;75&quot;      &quot;76&quot;      &quot;77&quot;      &quot;78&quot;      &quot;79&quot;      &quot;8&quot;       &quot;80&quot;      &quot;81&quot;     
-## [256] &quot;82&quot;      &quot;83&quot;      &quot;84&quot;      &quot;85&quot;      &quot;86&quot;      &quot;87&quot;      &quot;88&quot;      &quot;89&quot;      &quot;9&quot;       &quot;90&quot;      &quot;91&quot;      &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;     
-## [271] &quot;96&quot;      &quot;97&quot;      &quot;98&quot;      &quot;99&quot;      &quot;ARPA-1&quot;  &quot;ceco-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;chfo-1&quot;  &quot;DCECO-1&quot; &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot; 
-## [286] &quot;LIDE-4&quot;</code></pre>
 </div>
 <div id="save" class="section level1">
 <h1>Save</h1>
 <pre class="r"><code>save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)
 #write.csv(shr_by_sdlg, file = &quot;../../compiled_data/fire_footprints/shrub_master_data_2016.csv&quot;, row.names = F)</code></pre>
+<div id="this-version-has-286-rows-and-8-columns" class="section level2">
+<h2>This version has 286 rows and 8 columns</h2>
+</div>
+</div>
+<div id="light-files-and-difn" class="section level1">
+<h1>Light files and DIFN</h1>
+<div id="merge-in-difn-and-light-file-data-from-seedling-df" class="section level2">
+<h2>Merge in DIFN and Light File data from seedling df</h2>
+<pre class="r"><code>names(df)</code></pre>
+<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Elevation&quot;          &quot;Nearby_Easting&quot;     &quot;Nearby_Northing&quot;    &quot;Sdlg&quot;              
+##  [7] &quot;Species&quot;            &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;         &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;   
+## [13] &quot;HTLCB&quot;              &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot; &quot;Ht2015.meas2016&quot;    &quot;Note1&quot;              &quot;Note2&quot;             
+## [19] &quot;Note3_Light&quot;        &quot;DataSheet1&quot;         &quot;Light_File&quot;         &quot;DIFN&quot;               &quot;FirePatch&quot;          &quot;return&quot;            
+## [25] &quot;Date1&quot;              &quot;Date2&quot;              &quot;personel2&quot;          &quot;personel1&quot;          &quot;Time1&quot;              &quot;Time2&quot;             
+## [31] &quot;Photo&quot;              &quot;DataSheet2&quot;</code></pre>
+<pre class="r"><code>df_light &lt;- df %&gt;%
+  dplyr::select(Sdlg, Light_File, DIFN, FirePatch, Species)
+shr_by_sdlg &lt;- left_join(shr_by_sdlg, df_light)</code></pre>
+<pre><code>## Joining, by = &quot;Sdlg&quot;</code></pre>
+<pre class="r"><code>shr_by_sdlg</code></pre>
+<pre><code>## # A tibble: 286 x 12
+## # Groups:   Sdlg [286]
+##    Sdlg  ShrubSpp03  Cov1   Ht1 Cov1.2 Ht1.2 Cov1.3 Ht1.3 Light_File  DIFN FirePatch Species
+##    &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;  
+##  1 1     ARPA         290 131.     870 121.    1310 116.          20 0.232 CLVD-N    PILA   
+##  2 10    ARPA         330  85.2    770  95.8   1190 116.          27 0.325 CLVD-N    PIPO   
+##  3 100   CECO         360  91.1    760  89.2   1160  88.6          0 0     AMRC-2    ABCO   
+##  4 103   CECO         400  97.5    760 108.    1150 107.           0 0     AMRC-2    ABCO   
+##  5 104   CECO         400 128.     800 122.    1200 122.           0 0     AMRC-2    ABCO   
+##  6 105   CECO         510  83.5    890  80.1   1190  77.6         86 0.061 AMRC-2    ABCO   
+##  7 106   CECO         400  85      810  83.3   1220  79.0          0 0     AMRC-2    ABCO   
+##  8 107   CECO         380  69.5    710  76.1   1140  77.8         80 0.093 AMRC-2    ABCO   
+##  9 108   ARPA         380 207.     780 209.    1180 213.           0 0     CLVD-SE   PIPO   
+## 10 109   ARPA         170 172.     520 169.     810 174.          91 0.117 CLVD-SE   PIPO   
+## # ... with 276 more rows</code></pre>
+</div>
+<div id="mark-the-measurements-without-seedling-as-ref-for-reference" class="section level2">
+<h2>Mark the measurements without seedling as “ref” for reference</h2>
+<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;%
+  mutate(ref = ifelse(Sdlg %in% c(&quot;ARPA-1&quot;,  &quot;ceco-1&quot;,  &quot;CEIN-1&quot;, &quot;CEIN-2&quot;,&quot;chfo-1&quot;, &quot;DCECO-1&quot;, &quot;DCECO-2&quot;, &quot;DCECO-3&quot;, &quot;LIDE-1&quot;,  &quot;LIDE-2&quot;, &quot;LIDE-3&quot;, &quot;LIDE-4&quot;), 1,0))
+summary(as.factor(shr_by_sdlg$ref))</code></pre>
+<pre><code>##   0   1 
+## 274  12</code></pre>
+</div>
+</div>
+<div id="make-sdlg-all-caps" class="section level1">
+<h1>Make Sdlg all caps</h1>
+<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;%
+  ungroup() %&gt;%
+  mutate(Sdlg = toupper(Sdlg))</code></pre>
+<div id="add-light-files-for-non-seedling-shrub-locations" class="section level2">
+<h2>Add light files for non-seedling shrub locations</h2>
+<pre class="r"><code>shr_by_sdlg &lt;- shr_by_sdlg %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-4&quot;, 48, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-3&quot;, 47, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-2&quot;, 46, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;LIDE-1&quot;, 45, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-1&quot;, 125, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;CEIN-2&quot;, 126, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;CECO-1&quot;, 74, Light_File)) %&gt;%
+  mutate(Light_File = ifelse(Sdlg == &quot;ARPA-1&quot;, 94, Light_File))</code></pre>
+</div>
+</div>
+<div id="add-difn-degrees-from-fv2200-output-file" class="section level1">
+<h1>Add DIFN degrees from FV2200 output file</h1>
+<div id="load-in-difn-data-using-only-the-first-4-gaps-down-to-53-degrees" class="section level2">
+<h2>Load in DIFN data using only the first 4 gaps (down to 53 degrees)</h2>
+<pre class="r"><code>DIFNl53 &lt;- read.table(file=&quot;~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4&quot;,header=T,sep=&quot;\t&quot;)
+names(shr_by_sdlg)</code></pre>
+<pre><code>##  [1] &quot;Sdlg&quot;       &quot;ShrubSpp03&quot; &quot;Cov1&quot;       &quot;Ht1&quot;        &quot;Cov1.2&quot;     &quot;Ht1.2&quot;      &quot;Cov1.3&quot;     &quot;Ht1.3&quot;      &quot;Light_File&quot; &quot;DIFN&quot;       &quot;FirePatch&quot; 
+## [12] &quot;Species&quot;    &quot;ref&quot;</code></pre>
+<pre class="r"><code>DIFNl53 &lt;- distinct(DIFNl53)</code></pre>
+</div>
+<div id="delete-repeat-row-that-only-has-data-in-one-of-the-rows" class="section level2">
+<h2>Delete repeat row that only has data in one of the rows</h2>
+<pre class="r"><code>DIFNl53 &lt;- DIFNl53 %&gt;%
+  filter(!(LAI_File ==111 &amp; DIFN==0))</code></pre>
+</div>
+<div id="join-difn.53-data-with-shrub-data" class="section level2">
+<h2>Join DIFN.53 data with shrub data</h2>
+<pre class="r"><code>shr_by_sdlg &lt;- left_join(shr_by_sdlg, DIFNl53, by=c(&quot;Light_File&quot;=&quot;LAI_File&quot;)) %&gt;%
+  rename(DIFN.all = DIFN.x) %&gt;%
+  rename(DIFN.53 =DIFN.y) %&gt;%
+  rename(LAI.53 = LAI) %&gt;%
+  dplyr::select(-SMP, -TransComp, -Model, -Records, -ScattCorr)
+shr_by_sdlg</code></pre>
+<pre><code>## # A tibble: 286 x 16
+##    Sdlg  ShrubSpp03  Cov1   Ht1 Cov1.2 Ht1.2 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species   ref Date              LAI.53 DIFN.53
+##    &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;              &lt;dbl&gt;   &lt;dbl&gt;
+##  1 1     ARPA         290 131.     870 121.    1310 116.          20    0.232 CLVD-N    PILA        0 20160610 05:17:03   2.21   0.264
+##  2 10    ARPA         330  85.2    770  95.8   1190 116.          27    0.325 CLVD-N    PIPO        0 20160610 05:52:22   1.77   0.386
+##  3 100   CECO         360  91.1    760  89.2   1160  88.6          0    0     AMRC-2    ABCO        0 &lt;NA&gt;               NA     NA    
+##  4 103   CECO         400  97.5    760 108.    1150 107.           0    0     AMRC-2    ABCO        0 &lt;NA&gt;               NA     NA    
+##  5 104   CECO         400 128.     800 122.    1200 122.           0    0     AMRC-2    ABCO        0 &lt;NA&gt;               NA     NA    
+##  6 105   CECO         510  83.5    890  80.1   1190  77.6         86    0.061 AMRC-2    ABCO        0 20160623 06:57:07   4.08   0.071
+##  7 106   CECO         400  85      810  83.3   1220  79.0          0    0     AMRC-2    ABCO        0 &lt;NA&gt;               NA     NA    
+##  8 107   CECO         380  69.5    710  76.1   1140  77.8         80    0.093 AMRC-2    ABCO        0 20160623 06:19:58   3.49   0.096
+##  9 108   ARPA         380 207.     780 209.    1180 213.           0    0     CLVD-SE   PIPO        0 &lt;NA&gt;               NA     NA    
+## 10 109   ARPA         170 172.     520 169.     810 174.          91    0.117 CLVD-SE   PIPO        0 20160628 05:21:59   3.22   0.127
+## # ... with 276 more rows</code></pre>
+</div>
+<div id="check-for-duplicated-seedlings" class="section level2">
+<h2>Check for duplicated seedlings</h2>
+<pre class="r"><code>shr_by_sdlg %&gt;%
+  group_by(Sdlg) %&gt;%
+  summarize(n=n()) %&gt;%
+  filter(n !=1)</code></pre>
+<pre><code>## `summarise()` ungrouping output (override with `.groups` argument)</code></pre>
+<pre><code>## # A tibble: 0 x 2
+## # ... with 2 variables: Sdlg &lt;chr&gt;, n &lt;int&gt;</code></pre>
+</div>
+<div id="find-which-seedlings-have-difn.all-but-lack-difn.53" class="section level2">
+<h2>Find which seedlings have DIFN.all but lack DIFN.53</h2>
+<pre class="r"><code>shr_by_sdlg %&gt;%
+  filter(!(is.na(DIFN.all) | DIFN.all==0) &amp; is.na(DIFN.53))</code></pre>
+<pre><code>## # A tibble: 2 x 16
+##   Sdlg  ShrubSpp03  Cov1   Ht1 Cov1.2 Ht1.2 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species   ref Date  LAI.53 DIFN.53
+##   &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+## 1 3     ARPA         290  131.    870  121.   1310  116.          0    0.222 CLVD-N    PSME        0 &lt;NA&gt;      NA      NA
+## 2 9     ARPA         400  127.    940  119.   1440  132.          0    0.283 CLVD-N    ABCO        0 &lt;NA&gt;      NA      NA</code></pre>
+</div>
+<div id="fill-in-a-couple-seedlings-with-funky-difn-situations" class="section level2">
+<h2>Fill in a couple seedlings with funky DIFN situations</h2>
+<p>Seedlings 3 and 9 have two light files. I average them for 3 and use one for 9 because the other one is funky</p>
+<pre class="r"><code>shr_by_sdlg[shr_by_sdlg$Sdlg==9,&quot;DIFN.53&quot;] &lt;- DIFNl53[DIFNl53$LAI_File==15,&quot;DIFN&quot;]
+shr_by_sdlg[shr_by_sdlg$Sdlg==3,&quot;DIFN.53&quot;] &lt;- mean(DIFNl53[DIFNl53$LAI_File%in%c(17,19),&quot;DIFN&quot;])</code></pre>
+</div>
+<div id="check-again" class="section level2">
+<h2>Check again</h2>
+<pre class="r"><code>shr_by_sdlg %&gt;%
+  filter(!(is.na(DIFN.all) | DIFN.all==0) &amp; is.na(DIFN.53))</code></pre>
+<pre><code>## # A tibble: 0 x 16
+## # ... with 16 variables: Sdlg &lt;chr&gt;, ShrubSpp03 &lt;chr&gt;, Cov1 &lt;dbl&gt;, Ht1 &lt;dbl&gt;, Cov1.2 &lt;dbl&gt;, Ht1.2 &lt;dbl&gt;, Cov1.3 &lt;dbl&gt;, Ht1.3 &lt;dbl&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN.all &lt;dbl&gt;, FirePatch &lt;chr&gt;, Species &lt;chr&gt;, ref &lt;dbl&gt;, Date &lt;chr&gt;, LAI.53 &lt;dbl&gt;, DIFN.53 &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<div id="figure-out-where-the-arvi-is" class="section level1">
+<h1>Figure out where the ARVI is</h1>
+<pre class="r"><code>shr_by_sdlg %&gt;%
+  filter(ShrubSpp03==&quot;ARVI&quot;)</code></pre>
+<pre><code>## # A tibble: 2 x 16
+##   Sdlg   ShrubSpp03  Cov1   Ht1 Cov1.2 Ht1.2 Cov1.3 Ht1.3 Light_File DIFN.all FirePatch Species   ref Date              LAI.53 DIFN.53
+##   &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;              &lt;dbl&gt;   &lt;dbl&gt;
+## 1 111    ARVI         390  165.    730  165.   1040  163.         93    0.101 CLVD-SE   CADE        0 20160628 05:57:56   3.51   0.118
+## 2 ARPA-1 ARVI         400  212.    800  201.   1190  197.         94   NA     &lt;NA&gt;      &lt;NA&gt;        1 20160628 06:12:34   4.49   0.06</code></pre>
+</div>
+<div id="save-for-difn" class="section level1">
+<h1>Save for DIFN</h1>
+<pre class="r"><code>save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata&quot;)
+save(shr_by_sdlg, file=&quot;../../compiled_data/fire_footprints/shrub_master_data_2016.Rdata&quot;)</code></pre>
+<p>This version has 286 rows and 16 columns</p>
+</div>
+<div id="list-seedlings" class="section level1">
+<h1>List seedlings</h1>
+<pre class="r"><code>sort(shr_by_sdlg$Sdlg)</code></pre>
+<pre><code>##   [1] &quot;1&quot;       &quot;10&quot;      &quot;100&quot;     &quot;103&quot;     &quot;104&quot;     &quot;105&quot;     &quot;106&quot;     &quot;107&quot;     &quot;108&quot;     &quot;109&quot;     &quot;11&quot;      &quot;110&quot;     &quot;111&quot;     &quot;112&quot;    
+##  [15] &quot;113&quot;     &quot;115&quot;     &quot;116&quot;     &quot;117&quot;     &quot;118&quot;     &quot;119&quot;     &quot;12&quot;      &quot;120&quot;     &quot;121&quot;     &quot;122&quot;     &quot;123&quot;     &quot;124&quot;     &quot;125F&quot;    &quot;125W&quot;   
+##  [29] &quot;126&quot;     &quot;127&quot;     &quot;128&quot;     &quot;129&quot;     &quot;13&quot;      &quot;130&quot;     &quot;131&quot;     &quot;132&quot;     &quot;133&quot;     &quot;134&quot;     &quot;135&quot;     &quot;136&quot;     &quot;137&quot;     &quot;138&quot;    
+##  [43] &quot;139&quot;     &quot;14&quot;      &quot;140&quot;     &quot;141&quot;     &quot;142&quot;     &quot;143&quot;     &quot;144&quot;     &quot;145&quot;     &quot;146&quot;     &quot;147&quot;     &quot;148&quot;     &quot;149&quot;     &quot;15&quot;      &quot;150&quot;    
+##  [57] &quot;151&quot;     &quot;152&quot;     &quot;153&quot;     &quot;154&quot;     &quot;155&quot;     &quot;156&quot;     &quot;157&quot;     &quot;158&quot;     &quot;159&quot;     &quot;16&quot;      &quot;160&quot;     &quot;161&quot;     &quot;162&quot;     &quot;163&quot;    
+##  [71] &quot;164&quot;     &quot;165&quot;     &quot;166&quot;     &quot;167&quot;     &quot;168&quot;     &quot;169&quot;     &quot;170&quot;     &quot;171&quot;     &quot;172&quot;     &quot;173&quot;     &quot;174&quot;     &quot;175&quot;     &quot;176&quot;     &quot;177&quot;    
+##  [85] &quot;178&quot;     &quot;179&quot;     &quot;180&quot;     &quot;181&quot;     &quot;182&quot;     &quot;183&quot;     &quot;184&quot;     &quot;185&quot;     &quot;186&quot;     &quot;187&quot;     &quot;188&quot;     &quot;189&quot;     &quot;19&quot;      &quot;190&quot;    
+##  [99] &quot;191&quot;     &quot;192&quot;     &quot;193&quot;     &quot;194&quot;     &quot;195&quot;     &quot;196&quot;     &quot;197&quot;     &quot;198&quot;     &quot;199&quot;     &quot;2&quot;       &quot;20&quot;      &quot;200&quot;     &quot;201&quot;     &quot;202&quot;    
+## [113] &quot;203&quot;     &quot;204&quot;     &quot;205&quot;     &quot;206&quot;     &quot;207&quot;     &quot;208&quot;     &quot;209&quot;     &quot;21&quot;      &quot;210&quot;     &quot;211&quot;     &quot;212&quot;     &quot;213&quot;     &quot;214&quot;     &quot;215&quot;    
+## [127] &quot;216&quot;     &quot;217&quot;     &quot;218&quot;     &quot;219&quot;     &quot;22&quot;      &quot;220&quot;     &quot;221&quot;     &quot;222&quot;     &quot;223&quot;     &quot;224&quot;     &quot;225&quot;     &quot;226&quot;     &quot;227&quot;     &quot;228&quot;    
+## [141] &quot;229&quot;     &quot;23&quot;      &quot;230&quot;     &quot;231&quot;     &quot;232&quot;     &quot;233&quot;     &quot;234&quot;     &quot;235&quot;     &quot;236&quot;     &quot;237&quot;     &quot;238&quot;     &quot;239&quot;     &quot;24&quot;      &quot;240&quot;    
+## [155] &quot;241&quot;     &quot;242&quot;     &quot;243&quot;     &quot;244&quot;     &quot;245&quot;     &quot;246&quot;     &quot;247&quot;     &quot;248&quot;     &quot;249&quot;     &quot;25&quot;      &quot;250&quot;     &quot;251&quot;     &quot;252&quot;     &quot;253&quot;    
+## [169] &quot;254&quot;     &quot;255&quot;     &quot;256&quot;     &quot;257&quot;     &quot;258&quot;     &quot;259&quot;     &quot;26&quot;      &quot;260&quot;     &quot;261&quot;     &quot;262&quot;     &quot;263&quot;     &quot;264&quot;     &quot;265&quot;     &quot;27&quot;     
+## [183] &quot;275&quot;     &quot;276&quot;     &quot;277&quot;     &quot;278&quot;     &quot;279&quot;     &quot;28&quot;      &quot;280&quot;     &quot;281&quot;     &quot;282&quot;     &quot;283&quot;     &quot;284&quot;     &quot;285&quot;     &quot;286&quot;     &quot;287&quot;    
+## [197] &quot;288&quot;     &quot;289&quot;     &quot;290&quot;     &quot;291&quot;     &quot;292&quot;     &quot;293&quot;     &quot;294&quot;     &quot;3&quot;       &quot;35&quot;      &quot;36&quot;      &quot;37&quot;      &quot;38&quot;      &quot;39&quot;      &quot;4&quot;      
+## [211] &quot;40&quot;      &quot;41&quot;      &quot;42&quot;      &quot;43&quot;      &quot;44&quot;      &quot;45&quot;      &quot;46&quot;      &quot;47&quot;      &quot;48&quot;      &quot;49&quot;      &quot;5&quot;       &quot;50&quot;      &quot;51&quot;      &quot;52&quot;     
+## [225] &quot;53&quot;      &quot;54&quot;      &quot;55&quot;      &quot;56&quot;      &quot;57&quot;      &quot;58&quot;      &quot;6&quot;       &quot;60&quot;      &quot;61&quot;      &quot;62&quot;      &quot;63&quot;      &quot;64&quot;      &quot;65&quot;      &quot;66&quot;     
+## [239] &quot;67&quot;      &quot;68&quot;      &quot;69&quot;      &quot;7&quot;       &quot;70&quot;      &quot;71&quot;      &quot;72&quot;      &quot;73&quot;      &quot;74&quot;      &quot;75&quot;      &quot;76&quot;      &quot;77&quot;      &quot;78&quot;      &quot;79&quot;     
+## [253] &quot;8&quot;       &quot;80&quot;      &quot;81&quot;      &quot;82&quot;      &quot;83&quot;      &quot;84&quot;      &quot;85&quot;      &quot;86&quot;      &quot;87&quot;      &quot;88&quot;      &quot;89&quot;      &quot;9&quot;       &quot;90&quot;      &quot;91&quot;     
+## [267] &quot;92&quot;      &quot;93&quot;      &quot;94&quot;      &quot;95&quot;      &quot;96&quot;      &quot;97&quot;      &quot;98&quot;      &quot;99&quot;      &quot;ARPA-1&quot;  &quot;CECO-1&quot;  &quot;CEIN-1&quot;  &quot;CEIN-2&quot;  &quot;CHFO-1&quot;  &quot;DCECO-1&quot;
+## [281] &quot;DCECO-2&quot; &quot;DCECO-3&quot; &quot;LIDE-1&quot;  &quot;LIDE-2&quot;  &quot;LIDE-3&quot;  &quot;LIDE-4&quot;</code></pre>
 </div>
 
 

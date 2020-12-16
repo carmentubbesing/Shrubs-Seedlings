@@ -16,6 +16,7 @@ Files are dependent in the following order:
 * uses:
     * `~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/Master_Compiled_shrubs.csv`
     * `../../compiled_data/fire_footprints/seedlings_cleaned_2016.Rdata`
+    * `~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata`
 * does:
@@ -24,7 +25,6 @@ Files are dependent in the following order:
 #### **clean_combine_2016-only.Rmd**
 * uses:
     * `~/Shrubs-Seedlings/compiled_data/shrub_master_data_2016.Rdata`
-    * `~/../Dropbox (Stephens Lab)/SORTIE/Shrubs_Summer16/Completed_Data_and_Photos/LAI-2000_data/AllDIFNGaps1-4`
 * creates:
     * `~/Shrubs-Seedlings/compiled_data/master_data_2016.Rdata`
     * `~/Shrubs-Seedlings/compiled_data/master_data_2016.csv`

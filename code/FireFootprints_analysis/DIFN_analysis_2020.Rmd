@@ -26,7 +26,7 @@ The point of this script is to see if DIFN decreases with time since fire indepe
 
 # Load data
 ```{r}
-setwd("~/Shrubs-Seedlings/code/FireFootprints_analysis/")
+setwd("~/../Shrubs-Seedlings/code/FireFootprints_analysis/")
 load(file="../../compiled_data/fire_footprints/shrub_master_data_2016_DIFN.Rdata")
 load(file = "../../compiled_data/fire_footprints/seedlings_DIFN_cleaned_2016.Rdata")
 ```
@@ -62,9 +62,8 @@ df <- df %>%
 
 ```{r}
 df %>% 
-  arrange(Date) %>% 
-  select(Sdlg, Date, Fire, DataSheet1, DataSheet2) %>% 
-  View()
+  select(Sdlg, Date1, Fire, DataSheet1, DataSheet2) %>% 
+  head()
 ```
 
 # Correct data sheet and fire for the rows that are missing it
@@ -98,7 +97,7 @@ summary(as.factor(df$Years))
 ```{r}
 dfl <- df %>% 
   filter(!is.na(DIFN.53)) %>% 
-  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File,ShrubSpp03, Cov1.3, Ht1.3, Years, LAI.53, DIFN.53, ref)
+  dplyr::select(Sdlg, Ht.cm, Fire, FirePatch, Elevation, Slope.Deg, Light_File,ShrubSpp03, Cov1.3, Ht1.3, Years, DIFN.53, ref, Species)
 ```
 
 # Add shrubarea3 column
@@ -130,30 +129,18 @@ dfl <- left_join(dfl, df17, by = "Sdlg")
 
 ## Add height of 0 for seedling-less measurements
 ```{r}
-dfl <- dfl %>% 
+dfl <- dfl %>%
   mutate(Ht.cm = ifelse(ref ==1, Ht.cm ==0, Ht.cm))
 ```
 
 ## Average height for DIFN with multiple seedlings
 ```{r}
-dfl %>% 
-  arrange(FirePatch) %>% 
-  arrange(Fire) %>% 
-  arrange(Cov1.3) %>% 
-  arrange(DIFN.53) %>% 
-  group_by(Fire, FirePatch, DIFN.53, Cov1.3, Ht1.3) %>% 
-  mutate(Ht.cm = mean(Ht.cm)) %>% 
-  ungroup() %>% 
-  distinct() 
-```
-
-## Take out spots with >30 cm tree height
-```{r}
 dfl <- dfl %>% 
-  filter(Ht.cm<50)
+  group_by(Fire, FirePatch, DIFN.53, Cov1.3, Ht1.3) %>% 
+  mutate(Ht.cm.meanDIFN = mean(Ht.cm)) 
 ```
 
-# Group shrub species
+# Group shrub species into "other" category
 ```{r}
 nrow(dfl)
 summary(as.factor(dfl$ShrubSpp03))
@@ -161,11 +148,9 @@ dfl <- dfl %>%
   mutate(ShrubSpp03 = ifelse(!ShrubSpp03 %in% c("CECO", "ARPA", "CHSE", "CHFO", "CEIN", "LIDE"), "Other", as.character(ShrubSpp03))) 
 
 summary(as.factor(dfl$ShrubSpp03))
-dfl <- dfl %>% 
-  mutate(ShrubSpp03 = ifelse(ShrubSpp03 %in% c("CEIN", "CECO"), "Ceanothos", ShrubSpp03))
 ```
 
-# Look at DIFN in comparison to shrub cover, area, and species
+# Look at DIFN.53 in comparison to shrub cover, area, and species
 ```{r}
 ggplot(dfl)+
   geom_point(aes(x = Cov1.3, y = DIFN.53))
@@ -180,35 +165,13 @@ hist(dfl$DIFN.53)
 hist(log(dfl$DIFN.53))
 ```
 
-No reason to transform DIFN
+No reason to transform DIFN.53
 
-# Take out 2 DIFN measurements = 0 because they don't make sense
+# Take out 2 DIFN.53 measurements = 0 because they don't make sense
 ```{r}
 dfl <- dfl %>% 
-  filter(DIFN.53 != 0)
+  filter(DIFN.53 != 0 & !is.na(shrubarea3))
 nrow(dfl)
-```
-
-# Model DIFN in relation to shrubarea3, shrub species, years since fire
-
-```{r}
-dfl <- dfl %>% 
-  mutate(ShrubSpp03 = as.factor(ShrubSpp03))
-LM <- lm(DIFN.53 ~ Years +  shrubarea3 + ShrubSpp03, data = dfl)
-summary(LM)
-drop1(LM, test = "Chisq")
-```
-
-```{r}
-plot(predictorEffect("shrubarea3", LM))
-plot(predictorEffect("Years", LM))
-```
-
-```{r}
-plot(LM)
-dfl$E <- resid(LM)
-ggplot(dfl)+
-  geom_boxplot(aes(Fire, E))
 ```
 
 # To test for the effect of Years since fire when shrubarea and species have been accounted for, model the residuals of that model against Years
@@ -245,3 +208,16 @@ summary(LM_resid)
 drop1(LM_resid, test= "F")
 plot(predictorEffect("Years",LM_resid))
 ```
+
+# Save compiled data
+```{r}
+save(dfl, file = "../../compiled_data/fire_footprints/DIFN_Ecosystems.Rdata")
+```
+
+# DO THIS FOR CERTAIN ANALYSES
+## Take out spots with >30 cm tree height
+```{r}
+dfl <- dfl %>% 
+  filter(Ht.cm<50)
+```
+

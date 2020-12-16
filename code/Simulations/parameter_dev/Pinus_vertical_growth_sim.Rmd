@@ -385,6 +385,10 @@ save(RMSE_pine_growth, file = "../../../results/coefficients/RMSE_pine_growth.Rd
 save(LM_pine_nonnorm_sim, file = "../../../results/coefficients/LM_pine_nonnorm_sim.Rdata")
 ```
 
+```{r}
+ r.squaredGLMM(LM_pine_nonnorm_sim)
+```
+
 # Bootstrap the model, drawing same number of observations each time with replacement
 ```{r}
 coef_all <- data.frame()

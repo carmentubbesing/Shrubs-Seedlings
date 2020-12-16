@@ -435,37 +435,39 @@ summary {
 <div id="take-out-blank-columns-after-making-sure-theyre-blank" class="section level2">
 <h2>Take out blank columns after making sure they’re blank</h2>
 <pre class="r"><code>names(sdlt)</code></pre>
-<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Date&quot;               &quot;Closest_Time&quot;       &quot;Personel&quot;           &quot;Elevation&quot;          &quot;Nearby_Easting&quot;    
-##  [8] &quot;Nearby_Northing&quot;    &quot;Photo.&quot;             &quot;Seedling.&quot;          &quot;Return&quot;             &quot;Species&quot;            &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;        
-## [15] &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;    &quot;HTLCB&quot;              &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot; &quot;Ht2015.meas2016&quot;   
-## [22] &quot;CADE_Gr_inner&quot;      &quot;CADE_Gr_outer&quot;      &quot;CADE_dia_at_Gr_cm&quot;  &quot;ImmedAboveSpp&quot;      &quot;ImmedAboveHt.cm&quot;    &quot;Note1&quot;              &quot;Note2&quot;             
-## [29] &quot;Note3_Light&quot;        &quot;DataSheet&quot;          &quot;Light_File&quot;         &quot;DIFN&quot;               &quot;CADE_Gr_mm&quot;         &quot;FINAL_Gr_CADE_.&quot;    &quot;X&quot;                 
-## [36] &quot;X.1&quot;                &quot;volume_increment&quot;   &quot;X.2&quot;                &quot;X.3&quot;                &quot;X.4&quot;                &quot;X.5&quot;                &quot;X.6&quot;               
+<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Date&quot;               &quot;Closest_Time&quot;       &quot;Personel&quot;           &quot;Elevation&quot;         
+##  [7] &quot;Nearby_Easting&quot;     &quot;Nearby_Northing&quot;    &quot;Photo.&quot;             &quot;Seedling.&quot;          &quot;Return&quot;             &quot;Species&quot;           
+## [13] &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;         &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;    &quot;HTLCB&quot;             
+## [19] &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot; &quot;Ht2015.meas2016&quot;    &quot;CADE_Gr_inner&quot;      &quot;CADE_Gr_outer&quot;      &quot;CADE_dia_at_Gr_cm&quot; 
+## [25] &quot;ImmedAboveSpp&quot;      &quot;ImmedAboveHt.cm&quot;    &quot;Note1&quot;              &quot;Note2&quot;              &quot;Note3_Light&quot;        &quot;DataSheet&quot;         
+## [31] &quot;Light_File&quot;         &quot;DIFN&quot;               &quot;CADE_Gr_mm&quot;         &quot;FINAL_Gr_CADE_.&quot;    &quot;X&quot;                  &quot;X.1&quot;               
+## [37] &quot;volume_increment&quot;   &quot;X.2&quot;                &quot;X.3&quot;                &quot;X.4&quot;                &quot;X.5&quot;                &quot;X.6&quot;               
 ## [43] &quot;X.7&quot;                &quot;X.8&quot;                &quot;X.9&quot;</code></pre>
 <pre class="r"><code>summary(sdlt[33:45])</code></pre>
-<pre><code>##    CADE_Gr_mm     FINAL_Gr_CADE_.      X             X.1          volume_increment   X.2            X.3            X.4            X.5            X.6         
-##  Min.   :0.0700   Min.   :0.01408   Mode:logical   Mode:logical   Min.   :0        Mode:logical   Mode:logical   Mode:logical   Mode:logical   Mode:logical  
-##  1st Qu.:0.1250   1st Qu.:0.05817   NA&#39;s:291       NA&#39;s:291       1st Qu.:0        NA&#39;s:291       NA&#39;s:291       NA&#39;s:291       NA&#39;s:291       NA&#39;s:291      
-##  Median :0.1700   Median :0.08235                                 Median :0                                                                                  
-##  Mean   :0.8533   Mean   :0.12330                                 Mean   :0                                                                                  
-##  3rd Qu.:1.5425   3rd Qu.:0.14110                                 3rd Qu.:0                                                                                  
-##  Max.   :2.6000   Max.   :0.43860                                 Max.   :0                                                                                  
-##  NA&#39;s   :285      NA&#39;s   :268                                     NA&#39;s   :290                                                                                
-##    X.7            X.8               X.9     
-##  Mode:logical   Mode:logical   Min.   :53   
-##  NA&#39;s:291       NA&#39;s:291       1st Qu.:53   
-##                                Median :53   
-##                                Mean   :53   
-##                                3rd Qu.:53   
-##                                Max.   :53   
-##                                NA&#39;s   :290</code></pre>
+<pre><code>##    CADE_Gr_mm     FINAL_Gr_CADE_.      X             X.1          volume_increment   X.2            X.3            X.4            X.5         
+##  Min.   :0.0700   Min.   :0.01408   Mode:logical   Mode:logical   Min.   :0        Mode:logical   Mode:logical   Mode:logical   Mode:logical  
+##  1st Qu.:0.1250   1st Qu.:0.05817   NA&#39;s:291       NA&#39;s:291       1st Qu.:0        NA&#39;s:291       NA&#39;s:291       NA&#39;s:291       NA&#39;s:291      
+##  Median :0.1700   Median :0.08235                                 Median :0                                                                   
+##  Mean   :0.8533   Mean   :0.12330                                 Mean   :0                                                                   
+##  3rd Qu.:1.5425   3rd Qu.:0.14110                                 3rd Qu.:0                                                                   
+##  Max.   :2.6000   Max.   :0.43860                                 Max.   :0                                                                   
+##  NA&#39;s   :285      NA&#39;s   :268                                     NA&#39;s   :290                                                                 
+##    X.6            X.7            X.8               X.9     
+##  Mode:logical   Mode:logical   Mode:logical   Min.   :53   
+##  NA&#39;s:291       NA&#39;s:291       NA&#39;s:291       1st Qu.:53   
+##                                               Median :53   
+##                                               Mean   :53   
+##                                               3rd Qu.:53   
+##                                               Max.   :53   
+##                                               NA&#39;s   :290</code></pre>
 <pre class="r"><code>sdlt &lt;- sdlt[,c(1:32)]
 names(sdlt)</code></pre>
-<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Date&quot;               &quot;Closest_Time&quot;       &quot;Personel&quot;           &quot;Elevation&quot;          &quot;Nearby_Easting&quot;    
-##  [8] &quot;Nearby_Northing&quot;    &quot;Photo.&quot;             &quot;Seedling.&quot;          &quot;Return&quot;             &quot;Species&quot;            &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;        
-## [15] &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;    &quot;HTLCB&quot;              &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot; &quot;Ht2015.meas2016&quot;   
-## [22] &quot;CADE_Gr_inner&quot;      &quot;CADE_Gr_outer&quot;      &quot;CADE_dia_at_Gr_cm&quot;  &quot;ImmedAboveSpp&quot;      &quot;ImmedAboveHt.cm&quot;    &quot;Note1&quot;              &quot;Note2&quot;             
-## [29] &quot;Note3_Light&quot;        &quot;DataSheet&quot;          &quot;Light_File&quot;         &quot;DIFN&quot;</code></pre>
+<pre><code>##  [1] &quot;Fire&quot;               &quot;Patch&quot;              &quot;Date&quot;               &quot;Closest_Time&quot;       &quot;Personel&quot;           &quot;Elevation&quot;         
+##  [7] &quot;Nearby_Easting&quot;     &quot;Nearby_Northing&quot;    &quot;Photo.&quot;             &quot;Seedling.&quot;          &quot;Return&quot;             &quot;Species&quot;           
+## [13] &quot;Slope.Deg&quot;          &quot;Aspect.deg&quot;         &quot;Ht.cm&quot;              &quot;BasDia.cm&quot;          &quot;LastYearGrth.cm&quot;    &quot;HTLCB&quot;             
+## [19] &quot;Dia_at_2016_growth&quot; &quot;Dia_at_2015_growth&quot; &quot;Ht2015.meas2016&quot;    &quot;CADE_Gr_inner&quot;      &quot;CADE_Gr_outer&quot;      &quot;CADE_dia_at_Gr_cm&quot; 
+## [25] &quot;ImmedAboveSpp&quot;      &quot;ImmedAboveHt.cm&quot;    &quot;Note1&quot;              &quot;Note2&quot;              &quot;Note3_Light&quot;        &quot;DataSheet&quot;         
+## [31] &quot;Light_File&quot;         &quot;DIFN&quot;</code></pre>
 </div>
 <div id="take-out-columns-related-to-cade-or-immediately-above-data" class="section level2">
 <h2>Take out columns related to CADE or “immediately above” data</h2>
@@ -515,10 +517,10 @@ df &lt;- rename(df,Sdlg = Seedling.)</code></pre>
   filter(Return==1) %&gt;% 
   filter(Ht.cm&gt;0)</code></pre>
 <pre><code>## # A tibble: 0 x 28
-## # ... with 28 variables: Fire &lt;chr&gt;, Patch &lt;chr&gt;, Date &lt;chr&gt;, Closest_Time &lt;chr&gt;, Personel &lt;chr&gt;, Elevation &lt;int&gt;, Nearby_Easting &lt;int&gt;, Nearby_Northing &lt;int&gt;,
-## #   Photo. &lt;chr&gt;, Sdlg &lt;chr&gt;, Return &lt;int&gt;, Species &lt;chr&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;, LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;int&gt;,
-## #   Dia_at_2016_growth &lt;dbl&gt;, Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;chr&gt;,
-## #   DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;</code></pre>
+## # ... with 28 variables: Fire &lt;chr&gt;, Patch &lt;chr&gt;, Date &lt;chr&gt;, Closest_Time &lt;chr&gt;, Personel &lt;chr&gt;, Elevation &lt;int&gt;, Nearby_Easting &lt;int&gt;,
+## #   Nearby_Northing &lt;int&gt;, Photo. &lt;chr&gt;, Sdlg &lt;chr&gt;, Return &lt;int&gt;, Species &lt;chr&gt;, Slope.Deg &lt;int&gt;, Aspect.deg &lt;int&gt;, Ht.cm &lt;dbl&gt;, BasDia.cm &lt;dbl&gt;,
+## #   LastYearGrth.cm &lt;dbl&gt;, HTLCB &lt;int&gt;, Dia_at_2016_growth &lt;dbl&gt;, Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;,
+## #   Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;chr&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;</code></pre>
 </div>
 <div id="create-separate-columns-for-dates-of-visit" class="section level2">
 <h2>Create separate columns for dates of visit</h2>
@@ -617,22 +619,23 @@ df %&gt;%
   mutate(Time1 = ifelse(Time1 == &quot;1/7/1900 7:00&quot;, &quot;1:00&quot;, Time1)) %&gt;% 
   mutate(Time1 = ifelse(Time1 == &quot;0.291666667&quot;, &quot;1:00&quot;, Time1))
 df$Time1  </code></pre>
-<pre><code>##   [1] &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot;
-##  [20] &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
-##  [39] &quot;8:01&quot;  &quot;8:01&quot;  &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;14:33&quot;
-##  [58] &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
-##  [77] &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
-##  [96] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;9:52&quot; 
-## [115] &quot;9:52&quot;  &quot;10:32&quot; &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot;
-## [134] &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;6:16&quot; 
-## [153] &quot;11:33&quot; &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
-## [172] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;13:50&quot; &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot; 
-## [191] &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
-## [210] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot; 
-## [229] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot; 
-## [248] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot; 
-## [267] &quot;6:25&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;12:00&quot; &quot;12:00&quot; &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot; 
-## [286] &quot;8:39&quot;  &quot;8:39&quot;  &quot;15:00&quot; &quot;1:00&quot;</code></pre>
+<pre><code>##   [1] &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;9:45&quot;  &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;13:43&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot;
+##  [18] &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;16:22&quot; &quot;1:00&quot;  &quot;16:22&quot; &quot;1:00&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot; 
+##  [35] &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;8:01&quot;  &quot;16:23&quot; &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot; 
+##  [52] &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;8:38&quot;  &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;14:33&quot; &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot; 
+##  [69] &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;8:21&quot;  &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;13:31&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
+##  [86] &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot; 
+## [103] &quot;7:45&quot;  &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;7:45&quot;  &quot;7:45&quot;  &quot;7:45&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;9:52&quot;  &quot;10:32&quot; &quot;10:32&quot; &quot;10:32&quot; &quot;1:00&quot; 
+## [120] &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;15:14&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;12:30&quot; &quot;7:00&quot;  &quot;1:00&quot; 
+## [137] &quot;1:00&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;9:28&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;11:33&quot; &quot;6:16&quot;  &quot;6:16&quot;  &quot;6:16&quot;  &quot;11:33&quot;
+## [154] &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot; 
+## [171] &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;9:44&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;8:30&quot;  &quot;13:50&quot; &quot;13:50&quot; &quot;13:50&quot; &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot; 
+## [188] &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;6:15&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;10:11&quot;
+## [205] &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot; &quot;10:11&quot;
+## [222] &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;7:19&quot;  &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot;
+## [239] &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;10:40&quot; &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;1:00&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot; &quot;10:35&quot;
+## [256] &quot;10:35&quot; &quot;6:25&quot;  &quot;10:35&quot; &quot;10:35&quot; &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;6:25&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;8:09&quot;  &quot;7:33&quot; 
+## [273] &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;7:33&quot;  &quot;12:00&quot; &quot;12:00&quot; &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;8:39&quot;  &quot;15:00&quot; &quot;1:00&quot;</code></pre>
 </div>
 <div id="make-date-columns-into-date-format-and-time-column-into-time-format" class="section level2">
 <h2>Make date columns into date format and time column into time format</h2>
@@ -831,96 +834,102 @@ print(boo)</code></pre>
 <pre><code>## $Species
 ## # A tibble: 2 x 31
 ## # Groups:   Sdlg [1]
-##   Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##   &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-## 1 CLVD  N         1626.         724392         4303842 16    PILA            0          0  16.2      0.52            1.35     0               NA               NA
-## 2 CLVD  N         1626.         724392         4303842 16    PIPO            0          0  16.2      0.52            1.35     0               NA               NA
-## # ... with 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;,
-## #   return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
+##   Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##   &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+## 1 CLVD  N         1626.         724392         4303842 16    PILA            0          0  16.2      0.52            1.35     0               NA
+## 2 CLVD  N         1626.         724392         4303842 16    PIPO            0          0  16.2      0.52            1.35     0               NA
+## # ... with 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;,
+## #   Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $Note1
 ## # A tibble: 26 x 31
 ## # Groups:   Sdlg [13]
-##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg  Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 CLVD  N         1626           72432         4303788 1     PILA           18          2 121         2.92           13.3      0               NA               NA
-##  2 CLVD  N         1626           72432         4303788 1     PILA           18          2 121         2.92           13.3      0               NA               NA
-##  3 CLVD  N         1626           72432         4303788 2     PIPO           18          2 143         3.44            6.7      0               NA               NA
-##  4 CLVD  N         1626           72432         4303788 2     PIPO           18          2 143         3.44            6.7      0               NA               NA
-##  5 CLVD  N         1626           72432         4303788 3     PSME           18          2  68         1.71            5.6      0               NA               NA
-##  6 CLVD  N         1626           72432         4303788 3     PSME           18          2  68         1.71            5.6      0               NA               NA
-##  7 CLVD  N         1626          724392         4303842 6     ABCO           22         85   9.45      0.3             1.92     0               NA               NA
-##  8 CLVD  N         1626          724392         4303842 6     ABCO           22         85   9.45      0.3             1.92     0               NA               NA
-##  9 CLVD  N         1626.         724392         4303842 7     ABCO            0          0  22         0.37            2.3      0               NA               NA
-## 10 CLVD  N         1626.         724392         4303842 7     ABCO            0          0  22         0.37            2.3      0               NA               NA
-## # ... with 16 more rows, and 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;,
-## #   FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg  Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+##  1 CLVD  N         1626           72432         4303788 1     PILA           18          2 121         2.92           13.3      0               NA
+##  2 CLVD  N         1626           72432         4303788 1     PILA           18          2 121         2.92           13.3      0               NA
+##  3 CLVD  N         1626           72432         4303788 2     PIPO           18          2 143         3.44            6.7      0               NA
+##  4 CLVD  N         1626           72432         4303788 2     PIPO           18          2 143         3.44            6.7      0               NA
+##  5 CLVD  N         1626           72432         4303788 3     PSME           18          2  68         1.71            5.6      0               NA
+##  6 CLVD  N         1626           72432         4303788 3     PSME           18          2  68         1.71            5.6      0               NA
+##  7 CLVD  N         1626          724392         4303842 6     ABCO           22         85   9.45      0.3             1.92     0               NA
+##  8 CLVD  N         1626          724392         4303842 6     ABCO           22         85   9.45      0.3             1.92     0               NA
+##  9 CLVD  N         1626.         724392         4303842 7     ABCO            0          0  22         0.37            2.3      0               NA
+## 10 CLVD  N         1626.         724392         4303842 7     ABCO            0          0  22         0.37            2.3      0               NA
+## # ... with 16 more rows, and 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;,
+## #   DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $Note2
 ## # A tibble: 4 x 31
 ## # Groups:   Sdlg [2]
-##   Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##   &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-## 1 CLVD  N         1626.         724392         4303842 9     ABCO            0          0   146      3.52            18       0               NA               NA
-## 2 CLVD  N         1626.         724392         4303842 9     ABCO            0          0   146      3.52            18       0               NA               NA
-## 3 CLVD  N         1626.         724392         4303842 15    ABCO            0          0    46      1.28             7.9     0               NA               NA
-## 4 CLVD  N         1626.         724392         4303842 15    ABCO            0          0    46      1.28             7.9     0               NA               NA
-## # ... with 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;,
-## #   return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
+##   Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##   &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+## 1 CLVD  N         1626.         724392         4303842 9     ABCO            0          0   146      3.52            18       0               NA
+## 2 CLVD  N         1626.         724392         4303842 9     ABCO            0          0   146      3.52            18       0               NA
+## 3 CLVD  N         1626.         724392         4303842 15    ABCO            0          0    46      1.28             7.9     0               NA
+## 4 CLVD  N         1626.         724392         4303842 15    ABCO            0          0    46      1.28             7.9     0               NA
+## # ... with 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;,
+## #   Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;,
+## #   Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $DataSheet
 ## # A tibble: 30 x 31
 ## # Groups:   Sdlg [15]
-##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## # ... with 20 more rows, and 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;,
-## #   FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## # ... with 20 more rows, and 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;,
+## #   DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $return
 ## # A tibble: 30 x 31
 ## # Groups:   Sdlg [15]
-##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## # ... with 20 more rows, and 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;,
-## #   FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## # ... with 20 more rows, and 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;,
+## #   DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;
 ## 
 ## $personel1
 ## # A tibble: 30 x 31
 ## # Groups:   Sdlg [15]
-##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~ Dia_at_2015_gro~
-##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
-##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA               NA
-##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA               NA
-##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA               NA
-##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA               NA
-##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA               NA
-## # ... with 20 more rows, and 16 more variables: Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;, DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;,
-## #   FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;, Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;</code></pre>
+##    Fire  Patch Elevation Nearby_Easting Nearby_Northing Sdlg  Species Slope.Deg Aspect.deg Ht.cm BasDia.cm LastYearGrth.cm HTLCB Dia_at_2016_gro~
+##    &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;          &lt;dbl&gt;           &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;           &lt;dbl&gt; &lt;dbl&gt;            &lt;dbl&gt;
+##  1 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  2 CLVD  N          1626          72432         4303788 1     PILA           18          2   121      2.92           13.3      0               NA
+##  3 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  4 CLVD  N          1626          72432         4303788 2     PIPO           18          2   143      3.44            6.7      0               NA
+##  5 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  6 CLVD  N          1626          72432         4303788 3     PSME           18          2    68      1.71            5.6      0               NA
+##  7 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  8 CLVD  N          1626         724321         4303791 4     PIPO           18          2    88      1.85            3.09     0               NA
+##  9 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## 10 CLVD  N          1626         724321         4303791 5     PIPO           14          2   191      6.19           19        0               NA
+## # ... with 20 more rows, and 17 more variables: Dia_at_2015_growth &lt;dbl&gt;, Ht2015.meas2016 &lt;int&gt;, Note1 &lt;chr&gt;, Note2 &lt;chr&gt;, Note3_Light &lt;chr&gt;,
+## #   DataSheet &lt;chr&gt;, Light_File &lt;dbl&gt;, DIFN &lt;dbl&gt;, FirePatch &lt;chr&gt;, return &lt;chr&gt;, Date1 &lt;date&gt;, Date2 &lt;date&gt;, personel2 &lt;chr&gt;, personel1 &lt;chr&gt;,
+## #   Time1 &lt;time&gt;, Time2 &lt;time&gt;, Photo &lt;chr&gt;</code></pre>
 </div>
 </div>
 <div id="sync-notes-columns" class="section level2">
