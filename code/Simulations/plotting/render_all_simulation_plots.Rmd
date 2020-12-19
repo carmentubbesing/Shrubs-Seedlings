@@ -12,8 +12,8 @@ library(knitr)
 ```
 
 ```{r defining}
-data_date <<- "2020-12-15"
-n_reps <<- "200"
+data_date <<- "2020-12-17"
+n_reps <<- "1000"
 ```
 
 ```{r summarizing, warning = F}
@@ -37,6 +37,6 @@ rmarkdown::render("plot_coef_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_growth_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_index_final.Rmd", "html_document", quiet = T)
 rmarkdown::render("plot_Gradient_final.Rmd", "html_document", quiet = T)
-rmarkdown::render("plot_growth_climate_supp.Rmd", "html_document", quiet = T)
+rmarkdown::render("pine_growth_climate_supp.Rmd", "html_document", quiet = T)
 ```
 

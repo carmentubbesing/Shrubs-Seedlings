@@ -12,14 +12,12 @@ require(egg)
 require(grid)
 ```
 
-
 # Load summarized results
 ```{r}
 filename <- paste("../../../../results/data/summary_emerge_coef_", data_date,"_", n_reps, ".Rdata", sep = "")
 
 load(file = filename)
 ```
-
 
 ## Plot 
 ```{r}
@@ -114,7 +112,6 @@ Q50 <- Q50 %>%
     TRUE ~ "CECO"
   ))
 ```
-
 
 ```{r}
 Q50plot <- ggplot(Q50, aes(col = simspp))+

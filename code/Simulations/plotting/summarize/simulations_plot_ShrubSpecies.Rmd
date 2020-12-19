@@ -21,8 +21,10 @@ require(grid)
 ```
 
 ```{r}
-data_date <<- "2020-11-02"
-n_reps <<- "20"
+#data_date <<- "2020-11-02"
+#n_reps <<- "20"
+data_date
+n_reps
 ```
 
 ```{r}
@@ -83,7 +85,6 @@ df %>%
 <!-- df <- df %>%  -->
 <!--  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp)) -->
 <!-- ``` -->
-
 
 ## Summarize
 

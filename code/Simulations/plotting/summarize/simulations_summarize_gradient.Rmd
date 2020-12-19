@@ -19,6 +19,12 @@ require(grid)
 ```
 
 ```{r}
+data_date <<- "2020-12-17"
+n_reps <- 1000
+```
+
+
+```{r}
 namemin <- paste("~/Ch3_Simulation_Results/Simulation15_",  data_date, "_", n_reps, "_MIN.Rdata", sep = "")
 
 namemedian <- paste("~/Ch3_Simulation_Results/Simulation16_", data_date, "_", n_reps, "_MEDIAN.Rdata", sep = "")
@@ -91,6 +97,14 @@ summary_emerge <- df %>%
   mutate(prop_emerged = total_emergents/initial_n) %>% 
   group_by(Years, Species, sim_spp) %>% 
   summarize(mean = mean(prop_emerged), sd = sd(prop_emerged))
+```
+
+### Test
+```{r}
+df %>% 
+  filter(Years == 40) %>% 
+  group_by(sim_spp, Species) %>% 
+  summarize(mean())
 ```
 
 

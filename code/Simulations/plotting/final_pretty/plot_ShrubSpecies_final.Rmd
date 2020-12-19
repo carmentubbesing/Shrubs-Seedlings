@@ -16,6 +16,7 @@ require(grid)
 ```{r}
 filename <- paste("../../../../results/data/summary_emerge_prop_ShrubSpp_", data_date,"_", n_reps, ".Rdata", sep = "")
 load(file = filename) 
+filename
 ```
 
 # Plot
@@ -157,6 +158,16 @@ summary_emerge %>%
   group_by(Species, sim_spp) %>% 
   filter(mean == max(mean)) %>% 
   filter(Years == min(Years)) %>% 
-  arrange(sim_spp)
+  arrange(sim_spp) %>% 
+  mutate(mean_perc = mean*100, sd_perc = sd*100) %>% 
+  select(sim_spp, Species, mean_perc, sd_perc, Years) %>% 
+  arrange(sim_spp, desc(Species))
+```
+
+# Find % emergence of pines under whitethorn at 15 years for discussion
+```{r}
+summary_emerge %>% 
+  filter(Species == "PIPO" & sim_spp == "CECO") %>% 
+  filter(Years == 15)
 ```
 

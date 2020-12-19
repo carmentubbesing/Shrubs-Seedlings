@@ -14,6 +14,7 @@ require(grid)
 
 # Load summary
 ```{r}
+setwd("~/../Shrubs-Seedlings/code/Simulations/plotting/final_pretty")
 filename <- paste("../../../../results/data/summary_emerge_index_", data_date,"_", n_reps, ".Rdata", sep = "")
 load(file = filename)
 ```
@@ -126,14 +127,14 @@ Q50plot <- ggplot()+
   
   geom_errorbarh(data = Q50, aes(y = simspp, col = simspp, xmin = lower, xmax = upper), size = 1, height = 0.5)+
   
-  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "ABCO")), aes(col = simspp, y = simspp, xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = max(summary_emerge$Years)), size = 1, height = 0, linetype = "dotted")+
   
-  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "ABCO")), aes(col = simspp, y = simspp, xmin = lower, xmax = mean_cein_abco), size = 1, height = 0)+
+  geom_errorbarh(data = Q50 %>% filter((simspp == "CEIN" & Species == "PIPO")), aes(col = simspp, y = simspp, xmin = lower, xmax = mean_cein_abco), size = 1, height = 0)+
   
   geom_point(data = Q50, aes(x = mean, y = simspp, col = simspp), size = 1, fill = "white", stroke = 1.5)+
-  #scale_shape_manual(values = c(16,21))+
+  scale_shape_manual(values = c(16,21))+
 
-  geom_linerange(data = Q50 %>% filter((Species == "ABCO" & simspp == "CEIN")), aes(x = lower, ymin = 2.75, ymax= 3.25), size = 1, col = "#e7298a")+
+  geom_linerange(data = Q50 %>% filter((Species == "PIPO" & simspp == "CEIN")), aes(x = lower, ymin = 2.75, ymax= 3.25), size = 1, col = "#e7298a")+
   
   ylab("Shrub\nspecies")+
   scale_color_manual(values = c("#d95f02","#1b9e77",  "#e7298a"))+

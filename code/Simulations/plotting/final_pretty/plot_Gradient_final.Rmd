@@ -12,6 +12,11 @@ require(egg)
 require(grid)
 ```
 
+```{r}
+#data_date <<- "2020-12-17"
+#n_reps <- 1000
+```
+
 # Load summarized data
 ```{r}
 filename <- paste("../../../../results/data/summary_emerge_prop_Gradient_", data_date,"_", n_reps, ".Rdata", sep = "")

@@ -72,7 +72,7 @@ dfsimallreps <<- dfsimallreps %>%
 time <- Sys.time()
 
 dfsimallreps <- iterate(iterations, fire, years_max, climate_method, conifer_species_method, shrub_method, n_seedlings, shrub_coefficient, shrub_heightgrowth, shrub_initial_index)
-
+dfsimallreps_bu <- dfsimallreps
 Sys.time()-time
 ```
 
@@ -140,9 +140,7 @@ filename <-  paste("~/Ch3_Simulation_Results/Simulation5_",  Sys.Date(), "_", it
 save(dfsimallreps, file =filename)
 ```
 
-
 # Repeat for single shrub COEFFICIENT models
-
 ```{r}
 shrub_method <- "welch" #empirical, welch, CECO, ARPA, LIDE, OTHER
 ```

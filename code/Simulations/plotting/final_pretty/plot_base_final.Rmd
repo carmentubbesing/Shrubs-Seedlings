@@ -98,7 +98,7 @@ ggplot(summary_emerge_prop)+
   theme_minimal()
 ```
 
-# Find mean prop emerged at end of sim for each species (for Table 1)
+# Find mean prop emerged at end of sim for each species (for Results Section)
 ```{r}
 summary_emerge_prop %>% 
   group_by(Species) %>% 

@@ -402,7 +402,7 @@ cein &lt;- cein %&gt;%
 <pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
 <pre class="r"><code>max_year</code></pre>
 <pre><code>## max_year 
-##       77</code></pre>
+##       73</code></pre>
 <pre class="r"><code>cein &lt;- cein %&gt;% 
   filter(Years &lt; max_year+1)</code></pre>
 <pre class="r"><code>nrow_total &lt;- nrow(arpa) + nrow(ceco) + nrow(cein)</code></pre>
@@ -424,8 +424,8 @@ df &lt;- full_join(df, cein)</code></pre>
 ## # Groups:   emerged [2]
 ##   emerged      n
 ##     &lt;dbl&gt;  &lt;int&gt;
-## 1       0 288324
-## 2       1  11176</code></pre>
+## 1       0 288233
+## 2       1  11167</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))</code></pre>
 <div id="summarize" class="section level2">
@@ -463,7 +463,7 @@ df &lt;- full_join(df, cein)</code></pre>
 
 max_year</code></pre>
 <pre><code>## Years 
-##    57</code></pre>
+##    62</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
   filter(Years &lt; max_year + 1)</code></pre>
 </div>

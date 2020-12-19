@@ -2,7 +2,9 @@
 title: "tests"
 author: "Carmen"
 date: "2/19/2020"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 ---
 
 
@@ -13,12 +15,14 @@ require(gridExtra)
 
 # Load base results
 ```{r}
-data_date <- "2020-12-15"
-n_reps <- "100"
+data_date <- "2020-12-17"
+n_reps <- "1000"
 ```
 
 ```{r}
-name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+#name <- paste("Simulation1", data_date, n_reps, "empirical_welch_empiricalcoef_empiricalgrowth_empiricalindex", sep = "_")
+name <- paste("Simulation13", data_date, n_reps, "welch_empiricalcoef_CEINindex_empiricalgrowth", sep = "_")
+
 df_filename <- paste("~/Ch3_Simulation_Results/", name, ".Rdata", sep = "")
 load(df_filename)
 ```
@@ -35,7 +39,6 @@ dfbase %>%
   count() %>% 
   ggplot(aes(col = Species, fill = ShrubSpp03))+
   geom_col(aes(x = interaction(Species, ShrubSpp03), y = n))
-
 ```
 
 ```{r}
@@ -47,7 +50,8 @@ plot_base <- dfbase %>%
   geom_line() +
   geom_line(aes(y = n/100), linetype = 2)+
   ylab("shrub height")+
-  theme_minimal()
+  theme_minimal()+
+  ggtitle('solid line = height, dashed = n')
 plot_base
 ```
 
@@ -143,6 +147,7 @@ remove(test)
 test10 <- dfsimallreps %>% 
   group_by(climate_year) %>% 
   count()
+test10
 test10 <- nrow(test10) == 3
 ```
 
@@ -216,11 +221,11 @@ test <- dfsimallreps %>%
   arrange(Sdlg) %>% 
   mutate(ID = paste(Sdlg, rep, ID_withinrep, sep = "-"))
 
-test2 <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID")) %>% 
+test <- pivot_wider(test, names_from = "Years", values_from = "dia.cm", id_cols = c("rep", "ID")) %>% 
   filter(rep %in% c(1:20)) %>% 
   rename(dia.cmYear19 = `19`, dia.cmYear20 = `20`)
 
-ggplot(test2)+
+ggplot(test)+
   geom_point(aes(x = dia.cmYear19, y = dia.cmYear20, col = as.factor(rep)))+
   geom_abline(aes(slope = 1, intercept = 0))+
   theme_minimal()
@@ -243,6 +248,11 @@ dfsimallreps %>%
   theme_minimal()
 ```
 
+# Make sure # iterations matches # reps
+```{r}
+test11 <- length(unique(dfsimallreps$rep)) > as.numeric(n_reps) - 10
+```
+
 # ALL TESTS TOGETHER
 ```{r}
 test1
@@ -255,5 +265,11 @@ test7
 test8
 test9
 test10
+test11
+```
+
+```{r}
+tests <- c(test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11)
+all(tests) == TRUE
 ```
 

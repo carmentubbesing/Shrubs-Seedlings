@@ -383,8 +383,8 @@ summary {
 <div id="if-youre-running-this-code-on-its-own-you-have-to-define-data_date-and-n_reps-at-the-top" class="section level1">
 <h1>If you’re running this code on its own, you have to define data_date and n_reps at the top</h1>
 <pre class="r"><code>strt &lt;- Sys.time()</code></pre>
-<pre class="r"><code>data_date &lt;&lt;- &quot;2020-11-02&quot;
-n_reps &lt;&lt;- &quot;20&quot;</code></pre>
+<pre class="r"><code>#data_date &lt;&lt;- &quot;2020-11-02&quot;
+#n_reps &lt;&lt;- &quot;20&quot;</code></pre>
 <pre class="r"><code>namecein &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation5_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_CEIN.Rdata&quot;, sep = &quot;&quot;)
 
 namearpa &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation4_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_ARPA.Rdata&quot;, sep = &quot;&quot;)
@@ -423,10 +423,10 @@ df &lt;- full_join(df, cein)</code></pre>
   count()</code></pre>
 <pre><code>## # A tibble: 2 x 3
 ## # Groups:   emerged, Years [2]
-##   emerged Years     n
-##     &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;
-## 1       0     8  5956
-## 2       1     8    44</code></pre>
+##   emerged Years      n
+##     &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt;
+## 1       0     8 297539
+## 2       1     8   2261</code></pre>
 <!-- ```{r} -->
 <!-- df <- df %>%  -->
 <!--  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp)) -->
@@ -465,8 +465,8 @@ df &lt;- full_join(df, cein)</code></pre>
   unlist()
 
 max_year</code></pre>
-<pre><code>## Years1 Years2 
-##     38     38</code></pre>
+<pre><code>## Years 
+##    46</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
   filter(Years &lt; unique(max_year) + 1)</code></pre>
 </div>

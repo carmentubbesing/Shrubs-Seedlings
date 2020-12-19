@@ -11,7 +11,7 @@ require(tidyverse)
 
 ```{r}
 data_date <<- "2020-12-15"
-n_reps <<- "200"
+n_reps <<- "1000"
 ```
 
 ```{r}
@@ -53,7 +53,7 @@ dfsimallreps %>%
     legend.position = c(0.8,0.7)
   )
 filename <- paste("../../../../results/figures/Simulations/pine_growth_climate", data_date, "_", n_reps,".png", sep = "")
-ggsave(file = filename, width = 5, height =4, dpi = 400)
+ggsave(file = filename, width = 6, height =5, dpi = 400)
 ```
 
 # What's the highest year?

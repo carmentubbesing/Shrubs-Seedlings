@@ -15,8 +15,8 @@ require(gridExtra)
 ```
 
 ```{r}
-#data_date <<- "2020-12-15"
-#n_reps <<- "100"
+#data_date <- "2020-12-15"
+#n_reps <- "200"
 ```
 
 ```{r}

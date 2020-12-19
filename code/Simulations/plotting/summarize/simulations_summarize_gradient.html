@@ -407,17 +407,16 @@ df &lt;- full_join(df, max)</code></pre>
   filter(!is.finite(pred_exp) | is.na(pred_exp)) %&gt;% 
   group_by(emerged, Years, sim_spp) %&gt;% 
   count()</code></pre>
-<pre><code>## # A tibble: 7 x 4
-## # Groups:   emerged, Years, sim_spp [7]
+<pre><code>## # A tibble: 6 x 4
+## # Groups:   emerged, Years, sim_spp [6]
 ##   emerged Years sim_spp     n
 ##     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;
-## 1       0     8 MAX      2000
-## 2       0     8 MEDIAN   2000
-## 3       0     8 MIN       322
-## 4       1     8 MIN      1678
-## 5       1     9 MIN      1180
-## 6       1    10 MIN      1180
-## 7       1    11 MIN      1180</code></pre>
+## 1       0     8 MAX     93570
+## 2       0     8 MEDIAN  93456
+## 3       0     8 MIN     93485
+## 4       1     8 MAX      6330
+## 5       1     8 MEDIAN   6344
+## 6       1     8 MIN      6415</code></pre>
 <!-- ```{r} -->
 <!-- df <- df %>%  -->
 <!--  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp)) -->
@@ -457,7 +456,7 @@ df &lt;- full_join(df, max)</code></pre>
 
 max_year</code></pre>
 <pre><code>## Years 
-##    47</code></pre>
+##    43</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
   filter(Years &lt; unique(max_year) + 1)</code></pre>
 </div>

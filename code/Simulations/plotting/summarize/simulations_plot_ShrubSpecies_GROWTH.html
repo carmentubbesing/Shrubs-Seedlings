@@ -371,9 +371,7 @@ summary {
 
 <pre class="r"><code>strt &lt;- Sys.time()
 setwd(&quot;~/../Shrubs-Seedlings/code/Simulations/&quot;)</code></pre>
-<pre class="r"><code>date &lt;- &quot;2020-10-30&quot;
-
-namececo &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation9_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_welch_empiricalcoef_CECOgrowth.Rdata&quot;, sep = &quot;&quot;)
+<pre class="r"><code>namececo &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation9_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_welch_empiricalcoef_CECOgrowth.Rdata&quot;, sep = &quot;&quot;)
 
 namecein &lt;- paste(&quot;~/Ch3_Simulation_Results/Simulation10_&quot;, data_date, &quot;_&quot;, n_reps, &quot;_welch_empiricalcoef_CEINgrowth.Rdata&quot;, sep = &quot;&quot;)
 
@@ -405,7 +403,7 @@ cein &lt;- cein %&gt;%
 <pre><code>## `summarise()` regrouping output by &#39;Years&#39; (override with `.groups` argument)</code></pre>
 <pre class="r"><code>max_year</code></pre>
 <pre><code>## max_year 
-##       48</code></pre>
+##       50</code></pre>
 <pre class="r"><code>cein &lt;- cein %&gt;% 
   filter(Years &lt; max_year+1)</code></pre>
 <pre class="r"><code>nrow_total &lt;-  nrow(cein) + nrow(ceco) + nrow(arpa)</code></pre>
@@ -430,8 +428,8 @@ df &lt;- full_join(df, cein)</code></pre>
 ## # Groups:   emerged [2]
 ##   emerged      n
 ##     &lt;dbl&gt;  &lt;int&gt;
-## 1       0 290312
-## 2       1   9588</code></pre>
+## 1       0 290046
+## 2       1   9754</code></pre>
 <pre class="r"><code>df &lt;- df %&gt;% 
  mutate(pred_exp = ifelse(!is.finite(pred_exp) | !is.na(pred_exp), 999, pred_exp))</code></pre>
 <div id="summarize" class="section level2">
@@ -470,7 +468,7 @@ df &lt;- full_join(df, cein)</code></pre>
 
 max_year</code></pre>
 <pre><code>## Years 
-##    51</code></pre>
+##    55</code></pre>
 <pre class="r"><code>summary_emerge &lt;- summary_emerge %&gt;% 
   filter(Years &lt; max_year + 1)</code></pre>
 </div>
